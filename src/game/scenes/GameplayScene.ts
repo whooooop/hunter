@@ -4,6 +4,7 @@ import { Player } from '../entities/Player';
 import { BaseEnemy } from '../entities/BaseEnemy';
 import { SquirrelEnemy } from '../entities/SquirrelEnemy';
 import { BaseBullet } from '../weapons/BaseBullet';
+import { ForestLocation } from '../locations/ForestLocation';
 
 export class GameplayScene extends Phaser.Scene {
   private player!: Player;
@@ -16,6 +17,8 @@ export class GameplayScene extends Phaser.Scene {
   
   private enemySpawnTimer!: Phaser.Time.TimerEvent;
   
+  private forestLocation!: ForestLocation;
+  
   constructor() {
     super({ key: SceneKeys.GAMEPLAY });
   }
@@ -27,6 +30,8 @@ export class GameplayScene extends Phaser.Scene {
     this.load.image('bullet_placeholder', 'public/assets/images/bullet_placeholder.png');
     this.load.image('weapon_placeholder', 'public/assets/images/weapon_placeholder.png');
     this.load.image('background', 'public/assets/images/background.png');
+    
+    // Шейдер теперь регистрируется в классе ForestLocation
   }
   
   create(): void {
@@ -37,10 +42,12 @@ export class GameplayScene extends Phaser.Scene {
     // Устанавливаем границы мира
     this.physics.world.setBounds(0, 0, WORLD_BOUNDS.width, WORLD_BOUNDS.height);
     
-    // Создаем фон
-    this.add.image(0, 0, 'background')
-      .setOrigin(0, 0)
-      .setDisplaySize(WORLD_BOUNDS.width, WORLD_BOUNDS.height);
+    // Создаем локацию (фон будет создан в ForestLocation)
+    const forestLocation = new ForestLocation(this);
+    forestLocation.create();
+    
+    // Сохраняем ссылку на локацию для обновления
+    this.forestLocation = forestLocation;
     
     // Инициализируем группы врагов и пуль
     this.bullets = this.physics.add.group({
@@ -113,6 +120,11 @@ export class GameplayScene extends Phaser.Scene {
   }
   
   update(time: number, delta: number): void {
+    // Обновляем локацию (анимация травы)
+    if (this.forestLocation) {
+      this.forestLocation.update(time);
+    }
+    
     // Обновляем игрока
     if (this.player) {
       this.player.update(time, delta);
