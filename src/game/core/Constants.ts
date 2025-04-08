@@ -37,5 +37,5 @@ export const WORLD_BOUNDS = {
 
 // Константы для физики
 export const PHYSICS = {
-  debug: true
+  debug: false
 }; 

@@ -5,11 +5,13 @@ import { BaseEnemy } from '../entities/BaseEnemy';
 import { SquirrelEnemy } from '../entities/SquirrelEnemy';
 import { BaseBullet } from '../weapons/BaseBullet';
 import { ForestLocation } from '../locations/ForestLocation';
+import { WaveInfo } from './GameplayScene/components/WaveInfo';
 
 export class GameplayScene extends Phaser.Scene {
   private player!: Player;
   private enemies!: Phaser.Physics.Arcade.Group;
   private bullets!: Phaser.Physics.Arcade.Group;
+  private waveInfo!: WaveInfo;
   
   private score: number = 0;
   private scoreText!: Phaser.GameObjects.Text;
@@ -36,8 +38,9 @@ export class GameplayScene extends Phaser.Scene {
   
   create(): void {
     // Включаем отладку физики, если это указано в настройках
-    this.physics.world.createDebugGraphic();
-    this.physics.world.debugGraphic.visible = PHYSICS.debug;
+    // Закомментировано для отключения отладочной графики
+    // this.physics.world.createDebugGraphic();
+    // this.physics.world.debugGraphic.visible = PHYSICS.debug;
     
     // Устанавливаем границы мира
     this.physics.world.setBounds(0, 0, WORLD_BOUNDS.width, WORLD_BOUNDS.height);
@@ -48,6 +51,9 @@ export class GameplayScene extends Phaser.Scene {
     
     // Сохраняем ссылку на локацию для обновления
     this.forestLocation = forestLocation;
+    
+    // Создаем информацию о волне
+    this.waveInfo = new WaveInfo(this);
     
     // Инициализируем группы врагов и пуль
     this.bullets = this.physics.add.group({
@@ -107,12 +113,12 @@ export class GameplayScene extends Phaser.Scene {
     this.events.on('enemyKilled', this.onEnemyKilled, this);
     
     // Запускаем периодический спавн врагов
-    this.enemySpawnTimer = this.time.addEvent({
-      delay: 2000,
-      callback: this.spawnEnemy,
-      callbackScope: this,
-      loop: true
-    });
+    // this.enemySpawnTimer = this.time.addEvent({
+    //   delay: 2000,
+    //   callback: this.spawnEnemy,
+    //   callbackScope: this,
+    //   loop: true
+    // });
     
     // Настройка отладки
     // Пример отключения отладки для определенных типов объектов:

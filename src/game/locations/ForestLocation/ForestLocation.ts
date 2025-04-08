@@ -5,7 +5,11 @@ import { GRASS_SHADER_KEY, GRASS_FRAGMENT_SHADER, GRASS_VERTEX_SHADER } from './
 export class ForestLocation {
   private scene: Phaser.Scene;
   private config: ForestLocationConfig;
-  
+
+  private width: number = 0;
+  private height: number = 0;
+  private skyHeight: number = 0;
+
   // Ссылка на шейдер травы
   private grassShader: Phaser.GameObjects.Shader | null = null;
   
@@ -26,8 +30,8 @@ export class ForestLocation {
   private registerGrassShader(): void {
     // Регистрируем шейдер
     this.scene.cache.shader.add(GRASS_SHADER_KEY, {
-        fragment: GRASS_FRAGMENT_SHADER,
-        vertex: GRASS_VERTEX_SHADER
+      fragment: GRASS_FRAGMENT_SHADER,
+      vertex: GRASS_VERTEX_SHADER
     });
   }
   
@@ -38,62 +42,22 @@ export class ForestLocation {
   // Метод для создания локации на сцене
   public create(): void {
     // Получаем размеры экрана
-    const width = this.scene.cameras.main.width;
-    const height = this.scene.cameras.main.height;
+    this.width = this.scene.cameras.main.width;
+    this.height = this.scene.cameras.main.height;
+    this.skyHeight = this.height / 6;
     
-    const skyHeight = height / 6;
-    
-    // Создаем графический объект для рисования фона
-    const background = this.scene.add.graphics();
-    
-    // Рисуем небо (верхняя 1/6 часть)
-    background.fillStyle(FOREST_COLORS.skyColor, 1);
-    background.fillRect(0, 0, width, skyHeight);
-    background.setDepth(0);
-    
-    // Создаем статичный цветной фон под шейдером для участков, где нет травы
-    background.fillStyle(FOREST_COLORS.grassColor, 1);
-    background.fillRect(0, skyHeight, width, height - skyHeight);
-    background.setDepth(1);
-    
-    // Конвертируем цвет травы из hex в RGB для шейдера (от 0 до 1)
-    const r = ((FOREST_COLORS.grassColor >> 16) & 0xFF) / 255;
-    const g = ((FOREST_COLORS.grassColor >> 8) & 0xFF) / 255;
-    const b = (FOREST_COLORS.grassColor & 0xFF) / 255;
-    
-    try {
-      // Создаем BaseShader и использовать его для создания шейдера
-      const baseShader = new Phaser.Display.BaseShader(GRASS_SHADER_KEY, GRASS_FRAGMENT_SHADER, GRASS_VERTEX_SHADER);
-      
-      // Создаем шейдер используя BaseShader
-      this.grassShader = this.scene.add.shader(
-        baseShader,
-        width / 2,                        // позиция x
-        height / 2,                       // позиция y
-        width,                            // ширина
-        height - skyHeight                // высота
-      );
-      
-      // Устанавливаем uniform-параметры шейдера
-      this.grassShader.setUniform('grassColor.value', [r, g, b]);
-      this.grassShader.setUniform('resolution.value', [width, height - skyHeight]);
-      
-      // Важно! Устанавливаем правильную глубину отрисовки и позицию для шейдера
-      this.grassShader.setDepth(5);
-      this.grassShader.y = (skyHeight + height) / 2; // Центрируем относительно области травы
-    } catch (error: any) {
-      console.error(error);
-    }
+    this.createBackground();
+    this.createGrassShader();
     
     // Создаем препятствия, если они есть
-    if (this.config.obstacles) {
-      this.config.obstacles.forEach(obstacleGroup => {
-        obstacleGroup.positions.forEach(pos => {
-          const obstacle = this.scene.add.image(pos.x, pos.y, obstacleGroup.texture);
-          obstacle.setDepth(10); // Объекты должны быть над травой
-        });
-      });
-    }
+    // if (this.config.obstacles) {
+    //   this.config.obstacles.forEach(obstacleGroup => {
+    //     obstacleGroup.positions.forEach(pos => {
+    //       const obstacle = this.scene.add.image(pos.x, pos.y, obstacleGroup.texture);
+    //       obstacle.setDepth(10); // Объекты должны быть над травой
+    //     });
+    //   });
+    // }
     
     // Воспроизводим музыку, если она указана
     if (this.config.music) {
@@ -119,12 +83,64 @@ export class ForestLocation {
       });
     }
   }
+
+  private createBackground(): void {
+      // Создаем графический объект для рисования фона
+      const background = this.scene.add.graphics();
+          
+      // Рисуем небо (верхняя 1/6 часть)
+      background.fillStyle(FOREST_COLORS.skyColor, 1);
+      background.fillRect(0, 0, this.width, this.skyHeight);
+      background.setDepth(0);
+
+      // Создаем статичный цветной фон под шейдером для участков, где нет травы
+      background.fillStyle(FOREST_COLORS.grassColor, 1);
+      background.fillRect(0, this.skyHeight, this.width, this.height - this.skyHeight);
+      background.setDepth(1);
+  }
+
+  private createGrassShader(): void {
+    try {
+      // Конвертируем цвет травы из hex в RGB для шейдера (от 0 до 1)
+      const r = ((FOREST_COLORS.grassColor >> 16) & 0xFF) / 255;
+      const g = ((FOREST_COLORS.grassColor >> 8) & 0xFF) / 255;
+      const b = (FOREST_COLORS.grassColor & 0xFF) / 255;
+    
+      // Создаем BaseShader и используем его для создания шейдера
+      const baseShader = new Phaser.Display.BaseShader(GRASS_SHADER_KEY, GRASS_FRAGMENT_SHADER, GRASS_VERTEX_SHADER);
+      
+      // Создаем шейдер, используя BaseShader
+      this.grassShader = this.scene.add.shader(
+        baseShader,
+        this.width / 2,     // позиция x (центр экрана)
+        this.height / 2,    // позиция y (центр экрана)
+        this.width * 2,     // ширина (в два раза больше экрана)
+        this.height * 2     // высота (в два раза больше экрана)
+      );
+      
+      // Устанавливаем uniform-параметры шейдера
+      this.grassShader.setUniform('grassColor.value', [r, g, b]);
+      this.grassShader.setUniform('resolution.value', [this.width * 2, this.height * 2]);
+      
+      // Устанавливаем правильную глубину отрисовки
+      this.grassShader.setDepth(5);
+      
+      // Устанавливаем origin в (0.5, 0.5) для правильного позиционирования
+      this.grassShader.setOrigin(0.5, 0.5);
+      
+      // Перемещаем шейдер в нужную позицию
+      this.grassShader.setPosition(this.width / 2, this.skyHeight + (this.height - this.skyHeight) / 2);
+    } catch (error: any) {
+      console.error('Ошибка при создании шейдера:', error);
+    }
+  } 
   
+
   // Метод для обновления анимации травы
   public update(time: number): void {
     if (this.grassShader) {
       // Обновляем время для анимации в шейдере
-      this.grassShader.setUniform('time.value', time / 1000);
+      this.grassShader.setUniform('time', time / 1000);
     }
   }
 } 

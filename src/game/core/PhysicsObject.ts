@@ -1,4 +1,6 @@
 import * as Phaser from 'phaser';
+import { forceToTargetOffset, easeOutQuart, easeOutQuint } from '../utils/ForceUtils';
+import { createLogger } from '../../utils/logger';
 
 // Интерфейс для настроек отладки
 export interface DebugSettings {
@@ -10,14 +12,46 @@ export interface DebugSettings {
   showPath: boolean;
 }
 
+// Интерфейс для внешней силы с целевым смещением
+interface ExternalForce {
+  // Целевое смещение
+  targetOffsetX: number;
+  targetOffsetY: number;
+  
+  // Текущее смещение
+  currentOffsetX: number;
+  currentOffsetY: number;
+  
+  // Параметры силы
+  strength: number;        // Сила воздействия (0-1)
+  remainingStrength: number; // Оставшаяся сила
+  decayRate: number;       // Скорость затухания (0-1)
+  
+  // Новые параметры
+  initialStrength: number; // Начальная сила для расчета затухания
+  angle: number;           // Угол направления силы в радианах
+  friction: number;        // Коэффициент трения для этой силы
+}
+
 export class PhysicsObject {
+  public readonly id: string;
+
   protected scene: Phaser.Scene;
   protected sprite: Phaser.Physics.Arcade.Sprite;
   protected name: string = 'PhysicsObject';
+  protected logger = createLogger('PhysicsObject');
 
   protected velocityX: number = 0;     // Текущая скорость по X
   protected velocityY: number = 0;     // Текущая скорость по Y
   protected friction: number = 0;      // Трение (замедление при движении)
+
+  // Параметры для внешних сил (отдача, ветер и т.д.)
+  protected externalForces: ExternalForce[] = [];
+  
+  // Настройки затухания по умолчанию
+  protected defaultDecayRate: number = 0.05; // Скорость затухания (чем меньше, тем медленнее)
+  protected defaultForceStrength: number = 0.15; // Сила воздействия (чем больше, тем быстрее)
+  protected forceThreshold: number = 0.01; // Порог для удаления силы
 
   protected debugObjects: Phaser.GameObjects.GameObject[] = [];
   protected debugTexts: {[key: string]: Phaser.GameObjects.Text} = {};
@@ -44,11 +78,13 @@ export class PhysicsObject {
     showPath: true
   };
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
+  constructor(id: string, scene: Phaser.Scene, x: number, y: number) {
+    this.id = id;
     this.x = x;
     this.y = y;
     this.scene = scene;
     this.sprite = scene.physics.add.sprite(x, y, 'enemy_placeholder');
+    this.logger = createLogger(this.name);
     
     this.setupPhysics();
 
@@ -57,7 +93,7 @@ export class PhysicsObject {
     }
     
     if (this.debug.logCreation) {
-      console.log(`PhysicsObject создан: ${this.name} на позиции (${x}, ${y})`);
+      this.logger.info(`Создан на позиции (${x}, ${y})`);
     }
   }
 
@@ -143,7 +179,10 @@ export class PhysicsObject {
       const frictionY = Math.min(Math.abs(this.velocityY), this.friction) * Math.sign(this.velocityY);
       this.velocityY -= frictionY;
     }
-
+    
+    // Обновляем движение от внешних воздействий (отдача, ветер и т.д.)
+    this.updateExternalForces(delta);
+    
     // Обновляем позицию игрока на основе текущей скорости
     this.x += this.velocityX * (delta / 1000);
     this.y += this.velocityY * (delta / 1000);
@@ -224,5 +263,105 @@ export class PhysicsObject {
     if (this.sprite) {
       this.sprite.destroy();
     }
+  }
+
+  /**
+   * Применяет внешнюю силу к объекту (отдача, ветер и т.д.)
+   * @param vectorX Направление по X (-1 до 1)
+   * @param vectorY Направление по Y (-1 до 1)
+   * @param force Сила воздействия
+   * @param strength Скорость приближения к цели (0-1)
+   * @param decayRate Скорость затухания (0-1)
+   */
+  public applyForce(
+    vectorX: number, 
+    vectorY: number, 
+    force: number, 
+    strength: number = this.defaultForceStrength, 
+    decayRate: number = this.defaultDecayRate
+  ): void {
+    // Рассчитываем угол направления силы
+    const angle = Math.atan2(vectorY, vectorX);
+    
+    // Рассчитываем целевое смещение на основе направления и силы
+    const targetOffset = forceToTargetOffset(force, angle, this.friction);
+    
+    // Создаем новую силу
+    const externalForce: ExternalForce = {
+      targetOffsetX: targetOffset.x,
+      targetOffsetY: targetOffset.y,
+      currentOffsetX: 0,
+      currentOffsetY: 0,
+      strength: Math.max(0, Math.min(1, strength)), // Ограничиваем в диапазоне 0-1
+      initialStrength: force, // Сохраняем начальную силу
+      remainingStrength: force, // Начинаем с полной силы
+      decayRate: Math.max(0, Math.min(1, decayRate)), // Ограничиваем в диапазоне 0-1
+      angle, // Сохраняем угол
+      friction: this.friction // Используем трение объекта
+    };
+    
+    // Добавляем силу в список активных
+    this.externalForces.push(externalForce);
+    
+    this.logger.debug(`Применена сила: угол=${angle.toFixed(2)}, сила=${force.toFixed(2)}`);
+  }
+  
+  /**
+   * Обновляет и применяет внешние силы к объекту
+   * @param delta Дельта времени
+   */
+  protected updateExternalForces(delta: number): void {
+    if (this.externalForces.length === 0) {
+      return;
+    }
+
+    let totalOffsetX = 0;
+    let totalOffsetY = 0;
+
+    // Обработка всех активных сил
+    for (let i = this.externalForces.length - 1; i >= 0; i--) {
+      const force = this.externalForces[i];
+      
+      // Уменьшаем оставшуюся силу с учетом трения
+      // Для больших сил затухание происходит медленнее
+      const frictionFactor = 0.02 + (force.remainingStrength / force.initialStrength) * 0.08;
+      force.remainingStrength -= force.initialStrength * frictionFactor * (delta / 16);
+      
+      // Удаляем силу, если она достаточно ослабла
+      if (force.remainingStrength <= this.forceThreshold * 2) {
+        this.externalForces.splice(i, 1);
+        continue;
+      }
+      
+      // Текущая сила относительно начальной (от 0 до 1)
+      const strengthRatio = force.remainingStrength / force.initialStrength;
+      
+      // Используем функцию затухания для более плавного ослабления в конце
+      // Для более сильных воздействий используем более резкое ослабление
+      let currentStrength;
+      if (force.initialStrength > this.forceThreshold * 10) {
+        currentStrength = easeOutQuart(strengthRatio);
+      } else {
+        currentStrength = easeOutQuint(strengthRatio);
+      }
+      
+      // Рассчитываем смещение с учетом силы и трения
+      const offset = forceToTargetOffset(
+        currentStrength * force.initialStrength,
+        force.angle,
+        force.friction
+      );
+      
+      // Накапливаем смещение
+      totalOffsetX += offset.x;
+      totalOffsetY += offset.y;
+    }
+    
+    // Применяем итоговое смещение к спрайту с учетом дельты времени
+    // Делим на 16, чтобы нормализовать смещение относительно дельты (~16ms за фрейм при 60 FPS)
+    this.x += totalOffsetX * (delta / 16);
+    this.y += totalOffsetY * (delta / 16);
+    
+    this.logger.debug(`Смещение от внешних сил: (${totalOffsetX.toFixed(2)}, ${totalOffsetY.toFixed(2)})`);
   }
 } 

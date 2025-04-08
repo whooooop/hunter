@@ -11,14 +11,21 @@ module.exports = {
         exclude: /node_modules/
       },
       {
-        test: /\.(vert|frag|glsl)$/,
+        test: /\.(vert|frag|geom)$/,
         use: 'raw-loader',
         exclude: /node_modules/
+      },
+      {
+        test: /\.mp3$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/sounds/[hash][ext]'
+        }
       }
     ]
   },
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.vert', '.frag', '.glsl']
+    extensions: ['.ts', '.tsx', '.js', '.vert', '.frag', '.glsl', '.geom']
   },
   output: {
     filename: 'bundle.js',

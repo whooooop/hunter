@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { GameplayScene } from './game/scenes/GameplayScene';
 import { WORLD_BOUNDS } from './game/core/Constants';
+import { logger } from './utils/logger';
 
 // Конфигурация игры
 const config: Phaser.Types.Core.GameConfig = {
@@ -12,22 +13,26 @@ const config: Phaser.Types.Core.GameConfig = {
     default: 'arcade',
     arcade: {
       gravity: { x: 0, y: 0 },
-      debug: true
+      debug: false
     }
   },
   scene: [GameplayScene]
 };
 
-// Проверяем, что загружается в браузере
-window.addEventListener('DOMContentLoaded', () => {
-  console.log('Инициализация игры Охотник');
-  
+function initGame() {
   try {
+    logger.info('Инициализация игры Охотник');
+    
     // Создаем экземпляр игры
     const game = new Phaser.Game(config);
     
-    console.log('Игра инициализирована успешно');
+    logger.info('Игра инициализирована успешно');
   } catch (error) {
-    console.error('Ошибка при инициализации игры:', error);
+    logger.error('Ошибка при инициализации игры:', error);
   }
+}
+
+// Проверяем, что загружается в браузере
+window.addEventListener('DOMContentLoaded', () => {
+  initGame();
 }); 

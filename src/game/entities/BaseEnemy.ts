@@ -15,7 +15,7 @@ export class BaseEnemy extends PhysicsObject {
   protected health: number = 100;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y);
+    super('enemy', scene, x, y);
     
     // Сохраняем ссылку на объект BaseEnemy в данных спрайта
     this.sprite.setData('enemyRef', this);

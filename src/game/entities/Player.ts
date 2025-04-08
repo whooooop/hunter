@@ -1,7 +1,8 @@
 import * as Phaser from 'phaser';
 import { PhysicsObject } from '../core/PhysicsObject';
 import { BaseWeapon } from '../weapons/BaseWeapon';
-import { Pistol } from '../weapons/Pistol';
+import { Pistol } from '../weapons/pistol/Pistol';
+import { createLogger } from '../../utils/logger';
 
 export class Player extends PhysicsObject {
   name = 'Player';
@@ -16,16 +17,19 @@ export class Player extends PhysicsObject {
   private weapon: BaseWeapon;
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private fireKey: Phaser.Input.Keyboard.Key;
-  
+  private reloadKey: Phaser.Input.Keyboard.Key;
+
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y);
+    super('player', scene, x, y);
     
     // Настраиваем курсоры для управления
     this.cursors = scene.input.keyboard!.createCursorKeys();
     this.fireKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F);
+    this.reloadKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
     
     // Создаем стартовое оружие
-    this.weapon = new Pistol(scene);
+    this.weapon = new Pistol(scene, this);
+    this.logger.info(`Игрок создан с оружием: ${this.weapon.getId()}`);
   }
   
   public update(time: number, delta: number): void {
@@ -34,6 +38,9 @@ export class Player extends PhysicsObject {
 
     // Обрабатываем стрельбу
     this.handleFiring(time);
+
+    // Обрабатываем перезарядку
+    this.handleReloading();
     
     super.update(time, delta);
   }
@@ -58,8 +65,16 @@ export class Player extends PhysicsObject {
   
   private handleFiring(time: number): void {
     if (this.fireKey.isDown) {
-      // Направление стрельбы всегда вправо
+      // Направление стрельбы зависит от направления игрока
       this.weapon.fire(this.sprite.x, this.sprite.y);
+    } else {
+      this.weapon.resetTrigger();
+    }
+  }
+
+  private handleReloading(): void {
+    if (this.reloadKey.isDown) {
+      this.weapon.reload();
     }
   }
 } 
