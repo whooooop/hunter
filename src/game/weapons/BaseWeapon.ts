@@ -4,6 +4,7 @@ import { GameplayScene } from '../scenes/GameplayScene';
 import { Player } from '../entities/Player';
 import { settings } from '../settings';
 import { createLogger } from '../../utils/logger';
+import { ShellCasing } from '../entities/ShellCasing';
 
 const logger = createLogger('BaseWeapon');
 
@@ -197,6 +198,9 @@ export class BaseWeapon {
     if (this.scene instanceof GameplayScene) {
       const gameScene = this.scene as GameplayScene;
       gameScene.getBulletsGroup().add(bullet.getSprite());
+      
+      // Создаем гильзу после выстрела
+      this.ejectShellCasing(x, y, direction);
     }
     
     // Рассчитываем точку прицеливания с учетом разброса и направления
@@ -299,5 +303,21 @@ export class BaseWeapon {
   // Метод для сброса блокировки выстрела (вызывается при отпускании кнопки)
   public resetTrigger(): void {
     this.canFireAgain = true;
+  }
+
+  /**
+   * Выбрасывает гильзу после выстрела
+   * @param x Координата X точки выброса
+   * @param y Координата Y точки выброса
+   * @param direction Направление выстрела (1 вправо, -1 влево)
+   */
+  protected ejectShellCasing(x: number, y: number, direction: number): void {
+    // Проверяем, включена ли функция отображения гильз
+    if (!settings.gameplay.shellCasings.enabled) {
+      return;
+    }
+    
+    // Создаем новую гильзу
+    new ShellCasing(this.scene, x, y, direction);
   }
 } 

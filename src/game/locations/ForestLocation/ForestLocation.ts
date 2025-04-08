@@ -47,7 +47,7 @@ export class ForestLocation {
     this.skyHeight = this.height / 6;
     
     this.createBackground();
-    this.createGrassShader();
+    // this.createGrassShader();
     
     // Создаем препятствия, если они есть
     // if (this.config.obstacles) {

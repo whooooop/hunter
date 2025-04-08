@@ -7,7 +7,7 @@ export class SimpleBullet extends BaseBullet {
     super(scene, x, y, {
         color: hexToRgb('#b7f191'),
         width: 40,
-        height: 1,
+        height: 2,
     });
   }
 } 

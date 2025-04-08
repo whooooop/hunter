@@ -6,11 +6,17 @@ import { SquirrelEnemy } from '../entities/SquirrelEnemy';
 import { BaseBullet } from '../weapons/BaseBullet';
 import { ForestLocation } from '../locations/ForestLocation';
 import { WaveInfo } from './GameplayScene/components/WaveInfo';
+import { settings } from '../settings';
+import { createLogger } from '../../utils/logger';
+import { createShellCasingTexture } from '../utils/ShellCasingTexture';
+
+const logger = createLogger('GameplayScene');
 
 export class GameplayScene extends Phaser.Scene {
   private player!: Player;
   private enemies!: Phaser.Physics.Arcade.Group;
   private bullets!: Phaser.Physics.Arcade.Group;
+  private shellCasings!: Phaser.Physics.Arcade.Group; // Группа для гильз
   private waveInfo!: WaveInfo;
   
   private score: number = 0;
@@ -32,8 +38,6 @@ export class GameplayScene extends Phaser.Scene {
     this.load.image('bullet_placeholder', 'public/assets/images/bullet_placeholder.png');
     this.load.image('weapon_placeholder', 'public/assets/images/weapon_placeholder.png');
     this.load.image('background', 'public/assets/images/background.png');
-    
-    // Шейдер теперь регистрируется в классе ForestLocation
   }
   
   create(): void {
@@ -41,6 +45,9 @@ export class GameplayScene extends Phaser.Scene {
     // Закомментировано для отключения отладочной графики
     // this.physics.world.createDebugGraphic();
     // this.physics.world.debugGraphic.visible = PHYSICS.debug;
+    
+    // Создаем текстуру гильзы программно
+    createShellCasingTexture(this);
     
     // Устанавливаем границы мира
     this.physics.world.setBounds(0, 0, WORLD_BOUNDS.width, WORLD_BOUNDS.height);
@@ -60,6 +67,17 @@ export class GameplayScene extends Phaser.Scene {
       classType: BaseBullet,
       runChildUpdate: true,
       allowGravity: false
+    });
+    
+    // Инициализируем группу для гильз
+    this.shellCasings = this.physics.add.group({
+      bounceX: settings.gameplay.shellCasings.bounce,
+      bounceY: settings.gameplay.shellCasings.bounce,
+      collideWorldBounds: true,
+      runChildUpdate: true,
+      dragX: settings.gameplay.shellCasings.dragX,
+      dragY: 0,
+      gravityY: settings.gameplay.shellCasings.gravity
     });
     
     this.enemies = this.physics.add.group({
@@ -111,18 +129,14 @@ export class GameplayScene extends Phaser.Scene {
     
     // Устанавливаем обработчик события убийства врага
     this.events.on('enemyKilled', this.onEnemyKilled, this);
-    
-    // Запускаем периодический спавн врагов
-    // this.enemySpawnTimer = this.time.addEvent({
-    //   delay: 2000,
-    //   callback: this.spawnEnemy,
-    //   callbackScope: this,
-    //   loop: true
-    // });
-    
-    // Настройка отладки
-    // Пример отключения отладки для определенных типов объектов:
-    // PhysicsObject.setDebug({ showEnemyPath: false });
+  }
+  
+  /**
+   * Добавляет созданную гильзу в группу гильз
+   * @param shell Спрайт гильзы для добавления в группу
+   */
+  public addShellCasing(shell: Phaser.Physics.Arcade.Sprite): void {
+    this.shellCasings.add(shell);
   }
   
   update(time: number, delta: number): void {
@@ -135,7 +149,7 @@ export class GameplayScene extends Phaser.Scene {
     if (this.player) {
       this.player.update(time, delta);
     }
-    
+  
     // Обновляем всех врагов
     this.enemies.getChildren().forEach(enemySprite => {
       const enemy = (enemySprite as Phaser.Physics.Arcade.Sprite).getData('enemyRef');
@@ -148,6 +162,16 @@ export class GameplayScene extends Phaser.Scene {
   // Метод для доступа к группе пуль
   public getBulletsGroup(): Phaser.Physics.Arcade.Group {
     return this.bullets;
+  }
+  
+  // Метод для доступа к группе гильз
+  public getShellCasingsGroup(): Phaser.Physics.Arcade.Group {
+    return this.shellCasings;
+  }
+  
+  // Очистка всех гильз со сцены
+  public clearAllShellCasings(): void {
+    this.shellCasings.clear(true, true);
   }
   
   private spawnEnemy(): void {

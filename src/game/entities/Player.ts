@@ -4,9 +4,13 @@ import { BaseWeapon } from '../weapons/BaseWeapon';
 import { Pistol } from '../weapons/pistol/Pistol';
 import { createLogger } from '../../utils/logger';
 
+const logger = createLogger('Player');
+
 export class Player extends PhysicsObject {
   name = 'Player';
   direction = 1;
+
+  canChangeDirection: boolean = false;
 
   acceleration: number = 15;
   deceleration: number = 8;
@@ -29,7 +33,7 @@ export class Player extends PhysicsObject {
     
     // Создаем стартовое оружие
     this.weapon = new Pistol(scene, this);
-    this.logger.info(`Игрок создан с оружием: ${this.weapon.getId()}`);
+    logger.info(`Игрок создан с оружием: ${this.weapon.getId()}`);
   }
   
   public update(time: number, delta: number): void {
@@ -48,8 +52,10 @@ export class Player extends PhysicsObject {
   private handleMovement(): void {
     if (this.cursors.left.isDown) {
       this.moveX = -1;
+      this.handleDirectionChange(-1);
     } else if (this.cursors.right.isDown) {
       this.moveX = 1;
+      this.handleDirectionChange(1);
     } else {
       this.moveX = 0;
     }
@@ -63,10 +69,16 @@ export class Player extends PhysicsObject {
     }
   }
   
+  private handleDirectionChange(direction: number): void {
+    if (this.canChangeDirection) {
+      this.direction = direction;
+      this.sprite.setFlipX(direction === -1);
+    }
+  }
+
   private handleFiring(time: number): void {
     if (this.fireKey.isDown) {
-      // Направление стрельбы зависит от направления игрока
-      this.weapon.fire(this.sprite.x, this.sprite.y);
+      this.weapon.fire(this.sprite.x, this.sprite.y, this.direction);
     } else {
       this.weapon.resetTrigger();
     }
@@ -76,5 +88,15 @@ export class Player extends PhysicsObject {
     if (this.reloadKey.isDown) {
       this.weapon.reload();
     }
+  }
+  
+  // Геттер для получения текущего направления игрока
+  public getDirection(): number {
+    return this.direction;
+  }
+  
+  // Геттер для получения спрайта игрока
+  public getSprite(): Phaser.Physics.Arcade.Sprite {
+    return this.sprite;
   }
 } 
