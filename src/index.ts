@@ -1,14 +1,14 @@
 import * as Phaser from 'phaser';
 import { GameplayScene } from './game/scenes/GameplayScene';
-import { WORLD_BOUNDS } from './game/core/Constants';
+import { settings } from './game/settings';
 import { logger } from './utils/logger';
 
 // Конфигурация игры
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: 'game-container',
-  width: WORLD_BOUNDS.width,
-  height: WORLD_BOUNDS.height,
+  width: settings.display.width,
+  height: settings.display.height,
   physics: {
     default: 'arcade',
     arcade: {

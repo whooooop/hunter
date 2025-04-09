@@ -29,12 +29,6 @@ export enum LocationType {
   FOREST = 'forest'
 }
 
-// Константы для игрового мира
-export const WORLD_BOUNDS = {
-  width: 800,
-  height: 600
-};
-
 // Константы для физики
 export const PHYSICS = {
   debug: false

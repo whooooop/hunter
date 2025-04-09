@@ -5,6 +5,7 @@ import { Player } from '../entities/Player';
 import { settings } from '../settings';
 import { createLogger } from '../../utils/logger';
 import { ShellCasing } from '../entities/ShellCasing';
+import { WeaponSight } from './WeaponSight';
 
 const logger = createLogger('BaseWeapon');
 
@@ -63,6 +64,8 @@ export class BaseWeapon {
     reload: null
   }
 
+  private sight: WeaponSight | null = null;
+
   constructor(id: string, scene: Phaser.Scene, player: Player, options: BaseWeaponOptions) {
     this.id = id;
     this.scene = scene;
@@ -72,6 +75,9 @@ export class BaseWeapon {
     
     this.loadAudioAssets();
     logger.info(`Оружие создано: ${id}, магазин: ${this.currentAmmo}/${this.options.magazineSize}`);
+    
+    // Создаем прицел с настраиваемыми параметрами
+    this.sight = new WeaponSight(scene);
   }
 
   /**
@@ -297,7 +303,16 @@ export class BaseWeapon {
   }
 
   public update(time: number, delta: number): void {
-    // Обновление состояния оружия
+    if (this.sight) {
+      const playerSprite = this.player.getSprite();
+      // Обновляем позицию прицела используя координаты спрайта игрока
+      this.sight.update(
+        playerSprite.x,
+        playerSprite.y,
+        this.player.getDirection(),
+        this.currentAmmo > 0
+      );
+    }
   }
 
   // Метод для сброса блокировки выстрела (вызывается при отпускании кнопки)
@@ -319,5 +334,12 @@ export class BaseWeapon {
     
     // Создаем новую гильзу
     new ShellCasing(this.scene, x, y, direction);
+  }
+
+  public destroy(): void {
+    if (this.sight) {
+      this.sight.destroy();
+      this.sight = null;
+    }
   }
 } 

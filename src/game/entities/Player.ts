@@ -46,6 +46,9 @@ export class Player extends PhysicsObject {
     // Обрабатываем перезарядку
     this.handleReloading();
     
+    // Обновляем оружие
+    this.weapon.update(time, delta);
+    
     super.update(time, delta);
   }
   

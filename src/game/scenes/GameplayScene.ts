@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { SceneKeys, PLAYER_POSITION_X, PLAYER_POSITION_Y, PHYSICS, WORLD_BOUNDS } from '../core/Constants';
+import { SceneKeys, PLAYER_POSITION_X, PLAYER_POSITION_Y } from '../core/Constants';
 import { Player } from '../entities/Player';
 import { BaseEnemy } from '../entities/BaseEnemy';
 import { SquirrelEnemy } from '../entities/SquirrelEnemy';
@@ -50,7 +50,7 @@ export class GameplayScene extends Phaser.Scene {
     createShellCasingTexture(this);
     
     // Устанавливаем границы мира
-    this.physics.world.setBounds(0, 0, WORLD_BOUNDS.width, WORLD_BOUNDS.height);
+    this.physics.world.setBounds(0, 0, settings.display.width, settings.display.height);
     
     // Создаем локацию (фон будет создан в ForestLocation)
     const forestLocation = new ForestLocation(this);
@@ -116,8 +116,8 @@ export class GameplayScene extends Phaser.Scene {
     
     // Создаем текст для GameOver (скрытый изначально)
     this.gameOverText = this.add.text(
-      WORLD_BOUNDS.width / 2, 
-      WORLD_BOUNDS.height / 2, 
+      settings.display.width / 2, 
+      settings.display.height / 2, 
       'ИГРА ОКОНЧЕНА', 
       { fontSize: '36px', color: '#ff0000', fontFamily: 'Arial' }
     )
@@ -177,8 +177,8 @@ export class GameplayScene extends Phaser.Scene {
   private spawnEnemy(): void {
     // Создаем врага в видимой части экрана для отладки
     // вместо за правой границей экрана
-    const x = WORLD_BOUNDS.width / 1.5; // Примерно 2/3 экрана справа
-    const y = Phaser.Math.Between(50, WORLD_BOUNDS.height - 50);
+    const x = settings.display.width / 1.5; // Примерно 2/3 экрана справа
+    const y = Phaser.Math.Between(50, settings.display.height - 50);
     
     const enemy = new SquirrelEnemy(this, x, y);
     this.enemies.add(enemy.getSprite());
@@ -258,8 +258,8 @@ export class GameplayScene extends Phaser.Scene {
     // Добавляем кнопку перезапуска через 2 секунды
     this.time.delayedCall(2000, () => {
       const restartButton = this.add.text(
-        WORLD_BOUNDS.width / 2,
-        WORLD_BOUNDS.height / 2 + 50,
+        settings.display.width / 2,
+        settings.display.height / 2 + 50,
         'Нажмите для перезапуска',
         { fontSize: '24px', color: '#fff', fontFamily: 'Arial' }
       )
