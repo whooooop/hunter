@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { GameplayScene } from './game/scenes/GameplayScene';
+import { LoadingScene } from './game/scenes/LoadingScene';
 import { settings } from './game/settings';
 import { logger } from './utils/logger';
 
@@ -9,6 +10,7 @@ const config: Phaser.Types.Core.GameConfig = {
   parent: 'game-container',
   width: settings.display.width,
   height: settings.display.height,
+  backgroundColor: '#000000',
   physics: {
     default: 'arcade',
     arcade: {
@@ -16,7 +18,7 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false
     }
   },
-  scene: [GameplayScene]
+  scene: [LoadingScene, GameplayScene]
 };
 
 function initGame() {

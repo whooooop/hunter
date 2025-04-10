@@ -1,9 +1,16 @@
 import * as Phaser from 'phaser';
+import { BaseLocation } from '../../core/BaseLocation';
 import { ForestLocationConfig, DEFAULT_FOREST_CONFIG, FOREST_COLORS } from './ForestLocationConfig';
 import { GRASS_SHADER_KEY, GRASS_FRAGMENT_SHADER, GRASS_VERTEX_SHADER } from './GrassShader';
+import { createLogger } from '../../../utils/logger';
+import skyImage from './assets/images/sky.png';
+import groundImage from './assets/images/ground.png';
+import { Tree } from './components/Tree';
+import { GameplayScene } from '../../scenes/GameplayScene';
 
-export class ForestLocation {
-  private scene: Phaser.Scene;
+const logger = createLogger('ForestLocation');
+
+export class ForestLocation extends BaseLocation {
   private config: ForestLocationConfig;
 
   private width: number = 0;
@@ -14,7 +21,7 @@ export class ForestLocation {
   private grassShader: Phaser.GameObjects.Shader | null = null;
   
   constructor(scene: Phaser.Scene, config: Partial<ForestLocationConfig> = {}) {
-    this.scene = scene;
+    super(scene);
     
     // Объединяем стандартную конфигурацию с пользовательской
     this.config = {
@@ -24,6 +31,18 @@ export class ForestLocation {
     
     // Регистрируем шейдер для травы
     this.registerGrassShader();
+  }
+  
+  /**
+   * Предзагрузка ресурсов для лесной локации
+   */
+  public preload(): void {
+    logger.info('preload', groundImage);
+    this.scene.load.image('forest_location_sky', skyImage);
+    this.scene.load.image('forest_location_ground', groundImage);
+    
+    // Предзагрузка ресурсов для дерева
+    Tree.preload(this.scene);
   }
   
   // Регистрируем шейдер травы
@@ -39,7 +58,7 @@ export class ForestLocation {
     return this.config;
   }
   
-  // Метод для создания локации на сцене
+  // Реализация метода базового класса
   public create(): void {
     // Получаем размеры экрана
     this.width = this.scene.cameras.main.width;
@@ -49,54 +68,34 @@ export class ForestLocation {
     this.createBackground();
     // this.createGrassShader();
     
-    // Создаем препятствия, если они есть
-    // if (this.config.obstacles) {
-    //   this.config.obstacles.forEach(obstacleGroup => {
-    //     obstacleGroup.positions.forEach(pos => {
-    //       const obstacle = this.scene.add.image(pos.x, pos.y, obstacleGroup.texture);
-    //       obstacle.setDepth(10); // Объекты должны быть над травой
-    //     });
-    //   });
-    // }
-    
-    // Воспроизводим музыку, если она указана
-    if (this.config.music) {
-      this.scene.sound.play(this.config.music, {
-        loop: true,
-        volume: 0.5
-      });
-    }
-    
-    // Воспроизводим фоновые звуки, если они указаны
-    if (this.config.ambientSounds) {
-      this.config.ambientSounds.forEach(sound => {
-        // Воспроизводим звуки с интервалом
-        this.scene.time.addEvent({
-          delay: Phaser.Math.Between(5000, 15000),
-          callback: () => {
-            this.scene.sound.play(sound, {
-              volume: 0.3
-            });
-          },
-          loop: true
-        });
-      });
-    }
+    // Создаем ёлку справа по центру
+    this.createTree(this.width / 2, this.skyHeight + 300);
+    this.createTree(this.width / 2 - 30, this.skyHeight + 230);
   }
 
   private createBackground(): void {
-      // Создаем графический объект для рисования фона
-      const background = this.scene.add.graphics();
-          
-      // Рисуем небо (верхняя 1/6 часть)
-      background.fillStyle(FOREST_COLORS.skyColor, 1);
-      background.fillRect(0, 0, this.width, this.skyHeight);
-      background.setDepth(0);
+    // Создаем небо (на всю ширину экрана)
+    const sky = this.scene.add.image(this.width / 2, this.skyHeight / 2, 'forest_location_sky');
+    
+    // Используем setScale вместо setDisplaySize для более точного контроля
+    // const scaleX = this.width / frame.width;
+    // const scaleY = this.skyHeight / frame.height;
+    // sky.setScale(scaleX, scaleY);
+    
+    sky.setOrigin(0.5, 0.5);
+    sky.setDepth(0);
 
-      // Создаем статичный цветной фон под шейдером для участков, где нет травы
-      background.fillStyle(FOREST_COLORS.grassColor, 1);
-      background.fillRect(0, this.skyHeight, this.width, this.height - this.skyHeight);
-      background.setDepth(1);
+    // Создаем землю под небом
+    const ground = this.scene.add.image(this.width / 2, this.skyHeight, 'forest_location_ground');
+    // ground.setDisplaySize(this.width, this.skyHeight);
+    ground.setOrigin(0.5, 0.5);
+    ground.setDepth(2); // Выше неба, но ниже игровых объектов
+    
+    // Создаем статичный цветной фон под шейдером для участков, где нет травы
+    const background = this.scene.add.graphics();
+    background.fillStyle(FOREST_COLORS.grassColor, 1);
+    background.fillRect(0, this.skyHeight + 40, this.width, this.height - this.skyHeight - 40);
+    background.setDepth(1);
   }
 
   private createGrassShader(): void {
@@ -131,16 +130,50 @@ export class ForestLocation {
       // Перемещаем шейдер в нужную позицию
       this.grassShader.setPosition(this.width / 2, this.skyHeight + (this.height - this.skyHeight) / 2);
     } catch (error: any) {
-      console.error('Ошибка при создании шейдера:', error);
+      logger.error('Ошибка при создании шейдера:', error);
     }
   } 
   
-
   // Метод для обновления анимации травы
   public update(time: number): void {
     if (this.grassShader) {
       // Обновляем время для анимации в шейдере
       this.grassShader.setUniform('time', time / 1000);
+    }
+  }
+  
+  // Переопределяем метод destroy для очистки ресурсов
+  public override destroy(): void {
+    logger.info('Уничтожение лесной локации');
+    
+    // Уничтожаем шейдер травы
+    if (this.grassShader) {
+      this.grassShader.destroy();
+      this.grassShader = null;
+    }
+    
+    // Вызываем метод базового класса
+    super.destroy();
+  }
+
+  /**
+   * Создает ёлку и размещает ее справа на сцене
+   */
+  private createTree(x: number, y: number): void {
+    // Создаем ёлку
+    const tree = new Tree(this.scene, x, y);
+
+    // Добавляем её на сцену
+    this.scene.add.existing(tree);
+    
+    // Добавляем дерево в группу интерактивных объектов
+    if (this.scene instanceof GameplayScene) {
+      const gameScene = this.scene as GameplayScene;
+      // Т.к. Tree наследуется от LocationObject, а LocationObject от Sprite,
+      // мы можем безопасно привести его к типу Phaser.Physics.Arcade.Sprite
+      // Это решит проблему несоответствия типов между Tree и ожидаемым Sprite
+      gameScene.addInteractiveObject(tree as unknown as Phaser.Physics.Arcade.Sprite);
+      logger.info(`Дерево добавлено в группу интерактивных объектов`);
     }
   }
 } 

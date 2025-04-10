@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { hexToRgb } from '../../../../utils/colors';
+import { hexToRgb } from '../../utils/colors';
 
 export class WaveInfo {
     private scene: Phaser.Scene;

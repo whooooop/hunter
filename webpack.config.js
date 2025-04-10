@@ -21,6 +21,13 @@ module.exports = {
         generator: {
           filename: 'assets/sounds/[hash][ext]'
         }
+      },
+      {
+        test: /\.(png|jpg|jpeg|gif|svg)$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/images/[hash][ext]'
+        }
       }
     ]
   },

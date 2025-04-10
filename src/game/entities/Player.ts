@@ -1,7 +1,6 @@
 import * as Phaser from 'phaser';
 import { PhysicsObject } from '../core/PhysicsObject';
 import { BaseWeapon } from '../weapons/BaseWeapon';
-import { Pistol } from '../weapons/pistol/Pistol';
 import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('Player');
@@ -18,7 +17,7 @@ export class Player extends PhysicsObject {
   maxVelocityX: number = 300;
   maxVelocityY: number = 300;
 
-  private weapon: BaseWeapon;
+  private weapon!: BaseWeapon;
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private fireKey: Phaser.Input.Keyboard.Key;
   private reloadKey: Phaser.Input.Keyboard.Key;
@@ -31,23 +30,43 @@ export class Player extends PhysicsObject {
     this.fireKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.reloadKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
     
-    // Создаем стартовое оружие
-    this.weapon = new Pistol(scene, this);
-    logger.info(`Игрок создан с оружием: ${this.weapon.getId()}`);
+    // Оружие будет назначено позже через setWeapon
+    logger.info('Игрок создан без оружия');
+  }
+  
+  /**
+   * Назначает игроку указанное оружие
+   * @param weapon Оружие для назначения
+   */
+  public setWeapon(weapon: BaseWeapon): void {
+    // Если у игрока уже есть оружие, уничтожаем его
+    if (this.weapon) {
+      this.weapon.destroy();
+    }
+    
+    weapon.create(this);
+    this.weapon = weapon;
+
+    logger.info(`Игроку назначено оружие: ${this.weapon.getId()}`);
+  }
+  
+  /**
+   * Возвращает текущее оружие игрока
+   */
+  public getWeapon(): BaseWeapon | null {
+    return this.weapon || null;
   }
   
   public update(time: number, delta: number): void {
     // Обрабатываем управление
     this.handleMovement();
 
-    // Обрабатываем стрельбу
-    this.handleFiring(time);
-
-    // Обрабатываем перезарядку
-    this.handleReloading();
-    
-    // Обновляем оружие
-    this.weapon.update(time, delta);
+    // Обрабатываем стрельбу и обновляем оружие только если оно назначено
+    if (this.weapon) {
+      this.handleFiring(time);
+      this.handleReloading();
+      this.weapon.update(time, delta);
+    }
     
     super.update(time, delta);
   }

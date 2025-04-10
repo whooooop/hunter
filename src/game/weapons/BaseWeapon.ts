@@ -47,12 +47,12 @@ export class BaseWeapon {
   protected id: string = 'unknown_weapon';
 
   protected scene: Phaser.Scene;
-  protected player: Player;
+  protected player: Player | null = null;
   protected sprite: Phaser.GameObjects.Sprite | null = null;
   
   protected lastFired: number = 0;
   protected isReloading: boolean = false;
-  protected currentAmmo: number;
+  protected currentAmmo: number = 0;
   protected currentRecoil: number = 0;
   protected canFireAgain: boolean = true; // Флаг для неавтоматического оружия
 
@@ -66,18 +66,10 @@ export class BaseWeapon {
 
   private sight: WeaponSight | null = null;
 
-  constructor(id: string, scene: Phaser.Scene, player: Player, options: BaseWeaponOptions) {
+  constructor(id: string, scene: Phaser.Scene, options: BaseWeaponOptions) {
     this.id = id;
     this.scene = scene;
-    this.player = player;
     this.options = options;
-    this.currentAmmo = this.options.magazineSize;
-    
-    this.loadAudioAssets();
-    logger.info(`Оружие создано: ${id}, магазин: ${this.currentAmmo}/${this.options.magazineSize}`);
-    
-    // Создаем прицел с настраиваемыми параметрами
-    this.sight = new WeaponSight(scene);
   }
 
   /**
@@ -87,25 +79,34 @@ export class BaseWeapon {
     return this.id;
   }
 
-  loadAudioAssets(): void {
+  public preload(): void {
     if (this.options.fireSoundPath) {
-      // Сначала загружаем звук
       this.scene.load.audio(this.options.fireSoundPath, this.options.fireSoundPath);
-      setTimeout(() => {
-        this.audioAssets.fire = this.scene.sound.add(this.options.fireSoundPath!, { volume: settings.audio.weaponsVolume });
-        logger.debug(`Загружен звук выстрела: ${this.options.fireSoundPath}`);
-      }, 100)
-      // this.scene.load.once('complete', () => {    });
-      this.scene.load.start();
     }
+    if (this.options.emptySoundPath) {
+      this.scene.load.audio(this.options.emptySoundPath, this.options.emptySoundPath);
+    }
+    if (this.options.reloadSoundPath) {
+      this.scene.load.audio(this.options.reloadSoundPath, this.options.reloadSoundPath);
+    }
+  } 
 
+  create(player: Player): void {
+    this.player = player;
+    this.currentAmmo = this.options.magazineSize;
+    this.sight = new WeaponSight(this.scene);
+
+    if (this.options.fireSoundPath) {
+      this.audioAssets.fire = this.scene.sound.add(this.options.fireSoundPath, { volume: settings.audio.weaponsVolume });
+    }
     if (this.options.emptySoundPath) {
       this.audioAssets.empty = this.scene.sound.add(this.options.emptySoundPath, { volume: settings.audio.weaponsVolume });
-    } 
-
+    }
     if (this.options.reloadSoundPath) {
       this.audioAssets.reload = this.scene.sound.add(this.options.reloadSoundPath, { volume: settings.audio.weaponsVolume });
     }
+
+    logger.info(`Оружие создано: ${this.id}, магазин: ${this.currentAmmo}/${this.options.magazineSize}`);
   }
 
   public getCurrentAmmo(): number {
@@ -230,6 +231,10 @@ export class BaseWeapon {
    * Применяет отдачу от выстрела к игроку
    */
   private applyRecoil(direction: number): void {
+    if (!this.player) {
+      return;
+    }
+    
     // Рассчитываем силу отдачи
     const recoilForce = this.calculateRecoilForce();
     
@@ -252,9 +257,6 @@ export class BaseWeapon {
     // Применяем отдачу к игроку с экспоненциальным затуханием
     // Параметры: (направление по X, направление по Y, сила, скорость, затухание)
     this.player.applyForce(recoilVectorX, recoilVectorY, boostedForce, strength, decayRate);
-    
-    // Отладочная информация
-    console.log(`Отдача: вектор (${recoilVectorX}, ${recoilVectorY}), сила ${boostedForce}, скорость ${strength}, затухание ${decayRate}`);
   }
 
   /**
@@ -303,7 +305,7 @@ export class BaseWeapon {
   }
 
   public update(time: number, delta: number): void {
-    if (this.sight) {
+    if (this.sight && this.player) {
       const playerSprite = this.player.getSprite();
       // Обновляем позицию прицела используя координаты спрайта игрока
       this.sight.update(

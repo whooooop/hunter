@@ -9,8 +9,8 @@ import fireSound from './assets/sounds/shot.mp3';
 const logger = createLogger('Pistol');
 
 export class Pistol extends BaseWeapon {
-  constructor(scene: Phaser.Scene, player: Player) {
-    super('pistol', scene, player, {
+  constructor(scene: Phaser.Scene) {
+    super('pistol', scene, {
       reloadTime: 400,     // Скорость перезарядки в мс
       magazineSize: 30,    // Размер магазина
       damage: 10,          // Урон от одного выстрела

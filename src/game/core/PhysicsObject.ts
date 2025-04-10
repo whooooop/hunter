@@ -88,9 +88,9 @@ export class PhysicsObject {
     
     this.setupPhysics();
 
-    if (this.debug.enabled) {
-      this.setupDebug();
-    }
+    // if (this.debug.enabled) {
+    //   this.setupDebug();
+    // }
     
     if (this.debug.logCreation) {
       this.logger.info(`Создан на позиции (${x}, ${y})`);
