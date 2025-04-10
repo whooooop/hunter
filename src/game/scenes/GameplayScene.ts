@@ -1,8 +1,8 @@
 import * as Phaser from 'phaser';
 import { SceneKeys, PLAYER_POSITION_X, PLAYER_POSITION_Y } from '../core/Constants';
 import { Player } from '../entities/Player';
-import { BaseEnemy } from '../entities/BaseEnemy';
-import { BaseBullet } from '../weapons/BaseBullet';
+import { BaseEnemy } from '../core/BaseEnemy';
+import { BaseBullet } from '../core/BaseBullet';
 import { WaveInfo } from '../core/WaveInfo';
 import { settings } from '../settings';
 import { createLogger } from '../../utils/logger';
@@ -13,6 +13,8 @@ import { WeaponManager } from '../core/WeaponManager';
 import { LocationObject } from '../core/LocationObject';
 import { WeaponStatus } from '../ui/WeaponStatus';
 import { BaseShop } from '../core/BaseShop';
+import { SquirrelEnemy } from '../entities/squireel/SquirrelEnemy';
+import { BaseBlood } from '../core/BaseBlood';
 
 const logger = createLogger('GameplayScene');
 
@@ -35,6 +37,7 @@ export class GameplayScene extends Phaser.Scene {
   private waveInfo!: WaveInfo;
   private weaponStatus!: WeaponStatus;
   private enemySpawnTimer!: Phaser.Time.TimerEvent;
+  private blood!: BaseBlood; // Система для брызг крови
   
   constructor() {
     super({ key: SceneKeys.GAMEPLAY });
@@ -66,6 +69,9 @@ export class GameplayScene extends Phaser.Scene {
     
     // Создаем интерфейс отображения состояния оружия
     this.weaponStatus = new WeaponStatus(this);
+    
+    // Инициализируем систему крови
+    this.blood = new BaseBlood(this);
     
     // Инициализируем группы врагов и пуль
     this.bullets = this.physics.add.group({
@@ -136,6 +142,8 @@ export class GameplayScene extends Phaser.Scene {
       undefined,
       this
     );
+
+    this.spawnEnemy();
   }
 
   /**
@@ -198,12 +206,12 @@ export class GameplayScene extends Phaser.Scene {
     }
   
     // Обновляем всех врагов
-    // this.enemies.getChildren().forEach(enemySprite => {
-    //   const enemy = (enemySprite as Phaser.Physics.Arcade.Sprite).getData('enemyRef');
-    //   if (enemy && typeof enemy.update === 'function') {
-    //     enemy.update(time, delta);
-    //   }
-    // });
+    this.enemies.getChildren().forEach(enemySprite => {
+      const enemy = (enemySprite as Phaser.Physics.Arcade.Sprite).getData('enemyRef');
+      if (enemy && typeof enemy.update === 'function') {
+        enemy.update(time, delta);
+      }
+    });
   }
   
   // Метод для доступа к группе пуль
@@ -221,15 +229,18 @@ export class GameplayScene extends Phaser.Scene {
     this.shellCasings.clear(true, true);
   }
   
-  // private spawnEnemy(): void {
-  //   // Создаем врага в видимой части экрана для отладки
-  //   // вместо за правой границей экрана
-  //   const x = settings.display.width / 1.5; // Примерно 2/3 экрана справа
-  //   const y = Phaser.Math.Between(50, settings.display.height - 50);
+  private spawnEnemy(): void {
+    const x = settings.display.width - 50;
+    const y = 400;
     
-  //   const enemy = new SquirrelEnemy(this, x, y);
-  //   this.enemies.add(enemy.getSprite());
-  // }
+    const enemy = new SquirrelEnemy(this, x, y, {
+      health: 1000,
+      moveX: -1,
+      moveY: 1,
+      direction: -1,
+    });
+    this.enemies.add(enemy.getSprite());
+  }
   
   /**
    * Обработчик столкновения пули с интерактивным объектом
@@ -255,8 +266,8 @@ export class GameplayScene extends Phaser.Scene {
   }
   
   private handleBulletEnemyCollision(
-    bulletObj: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile, 
-    enemyObj: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
+    bulletObj: Phaser.Types.Physics.Arcade.GameObjectWithBody, 
+    enemyObj: Phaser.Types.Physics.Arcade.GameObjectWithBody
   ): void {
     // Проверяем, что bulletObj это спрайт (а не тайл)
     if (!(bulletObj instanceof Phaser.Physics.Arcade.Sprite)) {
@@ -281,19 +292,54 @@ export class GameplayScene extends Phaser.Scene {
       return;
     }
     
+    // Создаем брызги крови в точке попадания с эффектом направления
+    // Преобразуем угол пули в направление для брызг
+    const bulletRotation = bullet.getDirection();
+    const directionMultiplier = Math.cos(bulletRotation) > 0 ? 10 : -10;
+    
+    // Брызги должны появляться от позиции врага (X), но на высоте пули (Y)
+    this.blood.createBloodSplash(
+      enemyObj.x, // X-координата врага
+      bulletObj.y, // Y-координата пули (высота)
+      {
+        amount: Phaser.Math.Between(3, 5), // Небольшое количество частиц
+        direction: directionMultiplier, // Направление с учетом пули
+        size: {
+          min: 0.3,
+          max: 0.7
+        },
+        speed: {
+          min: 100,
+          max: 180,
+          multiplier: 0.6
+        },
+        gravity: 600,
+        spread: Math.PI/7,
+        fallDistance: {
+          min: 15,
+          max: 25
+        },
+      }
+    );
+    
     // Наносим урон врагу
     enemy.takeDamage(bullet.getDamage());
     
     // Деактивируем пулю
-    bullet.onHit();
+    // bullet.onHit();
   }
   
   private handlePlayerEnemyCollision(
-    playerObj: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile, 
-    enemyObj: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
+    playerObj: Phaser.Types.Physics.Arcade.GameObjectWithBody, 
+    enemyObj: Phaser.Types.Physics.Arcade.GameObjectWithBody
   ): void {
     // Проверяем, что enemyObj - это спрайт
     if (!(enemyObj instanceof Phaser.Physics.Arcade.Sprite)) {
+      return;
+    }
+    
+    // Проверяем, что playerObj - это спрайт
+    if (!(playerObj instanceof Phaser.Physics.Arcade.Sprite)) {
       return;
     }
     
@@ -302,6 +348,12 @@ export class GameplayScene extends Phaser.Scene {
     if (!enemy) {
       console.error('Спрайт врага не содержит ссылку на объект BaseEnemy');
       return;
+    }
+    const direction = enemy.getDirection();
+    const player = playerObj.getData('playerRef') as Player;
+
+    if (!player.isJumping) {
+      player.applyForce(direction, 0, 10, 0.5, 0.1);  
     }
   }
 

@@ -8,6 +8,7 @@ interface LocationObjectOptions {
     frame: number;
     health: number;
     depthOffset: number;
+    scale: number;
 }
 
 export class LocationObject extends Phaser.GameObjects.Sprite {
@@ -22,6 +23,7 @@ export class LocationObject extends Phaser.GameObjects.Sprite {
         this.options = options;
         this.setDepth(y + settings.gameplay.depthOffset + options.depthOffset);
         this.setOrigin(0.5, 0.5);
+        this.setScale(options.scale);
     }
 
     /**
@@ -29,6 +31,8 @@ export class LocationObject extends Phaser.GameObjects.Sprite {
      * @param damage Величина урона
      */
     public takeDamage(damage: number): void {
+        console.log('takeDamage', damage);
+        
         if (this.isDestroyed) {
             return;
         }
@@ -49,7 +53,7 @@ export class LocationObject extends Phaser.GameObjects.Sprite {
         return this.health / this.options.health;
     }
 
-    private calculateFrameIndex(healthPercent: number): number {
+    protected calculateFrameIndex(healthPercent: number): number {
         // При 100% здоровья (healthPercent = 1) должен быть кадр 0 (первый)
         // При 0% здоровья (healthPercent = 0) должен быть кадр 4 (последний)
         

@@ -5,7 +5,7 @@ import { Player } from '../entities/Player';
 import { settings } from '../settings';
 import { createLogger } from '../../utils/logger';
 import { ShellCasing } from '../entities/ShellCasing';
-import { WeaponSight } from './WeaponSight';
+import { WeaponSight } from '../weapons/WeaponSight';
 
 const logger = createLogger('BaseWeapon');
 

@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { BaseBullet } from '../BaseBullet';
+import { BaseBullet } from '../../core/BaseBullet';
 import { hexToNumber } from '../../utils/colors';
 
 export class SimpleBullet extends BaseBullet {

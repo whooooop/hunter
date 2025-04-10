@@ -1,13 +1,12 @@
 import { createLogger } from '../../../../utils/logger';
 import { LocationObject } from '../../../core/LocationObject';
 import { generateStringWithLength } from '../../../../utils/stringGenerator';
-import woodChipImage from '../assets/images/wood_chip.png';
+
 import leafImage from '../assets/images/leaf.png';
-import treeImage from '../assets/images/tree.png';
+import woodChipImage from '../assets/images/wood_chip.png';
 
 const logger = createLogger('Tree');
 
-const TEXTURE_TREE = 'tree_' + generateStringWithLength(6);
 const TEXTURE_WOOOD_CHIP = 'tree_wood_chop' + generateStringWithLength(6);
 const TEXTURE_WOOOD_LEAF = 'tree_leaf' + generateStringWithLength(6);
 
@@ -22,19 +21,25 @@ interface ParticleEffectOptions {
     duration: number;
 }
 
-export class Tree extends LocationObject {
-    constructor(scene: Phaser.Scene, x: number, y: number) {
+interface TreeOptions {
+    depthOffset: number;
+    scale: number;
+    health: number;
+    texture: string;
+}
+
+export class BaseTree extends LocationObject {
+    constructor(scene: Phaser.Scene, x: number, y: number, options: TreeOptions) {
         super(scene, x, y, {
-            texture: TEXTURE_TREE,
+            texture: options.texture,
             frame: 0,
-            health: 1000,
-            depthOffset: 14
+            health: options.health,
+            depthOffset: options.depthOffset,
+            scale: options.scale
         });
-        this.setScale(0.8);
     }
-    
+
     static preload(scene: Phaser.Scene): void {
-        scene.load.spritesheet(TEXTURE_TREE, treeImage, { frameWidth: 76, frameHeight: 98 });
         scene.load.image(TEXTURE_WOOOD_CHIP, woodChipImage);
         scene.load.image(TEXTURE_WOOOD_LEAF, leafImage);
     }
@@ -85,8 +90,6 @@ export class Tree extends LocationObject {
             speed: [30, 80],
             duration: 1000
         });
-        
-        logger.debug(`Создано частиц: ${particles.length}`);
     }
 
     private createParticles(options: ParticleEffectOptions): void {

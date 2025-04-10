@@ -37,6 +37,7 @@ interface ExternalForce {
 }
 
 interface PhysicsObjectOptions {
+  name: string;
   depthOffset: number;
   debug?: DebugSettings;
   acceleration: number;
@@ -45,6 +46,9 @@ interface PhysicsObjectOptions {
   maxVelocityY: number;
   friction: number;
   shadow: PhysicsObjectShadowOptions | false;
+  moveX: number;
+  moveY: number;
+  direction: number;
 }
 
 interface PhysicsObjectShadowOptions {
@@ -53,35 +57,15 @@ interface PhysicsObjectShadowOptions {
   offsetY: number;
 }
 
-const defaultPhysicsObjectOptions: PhysicsObjectOptions = {
-  depthOffset: 0,
-  acceleration: 1,
-  deceleration: 0.5,
-  maxVelocityX: 20,
-  maxVelocityY: 5,
-  friction: 0,      // Трение (замедление при движении)
-  shadow: false,
-  debug: {
-    enabled: true,
-    showPositions: true,
-    showPhysics: true,
-    showSprites: true,
-    logCreation: true,
-    showPath: true
-  }
-}
-
 export class PhysicsObject {
-  public readonly id: string;
-
   protected scene: Phaser.Scene;
   protected sprite: Phaser.Physics.Arcade.Sprite;
-  protected name: string = 'PhysicsObject';
+  protected name: string;
 
-  protected velocityX: number = 0;     // Текущая скорость по X
-  protected velocityY: number = 0;     // Текущая скорость по Y
   protected moveX: number = 0;
   protected moveY: number = 0;
+  protected velocityX: number = 0;     // Текущая скорость по X
+  protected velocityY: number = 0;     // Текущая скорость по Y
   protected direction: number = 0;
 
   // Тень объекта
@@ -114,13 +98,16 @@ export class PhysicsObject {
     showPath: true
   };
 
-  constructor(id: string, scene: Phaser.Scene, x: number, y: number, options?: PhysicsObjectOptions) {
-    this.id = id;
+  constructor(scene: Phaser.Scene, x: number, y: number, options: PhysicsObjectOptions) {
+    this.name = options.name;
     this.x = x;
     this.y = y;
     this.scene = scene;
     this.sprite = scene.physics.add.sprite(x, y, 'enemy_placeholder');
-    this.options = { ...defaultPhysicsObjectOptions, ...options };
+    this.options = options;
+    this.moveX = options.moveX;
+    this.moveY = options.moveY;
+    this.direction = options.direction;
 
     this.setupPhysics();
 
@@ -171,7 +158,7 @@ export class PhysicsObject {
     
     // Создаем овал для тени
     this.shadowSprite = this.scene.add.ellipse(
-      this.x + 10,
+      this.x,
       this.y + this.sprite.height / 2, // Тень находится снизу спрайта
       width,
       height,
@@ -187,12 +174,12 @@ export class PhysicsObject {
    * Обновляет позицию и размер тени
    */
   private updateShadow(): void {
-    if (!this.shadowSprite) return;
+    if (!this.shadowSprite || !this.options.shadow) return;
     
     // Обновляем позицию тени под объектом
     this.shadowSprite.setPosition(
-      this.x + 5,
-      this.y + this.sprite.height / 2 + 4
+      this.x + (this.options.shadow as PhysicsObjectShadowOptions).offsetX,
+      this.y + this.sprite.height / 2 + (this.options.shadow as PhysicsObjectShadowOptions).offsetY
     );
     
     // Обновляем глубину отображения
@@ -326,7 +313,7 @@ export class PhysicsObject {
     const positionText = this.debugTexts['position'];
     if (positionText) {
       positionText.setPosition(this.x, this.y - 20);
-      positionText.setText(`${this.name} (${Math.floor(this.x)},${Math.floor(this.y)})`);
+      positionText.setText(`${this.name} (${Math.floor(this.x)},${Math.floor(this.y)}, ${Math.floor(this.sprite.depth)})`);
     }
 
     // Обновляем первый дебаг-объект (круг)
@@ -467,5 +454,9 @@ export class PhysicsObject {
     this.y += totalOffsetY * (delta / 16);
     
     logger.debug(`Смещение от внешних сил: (${totalOffsetX.toFixed(2)}, ${totalOffsetY.toFixed(2)})`);
+  }
+
+  public getDirection(): number {
+    return this.direction;
   }
 } 

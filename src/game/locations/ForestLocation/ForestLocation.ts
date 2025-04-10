@@ -1,13 +1,13 @@
 import * as Phaser from 'phaser';
 import { BaseLocation, LocationBounds } from '../../core/BaseLocation';
-import { ForestLocationConfig, DEFAULT_FOREST_CONFIG, FOREST_COLORS } from './ForestLocationConfig';
+import { ForestLocationConfig, DEFAULT_FOREST_CONFIG, FOREST_COLORS, INTERACTIVE_OBJECTS } from './ForestLocationConfig';
 import { GRASS_SHADER_KEY, GRASS_FRAGMENT_SHADER, GRASS_VERTEX_SHADER } from './GrassShader';
 import { createLogger } from '../../../utils/logger';
 import skyImage from './assets/images/sky.png';
 import groundImage from './assets/images/ground.png';
-import { Tree } from './components/Tree';
 import { GameplayScene } from '../../scenes/GameplayScene';
 import { ForestShop } from './components/ForestShop';
+import { SpruceTree } from './components/SpruceTree';
 
 const logger = createLogger('ForestLocation');
 
@@ -48,7 +48,7 @@ export class ForestLocation extends BaseLocation {
     this.scene.load.image('forest_location_ground', groundImage);
     
     ForestShop.preload(this.scene);
-    Tree.preload(this.scene);
+    SpruceTree.preload(this.scene);
   }
   
   // Регистрируем шейдер травы
@@ -86,9 +86,8 @@ export class ForestLocation extends BaseLocation {
     
     this.createShop();
     
-    // Создаем ёлку справа по центру
-    this.createTree(this.width / 2, this.skyHeight + 300);
-    this.createTree(this.width / 2 - 30, this.skyHeight + 230);
+    // Создаем деревья
+    this.createTrees();
   }
 
   /**
@@ -155,22 +154,28 @@ export class ForestLocation extends BaseLocation {
   /**
    * Создает ёлку и размещает ее справа на сцене
    */
-  private createTree(x: number, y: number): void {
-    // Создаем ёлку
-    const tree = new Tree(this.scene, x, y);
+  private createTrees(): void {
+    // this.createTrees(this.width / 2, this.skyHeight + 300);
+    // this.createTree(this.width / 2 - 30, this.skyHeight + 230);
 
-    // Добавляем её на сцену
-    this.scene.add.existing(tree);
+    INTERACTIVE_OBJECTS.forEach(({ type, position, scale, health }) => {    
+      const object = new SpruceTree(this.scene, position[0], position[1], {
+        scale,
+        health
+      });
+
+      // Добавляем её на сцену
+      this.scene.add.existing(object);
     
-    // Добавляем дерево в группу интерактивных объектов
-    if (this.scene instanceof GameplayScene) {
-      const gameScene = this.scene as GameplayScene;
-      // Т.к. Tree наследуется от LocationObject, а LocationObject от Sprite,
-      // мы можем безопасно привести его к типу Phaser.Physics.Arcade.Sprite
-      // Это решит проблему несоответствия типов между Tree и ожидаемым Sprite
-      gameScene.addInteractiveObject(tree as unknown as Phaser.Physics.Arcade.Sprite);
-      logger.info(`Дерево добавлено в группу интерактивных объектов`);
-    }
+      // Добавляем дерево в группу интерактивных объектов
+      if (this.scene instanceof GameplayScene) {
+        const gameScene = this.scene as GameplayScene;
+        // Т.к. Tree наследуется от LocationObject, а LocationObject от Sprite,
+        // мы можем безопасно привести его к типу Phaser.Physics.Arcade.Sprite
+        // Это решит проблему несоответствия типов между Tree и ожидаемым Sprite
+        gameScene.addInteractiveObject(object as unknown as Phaser.Physics.Arcade.Sprite);
+      }
+    });
   }
 
   /**

@@ -1,12 +1,9 @@
 import * as Phaser from 'phaser';
-import { BaseWeapon } from '../BaseWeapon';
-import { Player } from '../../entities/Player';
+import { BaseWeapon } from '../../core/BaseWeapon';
 import { SimpleBullet } from './SimpleBullet';
-import { createLogger } from '../../../utils/logger';
 
 import fireSound from './assets/sounds/shot.mp3';
-
-const logger = createLogger('Pistol');
+import emptySound from './assets/sounds/empty.mp3';
 
 export class Pistol extends BaseWeapon {
   constructor(scene: Phaser.Scene) {
@@ -16,7 +13,7 @@ export class Pistol extends BaseWeapon {
       damage: 10,          // Урон от одного выстрела
       speed: 4000,         // Скорость пули
       fireRate: 100,       // Задержка между выстрелами в мс
-      spreadAngle: 20,     // Угол разброса при выстреле в градусах
+      spreadAngle: 1,     // Угол разброса при выстреле в градусах
       aimingTime: 250,     // Время прицеливания в мс
       range: 1000,         // Дистанция стрельбы
       recoilForce: 2,      // Сила отдачи
@@ -24,6 +21,7 @@ export class Pistol extends BaseWeapon {
       automatic: true,     // Пистолет автоматический
       fireSoundPath: fireSound,
       bulletClass: SimpleBullet,
+      emptySoundPath: emptySound,
     });    
     
     // Инициализируем спрайт пистолета

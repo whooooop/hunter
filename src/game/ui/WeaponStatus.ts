@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { BaseWeapon } from '../weapons/BaseWeapon';
+import { BaseWeapon } from '../core/BaseWeapon';
 import { hexToNumber } from '../utils/colors';
 import { createLogger } from '../../utils/logger';
 import { COLORS } from '../core/Constants';

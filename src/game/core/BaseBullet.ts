@@ -181,6 +181,10 @@ export class BaseBullet {
   public getDamage(): number {
     return this.damage;
   }
+
+  public getDirection(): number {
+    return this.sprite.rotation;
+  }
   
   public deactivate(): void {
     this.isActive = false;

@@ -1,4 +1,4 @@
-import { BaseWeapon } from "../weapons/BaseWeapon";
+import { BaseWeapon } from "../core/BaseWeapon";
 import { Pistol } from "../weapons/pistol/Pistol";
 
 export class WeaponManager {

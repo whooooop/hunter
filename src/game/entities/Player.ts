@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { PhysicsObject } from '../core/PhysicsObject';
-import { BaseWeapon } from '../weapons/BaseWeapon';
+import { BaseWeapon } from '../core/BaseWeapon';
 import { createLogger } from '../../utils/logger';
 import { LocationBounds } from '../core/BaseLocation';
 
@@ -18,7 +18,7 @@ export class Player extends PhysicsObject {
   private jumpKey: Phaser.Input.Keyboard.Key;
   
   // Параметры прыжка
-  private isJumping: boolean = false;
+  public isJumping: boolean = false;
   private jumpHeight: number = 40; // Максимальная высота прыжка
   private jumpProgress: number = 0; // Прогресс прыжка (0-1)
   private jumpDuration: number = 500; // Длительность прыжка в мс
@@ -29,7 +29,11 @@ export class Player extends PhysicsObject {
   private locationBounds: LocationBounds | null = null;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super('player', scene, x, y, {
+    super(scene, x, y, {
+      name: 'Player',
+      moveX: 0,
+      moveY: 0,
+      direction: 1,
       depthOffset: 0,
       acceleration: 15,
       deceleration: 8,
@@ -41,6 +45,14 @@ export class Player extends PhysicsObject {
         offsetX: 5,
         offsetY: 4,
       },
+      debug: {
+        enabled: true,
+        showPositions: true,
+        showPhysics: true,
+        showSprites: true,
+        logCreation: true,
+        showPath: true,
+      },
     });
     
     // Настраиваем курсоры для управления
@@ -49,6 +61,7 @@ export class Player extends PhysicsObject {
     this.reloadKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
     this.jumpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.direction = 1;
+    this.sprite.setData('playerRef', this);
   }
   
   /**
