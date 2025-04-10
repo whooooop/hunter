@@ -1,4 +1,5 @@
 import { createLogger } from '../../utils/logger';
+import { settings } from '../settings';
 
 const logger = createLogger('LocationObject');
 
@@ -6,6 +7,7 @@ interface LocationObjectOptions {
     texture: string;
     frame: number;
     health: number;
+    depthOffset: number;
 }
 
 export class LocationObject extends Phaser.GameObjects.Sprite {
@@ -18,7 +20,7 @@ export class LocationObject extends Phaser.GameObjects.Sprite {
         super(scene, x, y, options.texture, 0);
         this.health = options.health;
         this.options = options;
-        this.setDepth(20);
+        this.setDepth(y + settings.gameplay.depthOffset + options.depthOffset);
         this.setOrigin(0.5, 0.5);
     }
 

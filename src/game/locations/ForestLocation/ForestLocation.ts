@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { BaseLocation } from '../../core/BaseLocation';
+import { BaseLocation, LocationBounds } from '../../core/BaseLocation';
 import { ForestLocationConfig, DEFAULT_FOREST_CONFIG, FOREST_COLORS } from './ForestLocationConfig';
 import { GRASS_SHADER_KEY, GRASS_FRAGMENT_SHADER, GRASS_VERTEX_SHADER } from './GrassShader';
 import { createLogger } from '../../../utils/logger';
@@ -16,6 +16,12 @@ export class ForestLocation extends BaseLocation {
   private width: number = 0;
   private height: number = 0;
   private skyHeight: number = 0;
+  public bounds: LocationBounds = {
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0
+  };
 
   // Ссылка на шейдер травы
   private grassShader: Phaser.GameObjects.Shader | null = null;
@@ -58,6 +64,13 @@ export class ForestLocation extends BaseLocation {
     return this.config;
   }
   
+  /**
+   * Возвращает границы локации для ограничения движения игрока
+   */
+  public getBounds(): { left: number, right: number, top: number, bottom: number } {
+    return this.bounds;
+  }
+  
   // Реализация метода базового класса
   public create(): void {
     // Получаем размеры экрана
@@ -65,12 +78,32 @@ export class ForestLocation extends BaseLocation {
     this.height = this.scene.cameras.main.height;
     this.skyHeight = this.height / 6;
     
+    // Устанавливаем границы локации
+    this.setupLocationBounds();
+    
     this.createBackground();
     // this.createGrassShader();
     
     // Создаем ёлку справа по центру
     this.createTree(this.width / 2, this.skyHeight + 300);
     this.createTree(this.width / 2 - 30, this.skyHeight + 230);
+  }
+
+  /**
+   * Устанавливает границы локации для ограничения движения игрока
+   */
+  private setupLocationBounds(): void {
+    // Левая граница - край экрана
+    this.bounds.left = 0;
+    
+    // Правая граница - край экрана
+    this.bounds.right = this.width;
+    
+    // Верхняя граница - верхний край земли (небо недоступно)
+    this.bounds.top = this.skyHeight + 50; // Отступ от неба
+    
+    // Нижняя граница - низ экрана
+    this.bounds.bottom = this.height;
   }
 
   private createBackground(): void {

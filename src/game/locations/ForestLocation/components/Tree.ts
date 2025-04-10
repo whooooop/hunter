@@ -27,7 +27,8 @@ export class Tree extends LocationObject {
         super(scene, x, y, {
             texture: TEXTURE_TREE,
             frame: 0,
-            health: 1000
+            health: 1000,
+            depthOffset: 14
         });
         this.setScale(0.8);
     }

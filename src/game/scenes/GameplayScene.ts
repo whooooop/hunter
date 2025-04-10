@@ -97,9 +97,9 @@ export class GameplayScene extends Phaser.Scene {
 
     // Создаем игрока
     this.player = new Player(this, PLAYER_POSITION_X, PLAYER_POSITION_Y);
-
     this.player.setWeapon(this.weaponManager.getWeapon('pistol'));
-    
+    this.player.setLocationBounds(this.location.bounds);
+
     // Настраиваем коллизии между пулями и врагами
     this.physics.add.overlap(
       this.bullets,
@@ -156,6 +156,7 @@ export class GameplayScene extends Phaser.Scene {
   }
   
   update(time: number, delta: number): void {
+    const bounds = this.location.bounds;
     this.location.update(time);
     
     // Обновляем игрока

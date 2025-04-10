@@ -2,36 +2,38 @@ import * as Phaser from 'phaser';
 import { PhysicsObject } from '../core/PhysicsObject';
 import { BaseWeapon } from '../weapons/BaseWeapon';
 import { createLogger } from '../../utils/logger';
+import { LocationBounds } from '../core/BaseLocation';
 
 const logger = createLogger('Player');
 
 export class Player extends PhysicsObject {
   name = 'Player';
-  direction = 1;
 
   canChangeDirection: boolean = false;
-
-  acceleration: number = 15;
-  deceleration: number = 8;
-  friction: number = 6;
-  maxVelocityX: number = 300;
-  maxVelocityY: number = 300;
 
   private weapon!: BaseWeapon;
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private fireKey: Phaser.Input.Keyboard.Key;
   private reloadKey: Phaser.Input.Keyboard.Key;
+  
+  // Границы локации
+  private locationBounds: LocationBounds | null = null;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super('player', scene, x, y);
+    super('player', scene, x, y, {
+      depthOffset: 0,
+      acceleration: 15,
+      deceleration: 8,
+      friction: 6,
+      maxVelocityX: 300,
+      maxVelocityY: 300,
+    });
     
     // Настраиваем курсоры для управления
     this.cursors = scene.input.keyboard!.createCursorKeys();
     this.fireKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.reloadKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-    
-    // Оружие будет назначено позже через setWeapon
-    logger.info('Игрок создан без оружия');
+    this.direction = 1;
   }
   
   /**
@@ -48,6 +50,10 @@ export class Player extends PhysicsObject {
     this.weapon = weapon;
 
     logger.info(`Игроку назначено оружие: ${this.weapon.getId()}`);
+  }
+
+  public setLocationBounds(bounds: LocationBounds): void {
+    this.locationBounds = bounds;
   }
   
   /**
@@ -68,7 +74,13 @@ export class Player extends PhysicsObject {
       this.weapon.update(time, delta);
     }
     
+    // Вызываем базовый метод обновления физического объекта
     super.update(time, delta);
+    
+    // Ограничиваем позицию игрока внутри границ локации
+    if (this.locationBounds) {
+      this.constrainPosition(this.locationBounds);
+    }
   }
   
   private handleMovement(): void {
@@ -103,6 +115,18 @@ export class Player extends PhysicsObject {
       this.weapon.fire(this.sprite.x, this.sprite.y, this.direction);
     } else {
       this.weapon.resetTrigger();
+    }
+  }
+
+  /**
+   * Ограничивает позицию игрока внутри заданных границ
+   */
+  private constrainPosition(bounds: LocationBounds): void {
+    if (bounds) {
+      if (this.x < bounds.left) this.x = bounds.left;
+      if (this.x > bounds.right) this.x = bounds.right;
+      if (this.y < bounds.top) this.y = bounds.top;
+      if (this.y > bounds.bottom) this.y = bounds.bottom;
     }
   }
 

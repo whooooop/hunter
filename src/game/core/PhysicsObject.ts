@@ -1,6 +1,9 @@
 import * as Phaser from 'phaser';
 import { forceToTargetOffset, easeOutQuart, easeOutQuint } from '../utils/ForceUtils';
 import { createLogger } from '../../utils/logger';
+import { settings } from '../settings';
+
+const logger = createLogger('PhysicsObject');
 
 // Интерфейс для настроек отладки
 export interface DebugSettings {
@@ -33,17 +36,47 @@ interface ExternalForce {
   friction: number;        // Коэффициент трения для этой силы
 }
 
+interface PhysicsObjectOptions {
+  depthOffset: number;
+  debug?: DebugSettings;
+  acceleration: number;
+  deceleration: number;
+  maxVelocityX: number;
+  maxVelocityY: number;
+  friction: number;
+}
+
+const defaultPhysicsObjectOptions: PhysicsObjectOptions = {
+  depthOffset: 0,
+  acceleration: 1,
+  deceleration: 0.5,
+  maxVelocityX: 20,
+  maxVelocityY: 5,
+  friction: 0,      // Трение (замедление при движении)
+  debug: {
+    enabled: true,
+    showPositions: true,
+    showPhysics: true,
+    showSprites: true,
+    logCreation: true,
+    showPath: true
+  }
+}
+
 export class PhysicsObject {
   public readonly id: string;
 
   protected scene: Phaser.Scene;
   protected sprite: Phaser.Physics.Arcade.Sprite;
   protected name: string = 'PhysicsObject';
-  protected logger = createLogger('PhysicsObject');
 
   protected velocityX: number = 0;     // Текущая скорость по X
   protected velocityY: number = 0;     // Текущая скорость по Y
-  protected friction: number = 0;      // Трение (замедление при движении)
+  protected moveX: number = 0;
+  protected moveY: number = 0;
+  protected direction: number = 0;
+
+  protected options: PhysicsObjectOptions;
 
   // Параметры для внешних сил (отдача, ветер и т.д.)
   protected externalForces: ExternalForce[] = [];
@@ -59,14 +92,6 @@ export class PhysicsObject {
 
   protected x: number = 0;
   protected y: number = 0;
-  protected acceleration: number = 1;
-  protected deceleration: number = 0.5;
-  protected direction: number = 1;
-
-  protected moveX: number = 0;
-  protected moveY: number = 0;
-  protected maxVelocityX: number = 20;
-  protected maxVelocityY: number = 5;
 
   // Настройки отладки для каждого объекта
   protected debug: DebugSettings = {
@@ -78,22 +103,22 @@ export class PhysicsObject {
     showPath: true
   };
 
-  constructor(id: string, scene: Phaser.Scene, x: number, y: number) {
+  constructor(id: string, scene: Phaser.Scene, x: number, y: number, options?: PhysicsObjectOptions) {
     this.id = id;
     this.x = x;
     this.y = y;
     this.scene = scene;
     this.sprite = scene.physics.add.sprite(x, y, 'enemy_placeholder');
-    this.logger = createLogger(this.name);
-    
+    this.options = { ...defaultPhysicsObjectOptions, ...options };
+
     this.setupPhysics();
 
-    // if (this.debug.enabled) {
-    //   this.setupDebug();
-    // }
+    if (this.options.debug?.enabled) {
+      this.setupDebug();
+    }
     
-    if (this.debug.logCreation) {
-      this.logger.info(`Создан на позиции (${x}, ${y})`);
+    if (this.options.debug?.logCreation) {
+      logger.info(`Создан на позиции (${x}, ${y})`);
     }
   }
 
@@ -109,18 +134,19 @@ export class PhysicsObject {
     this.sprite.setName(this.name);
     
     // Делаем спрайт видимым
-    if (this.debug.showSprites) {
+    if (this.options.debug?.showSprites) {
       this.sprite.setVisible(true);
     }
     
-    // Устанавливаем глубину отображения
-    this.sprite.setDepth(10);
-    
     // Включаем отображение тела для отладки, если включен режим отладки
-    if (this.debug.showPhysics && this.scene.physics.world.drawDebug) {
+    if (this.options.debug?.showPhysics && this.scene.physics.world.drawDebug) {
       // В Phaser 3 отладка физики включается на уровне мира, а не отдельных объектов
       this.scene.physics.world.debugGraphic.visible = true;
     }
+  }
+
+  protected getDepth(): number {
+    return this.y + this.options.depthOffset + settings.gameplay.depthOffset;
   }
 
   // Главный метод настройки отладки
@@ -129,14 +155,14 @@ export class PhysicsObject {
     this.addDebugPosition();
     
     // Добавляем отладочные линии пути, если включено
-    if (this.debug.showPath) {
-      this.addDebugPath();
-    }
+    // if (this.debug.showPath) {
+    //   this.addDebugPath();
+    // }
   }
   
     // Добавляем отладочные линии пути перемещения
   protected addDebugPath(): void {
-    if (!this.debug.showPath) return;
+    if (!this.options.debug?.showPath) return;
     
     const lineGraphics = this.scene.add.graphics();
     lineGraphics.lineStyle(2, 0xff0000, 1);
@@ -156,7 +182,7 @@ export class PhysicsObject {
     this.debugObjects.push(debugCircle);
   
     // Добавляем текст с именем объекта и координатами
-    const debugText = this.scene.add.text(this.x, this.y, `${this.name} (${Math.floor(this.x)},${Math.floor(this.y)})`, {
+    const debugText = this.scene.add.text(this.x, this.y, `${this.name} (${Math.floor(this.x)},${Math.floor(this.y)}, ${this.sprite.depth})`, {
       fontSize: '10px',
       color: '#ffffff'
     }).setOrigin(0.5, 0.5);
@@ -165,18 +191,22 @@ export class PhysicsObject {
     this.debugTexts['position'] = debugText;
   }
 
+  public setDepth(depth: number): void {
+    this.sprite.setDepth(depth);
+  }
+
   public update(time: number, delta: number): void {
     // Обрабатываем движение с ускорением
     this.handleMovementWithAcceleration();
 
     // Применяем трение при движении (дополнительное замедление)
-    if (Math.abs(this.velocityX) > 0 && this.friction > 0) {
-      const frictionX = Math.min(Math.abs(this.velocityX), this.friction) * Math.sign(this.velocityX);
+    if (Math.abs(this.velocityX) > 0 && this.options.friction > 0) {
+      const frictionX = Math.min(Math.abs(this.velocityX), this.options.friction) * Math.sign(this.velocityX);
       this.velocityX -= frictionX;
     }
     
-    if (Math.abs(this.velocityY) > 0 && this.friction > 0) {
-      const frictionY = Math.min(Math.abs(this.velocityY), this.friction) * Math.sign(this.velocityY);
+    if (Math.abs(this.velocityY) > 0 && this.options.friction > 0) {
+      const frictionY = Math.min(Math.abs(this.velocityY), this.options.friction) * Math.sign(this.velocityY);
       this.velocityY -= frictionY;
     }
     
@@ -190,6 +220,8 @@ export class PhysicsObject {
     // Устанавливаем позицию спрайта
     this.sprite.setPosition(this.x, this.y);
 
+    this.setDepth(this.getDepth());
+
     if (this.debug.enabled) {
       this.updateDebugVisuals();
     }
@@ -198,32 +230,32 @@ export class PhysicsObject {
   private handleMovementWithAcceleration(): void {
     if (this.moveX < 0) {
       // Ускорение влево
-      this.velocityX = Math.max(this.velocityX - this.acceleration, -this.maxVelocityX);
+      this.velocityX = Math.max(this.velocityX - this.options.acceleration, -this.options.maxVelocityX);
     } else if (this.moveX > 0) {
       // Ускорение вправо
-      this.velocityX = Math.min(this.velocityX + this.acceleration, this.maxVelocityX);
+      this.velocityX = Math.min(this.velocityX + this.options.acceleration, this.options.maxVelocityX);
     } else {
       // Замедление по X с инерцией
       if (this.velocityX > 0) {
-        this.velocityX = Math.max(this.velocityX - this.deceleration, 0);
+        this.velocityX = Math.max(this.velocityX - this.options.deceleration, 0);
       } else if (this.velocityX < 0) {
-        this.velocityX = Math.min(this.velocityX + this.deceleration, 0);
+        this.velocityX = Math.min(this.velocityX + this.options.deceleration, 0);
       }
     }
     
     // Обрабатываем движение по вертикали с ускорением
     if (this.moveY < 0) {
       // Ускорение вверх
-      this.velocityY = Math.max(this.velocityY - this.acceleration, -this.maxVelocityY);
+      this.velocityY = Math.max(this.velocityY - this.options.acceleration, -this.options.maxVelocityY);
     } else if (this.moveY > 0) {
       // Ускорение вниз
-      this.velocityY = Math.min(this.velocityY + this.acceleration, this.maxVelocityY);
+      this.velocityY = Math.min(this.velocityY + this.options.acceleration, this.options.maxVelocityY);
     } else {
       // Замедление по Y с инерцией
       if (this.velocityY > 0) {
-        this.velocityY = Math.max(this.velocityY - this.deceleration, 0);
+        this.velocityY = Math.max(this.velocityY - this.options.deceleration, 0);
       } else if (this.velocityY < 0) {
-        this.velocityY = Math.min(this.velocityY + this.deceleration, 0);
+        this.velocityY = Math.min(this.velocityY + this.options.deceleration, 0);
       }
     }
   }
@@ -284,7 +316,7 @@ export class PhysicsObject {
     const angle = Math.atan2(vectorY, vectorX);
     
     // Рассчитываем целевое смещение на основе направления и силы
-    const targetOffset = forceToTargetOffset(force, angle, this.friction);
+    const targetOffset = forceToTargetOffset(force, angle, this.options.friction);
     
     // Создаем новую силу
     const externalForce: ExternalForce = {
@@ -297,13 +329,13 @@ export class PhysicsObject {
       remainingStrength: force, // Начинаем с полной силы
       decayRate: Math.max(0, Math.min(1, decayRate)), // Ограничиваем в диапазоне 0-1
       angle, // Сохраняем угол
-      friction: this.friction // Используем трение объекта
+      friction: this.options.friction // Используем трение объекта
     };
     
     // Добавляем силу в список активных
     this.externalForces.push(externalForce);
     
-    this.logger.debug(`Применена сила: угол=${angle.toFixed(2)}, сила=${force.toFixed(2)}`);
+    logger.debug(`Применена сила: угол=${angle.toFixed(2)}, сила=${force.toFixed(2)}`);
   }
   
   /**
@@ -362,6 +394,6 @@ export class PhysicsObject {
     this.x += totalOffsetX * (delta / 16);
     this.y += totalOffsetY * (delta / 16);
     
-    this.logger.debug(`Смещение от внешних сил: (${totalOffsetX.toFixed(2)}, ${totalOffsetY.toFixed(2)})`);
+    logger.debug(`Смещение от внешних сил: (${totalOffsetX.toFixed(2)}, ${totalOffsetY.toFixed(2)})`);
   }
 } 

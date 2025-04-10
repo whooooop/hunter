@@ -3,6 +3,13 @@ import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('BaseLocation');
 
+export interface LocationBounds {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
 /**
  * Абстрактный класс для всех локаций в игре
  */
@@ -13,6 +20,9 @@ export abstract class BaseLocation {
       this.scene = scene;
       logger.info('Создание локации');
     }
+    
+    // Границы локации для ограничения движения игрока
+    abstract bounds: LocationBounds;
     
     /**
      * Метод для предзагрузки ресурсов локации

@@ -9,6 +9,7 @@ export const settings = {
         musicVolume: 0.5,
     },
     gameplay: {
+        depthOffset: 100,
         // Настройки для гильз оружия
         shellCasings: {
             enabled: true,       // Включено ли отображение гильз
