@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
-import { hexToRgb } from '../../utils/colors';
+import { hexToNumber, hexToRGB } from '../utils/colors';
+import { COLORS } from './Constants';
 
 export class WaveInfo {
     private scene: Phaser.Scene;
@@ -8,9 +9,9 @@ export class WaveInfo {
     private waveText!: Phaser.GameObjects.Text;
     private waveProgress: number = 20;
     
-    private readonly WAVE_BG_COLOR = hexToRgb('#06232d');
-    private readonly PROGRESS_COLOR = hexToRgb('#30444f');
-    private readonly TEXT_COLOR = '#ffffff';
+    private readonly WAVE_BG_COLOR = hexToNumber(COLORS.INTERFACE_BLOCK_BACKGROUND);
+    private readonly PROGRESS_COLOR = hexToNumber('#30444f');
+    private readonly TEXT_COLOR = COLORS.INTERFACE_BLOCK_TEXT;
     
     constructor(scene: Phaser.Scene) {
         this.scene = scene;

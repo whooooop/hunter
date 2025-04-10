@@ -44,6 +44,13 @@ interface PhysicsObjectOptions {
   maxVelocityX: number;
   maxVelocityY: number;
   friction: number;
+  shadow: PhysicsObjectShadowOptions | false;
+}
+
+interface PhysicsObjectShadowOptions {
+  scale: number;
+  offsetX: number;
+  offsetY: number;
 }
 
 const defaultPhysicsObjectOptions: PhysicsObjectOptions = {
@@ -53,6 +60,7 @@ const defaultPhysicsObjectOptions: PhysicsObjectOptions = {
   maxVelocityX: 20,
   maxVelocityY: 5,
   friction: 0,      // Трение (замедление при движении)
+  shadow: false,
   debug: {
     enabled: true,
     showPositions: true,
@@ -76,6 +84,9 @@ export class PhysicsObject {
   protected moveY: number = 0;
   protected direction: number = 0;
 
+  // Тень объекта
+  protected shadowSprite: Phaser.GameObjects.Ellipse | null = null;
+  
   protected options: PhysicsObjectOptions;
 
   // Параметры для внешних сил (отдача, ветер и т.д.)
@@ -90,8 +101,8 @@ export class PhysicsObject {
   protected debugTexts: {[key: string]: Phaser.GameObjects.Text} = {};
   protected debugGraphics: {[key: string]: Phaser.GameObjects.Graphics} = {};
 
-  protected x: number = 0;
-  protected y: number = 0;
+  public x: number = 0;
+  public y: number = 0;
 
   // Настройки отладки для каждого объекта
   protected debug: DebugSettings = {
@@ -138,11 +149,54 @@ export class PhysicsObject {
       this.sprite.setVisible(true);
     }
     
+    // Создаем тень, если она включена в опциях
+    if (this.options.shadow) {
+      this.createShadow();
+    }
+    
     // Включаем отображение тела для отладки, если включен режим отладки
     if (this.options.debug?.showPhysics && this.scene.physics.world.drawDebug) {
       // В Phaser 3 отладка физики включается на уровне мира, а не отдельных объектов
       this.scene.physics.world.debugGraphic.visible = true;
     }
+  }
+
+  /**
+   * Создает тень (овал) для объекта
+   */
+  private createShadow(): void {
+    // Определяем размеры тени на основе размеров спрайта
+    const width = this.sprite.width * 0.7; // Немного меньше ширины спрайта
+    const height = this.sprite.height * 0.3; // Плоский овал
+    
+    // Создаем овал для тени
+    this.shadowSprite = this.scene.add.ellipse(
+      this.x + 10,
+      this.y + this.sprite.height / 2, // Тень находится снизу спрайта
+      width,
+      height,
+      0x000000, // Черный цвет
+      0.1 // Прозрачность
+    );
+    
+    // Устанавливаем глубину отображения тени (ниже объекта)
+    this.shadowSprite.setDepth(this.getDepth() - 1);
+  }
+
+  /**
+   * Обновляет позицию и размер тени
+   */
+  private updateShadow(): void {
+    if (!this.shadowSprite) return;
+    
+    // Обновляем позицию тени под объектом
+    this.shadowSprite.setPosition(
+      this.x + 5,
+      this.y + this.sprite.height / 2 + 4
+    );
+    
+    // Обновляем глубину отображения
+    this.shadowSprite.setDepth(this.getDepth() - 1);
   }
 
   protected getDepth(): number {
@@ -219,8 +273,14 @@ export class PhysicsObject {
     
     // Устанавливаем позицию спрайта
     this.sprite.setPosition(this.x, this.y);
-
-    this.setDepth(this.getDepth());
+    
+    // Обновляем глубину отображения
+    this.sprite.setDepth(this.getDepth());
+    
+    // Обновляем тень, если она включена
+    if (this.options.shadow) {
+      this.updateShadow();
+    }
 
     if (this.debug.enabled) {
       this.updateDebugVisuals();
@@ -289,9 +349,21 @@ export class PhysicsObject {
   }
 
   public destroy(): void {
-    // Удаляем отладочные объекты
+    // Уничтожаем отладочные объекты
     this.debugObjects.forEach(obj => obj.destroy());
+    this.debugObjects = [];
     
+    // Очищаем ссылки на тексты и графику
+    this.debugTexts = {};
+    this.debugGraphics = {};
+    
+    // Уничтожаем тень, если она есть
+    if (this.shadowSprite) {
+      this.shadowSprite.destroy();
+      this.shadowSprite = null;
+    }
+    
+    // Уничтожаем спрайт
     if (this.sprite) {
       this.sprite.destroy();
     }

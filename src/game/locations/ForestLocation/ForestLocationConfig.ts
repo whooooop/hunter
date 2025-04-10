@@ -1,5 +1,4 @@
-import { RGB } from '../../utils/color';
-import { hexToRgb } from '../../utils/color';
+import { hexToNumber } from '../../utils/colors';
 
 export interface ForestLocationConfig {
   background: string;
@@ -9,13 +8,13 @@ export interface ForestLocationConfig {
   }[];
   music?: string;
   ambientSounds?: string[];
-  grassColor: RGB; // Добавляем свойство для цвета травы в шейдере
+  grassColor: number; // Добавляем свойство для цвета травы в шейдере
 }
 
 // Цвета для фона
 export const FOREST_COLORS = {
-  skyColor: 0x70b8bd,  // Небо
-  grassColor: 0x7dc478 // Трава
+  skyColor: hexToNumber('#70b8bd'),  // Небо
+  grassColor: hexToNumber('#7dc478') // Трава
 };
 
 // Стандартная конфигурация для локации "Лес"
@@ -38,5 +37,5 @@ export const DEFAULT_FOREST_CONFIG: ForestLocationConfig = {
       ]
     }
   ],
-  grassColor: hexToRgb(FOREST_COLORS.grassColor) // Конвертируем HEX в RGB
+  grassColor: FOREST_COLORS.grassColor // Конвертируем HEX в RGB
 }; 

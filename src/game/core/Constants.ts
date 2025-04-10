@@ -1,3 +1,5 @@
+import { hexToNumber } from "../utils/colors";
+
 // Ключи сцен
 export enum SceneKeys {
   LOADING = 'loading',
@@ -33,3 +35,11 @@ export enum LocationType {
 export const PHYSICS = {
   debug: false
 }; 
+
+export const COLORS = {
+  INTERFACE_BLOCK_BACKGROUND: '#06232d',
+  INTERFACE_BLOCK_TEXT: '#ffffff',
+
+  INTERACTIVE_BUTTON_BACKGROUND: '#fbb52f',
+  INTERACTIVE_BUTTON_TEXT: '#ffffff'
+}

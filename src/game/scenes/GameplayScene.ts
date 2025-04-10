@@ -2,7 +2,6 @@ import * as Phaser from 'phaser';
 import { SceneKeys, PLAYER_POSITION_X, PLAYER_POSITION_Y } from '../core/Constants';
 import { Player } from '../entities/Player';
 import { BaseEnemy } from '../entities/BaseEnemy';
-import { SquirrelEnemy } from '../entities/SquirrelEnemy';
 import { BaseBullet } from '../weapons/BaseBullet';
 import { WaveInfo } from '../core/WaveInfo';
 import { settings } from '../settings';
@@ -12,6 +11,8 @@ import { LocationManager } from '../core/LocationManager';
 import { BaseLocation } from '../core/BaseLocation';
 import { WeaponManager } from '../core/WeaponManager';
 import { LocationObject } from '../core/LocationObject';
+import { WeaponStatus } from '../ui/WeaponStatus';
+import { BaseShop } from '../core/BaseShop';
 
 const logger = createLogger('GameplayScene');
 
@@ -26,11 +27,13 @@ export class GameplayScene extends Phaser.Scene {
   private location!: BaseLocation;
   
   private player!: Player;
+  private shop!: BaseShop;
   private enemies!: Phaser.Physics.Arcade.Group;
   private bullets!: Phaser.Physics.Arcade.Group;
   private shellCasings!: Phaser.Physics.Arcade.Group; // Группа для гильз
   private interactiveObjects!: Phaser.Physics.Arcade.Group; // Группа для объектов, взаимодействующих с пулями
   private waveInfo!: WaveInfo;
+  private weaponStatus!: WeaponStatus;
   private enemySpawnTimer!: Phaser.Time.TimerEvent;
   
   constructor() {
@@ -60,6 +63,9 @@ export class GameplayScene extends Phaser.Scene {
     
     // Создаем информацию о волне
     this.waveInfo = new WaveInfo(this);
+    
+    // Создаем интерфейс отображения состояния оружия
+    this.weaponStatus = new WeaponStatus(this);
     
     // Инициализируем группы врагов и пуль
     this.bullets = this.physics.add.group({
@@ -97,8 +103,12 @@ export class GameplayScene extends Phaser.Scene {
 
     // Создаем игрока
     this.player = new Player(this, PLAYER_POSITION_X, PLAYER_POSITION_Y);
-    this.player.setWeapon(this.weaponManager.getWeapon('pistol'));
+    const weapon = this.weaponManager.getWeapon('pistol');
+    this.player.setWeapon(weapon);
     this.player.setLocationBounds(this.location.bounds);
+    
+    // Устанавливаем оружие в интерфейс
+    this.weaponStatus.setWeapon(weapon);
 
     // Настраиваем коллизии между пулями и врагами
     this.physics.add.overlap(
@@ -136,6 +146,10 @@ export class GameplayScene extends Phaser.Scene {
     this.interactiveObjects.add(object);
   }
 
+  public addShop(shop: BaseShop): void {
+    this.shop = shop;
+  }
+
   /**
    * Удаляет интерактивный объект из группы объектов, взаимодействующих с пулями
    * @param object Спрайт объекта для удаления из группы
@@ -162,6 +176,25 @@ export class GameplayScene extends Phaser.Scene {
     // Обновляем игрока
     if (this.player) {
       this.player.update(time, delta);
+      
+      // Обновляем состояние оружия в интерфейсе
+      const weapon = this.player.getWeapon();
+      if (weapon) {
+        this.weaponStatus.setAmmo(weapon.getCurrentAmmo(), 12); // Хардкод для размера магазина
+      }
+    }
+
+    if (this.shop && this.player) {
+      const distanceToPlayer = Phaser.Math.Distance.Between(
+        this.shop.x, this.shop.y,
+        this.player.x, this.player.y
+      );
+
+      if (distanceToPlayer <= this.shop.getInteractionRadius()) {
+        this.shop.setPlayerNearby(true);
+      } else {
+        this.shop.setPlayerNearby(false);
+      }
     }
   
     // Обновляем всех врагов

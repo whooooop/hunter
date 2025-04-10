@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { hexToRgb } from '../../utils/colors';
+import { hexToNumber } from '../utils/colors';
 
 /**
  * Скрипт для программного создания текстуры гильзы
@@ -19,8 +19,8 @@ export const createShellCasingTexture = (scene: Phaser.Scene): void => {
   const graphics = scene.add.graphics();
 
   // Цвета для гильзы - делаем более яркими
-  const shellColor = hexToRgb('#FFD700');       // Основной цвет гильзы (ярко-желтый)
-  const shellStrokeColor = hexToRgb('#FF8800'); // Контур гильзы (оранжевый для контраста)
+  const shellColor = hexToNumber('#FFD700');       // Основной цвет гильзы (ярко-желтый)
+  const shellStrokeColor = hexToNumber('#FF8800'); // Контур гильзы (оранжевый для контраста)
 
   // Рисуем гильзу в виде яркой желтой палочки с оранжевым контуром
   graphics.fillStyle(shellColor, 1);

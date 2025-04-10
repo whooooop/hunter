@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { hexToRgb } from '../../utils/colors';
+import { hexToNumber } from '../utils/colors';
 import { createLogger } from '../../utils/logger';
 
 interface WeaponSightOptions {
@@ -17,8 +17,8 @@ const defaultOptions: Required<WeaponSightOptions> = {
   lineLength: 10,
   gapSize: 4,
   alpha: 0.9,
-  color: hexToRgb('#000000'),
-  emptyColor: hexToRgb('#ff0000'),
+  color: hexToNumber('#000000'),
+  emptyColor: hexToNumber('#ff0000'),
   range: 150
 };
 

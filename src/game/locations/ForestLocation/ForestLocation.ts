@@ -7,6 +7,7 @@ import skyImage from './assets/images/sky.png';
 import groundImage from './assets/images/ground.png';
 import { Tree } from './components/Tree';
 import { GameplayScene } from '../../scenes/GameplayScene';
+import { ForestShop } from './components/ForestShop';
 
 const logger = createLogger('ForestLocation');
 
@@ -43,11 +44,10 @@ export class ForestLocation extends BaseLocation {
    * Предзагрузка ресурсов для лесной локации
    */
   public preload(): void {
-    logger.info('preload', groundImage);
     this.scene.load.image('forest_location_sky', skyImage);
     this.scene.load.image('forest_location_ground', groundImage);
     
-    // Предзагрузка ресурсов для дерева
+    ForestShop.preload(this.scene);
     Tree.preload(this.scene);
   }
   
@@ -84,6 +84,8 @@ export class ForestLocation extends BaseLocation {
     this.createBackground();
     // this.createGrassShader();
     
+    this.createShop();
+    
     // Создаем ёлку справа по центру
     this.createTree(this.width / 2, this.skyHeight + 300);
     this.createTree(this.width / 2 - 30, this.skyHeight + 230);
@@ -111,18 +113,15 @@ export class ForestLocation extends BaseLocation {
     const sky = this.scene.add.image(this.width / 2, this.skyHeight / 2, 'forest_location_sky');
     
     // Используем setScale вместо setDisplaySize для более точного контроля
-    // const scaleX = this.width / frame.width;
-    // const scaleY = this.skyHeight / frame.height;
-    // sky.setScale(scaleX, scaleY);
     
     sky.setOrigin(0.5, 0.5);
     sky.setDepth(0);
 
     // Создаем землю под небом
-    const ground = this.scene.add.image(this.width / 2, this.skyHeight, 'forest_location_ground');
+    // const ground = this.scene.add.image(this.width / 2, this.skyHeight, 'forest_location_ground');
     // ground.setDisplaySize(this.width, this.skyHeight);
-    ground.setOrigin(0.5, 0.5);
-    ground.setDepth(2); // Выше неба, но ниже игровых объектов
+    // ground.setOrigin(0.5, 0.5);
+    // ground.setDepth(2); // Выше неба, но ниже игровых объектов
     
     // Создаем статичный цветной фон под шейдером для участков, где нет травы
     const background = this.scene.add.graphics();
@@ -130,42 +129,6 @@ export class ForestLocation extends BaseLocation {
     background.fillRect(0, this.skyHeight + 40, this.width, this.height - this.skyHeight - 40);
     background.setDepth(1);
   }
-
-  private createGrassShader(): void {
-    try {
-      // Конвертируем цвет травы из hex в RGB для шейдера (от 0 до 1)
-      const r = ((FOREST_COLORS.grassColor >> 16) & 0xFF) / 255;
-      const g = ((FOREST_COLORS.grassColor >> 8) & 0xFF) / 255;
-      const b = (FOREST_COLORS.grassColor & 0xFF) / 255;
-    
-      // Создаем BaseShader и используем его для создания шейдера
-      const baseShader = new Phaser.Display.BaseShader(GRASS_SHADER_KEY, GRASS_FRAGMENT_SHADER, GRASS_VERTEX_SHADER);
-      
-      // Создаем шейдер, используя BaseShader
-      this.grassShader = this.scene.add.shader(
-        baseShader,
-        this.width / 2,     // позиция x (центр экрана)
-        this.height / 2,    // позиция y (центр экрана)
-        this.width * 2,     // ширина (в два раза больше экрана)
-        this.height * 2     // высота (в два раза больше экрана)
-      );
-      
-      // Устанавливаем uniform-параметры шейдера
-      this.grassShader.setUniform('grassColor.value', [r, g, b]);
-      this.grassShader.setUniform('resolution.value', [this.width * 2, this.height * 2]);
-      
-      // Устанавливаем правильную глубину отрисовки
-      this.grassShader.setDepth(5);
-      
-      // Устанавливаем origin в (0.5, 0.5) для правильного позиционирования
-      this.grassShader.setOrigin(0.5, 0.5);
-      
-      // Перемещаем шейдер в нужную позицию
-      this.grassShader.setPosition(this.width / 2, this.skyHeight + (this.height - this.skyHeight) / 2);
-    } catch (error: any) {
-      logger.error('Ошибка при создании шейдера:', error);
-    }
-  } 
   
   // Метод для обновления анимации травы
   public update(time: number): void {
@@ -208,5 +171,24 @@ export class ForestLocation extends BaseLocation {
       gameScene.addInteractiveObject(tree as unknown as Phaser.Physics.Arcade.Sprite);
       logger.info(`Дерево добавлено в группу интерактивных объектов`);
     }
+  }
+
+  /**
+   * Создает магазин на локации
+   */
+  private createShop(): void {
+    // Размещаем магазин в левом углу ниже слоя неба
+    const shopX = 120;
+    const shopY = this.skyHeight + 40;
+    
+    // Создаем магазин и добавляем его на сцену
+    const shop = new ForestShop(this.scene, shopX, shopY);
+    // this.scene.add.existing(shop);
+    if (this.scene instanceof GameplayScene) {
+      const gameScene = this.scene as GameplayScene;
+      gameScene.addShop(shop);
+      this.scene.add.existing(shop);
+    }
+    logger.info('Создан магазин в лесной локации');
   }
 } 
