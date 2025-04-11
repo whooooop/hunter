@@ -73,7 +73,6 @@ export class BaseEnemy extends PhysicsObject {
   }
   
   public update(time: number, delta: number): void {
-    console.log('update');
     // Проверяем, не вышел ли враг за левую границу экрана
     if (this.x < 0) {
       this.scene.events.emit('gameOver', false);

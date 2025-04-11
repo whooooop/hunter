@@ -5,7 +5,10 @@ import { settings } from '../settings';
 
 const logger = createLogger('BaseBlood');
 
-const BLOOD_TEXTURE_KEY = 'blood_particle_' + generateStringWithLength(6);
+// Создаем различные ключи для разных типов текстур крови
+const BLOOD_BASE_KEY = 'blood_particle_base_' + generateStringWithLength(6);
+const BLOOD_DROPS_KEY = 'blood_drops_' + generateStringWithLength(6);
+const BLOOD_SPLATTER_KEY = 'blood_splatter_' + generateStringWithLength(6);
 
 // Интерфейс с параметрами для настройки эффекта брызг крови
 export interface BloodSplashOptions {
@@ -21,7 +24,17 @@ export interface BloodSplashOptions {
         multiplier: number;    // Множитель скорости (0-1 для замедления, >1 для ускорения)
     };
     gravity?: number;          // Сила гравитации
-    spread?: number;           // Угол разброса (в радианах)
+    spread?: {                 // Разброс частиц
+        angle: number;         // Угол разброса по горизонтали (в радианах)
+        height: {              // Разброс по высоте (Y-координата)
+            min: number;       // Минимальный разброс по высоте
+            max: number;       // Максимальный разброс по высоте
+        }
+    };
+    initialVelocityY?: {       // Начальная вертикальная скорость
+        min: number;           // Минимальное значение
+        max: number;           // Максимальное значение
+    };
     fallDistance?: {           // Максимальная дистанция падения
         min: number;          
         max: number;
@@ -39,6 +52,8 @@ export interface BloodSplashOptions {
         max: number;
     };
     depth?: number;            // Приоритет отображения частиц (фиксированная глубина)
+    textureType?: string;      // Тип текстуры ('basic', 'drops', 'splatter')
+    minXDistance?: number;     // Минимальная дистанция разлета по оси X
 }
 
 // Дефолтные настройки для эффекта крови
@@ -55,7 +70,17 @@ const defaultBloodOptions: BloodSplashOptions = {
         multiplier: 0.6
     },
     gravity: 600,
-    spread: Math.PI/7,
+    spread: {
+        angle: Math.PI/7,
+        height: {
+            min: -5,
+            max: 15
+        }
+    },
+    initialVelocityY: {
+        min: 15,
+        max: 40
+    },
     fallDistance: {
         min: 15,
         max: 25
@@ -72,26 +97,44 @@ const defaultBloodOptions: BloodSplashOptions = {
         min: 0.6,
         max: 0.9
     },
-    depth: 10
+    depth: 10,
+    textureType: 'basic',
+    minXDistance: 50           // Значение по умолчанию для минимальной дистанции по X
 };
 
 export class BaseBlood {
     private scene: Phaser.Scene;
     private bloodParticles: Phaser.GameObjects.Sprite[] = [];
-    private maxParticles: number = 5000; // Максимальное количество частиц крови на сцене
+    private texturesCreated: boolean = false;
     
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
-        this.createBloodTexture();
+        this.createBloodTextures();
     }
     
     /**
-     * Создает текстуру для частиц крови
+     * Создает различные текстуры для частиц крови
      */
-    private createBloodTexture(): void {
-        // Проверяем, существует ли уже такая текстура
-        if (this.scene.textures.exists(BLOOD_TEXTURE_KEY)) {
-            return; // Используем существующую текстуру
+    private createBloodTextures(): void {
+        // Проверяем, созданы ли уже текстуры
+        if (this.texturesCreated) {
+            return;
+        }
+        
+        this.createBasicBloodTexture();
+        this.createBloodDropsTexture();
+        this.createBloodSplatterTexture();
+        
+        this.texturesCreated = true;
+        logger.debug('Созданы текстуры для частиц крови');
+    }
+    
+    /**
+     * Создает базовую текстуру для капель крови
+     */
+    private createBasicBloodTexture(): void {
+        if (this.scene.textures.exists(BLOOD_BASE_KEY)) {
+            return;
         }
         
         // Создаем графику для рисования частицы крови
@@ -101,29 +144,122 @@ export class BaseBlood {
         const darkRed = 0x8B0000;
         const brightRed = 0xFF0000;
         
-        // Рисуем несколько вариантов брызг крови
+        // Рисуем базовую каплю крови
         graphics.fillStyle(brightRed, 0.9);
-        
-        // Вариант 1: капля крови
         graphics.fillCircle(4, 4, 3);
         
-        // Вариант 2: брызги
-        graphics.fillCircle(12, 4, 2);
-        graphics.fillCircle(14, 6, 1.5);
-        graphics.fillCircle(10, 3, 1);
-        
-        // Вариант 3: пятно
-        graphics.fillStyle(darkRed, 0.8);
-        graphics.fillCircle(20, 4, 2.5);
-        graphics.fillCircle(21, 5, 2);
-        
-        // Создаем текстуру из графики (размер 24x8)
-        graphics.generateTexture(BLOOD_TEXTURE_KEY, 24, 8);
+        // Создаем текстуру из графики
+        graphics.generateTexture(BLOOD_BASE_KEY, 8, 8);
         
         // Удаляем графику после создания текстуры
         graphics.destroy();
+    }
+    
+    /**
+     * Создает текстуру с несколькими каплями крови
+     */
+    private createBloodDropsTexture(): void {
+        if (this.scene.textures.exists(BLOOD_DROPS_KEY)) {
+            return;
+        }
         
-        logger.debug('Создана текстура для частиц крови');
+        // Создаем графику для рисования частицы крови с каплями
+        const graphics = this.scene.add.graphics();
+        
+        // Цвета для крови
+        const darkRed = 0x8B0000;
+        const brightRed = 0xFF0000;
+        
+        // Рисуем основную каплю
+        graphics.fillStyle(brightRed, 0.9);
+        graphics.fillCircle(8, 8, 4);
+        
+        // Рисуем дополнительные маленькие капли
+        graphics.fillCircle(14, 6, 2);
+        graphics.fillCircle(4, 10, 2.5);
+        graphics.fillCircle(12, 12, 1.5);
+        
+        // Добавляем темные участки для объема
+        graphics.fillStyle(darkRed, 0.8);
+        graphics.fillCircle(7, 7, 2);
+        
+        // Создаем текстуру из графики
+        graphics.generateTexture(BLOOD_DROPS_KEY, 20, 20);
+        
+        // Удаляем графику после создания текстуры
+        graphics.destroy();
+    }
+    
+    /**
+     * Создает текстуру брызг крови с пятнами
+     */
+    private createBloodSplatterTexture(): void {
+        if (this.scene.textures.exists(BLOOD_SPLATTER_KEY)) {
+            return;
+        }
+        
+        // Создаем графику для рисования брызг
+        const graphics = this.scene.add.graphics();
+        
+        // Цвета для крови
+        const darkRed = 0x8B0000;
+        const brightRed = 0xFF0000;
+        
+        // Рисуем большое центральное пятно
+        graphics.fillStyle(brightRed, 0.85);
+        graphics.fillCircle(15, 15, 8);
+        
+        // Добавляем брызги в разные стороны
+        graphics.fillStyle(brightRed, 0.7);
+        
+        // Брызги в разных направлениях
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI * 2 / 6) * i;
+            const distance = Phaser.Math.Between(8, 15);
+            const x = 15 + Math.cos(angle) * distance;
+            const y = 15 + Math.sin(angle) * distance;
+            const size = Phaser.Math.FloatBetween(1, 4);
+            graphics.fillCircle(x, y, size);
+        }
+        
+        // Добавляем темные участки для объема
+        graphics.fillStyle(darkRed, 0.8);
+        graphics.fillCircle(13, 13, 4);
+        
+        // Создаем текстуру из графики
+        graphics.generateTexture(BLOOD_SPLATTER_KEY, 30, 30);
+        
+        // Удаляем графику после создания текстуры
+        graphics.destroy();
+    }
+    
+    /**
+     * Возвращает ключ текстуры в зависимости от настройки типа
+     */
+    private getTextureKey(textureType: string): string {
+        switch (textureType) {
+            case 'drops':
+                return BLOOD_DROPS_KEY;
+            case 'splatter':
+                return BLOOD_SPLATTER_KEY;
+            case 'basic':
+            default:
+                return BLOOD_BASE_KEY;
+        }
+    }
+    
+    /**
+     * Создает композитную частицу крови с несколькими каплями
+     */
+    private createCompositeBloodParticle(
+        x: number,
+        y: number,
+        settings: BloodSplashOptions
+    ): Phaser.Physics.Arcade.Sprite {
+        // Создаем основную частицу
+        const baseTextureKey = this.getTextureKey(settings.textureType!);
+        const bloodParticle = this.scene.physics.add.sprite(x, y, baseTextureKey);
+        return bloodParticle;
     }
     
     /**
@@ -135,15 +271,18 @@ export class BaseBlood {
     public createBloodSplash(
         x: number, 
         y: number, 
-        options?: Partial<BloodSplashOptions>
+        splashOptions?: Partial<BloodSplashOptions>
     ): void {
+        if (!settings.gameplay.blood.enabled) {
+            return;
+        }
         // Объединяем переданные параметры с дефолтными
-        const settings = { ...defaultBloodOptions, ...options };
+        const options = { ...defaultBloodOptions, ...splashOptions };
         
         // Проверяем, не превышен ли лимит частиц
-        if (this.bloodParticles.length >= this.maxParticles) {
+        if (this.bloodParticles.length >= settings.gameplay.blood.maxParticles) {
             // Удаляем самые старые частицы
-            const removeCount = Math.min(settings.amount!, this.bloodParticles.length);
+            const removeCount = Math.min(options.amount!, this.bloodParticles.length);
             for (let i = 0; i < removeCount; i++) {
                 const oldestParticle = this.bloodParticles.shift();
                 if (oldestParticle) {
@@ -157,64 +296,94 @@ export class BaseBlood {
         
         // Вычисляем максимальную высоту падения для псевдо-3D
         const maxFallDistance = Phaser.Math.Between(
-            settings.fallDistance!.min, 
-            settings.fallDistance!.max
+            options.fallDistance!.min, 
+            options.fallDistance!.max
         );
         
         // Создаем новые частицы крови с физикой
-        for (let i = 0; i < settings.amount!; i++) {
-            // Создаем спрайт для частицы крови с физикой
-            const bloodParticle = this.scene.physics.add.sprite(x, y, BLOOD_TEXTURE_KEY);
+        for (let i = 0; i < options.amount!; i++) {
+            // Применяем разброс по высоте для начальной позиции частицы
+            const heightSpread = Phaser.Math.Between(
+                options.spread!.height.min,
+                options.spread!.height.max
+            );
+            
+            // Создаем композитную частицу крови с учетом настроек капель
+            const bloodParticle = this.createCompositeBloodParticle(
+                x,
+                y + heightSpread,
+                options
+            );
             
             // Устанавливаем размер, вращение и прозрачность
             bloodParticle.setScale(Phaser.Math.FloatBetween(
-                settings.size!.min, 
-                settings.size!.max
+                options.size!.min, 
+                options.size!.max
             ));
             bloodParticle.setRotation(Phaser.Math.FloatBetween(0, Math.PI * 2));
             bloodParticle.setAlpha(Phaser.Math.FloatBetween(
-                settings.alpha!.min, 
-                settings.alpha!.max
+                options.alpha!.min, 
+                options.alpha!.max
             ));
             
             // Устанавливаем глубину отображения
-            bloodParticle.setDepth(settings.depth!);
+            bloodParticle.setDepth(options.depth!);
             
             // Отключаем стандартную коллизию с границами мира
             bloodParticle.setCollideWorldBounds(false);
             
             // Рассчитываем случайный угол разлета
-            const spreadAngle = Phaser.Math.FloatBetween(-settings.spread!, settings.spread!);
-            const bulletAngle = (settings.direction! > 0) ? 0 : Math.PI; // 0 - вправо, PI - влево
+            const spreadAngle = Phaser.Math.FloatBetween(
+                -options.spread!.angle, 
+                options.spread!.angle
+            );
+            const bulletAngle = (options.direction! > 0) ? 0 : Math.PI; // 0 - вправо, PI - влево
             const angle = bulletAngle + spreadAngle;
             
             // Вычисляем силу разлета
             const force = Phaser.Math.Between(
-                settings.speed!.min, 
-                settings.speed!.max
-            ) * Math.min(Math.abs(settings.direction!), 10) / 5;
+                options.speed!.min, 
+                options.speed!.max
+            ) * Math.min(Math.abs(options.direction!), 10) / 5;
             
-            // Рассчитываем компоненты скорости
-            const vx = Math.cos(angle) * force * settings.speed!.multiplier;
-            const vy = Math.sin(angle) * force - Phaser.Math.Between(15, 40);
+            // Рассчитываем компоненты скорости с учетом настроек начальной вертикальной скорости
+            let vx = Math.cos(angle) * force * options.speed!.multiplier;
+            const initialYVelocity = Phaser.Math.Between(
+                options.initialVelocityY!.min,
+                options.initialVelocityY!.max
+            );
+            const vy = Math.sin(angle) * force - initialYVelocity;
+            
+            // Применяем минимальную дистанцию разлета по X, если она задана
+            if (options.minXDistance && options.minXDistance > 0) {
+                // Определяем направление по X
+                const directionX = Math.sign(vx);
+                
+                // Если скорость по X ниже минимально необходимой для заданной дистанции,
+                // корректируем её, сохраняя направление
+                const minVxRequired = options.minXDistance * 0.2; // Коэффициент для примерного подбора скорости
+                if (Math.abs(vx) < minVxRequired) {
+                    vx = directionX * minVxRequired;
+                }
+            }
             
             // Применяем скорость
             bloodParticle.setVelocity(vx, vy);
             
             // Устанавливаем гравитацию
-            bloodParticle.setGravityY(settings.gravity!);
+            bloodParticle.setGravityY(options.gravity!);
             
             // Добавляем вращение
             bloodParticle.setAngularVelocity(Phaser.Math.Between(
-                settings.rotation!.min, 
-                settings.rotation!.max
+                options.rotation!.min, 
+                options.rotation!.max
             ));
             
             // Настраиваем сопротивление
-            bloodParticle.setDrag(settings.drag!.x, settings.drag!.y);
+            bloodParticle.setDrag(options.drag!.x, options.drag!.y);
             
-            // Сохраняем начальную позицию и максимальную дистанцию падения для псевдо-3D
-            bloodParticle.setData('initialY', y);
+            // Сохраняем начальную позицию с учетом разброса по высоте
+            bloodParticle.setData('initialY', y + heightSpread);
             bloodParticle.setData('maxFallDistance', maxFallDistance);
             
             // Добавляем в массив частиц
@@ -269,7 +438,7 @@ export class BaseBlood {
             loop: true
         });
         
-        logger.debug(`Создано ${settings.amount} динамических частиц крови в позиции (${x}, ${y})`);
+        logger.debug(`Создано ${options.amount} динамических частиц крови в позиции (${x}, ${y})`);
     }
     
     /**
@@ -288,10 +457,18 @@ export class BaseBlood {
                 multiplier: 0.5
             },
             gravity: 400,
+            spread: {
+                angle: Math.PI/10,
+                height: {
+                    min: -3,
+                    max: 8
+                }
+            },
             fallDistance: {
                 min: 10,
                 max: 20
-            }
+            },
+            textureType: 'basic'
         });
     }
     
@@ -314,12 +491,56 @@ export class BaseBlood {
                 max: 250,
                 multiplier: 0.8
             },
-            spread: Math.PI/4,
+            spread: {
+                angle: Math.PI/4,
+                height: {
+                    min: -10,
+                    max: 20
+                }
+            },
             gravity: 700,
             fallDistance: {
                 min: 20,
                 max: 35
-            }
+            },
+            textureType: 'splatter'
+        });
+    }
+    
+    /**
+     * Создает брызги крови с широким разбросом по высоте
+     * @param x Координата X
+     * @param y Координата Y
+     * @param direction Направление (-10 до 10)
+     * @param heightRange Диапазон разброса по высоте
+     */
+    public createWideSplatterBloodSplash(
+        x: number, 
+        y: number, 
+        direction: number, 
+        heightRange: number = 30
+    ): void {
+        this.createBloodSplash(x, y, {
+            amount: Phaser.Math.Between(8, 12),
+            direction,
+            speed: {
+                min: 100,
+                max: 200,
+                multiplier: 0.5
+            },
+            spread: {
+                angle: Math.PI/6,
+                height: {
+                    min: -heightRange/2,
+                    max: heightRange/2
+                }
+            },
+            gravity: 500,
+            fallDistance: {
+                min: 10,
+                max: 25
+            },
+            textureType: 'drops'
         });
     }
     
@@ -330,24 +551,5 @@ export class BaseBlood {
         this.bloodParticles.forEach(particle => particle.destroy());
         this.bloodParticles = [];
         logger.debug('Все частицы крови очищены');
-    }
-    
-    /**
-     * Устанавливает максимальное количество частиц крови
-     * @param count Максимальное количество частиц
-     */
-    public setMaxParticles(count: number): void {
-        this.maxParticles = count;
-        
-        // Если текущее количество превышает новый максимум, удаляем лишние
-        if (this.bloodParticles.length > this.maxParticles) {
-            const removeCount = this.bloodParticles.length - this.maxParticles;
-            for (let i = 0; i < removeCount; i++) {
-                const oldestParticle = this.bloodParticles.shift();
-                if (oldestParticle) {
-                    oldestParticle.destroy();
-                }
-            }
-        }
     }
 }

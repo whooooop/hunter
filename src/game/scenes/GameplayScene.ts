@@ -236,7 +236,7 @@ export class GameplayScene extends Phaser.Scene {
     const enemy = new SquirrelEnemy(this, x, y, {
       health: 1000,
       moveX: -1,
-      moveY: 1,
+      moveY: 0,
       direction: -1,
     });
     this.enemies.add(enemy.getSprite());
@@ -302,23 +302,30 @@ export class GameplayScene extends Phaser.Scene {
       enemyObj.x, // X-координата врага
       bulletObj.y, // Y-координата пули (высота)
       {
-        amount: Phaser.Math.Between(3, 5), // Небольшое количество частиц
+        amount: Phaser.Math.Between(3, 500), // Небольшое количество частиц
         direction: directionMultiplier, // Направление с учетом пули
         size: {
-          min: 0.3,
-          max: 0.7
+          min: 0.2,
+          max: 0.3
         },
         speed: {
-          min: 100,
-          max: 180,
+          min: 500,
+          max: 1080,
           multiplier: 0.6
         },
-        gravity: 600,
-        spread: Math.PI/7,
+        gravity: 700,
+        spread: {
+          angle: Math.PI/14,
+          height: {
+            min: -35, // Разброс вверх от точки попадания
+            max: 25   // Разброс вниз от точки попадания
+          }
+        },
         fallDistance: {
           min: 15,
           max: 25
         },
+        minXDistance: 80      // Минимальная дистанция разлета по оси X
       }
     );
     

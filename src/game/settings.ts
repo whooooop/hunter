@@ -21,6 +21,10 @@ export const settings = {
             bounce: 1,           // Коэффициент отскока
             scale: 0.35,         // Масштаб гильз
             dragX: 100,          // Трение по X для остановки гильз
+        },
+        blood: {
+            enabled: true,
+            maxParticles: 500000,
         }
     }
 }
