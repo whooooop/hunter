@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import { SceneKeys, PLAYER_POSITION_X, PLAYER_POSITION_Y } from '../core/Constants';
 import { Player } from '../entities/Player';
 import { BaseEnemy } from '../core/BaseEnemy';
-import { BaseBullet } from '../core/BaseBullet';
+import { BaseBullet, BaseBulletOptions } from '../core/BaseBullet';
 import { WaveInfo } from '../core/WaveInfo';
 import { settings } from '../settings';
 import { createLogger } from '../../utils/logger';
@@ -15,6 +15,7 @@ import { WeaponStatus } from '../ui/WeaponStatus';
 import { BaseShop } from '../core/BaseShop';
 import { SquirrelEnemy } from '../entities/squireel/SquirrelEnemy';
 import { DecalManager } from '../core/DecalManager';
+import { HitManager } from '../core/HitManager';
 
 const logger = createLogger('GameplayScene');
 
@@ -38,6 +39,7 @@ export class GameplayScene extends Phaser.Scene {
   private weaponStatus!: WeaponStatus;
   private enemySpawnTimer!: Phaser.Time.TimerEvent;
   private decalManager!: DecalManager;
+  private hitManager!: HitManager;
   
   constructor() {
     super({ key: SceneKeys.GAMEPLAY });
@@ -103,6 +105,9 @@ export class GameplayScene extends Phaser.Scene {
       runChildUpdate: true,
       allowGravity: false
     });
+    
+    // Инициализируем менеджер попаданий
+    this.hitManager = new HitManager(this, this.enemies, this.interactiveObjects);
 
     // Создаем локацию
     this.location.create();
@@ -117,13 +122,13 @@ export class GameplayScene extends Phaser.Scene {
     this.weaponStatus.setWeapon(weapon);
 
     // Настраиваем коллизии между пулями и врагами
-    this.physics.add.overlap(
-      this.bullets,
-      this.enemies,
-      this.handleBulletEnemyCollision as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
-      undefined,
-      this
-    );
+    // this.physics.add.overlap(
+    //   this.bullets,
+    //   this.enemies,
+    //   this.handleBulletEnemyCollision as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
+    //   undefined,
+    //   this
+    // );
     
     // Настраиваем коллизии между игроком и врагами
     this.physics.add.overlap(
@@ -135,13 +140,13 @@ export class GameplayScene extends Phaser.Scene {
     );
     
     // Настраиваем коллизии между пулями и интерактивными объектами
-    this.physics.add.overlap(
-      this.bullets,
-      this.interactiveObjects,
-      this.handleBulletObjectCollision as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
-      undefined,
-      this
-    );
+    // this.physics.add.overlap(
+    //   this.bullets,
+    //   this.interactiveObjects,
+    //   this.handleBulletObjectCollision as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
+    //   undefined,
+    //   this
+    // );
 
     this.spawnEnemy();
   }
@@ -211,6 +216,9 @@ export class GameplayScene extends Phaser.Scene {
         enemy.update(time, delta);
       }
     });
+
+    // Обрабатываем попадания пуль
+    this.hitManager.update(time);
   }
   
   // Метод для доступа к группе пуль
@@ -221,6 +229,16 @@ export class GameplayScene extends Phaser.Scene {
   // Метод для доступа к группе гильз
   public getShellCasingsGroup(): Phaser.Physics.Arcade.Group {
     return this.shellCasings;
+  }
+  
+  // Метод для доступа к группе врагов
+  public getEnemiesGroup(): Phaser.Physics.Arcade.Group {
+    return this.enemies;
+  }
+  
+  // Метод для доступа к группе интерактивных объектов
+  public getInteractiveObjectsGroup(): Phaser.Physics.Arcade.Group {
+    return this.interactiveObjects;
   }
   
   private spawnEnemy(): void {
@@ -240,67 +258,67 @@ export class GameplayScene extends Phaser.Scene {
   /**
    * Обработчик столкновения пули с интерактивным объектом
    */
-  private handleBulletObjectCollision(
-    bulletObj: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile, 
-    locationObject: LocationObject
-  ): void {
-    // Проверяем, что bulletObj это спрайт
-    if (!(bulletObj instanceof Phaser.Physics.Arcade.Sprite)) {
-      return;
-    }
+  // private handleBulletObjectCollision(
+  //   bulletObj: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile, 
+  //   locationObject: LocationObject
+  // ): void {
+  //   // Проверяем, что bulletObj это спрайт
+  //   if (!(bulletObj instanceof Phaser.Physics.Arcade.Sprite)) {
+  //     return;
+  //   }
     
-    // Получаем объект пули из свойства данных спрайта
-    const bullet = bulletObj.getData('bulletRef') as BaseBullet;
+  //   // Получаем объект пули из свойства данных спрайта
+  //   const bullet = bulletObj.getData('bulletRef') as BaseBullet;
 
-    locationObject.takeDamage(bullet.getDamage());
+  //   locationObject.takeDamage(bullet.getDamage());
 
-    if (locationObject.isDestroyed) {
-      // this.removeInteractiveObject(locationObject, true);
-    }
-    // bullet.onHit();
-  }
+  //   if (locationObject.isDestroyed) {
+  //     // this.removeInteractiveObject(locationObject, true);
+  //   }
+  //   // bullet.onHit();
+  // }
 
-  private handleBulletEnemyCollision(
-    bulletObj: Phaser.Types.Physics.Arcade.GameObjectWithBody, 
-    enemyObj: Phaser.Types.Physics.Arcade.GameObjectWithBody
-  ): void {
-    // Проверяем, что bulletObj это спрайт (а не тайл)
-    if (!(bulletObj instanceof Phaser.Physics.Arcade.Sprite)) {
-      return;
-    }
+  // private handleBulletEnemyCollision(
+  //   bulletObj: Phaser.Types.Physics.Arcade.GameObjectWithBody, 
+  //   enemyObj: Phaser.Types.Physics.Arcade.GameObjectWithBody
+  // ): void {
+  //   // Проверяем, что bulletObj это спрайт (а не тайл)
+  //   if (!(bulletObj instanceof Phaser.Physics.Arcade.Sprite)) {
+  //     return;
+  //   }
     
-    // Получаем объект пули из свойства данных спрайта
-    const bullet = bulletObj.getData('bulletRef') as BaseBullet;
-    if (!bullet) {
-      console.error('Спрайт пули не содержит ссылку на объект BaseBullet');
-      return;
-    }
+  //   // Получаем объект пули из свойства данных спрайта
+  //   const bullet = bulletObj.getData('bulletRef') as BaseBullet;
+  //   if (!bullet) {
+  //     console.error('Спрайт пули не содержит ссылку на объект BaseBullet');
+  //     return;
+  //   }
     
-    // Проверяем, что enemyObj валидный
-    if (!(enemyObj instanceof Phaser.Physics.Arcade.Sprite)) {
-      return;
-    }
+  //   // Проверяем, что enemyObj валидный
+  //   if (!(enemyObj instanceof Phaser.Physics.Arcade.Sprite)) {
+  //     return;
+  //   }
     
-    const enemy = enemyObj.getData('enemyRef') as BaseEnemy;
-    if (!enemy) {
-      console.error('Спрайт врага не содержит ссылку на объект BaseEnemy');
-      return;
-    }
+  //   const enemy = enemyObj.getData('enemyRef') as BaseEnemy;
+  //   if (!enemy) {
+  //     console.error('Спрайт врага не содержит ссылку на объект BaseEnemy');
+  //     return;
+  //   }
     
-    // Создаем брызги крови в точке попадания с эффектом направления
-    // Преобразуем угол пули в направление для брызг
-    const direction = bullet.getDirection();
+  //   // Создаем брызги крови в точке попадания с эффектом направления
+  //   // Преобразуем угол пули в направление для брызг
+  //   const direction = bullet.getDirection();
     
-    // Наносим урон врагу
-    enemy.takeDamage({
-      damage: bullet.getDamage(),
-      direction,
-      x: enemyObj.x,
-      y: bulletObj.y,
-    });
-    // Деактивируем пулю
-    // bullet.onHit();
-  }
+  //   // Наносим урон врагу
+  //   enemy.takeDamage({
+  //     damage: bullet.getDamage(),
+  //     direction,
+  //     x: enemyObj.x,
+  //     y: bulletObj.y,
+  //   });
+  //   // Деактивируем пулю
+  //   // bullet.onHit();
+  // }
   
   private handlePlayerEnemyCollision(
     playerObj: Phaser.Types.Physics.Arcade.GameObjectWithBody, 
@@ -328,5 +346,23 @@ export class GameplayScene extends Phaser.Scene {
     if (!player.isJumping) {
       player.applyForce(direction, 0, 10, 0.5, 0.1);  
     }
+  }
+
+  /**
+   * Добавляет пулю с предварительным расчетом столкновений
+   */
+  public addPredictiveBullet(
+    x: number, 
+    y: number, 
+    targetX: number, 
+    targetY: number, 
+    speed: number, 
+    damage: number, 
+    range: number,
+    bulletOptions?: BaseBulletOptions
+  ): Phaser.Physics.Arcade.Sprite | null {
+    return this.hitManager.addPredictiveBullet(
+      x, y, targetX, targetY, speed, damage, range, bulletOptions
+    );
   }
 } 

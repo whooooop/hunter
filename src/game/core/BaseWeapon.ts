@@ -188,16 +188,23 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
       return;
     }
 
+    // Проверяем, что сцена - это GameplayScene
+    if (!(this.scene instanceof GameplayScene)) {
+      return;
+    }
+    
+    const gameScene = this.scene as GameplayScene;
     const bulletOptions = typeof this.baseOptions.bullet === 'boolean' ? undefined : this.baseOptions.bullet;
     const bullet = new BaseBullet(this.scene, x, y, bulletOptions);
 
-    // Передаем пулю в группу bullets сцены GameplayScene
-    if (this.scene instanceof GameplayScene) {
-      const gameScene = this.scene as GameplayScene;
-      gameScene.getBulletsGroup().add(bullet.getSprite());
-    }
-
-    bullet.fire(x, y, targetX, targetY, this.baseOptions.speed, this.baseOptions.damage, this.baseOptions.range);
+    // Используем предиктивное создание пули
+    gameScene.addPredictiveBullet(
+      x, y, targetX, targetY,
+      this.baseOptions.speed,
+      this.baseOptions.damage,
+      this.baseOptions.range,
+      bulletOptions
+    );
   }
 
   public fire(x: number, y: number, direction: number = 1) {
