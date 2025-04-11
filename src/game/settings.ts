@@ -24,7 +24,7 @@ export const settings = {
         },
         blood: {
             enabled: true,
-            maxParticles: 500000,
+            keepDecals: true,
         }
     }
 }

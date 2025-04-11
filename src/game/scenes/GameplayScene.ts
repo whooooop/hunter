@@ -39,6 +39,9 @@ export class GameplayScene extends Phaser.Scene {
   private enemySpawnTimer!: Phaser.Time.TimerEvent;
   private blood!: BaseBlood; // Система для брызг крови
   
+  // Единая текстура для декалей (кровь, отметины от пуль и другие статичные эффекты)
+  private decalTexture!: Phaser.GameObjects.RenderTexture;
+  
   constructor() {
     super({ key: SceneKeys.GAMEPLAY });
   }
@@ -64,14 +67,22 @@ export class GameplayScene extends Phaser.Scene {
     // Устанавливаем границы мира
     this.physics.world.setBounds(0, 0, settings.display.width, settings.display.height);
     
+    // Создаем единую текстуру для всех декалей в игре
+    this.decalTexture = this.add.renderTexture(
+      0.5 * settings.display.width, 0.5 * settings.display.height, 
+      settings.display.width,
+      settings.display.height
+    );
+    this.decalTexture.setDepth(5); // Устанавливаем ниже, чем у активных объектов
+    
     // Создаем информацию о волне
     this.waveInfo = new WaveInfo(this);
     
     // Создаем интерфейс отображения состояния оружия
     this.weaponStatus = new WeaponStatus(this);
     
-    // Инициализируем систему крови
-    this.blood = new BaseBlood(this);
+    // Инициализируем систему крови с передачей общей текстуры для декалей
+    this.blood = new BaseBlood(this, this.decalTexture);
     
     // Инициализируем группы врагов и пуль
     this.bullets = this.physics.add.group({
@@ -224,11 +235,6 @@ export class GameplayScene extends Phaser.Scene {
     return this.shellCasings;
   }
   
-  // Очистка всех гильз со сцены
-  public clearAllShellCasings(): void {
-    this.shellCasings.clear(true, true);
-  }
-  
   private spawnEnemy(): void {
     const x = settings.display.width - 50;
     const y = 400;
@@ -264,7 +270,7 @@ export class GameplayScene extends Phaser.Scene {
     }
     // bullet.onHit();
   }
-  
+
   private handleBulletEnemyCollision(
     bulletObj: Phaser.Types.Physics.Arcade.GameObjectWithBody, 
     enemyObj: Phaser.Types.Physics.Arcade.GameObjectWithBody
@@ -302,7 +308,7 @@ export class GameplayScene extends Phaser.Scene {
       enemyObj.x, // X-координата врага
       bulletObj.y, // Y-координата пули (высота)
       {
-        amount: Phaser.Math.Between(3, 500), // Небольшое количество частиц
+        amount: Phaser.Math.Between(100, 500), // Очень большое количество частиц
         direction: directionMultiplier, // Направление с учетом пули
         size: {
           min: 0.2,

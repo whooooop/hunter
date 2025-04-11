@@ -106,10 +106,17 @@ export class BaseBlood {
     private scene: Phaser.Scene;
     private bloodParticles: Phaser.GameObjects.Sprite[] = [];
     private texturesCreated: boolean = false;
+    private decalTexture: Phaser.GameObjects.RenderTexture;
     
-    constructor(scene: Phaser.Scene) {
+    /**
+     * Конструктор системы крови
+     * @param scene Сцена для размещения эффектов крови
+     * @param decalTexture Опциональная внешняя текстура для декалей
+     */
+    constructor(scene: Phaser.Scene, decalTexture: Phaser.GameObjects.RenderTexture) {
         this.scene = scene;
         this.createBloodTextures();
+        this.decalTexture = decalTexture;
     }
     
     /**
@@ -263,6 +270,23 @@ export class BaseBlood {
     }
     
     /**
+     * Добавляет частицу крови на постоянный слой декалей и удаляет оригинальный спрайт
+     */
+    private addToDecalLayer(particle: Phaser.GameObjects.Sprite): void {
+        // Рендерим частицу в текстуру на её текущей позиции
+        this.drawDecal(particle);
+        
+        // Удаляем частицу из массива активных частиц
+        const index = this.bloodParticles.indexOf(particle);
+        if (index !== -1) {
+            this.bloodParticles.splice(index, 1);
+        }
+        
+        // Уничтожаем оригинальный спрайт частицы
+        particle.destroy();
+    }
+    
+    /**
      * Создает брызги крови в указанной позиции с настраиваемыми параметрами
      * @param x Координата X
      * @param y Координата Y
@@ -278,19 +302,7 @@ export class BaseBlood {
         }
         // Объединяем переданные параметры с дефолтными
         const options = { ...defaultBloodOptions, ...splashOptions };
-        
-        // Проверяем, не превышен ли лимит частиц
-        if (this.bloodParticles.length >= settings.gameplay.blood.maxParticles) {
-            // Удаляем самые старые частицы
-            const removeCount = Math.min(options.amount!, this.bloodParticles.length);
-            for (let i = 0; i < removeCount; i++) {
-                const oldestParticle = this.bloodParticles.shift();
-                if (oldestParticle) {
-                    oldestParticle.destroy();
-                }
-            }
-        }
-        
+ 
         // Создаем массив для физических брызг
         const physicsParticles: Phaser.Physics.Arcade.Sprite[] = [];
         
@@ -413,6 +425,9 @@ export class BaseBlood {
                             
                             // Отключаем физику, оставляя частицу видимой
                             particle.disableBody(true, false);
+                            
+                            // Добавляем частицу на слой декалей и удаляем её
+                            this.addToDecalLayer(particle);
                         } else {
                             // Умеренное ускорение падения по мере движения
                             if (particle.body && particle.body.velocity.y < 200) {
@@ -545,11 +560,106 @@ export class BaseBlood {
     }
     
     /**
-     * Очищает все частицы крови со сцены
+     * Создает оптимизированные брызги крови - большая часть сразу попадает в декали
      */
-    public clearAllBlood(): void {
-        this.bloodParticles.forEach(particle => particle.destroy());
-        this.bloodParticles = [];
-        logger.debug('Все частицы крови очищены');
+    public createOptimizedBloodSplash(
+        x: number, 
+        y: number, 
+        splashOptions?: Partial<BloodSplashOptions>
+    ): void {
+        if (!settings.gameplay.blood.enabled) {
+            return;
+        }
+        
+        // Объединяем переданные параметры с дефолтными
+        const options = { ...defaultBloodOptions, ...splashOptions };
+        
+        // Большая часть частиц сразу рендерится в текстуру без физики
+        this.createInstantBloodDecals(x, y, options);
+        
+        // Небольшое количество частиц создаем с физикой для визуального эффекта
+        const animatedAmount = Math.min(10, Math.ceil(options.amount! / 10));
+        
+        // Создаем только небольшое количество частиц с физикой для визуального эффекта
+        const reducedOptions = {
+            ...options,
+            amount: animatedAmount
+        };
+        
+        // Создаем анимированные частицы (существенно меньше, чем в оригинале)
+        this.createBloodSplash(x, y, reducedOptions);
     }
+    
+    /**
+     * Создает статичные декали крови сразу в текстуру, без физики
+     */
+    private createInstantBloodDecals(
+        x: number, 
+        y: number, 
+        options: BloodSplashOptions
+    ): void {
+        // Определяем направление брызг
+        const directionFactor = options.direction! > 0 ? 1 : -1;
+        
+        // Количество статичных частиц
+        const particleCount = options.amount! - Math.min(10, Math.ceil(options.amount! / 10));
+        
+        // Размеры области разброса
+        const spreadWidth = 120;
+        const spreadHeight = 80;
+        
+        for (let i = 0; i < particleCount; i++) {
+            // Выбираем случайную текстуру
+            const textureKey = this.getTextureKey(options.textureType!);
+            
+            // Случайное смещение с учетом направления
+            let offsetX = Phaser.Math.FloatBetween(-spreadWidth/2, spreadWidth/2);
+            // Добавляем направленность
+            offsetX += directionFactor * Math.abs(offsetX) * 0.5;
+            
+            const offsetY = Phaser.Math.FloatBetween(
+                options.spread!.height.min,
+                options.spread!.height.max
+            );
+            
+            // Случайное расстояние падения
+            const fallDistance = Phaser.Math.FloatBetween(
+                options.fallDistance!.min, 
+                options.fallDistance!.max
+            );
+            
+            // Создаем временный спрайт
+            const tempSprite = this.scene.add.sprite(
+                x + offsetX,
+                y + offsetY + fallDistance, // Сразу добавляем дистанцию падения
+                textureKey
+            );
+            
+            // Настраиваем его параметры
+            tempSprite.setScale(Phaser.Math.FloatBetween(
+                options.size!.min, 
+                options.size!.max
+            ));
+            tempSprite.setRotation(Phaser.Math.FloatBetween(0, Math.PI * 2));
+            tempSprite.setAlpha(Phaser.Math.FloatBetween(
+                options.alpha!.min, 
+                options.alpha!.max
+            ));
+            
+            // Сразу рендерим его в текстуру
+            this.drawDecal(tempSprite);
+            
+            // Уничтожаем временный спрайт
+            tempSprite.destroy();
+        }
+    }
+    
+    drawDecal(particle: Phaser.GameObjects.Sprite): void {
+        if (!settings.gameplay.blood.keepDecals) {
+            return;
+        }
+        this.decalTexture.draw(particle, particle.x, particle.y);
+    }
+
+
 }
