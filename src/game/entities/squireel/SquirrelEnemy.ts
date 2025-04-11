@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { BaseEnemy } from '../../core/BaseEnemy';
-
+import { DecalManager } from '../../core/DecalManager';
 import enemyPlaceholder from './assets/images/enemy_placeholder.png';
 import { generateStringWithLength } from '../../../utils/stringGenerator';
 
@@ -11,6 +11,7 @@ interface SquirrelEnemyOptions {
   moveY: number;
   direction: number;
   health: number;
+  decalManager?: DecalManager;
 }
 
 export class SquirrelEnemy extends BaseEnemy {
@@ -20,13 +21,14 @@ export class SquirrelEnemy extends BaseEnemy {
       health: options.health,
       acceleration: 10,
       deceleration: 8,
-      maxVelocityX: 30,
+      maxVelocityX: 100,
       maxVelocityY: 2,
       direction: -1,
       friction: 0,
       moveX: -1,
       moveY: 1,
       scale: 0.7,
+      decalManager: options.decalManager
     });
     
     // Дополнительная настройка для белки

@@ -1,15 +1,22 @@
 import * as Phaser from 'phaser';
-import { BaseBullet } from './BaseBullet';
+import { BaseBullet, BaseBulletOptions } from './BaseBullet';
 import { GameplayScene } from '../scenes/GameplayScene';
 import { Player } from '../entities/Player';
 import { settings } from '../settings';
 import { createLogger } from '../../utils/logger';
 import { ShellCasing } from '../entities/ShellCasing';
-import { WeaponSight } from '../weapons/WeaponSight';
+import { BaseWeaponSight, BaseWeaponSightOptions } from './BaseWeaponSight';
 
 const logger = createLogger('BaseWeapon');
 
 interface BaseWeaponOptions {
+  name: string;
+  texture: string;
+  scale: number;
+
+  offsetX: number;
+  offsetY: number;
+
   // Перезарядка
   reloadTime: number; // Скорость перезарядки в мс
   magazineSize: number; // Размер магазина
@@ -22,6 +29,7 @@ interface BaseWeaponOptions {
   fireRate: number; // Задержка между выстрелами в мс
   spreadAngle: number; // Угол разброса при выстреле в градусах
   aimingTime: number; // Время прицеливания в секундах
+  canAim: boolean; // Можно ли прицеливаться
   range: number; // Дистанция стрельбы
   automatic: boolean; // Является ли оружие автоматическим
   
@@ -30,12 +38,17 @@ interface BaseWeaponOptions {
   recoilRecovery: number; // Скорость восстановления от отдачи
 
   // Звуки
-  emptySoundPath?: string;
-  reloadSoundPath?: string;
-  fireSoundPath?: string;
+  emptyAudio?: string;
+  reloadAudio?: string;
+  fireAudio?: string;
 
-  bulletClass: typeof BaseBullet;
+  bulletCount: number;
+
+  sight: BaseWeaponSightOptions | boolean;
+  bullet: BaseBulletOptions | boolean;
+  shellCasings: boolean;
 }
+
 
 type AudioAssets = {
   fire: Phaser.Sound.BaseSound | null;
@@ -43,12 +56,8 @@ type AudioAssets = {
   reload: Phaser.Sound.BaseSound | null;
 }
 
-export class BaseWeapon {
-  protected id: string = 'unknown_weapon';
-
-  protected scene: Phaser.Scene;
+export class BaseWeapon extends Phaser.GameObjects.Sprite {
   protected player: Player | null = null;
-  protected sprite: Phaser.GameObjects.Sprite | null = null;
   
   protected lastFired: number = 0;
   protected isReloading: boolean = false;
@@ -56,7 +65,7 @@ export class BaseWeapon {
   protected currentRecoil: number = 0;
   protected canFireAgain: boolean = true; // Флаг для неавтоматического оружия
 
-  private options: BaseWeaponOptions;
+  private baseOptions: BaseWeaponOptions;
 
   private audioAssets: AudioAssets = {
     fire: null,
@@ -64,49 +73,44 @@ export class BaseWeapon {
     reload: null
   }
 
-  private sight: WeaponSight | null = null;
+  private sight: BaseWeaponSight | null = null;
 
-  constructor(id: string, scene: Phaser.Scene, options: BaseWeaponOptions) {
-    this.id = id;
-    this.scene = scene;
-    this.options = options;
+  constructor(scene: Phaser.Scene, options: BaseWeaponOptions) {
+    super(scene, 0, 0, options.texture);
+    this.name = options.name;
+    this.baseOptions = options;
+    this.setScale(this.baseOptions.scale);
   }
-
-  /**
-   * Возвращает идентификатор оружия
-   */
-  public getId(): string {
-    return this.id;
-  }
-
-  public preload(): void {
-    if (this.options.fireSoundPath) {
-      this.scene.load.audio(this.options.fireSoundPath, this.options.fireSoundPath);
-    }
-    if (this.options.emptySoundPath) {
-      this.scene.load.audio(this.options.emptySoundPath, this.options.emptySoundPath);
-    }
-    if (this.options.reloadSoundPath) {
-      this.scene.load.audio(this.options.reloadSoundPath, this.options.reloadSoundPath);
-    }
-  } 
 
   create(player: Player): void {
     this.player = player;
-    this.currentAmmo = this.options.magazineSize;
-    this.sight = new WeaponSight(this.scene);
+    this.currentAmmo = this.baseOptions.magazineSize;
 
-    if (this.options.fireSoundPath) {
-      this.audioAssets.fire = this.scene.sound.add(this.options.fireSoundPath, { volume: settings.audio.weaponsVolume });
-    }
-    if (this.options.emptySoundPath) {
-      this.audioAssets.empty = this.scene.sound.add(this.options.emptySoundPath, { volume: settings.audio.weaponsVolume });
-    }
-    if (this.options.reloadSoundPath) {
-      this.audioAssets.reload = this.scene.sound.add(this.options.reloadSoundPath, { volume: settings.audio.weaponsVolume });
-    }
+    this.createSight()
+    this.createAudioAssets()
+  }
 
-    logger.info(`Оружие создано: ${this.id}, магазин: ${this.currentAmmo}/${this.options.magazineSize}`);
+  protected createSight(): void {
+    if (!this.baseOptions.sight) {
+      return;
+    }
+    if (typeof this.baseOptions.sight === 'boolean') {
+      this.sight = new BaseWeaponSight(this.scene);
+    } else {
+      this.sight = new BaseWeaponSight(this.scene, this.baseOptions.sight);
+    }
+  }
+
+  protected createAudioAssets(): void {
+    if (this.baseOptions.fireAudio) {
+      this.audioAssets.fire = this.scene.sound.add(this.baseOptions.fireAudio, { volume: settings.audio.weaponsVolume });
+    }
+    if (this.baseOptions.emptyAudio) {
+      this.audioAssets.empty = this.scene.sound.add(this.baseOptions.emptyAudio, { volume: settings.audio.weaponsVolume });
+    }
+    if (this.baseOptions.reloadAudio) {
+      this.audioAssets.reload = this.scene.sound.add(this.baseOptions.reloadAudio, { volume: settings.audio.weaponsVolume });
+    }
   }
 
   public getCurrentAmmo(): number {
@@ -121,10 +125,10 @@ export class BaseWeapon {
     if (this.currentAmmo <= 0) return false;
     
     // Для неавтоматического оружия проверяем, был ли отпущен курок
-    if (!this.options.automatic && !this.canFireAgain) return false;
+    if (!this.baseOptions.automatic && !this.canFireAgain) return false;
     
     // Проверяем задержку между выстрелами
-    return time - this.lastFired >= this.options.fireRate;
+    return time - this.lastFired >= this.baseOptions.fireRate;
   }
 
   public isEmpty(): boolean {
@@ -132,15 +136,15 @@ export class BaseWeapon {
   }
 
   public reload(): void {
-    if (this.isReloading || this.currentAmmo === this.options.magazineSize) return;
+    if (this.isReloading || this.currentAmmo === this.baseOptions.magazineSize) return;
     
     this.playReloadSound();
     this.isReloading = true;
-    logger.info(`Начало перезарядки ${this.id}, текущие патроны: ${this.currentAmmo}`);
+    logger.info(`Начало перезарядки ${this.name}, текущие патроны: ${this.currentAmmo}`);
     
     // Устанавливаем таймер на перезарядку
-    this.scene.time.delayedCall(this.options.reloadTime, () => {
-      this.currentAmmo = this.options.magazineSize;
+    this.scene.time.delayedCall(this.baseOptions.reloadTime, () => {
+      this.currentAmmo = this.baseOptions.magazineSize;
       this.isReloading = false;
       logger.info(`Перезарядка завершена. Патроны: ${this.currentAmmo}`);
     });
@@ -151,17 +155,18 @@ export class BaseWeapon {
     const timeSinceLastShot = currentTime - this.lastFired;
     
     // Если это первый выстрел или прошло много времени с последнего выстрела
-    if (this.lastFired === 0 || timeSinceLastShot >= this.options.aimingTime) {
+    if (this.baseOptions.canAim && (this.lastFired === 0 || timeSinceLastShot >= this.baseOptions.aimingTime)) {
       return {
-        targetX: x + this.options.range * direction,
+        targetX: x + this.baseOptions.range * direction,
         targetY: y
       };
     }
     
     // Рассчитываем множитель разброса в зависимости от частоты стрельбы
     // Чем меньше времени прошло с последнего выстрела, тем больше разброс
-    const spreadMultiplier = Math.min(1, (this.options.aimingTime - timeSinceLastShot) / this.options.aimingTime);
-    const currentSpread = this.options.spreadAngle * spreadMultiplier;
+    // const spreadMultiplier = Math.min(1, (this.baseOptions.aimingTime - timeSinceLastShot) / this.baseOptions.aimingTime);
+    const spreadMultiplier = 1;
+    const currentSpread = this.baseOptions.spreadAngle * spreadMultiplier;
     
     // Получаем случайный угол в пределах текущего разброса
     const randomAngle = Phaser.Math.DegToRad(
@@ -170,18 +175,29 @@ export class BaseWeapon {
     
     // Рассчитываем конечную точку с учетом угла (стрельба всегда вправо)
     return {
-      targetX: x + Math.cos(randomAngle) * this.options.range * direction,
-      targetY: y + Math.sin(randomAngle) * this.options.range
+      targetX: x + Math.cos(randomAngle) * this.baseOptions.range * direction,
+      targetY: y + Math.sin(randomAngle) * this.baseOptions.range
     };
   }
 
   /**
    * Создает пулю в зависимости от типа оружия
    */
-  protected createBullet(x: number, y: number): BaseBullet {
-    // Базовая реализация просто создает BaseBullet
-    // Подклассы могут переопределить этот метод для создания специфичных пуль
-    return new this.options.bulletClass(this.scene, x, y);
+  protected createBullet(x: number, y: number, targetX: number, targetY: number, direction: number) {
+    if (!this.baseOptions.bullet) {
+      return;
+    }
+
+    const bulletOptions = typeof this.baseOptions.bullet === 'boolean' ? undefined : this.baseOptions.bullet;
+    const bullet = new BaseBullet(this.scene, x, y, bulletOptions);
+
+    // Передаем пулю в группу bullets сцены GameplayScene
+    if (this.scene instanceof GameplayScene) {
+      const gameScene = this.scene as GameplayScene;
+      gameScene.getBulletsGroup().add(bullet.getSprite());
+    }
+
+    bullet.fire(x, y, targetX, targetY, this.baseOptions.speed, this.baseOptions.damage, this.baseOptions.range);
   }
 
   public fire(x: number, y: number, direction: number = 1) {
@@ -194,37 +210,29 @@ export class BaseWeapon {
     }
     
     // Для неавтоматического оружия блокируем следующий выстрел
-    if (!this.options.automatic) {
+    if (!this.baseOptions.automatic) {
       this.canFireAgain = false;
     }
     
-    // Создаем пулю с помощью специального метода
-    const bullet = this.createBullet(x, y);
-    
-    // Передаем пулю в группу bullets сцены GameplayScene
-    if (this.scene instanceof GameplayScene) {
-      const gameScene = this.scene as GameplayScene;
-      gameScene.getBulletsGroup().add(bullet.getSprite());
-      
-      // Создаем гильзу после выстрела
+    for (let i = 0; i < this.baseOptions.bulletCount; i++) {
+      // Рассчитываем точку прицеливания с учетом разброса и направления
+      const { targetX, targetY } = this.calculateTargetPoint(x, y, direction);
+      this.createBullet(x, y, targetX, targetY, direction);
+    }
+
+    // Создаем гильзу после выстрела
+    if (this.baseOptions.shellCasings && this.scene instanceof GameplayScene) {
       this.ejectShellCasing(x, y, direction);
     }
-    
-    // Рассчитываем точку прицеливания с учетом разброса и направления
-    const { targetX, targetY } = this.calculateTargetPoint(x, y, direction);
 
-    // Отладочная информация
-    logger.debug(`Выстрел из (${x.toFixed(0)}, ${y.toFixed(0)}) в (${targetX.toFixed(0)}, ${targetY.toFixed(0)}), направление: ${direction}`);
-
-    bullet.fire(x, y, targetX, targetY, this.options.speed, this.options.damage, this.options.range);
-    this.playFireSound();
-    
     // Применяем отдачу к игроку с учетом направления
-    this.applyRecoil(direction);
-    
+    if (this.baseOptions.recoilForce) {
+      this.applyRecoil(direction);
+    }
+
+    this.playFireSound();
     this.lastFired = this.scene.time.now;
     this.currentAmmo--;
-    logger.debug(`Осталось патронов: ${this.currentAmmo}`);
   }
 
   /**
@@ -264,15 +272,15 @@ export class BaseWeapon {
    */
   private calculateRecoilForce(): number {
     // Базовая сила отдачи из настроек оружия
-    let recoilForce = this.options.recoilForce;
+    let recoilForce = this.baseOptions.recoilForce;
     
     // Увеличиваем отдачу при быстрой стрельбе
     const currentTime = this.scene.time.now;
     const timeSinceLastShot = currentTime - this.lastFired;
     
     // Если прошло мало времени с последнего выстрела, увеличиваем отдачу
-    if (this.lastFired !== 0 && timeSinceLastShot < this.options.aimingTime) {
-      const recoilMultiplier = 1 + (this.options.aimingTime - timeSinceLastShot) / this.options.aimingTime;
+    if (this.lastFired !== 0 && timeSinceLastShot < this.baseOptions.aimingTime) {
+      const recoilMultiplier = 1 + (this.baseOptions.aimingTime - timeSinceLastShot) / this.baseOptions.aimingTime;
       recoilForce *= recoilMultiplier;
     }
     
@@ -305,6 +313,8 @@ export class BaseWeapon {
   }
 
   public update(time: number, delta: number): void {
+    super.update(time, delta);
+
     if (this.sight && this.player) {
       const playerSprite = this.player.getSprite();
       // Обновляем позицию прицела используя координаты спрайта игрока
@@ -314,7 +324,22 @@ export class BaseWeapon {
         this.player.getDirection(),
         this.currentAmmo > 0
       );
+    } 
+    if (this.player) {
+      this.setPosition(this.player.x, this.player.y);
     }
+  }
+
+  public setDepth(depth: number) {
+    super.setDepth(depth);
+    return this;
+  }
+
+  public setPosition(x: number, y: number) {
+    const offsetX = this.baseOptions?.offsetX || 0;
+    const offsetY = this.baseOptions?.offsetY || 0;
+    super.setPosition(x + offsetX, y + offsetY);
+    return this;
   }
 
   // Метод для сброса блокировки выстрела (вызывается при отпускании кнопки)

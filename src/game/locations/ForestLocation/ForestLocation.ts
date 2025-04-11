@@ -1,15 +1,25 @@
 import * as Phaser from 'phaser';
 import { BaseLocation, LocationBounds } from '../../core/BaseLocation';
-import { ForestLocationConfig, DEFAULT_FOREST_CONFIG, FOREST_COLORS, INTERACTIVE_OBJECTS } from './ForestLocationConfig';
-import { GRASS_SHADER_KEY, GRASS_FRAGMENT_SHADER, GRASS_VERTEX_SHADER } from './GrassShader';
+import { ForestLocationConfig, DEFAULT_FOREST_CONFIG, FOREST_COLORS, INTERACTIVE_OBJECTS, CLOUDS } from './ForestLocationConfig';
 import { createLogger } from '../../../utils/logger';
-import skyImage from './assets/images/sky.png';
-import groundImage from './assets/images/ground.png';
 import { GameplayScene } from '../../scenes/GameplayScene';
 import { ForestShop } from './components/ForestShop';
 import { SpruceTree } from './components/SpruceTree';
+import { generateStringWithLength } from '../../../utils/stringGenerator';
+
+import skyImage from './assets/images/sky.png';
+import groundImage from './assets/images/ground.png';
+import rockImage from './assets/images/rock.png';
+import rockImage2 from './assets/images/rock2.png';
+import cloudImage from './assets/images/cloud.png';
 
 const logger = createLogger('ForestLocation');
+
+const GROUND_TEXTURE = 'ground_texture_' + generateStringWithLength(6);
+const ROCK_TEXTURE = 'rock_texture_' + generateStringWithLength(6);
+const ROCK_TEXTURE_2 = 'rock_texture_2_' + generateStringWithLength(6);
+const SKY_TEXTURE = 'sky_texture_' + generateStringWithLength(6);
+const CLOUD_TEXTURE = 'cloud_texture_' + generateStringWithLength(6);
 
 export class ForestLocation extends BaseLocation {
   private config: ForestLocationConfig;
@@ -27,6 +37,9 @@ export class ForestLocation extends BaseLocation {
   // Ссылка на шейдер травы
   private grassShader: Phaser.GameObjects.Shader | null = null;
   
+  // Массив для хранения облаков
+  private clouds: Phaser.GameObjects.Image[] = [];
+  
   constructor(scene: Phaser.Scene, config: Partial<ForestLocationConfig> = {}) {
     super(scene);
     
@@ -35,29 +48,19 @@ export class ForestLocation extends BaseLocation {
       ...DEFAULT_FOREST_CONFIG,
       ...config
     };
-    
-    // Регистрируем шейдер для травы
-    this.registerGrassShader();
   }
   
   /**
    * Предзагрузка ресурсов для лесной локации
    */
   public preload(): void {
-    this.scene.load.image('forest_location_sky', skyImage);
-    this.scene.load.image('forest_location_ground', groundImage);
-    
+    this.scene.load.image(SKY_TEXTURE, skyImage);
+    this.scene.load.image(GROUND_TEXTURE, groundImage);
+    this.scene.load.image(ROCK_TEXTURE, rockImage);
+    this.scene.load.image(ROCK_TEXTURE_2, rockImage2);  
+    this.scene.load.image(CLOUD_TEXTURE, cloudImage);
     ForestShop.preload(this.scene);
     SpruceTree.preload(this.scene);
-  }
-  
-  // Регистрируем шейдер травы
-  private registerGrassShader(): void {
-    // Регистрируем шейдер
-    this.scene.cache.shader.add(GRASS_SHADER_KEY, {
-      fragment: GRASS_FRAGMENT_SHADER,
-      vertex: GRASS_VERTEX_SHADER
-    });
   }
   
   public getConfig(): ForestLocationConfig {
@@ -76,14 +79,15 @@ export class ForestLocation extends BaseLocation {
     // Получаем размеры экрана
     this.width = this.scene.cameras.main.width;
     this.height = this.scene.cameras.main.height;
-    this.skyHeight = this.height / 6;
+    this.skyHeight = 188;
     
     // Устанавливаем границы локации
     this.setupLocationBounds();
     
     this.createBackground();
-    // this.createGrassShader();
-    
+
+    this.createClouds();
+
     this.createShop();
     
     // Создаем деревья
@@ -101,7 +105,7 @@ export class ForestLocation extends BaseLocation {
     this.bounds.right = this.width;
     
     // Верхняя граница - верхний край земли (небо недоступно)
-    this.bounds.top = this.skyHeight + 50; // Отступ от неба
+    this.bounds.top = this.skyHeight + 10; // Отступ от неба
     
     // Нижняя граница - низ экрана
     this.bounds.bottom = this.height;
@@ -109,28 +113,99 @@ export class ForestLocation extends BaseLocation {
 
   private createBackground(): void {
     // Создаем небо (на всю ширину экрана)
-    const sky = this.scene.add.image(this.width / 2, this.skyHeight / 2, 'forest_location_sky');
+    const sky = this.scene.add.image(this.width / 2, this.skyHeight, SKY_TEXTURE);
     
     // Используем setScale вместо setDisplaySize для более точного контроля
     
-    sky.setOrigin(0.5, 0.5);
+    sky.setOrigin(0.5);
     sky.setDepth(0);
 
     // Создаем землю под небом
-    // const ground = this.scene.add.image(this.width / 2, this.skyHeight, 'forest_location_ground');
-    // ground.setDisplaySize(this.width, this.skyHeight);
-    // ground.setOrigin(0.5, 0.5);
-    // ground.setDepth(2); // Выше неба, но ниже игровых объектов
+    const ground = this.scene.add.image(this.width / 2, this.skyHeight / 2, GROUND_TEXTURE);
+    ground.setDisplaySize(this.width, this.skyHeight);
+    ground.setOrigin(0.5);
+    ground.setDepth(5); // Выше неба, но ниже игровых объектов
     
     // Создаем статичный цветной фон под шейдером для участков, где нет травы
     const background = this.scene.add.graphics();
     background.fillStyle(FOREST_COLORS.grassColor, 1);
-    background.fillRect(0, this.skyHeight + 40, this.width, this.height - this.skyHeight - 40);
+    background.fillRect(0, this.skyHeight, this.width, this.height - this.skyHeight);
     background.setDepth(1);
+
+
+    // Создаем текстуру для гор
+    const rockTexture = this.scene.add.image(this.width / 2, this.skyHeight / 2, ROCK_TEXTURE);
+    rockTexture.setDepth(3);
+    rockTexture.setOrigin(0.5, 0.5);
+    rockTexture.setDisplaySize(this.width, this.skyHeight);
+
+    const rockTexture2 = this.scene.add.image(this.width / 2, this.skyHeight / 2, ROCK_TEXTURE_2);
+    rockTexture2.setDepth(2);
+    rockTexture2.setOrigin(0.5, 0.5);
+    rockTexture2.setDisplaySize(this.width, this.skyHeight);
+    
+  }
+  
+  private createClouds(): void {
+    // Удаляем существующие облака, если они есть
+    this.clouds.forEach(cloud => cloud.destroy());
+    this.clouds = [];
+    
+    // Создаем облака из конфигурации
+    CLOUDS.forEach(cloudConfig => {
+      const [x, y] = cloudConfig.position;
+      
+      // Создаем спрайт облака
+      const cloud = this.scene.add.image(x, y, CLOUD_TEXTURE);
+      
+      // Настраиваем размер (масштаб)
+      cloud.setScale(cloudConfig.scale);
+      
+      // Настраиваем прозрачность
+      cloud.setAlpha(cloudConfig.alpha);
+      
+      // Сохраняем параметры движения в данных спрайта
+      cloud.setData('speed', cloudConfig.speed);
+      cloud.setData('direction', cloudConfig.direction);
+      
+      // Устанавливаем низкий приоритет отображения
+      cloud.setDepth(cloudConfig.depth);
+      
+      // Добавляем в массив для обновления
+      this.clouds.push(cloud);
+    });
+  }
+  
+  /**
+   * Обновляет положение облаков для создания эффекта движения
+   */
+  private updateClouds(delta: number): void {
+    // Нормализуем дельту времени (для стабильного движения)
+    const normalizedDelta = delta / 16;
+    
+    // Обновляем положение каждого облака
+    this.clouds.forEach(cloud => {
+      // Получаем скорость и направление из данных облака
+      const speed = cloud.getData('speed');
+      const direction = cloud.getData('direction');
+      
+      // Обновляем позицию
+      cloud.x += speed * direction * normalizedDelta;
+      
+      // Если облако вышло за границы экрана, перемещаем его на противоположную сторону
+      if (cloud.x > this.width + cloud.width) {
+        cloud.x = -cloud.width;
+      } else if (cloud.x < -cloud.width) {
+        cloud.x = this.width + cloud.width;
+      }
+    });
   }
   
   // Метод для обновления анимации травы
-  public update(time: number): void {
+  public update(time: number, delta: number = 16): void {
+    // Обновляем облака
+    this.updateClouds(delta);
+    
     if (this.grassShader) {
       // Обновляем время для анимации в шейдере
       this.grassShader.setUniform('time', time / 1000);
@@ -183,8 +258,8 @@ export class ForestLocation extends BaseLocation {
    */
   private createShop(): void {
     // Размещаем магазин в левом углу ниже слоя неба
-    const shopX = 120;
-    const shopY = this.skyHeight + 40;
+    const shopX = 50;
+    const shopY = this.skyHeight - 20;
     
     // Создаем магазин и добавляем его на сцену
     const shop = new ForestShop(this.scene, shopX, shopY);

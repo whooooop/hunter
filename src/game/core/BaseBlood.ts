@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { createLogger } from '../../utils/logger';
 import { generateStringWithLength } from '../../utils/stringGenerator';
 import { settings } from '../settings';
+import { DecalManager } from './DecalManager';
 
 const logger = createLogger('BaseBlood');
 
@@ -51,9 +52,9 @@ export interface BloodSplashOptions {
         min: number;
         max: number;
     };
+    force?: number;            // Сила частицы
     depth?: number;            // Приоритет отображения частиц (фиксированная глубина)
     textureType?: string;      // Тип текстуры ('basic', 'drops', 'splatter')
-    minXDistance?: number;     // Минимальная дистанция разлета по оси X
 }
 
 // Дефолтные настройки для эффекта крови
@@ -99,24 +100,26 @@ const defaultBloodOptions: BloodSplashOptions = {
     },
     depth: 10,
     textureType: 'basic',
-    minXDistance: 50           // Значение по умолчанию для минимальной дистанции по X
 };
+
+interface BaseBloodOptions {
+    decalManager?: DecalManager;
+}
 
 export class BaseBlood {
     private scene: Phaser.Scene;
     private bloodParticles: Phaser.GameObjects.Sprite[] = [];
     private texturesCreated: boolean = false;
-    private decalTexture: Phaser.GameObjects.RenderTexture;
+    private decalManager: DecalManager | null = null;
     
     /**
      * Конструктор системы крови
      * @param scene Сцена для размещения эффектов крови
-     * @param decalTexture Опциональная внешняя текстура для декалей
      */
-    constructor(scene: Phaser.Scene, decalTexture: Phaser.GameObjects.RenderTexture) {
+    constructor(scene: Phaser.Scene, options: BaseBloodOptions) {
         this.scene = scene;
+        this.decalManager = options.decalManager || null;
         this.createBloodTextures();
-        this.decalTexture = decalTexture;
     }
     
     /**
@@ -356,7 +359,7 @@ export class BaseBlood {
             const force = Phaser.Math.Between(
                 options.speed!.min, 
                 options.speed!.max
-            ) * Math.min(Math.abs(options.direction!), 10) / 5;
+            ) * Math.min(Math.abs(options.force!), 10) / 5;
             
             // Рассчитываем компоненты скорости с учетом настроек начальной вертикальной скорости
             let vx = Math.cos(angle) * force * options.speed!.multiplier;
@@ -367,17 +370,17 @@ export class BaseBlood {
             const vy = Math.sin(angle) * force - initialYVelocity;
             
             // Применяем минимальную дистанцию разлета по X, если она задана
-            if (options.minXDistance && options.minXDistance > 0) {
-                // Определяем направление по X
-                const directionX = Math.sign(vx);
+            // if (options.minXDistance && options.minXDistance > 0) {
+            //     // Определяем направление по X
+            //     const directionX = Math.sign(vx);
                 
-                // Если скорость по X ниже минимально необходимой для заданной дистанции,
-                // корректируем её, сохраняя направление
-                const minVxRequired = options.minXDistance * 0.2; // Коэффициент для примерного подбора скорости
-                if (Math.abs(vx) < minVxRequired) {
-                    vx = directionX * minVxRequired;
-                }
-            }
+            //     // Если скорость по X ниже минимально необходимой для заданной дистанции,
+            //     // корректируем её, сохраняя направление
+            //     const minVxRequired = options.minXDistance * 0.2; // Коэффициент для примерного подбора скорости
+            //     if (Math.abs(vx) < minVxRequired) {
+            //         vx = directionX * minVxRequired;
+            //     }
+            // }
             
             // Применяем скорость
             bloodParticle.setVelocity(vx, vy);
@@ -655,11 +658,9 @@ export class BaseBlood {
     }
     
     drawDecal(particle: Phaser.GameObjects.Sprite): void {
-        if (!settings.gameplay.blood.keepDecals) {
+        if (!settings.gameplay.blood.keepDecals || !this.decalManager) {
             return;
         }
-        this.decalTexture.draw(particle, particle.x, particle.y);
+        this.decalManager.drawParticle(particle, particle.x, particle.y);
     }
-
-
 }

@@ -2,7 +2,6 @@ import * as Phaser from 'phaser';
 import { SceneKeys } from '../core/Constants';
 import { settings } from '../settings';
 import { createLogger } from '../../utils/logger';
-import { preloadImages } from '../assets/images';
 
 const logger = createLogger('LoadingScene');
 
@@ -15,8 +14,6 @@ export class LoadingScene extends Phaser.Scene {
   }
   
   preload(): void {
-    // Загружаем общие ресурсы, которые нужны для всей игры
-    preloadImages(this);
     this.loadCommonAssets();
   }
   

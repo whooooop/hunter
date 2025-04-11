@@ -14,7 +14,7 @@ import { LocationObject } from '../core/LocationObject';
 import { WeaponStatus } from '../ui/WeaponStatus';
 import { BaseShop } from '../core/BaseShop';
 import { SquirrelEnemy } from '../entities/squireel/SquirrelEnemy';
-import { BaseBlood } from '../core/BaseBlood';
+import { DecalManager } from '../core/DecalManager';
 
 const logger = createLogger('GameplayScene');
 
@@ -37,10 +37,7 @@ export class GameplayScene extends Phaser.Scene {
   private waveInfo!: WaveInfo;
   private weaponStatus!: WeaponStatus;
   private enemySpawnTimer!: Phaser.Time.TimerEvent;
-  private blood!: BaseBlood; // Система для брызг крови
-  
-  // Единая текстура для декалей (кровь, отметины от пуль и другие статичные эффекты)
-  private decalTexture!: Phaser.GameObjects.RenderTexture;
+  private decalManager!: DecalManager;
   
   constructor() {
     super({ key: SceneKeys.GAMEPLAY });
@@ -58,7 +55,7 @@ export class GameplayScene extends Phaser.Scene {
     // Создаем текстуру гильзы программно
     createShellCasingTexture(this);
 
-    this.weaponManager.preload();
+    WeaponManager.preload(this);
   }
   
   async create(): Promise<void> {
@@ -67,30 +64,22 @@ export class GameplayScene extends Phaser.Scene {
     // Устанавливаем границы мира
     this.physics.world.setBounds(0, 0, settings.display.width, settings.display.height);
     
-    // Создаем единую текстуру для всех декалей в игре
-    this.decalTexture = this.add.renderTexture(
-      0.5 * settings.display.width, 0.5 * settings.display.height, 
-      settings.display.width,
-      settings.display.height
-    );
-    this.decalTexture.setDepth(5); // Устанавливаем ниже, чем у активных объектов
+    this.decalManager = new DecalManager(this, 0, 0,settings.display.width, settings.display.height);
+    this.decalManager.setDepth(5); // Устанавливаем ниже, чем у активных объектов
     
     // Создаем информацию о волне
     this.waveInfo = new WaveInfo(this);
     
     // Создаем интерфейс отображения состояния оружия
     this.weaponStatus = new WeaponStatus(this);
-    
-    // Инициализируем систему крови с передачей общей текстуры для декалей
-    this.blood = new BaseBlood(this, this.decalTexture);
-    
+
     // Инициализируем группы врагов и пуль
     this.bullets = this.physics.add.group({
       classType: BaseBullet,
       runChildUpdate: true,
       allowGravity: false
     });
-    
+
     // Инициализируем группу для гильз
     this.shellCasings = this.physics.add.group({
       bounceX: settings.gameplay.shellCasings.bounce,
@@ -114,13 +103,13 @@ export class GameplayScene extends Phaser.Scene {
       runChildUpdate: true,
       allowGravity: false
     });
-    
+
     // Создаем локацию
     this.location.create();
 
     // Создаем игрока
     this.player = new Player(this, PLAYER_POSITION_X, PLAYER_POSITION_Y);
-    const weapon = this.weaponManager.getWeapon('pistol');
+    const weapon = this.weaponManager.getWeapon('sawed');
     this.player.setWeapon(weapon);
     this.player.setLocationBounds(this.location.bounds);
     
@@ -189,8 +178,7 @@ export class GameplayScene extends Phaser.Scene {
   }
   
   update(time: number, delta: number): void {
-    const bounds = this.location.bounds;
-    this.location.update(time);
+    this.location.update(time, delta);
     
     // Обновляем игрока
     if (this.player) {
@@ -244,6 +232,7 @@ export class GameplayScene extends Phaser.Scene {
       moveX: -1,
       moveY: 0,
       direction: -1,
+      decalManager: this.decalManager
     });
     this.enemies.add(enemy.getSprite());
   }
@@ -300,44 +289,15 @@ export class GameplayScene extends Phaser.Scene {
     
     // Создаем брызги крови в точке попадания с эффектом направления
     // Преобразуем угол пули в направление для брызг
-    const bulletRotation = bullet.getDirection();
-    const directionMultiplier = Math.cos(bulletRotation) > 0 ? 10 : -10;
-    
-    // Брызги должны появляться от позиции врага (X), но на высоте пули (Y)
-    this.blood.createBloodSplash(
-      enemyObj.x, // X-координата врага
-      bulletObj.y, // Y-координата пули (высота)
-      {
-        amount: Phaser.Math.Between(100, 500), // Очень большое количество частиц
-        direction: directionMultiplier, // Направление с учетом пули
-        size: {
-          min: 0.2,
-          max: 0.3
-        },
-        speed: {
-          min: 500,
-          max: 1080,
-          multiplier: 0.6
-        },
-        gravity: 700,
-        spread: {
-          angle: Math.PI/14,
-          height: {
-            min: -35, // Разброс вверх от точки попадания
-            max: 25   // Разброс вниз от точки попадания
-          }
-        },
-        fallDistance: {
-          min: 15,
-          max: 25
-        },
-        minXDistance: 80      // Минимальная дистанция разлета по оси X
-      }
-    );
+    const direction = bullet.getDirection();
     
     // Наносим урон врагу
-    enemy.takeDamage(bullet.getDamage());
-    
+    enemy.takeDamage({
+      damage: bullet.getDamage(),
+      direction,
+      x: enemyObj.x,
+      y: bulletObj.y,
+    });
     // Деактивируем пулю
     // bullet.onHit();
   }
@@ -369,5 +329,4 @@ export class GameplayScene extends Phaser.Scene {
       player.applyForce(direction, 0, 10, 0.5, 0.1);  
     }
   }
-
 } 

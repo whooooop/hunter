@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import { hexToNumber } from '../utils/colors';
 import { createLogger } from '../../utils/logger';
 
-interface WeaponSightOptions {
+export interface BaseWeaponSightOptions {
   lineThickness: number;
   lineLength: number;
   gapSize: number;
@@ -12,7 +12,7 @@ interface WeaponSightOptions {
   emptyColor: number;
 }
 
-const defaultOptions: Required<WeaponSightOptions> = {
+const defaultOptions: Required<BaseWeaponSightOptions> = {
   lineThickness: 1,
   lineLength: 10,
   gapSize: 4,
@@ -24,14 +24,14 @@ const defaultOptions: Required<WeaponSightOptions> = {
 
 const logger = createLogger('WeaponSight');
 
-export class WeaponSight {
+export class BaseWeaponSight {
   private scene: Phaser.Scene;
   private graphics: Phaser.GameObjects.Graphics;
   private range: number;
   private color: number;
-  private options: Required<WeaponSightOptions>;
+  private options: Required<BaseWeaponSightOptions>;
 
-  constructor(scene: Phaser.Scene, options?: WeaponSightOptions) {
+  constructor(scene: Phaser.Scene, options?: BaseWeaponSightOptions) {
     this.scene = scene;
     this.options = {...defaultOptions, ...options};
     this.color = this.options.color;

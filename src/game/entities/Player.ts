@@ -75,9 +75,9 @@ export class Player extends PhysicsObject {
     }
     
     weapon.create(this);
+    // Добавляем оружие на сцену
+    this.scene.add.existing(weapon);
     this.weapon = weapon;
-
-    logger.info(`Игроку назначено оружие: ${this.weapon.getId()}`);
   }
 
   public setLocationBounds(bounds: LocationBounds): void {
@@ -97,13 +97,6 @@ export class Player extends PhysicsObject {
     
     // Обрабатываем прыжок
     this.handleJump(time, delta);
-
-    // Обрабатываем стрельбу и обновляем оружие только если оно назначено
-    if (this.weapon) {
-      this.handleFiring(time);
-      this.handleReloading();
-      this.weapon.update(time, delta);
-    }
     
     // Вызываем базовый метод обновления физического объекта
     super.update(time, delta);
@@ -124,6 +117,14 @@ export class Player extends PhysicsObject {
     // Ограничиваем позицию игрока внутри границ локации
     if (this.locationBounds) {
       this.constrainPosition(this.locationBounds);
+    }
+
+    // Обрабатываем стрельбу и обновляем оружие только если оно назначено
+    if (this.weapon) {
+      this.handleFiring(time);
+      this.handleReloading();
+      this.weapon.setDepth(this.getDepth() + 1);
+      this.weapon.update(time, delta);
     }
   }
   

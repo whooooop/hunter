@@ -39,8 +39,10 @@ export abstract class BaseLocation {
     /**
      * Метод для обновления локации
      * Вызывается в методе update сцены
+     * @param time Текущее время
+     * @param delta Время, прошедшее с предыдущего кадра
      */
-    abstract update(time: number): void;
+    abstract update(time: number, delta?: number): void;
     
     /**
      * Метод для очистки ресурсов локации

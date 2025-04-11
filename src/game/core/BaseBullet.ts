@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { createLogger } from '../../utils/logger';
+import { hexToNumber } from '../utils/colors';
 
 const logger = createLogger('BaseBullet');
 
@@ -9,10 +10,10 @@ export interface BaseBulletOptions {
   height: number;
 }
 
-const defaultOptions: BaseBulletOptions = {
-  color: 0xffffff,
-  width: 10,
-  height: 4,
+const defaultBulletOptions: BaseBulletOptions = {
+  color: hexToNumber('#b7f191'),
+  width: 40,
+  height: 2,
 };
 
 export class BaseBullet {
@@ -25,29 +26,28 @@ export class BaseBullet {
   private startX: number = 0;
   private startY: number = 0;
   private isActive: boolean = false;
-  protected options: BaseBulletOptions;
+  protected baseOptions: BaseBulletOptions;
   
   constructor(scene: Phaser.Scene, x: number, y: number, options?: BaseBulletOptions) {
     this.scene = scene;
-    this.options = { ...defaultOptions, ...options };
-    logger.debug(`Создана пуля: цвет=${this.options.color.toString(16)}, размер=${this.options.width}x${this.options.height}`);
+    this.baseOptions = { ...defaultBulletOptions, ...options };
     
     // Создаем графику для пули
     this.bulletGraphic = scene.add.graphics();
     this.drawBullet();
     
     // Создаем спрайт для физики на основе текстуры из графики
-    const key = `bullet_${this.options.color.toString(16)}_${this.options.width}x${this.options.height}`;
+    const key = `bullet_${this.baseOptions.color.toString(16)}_${this.baseOptions.width}x${this.baseOptions.height}`;
     
     if (!scene.textures.exists(key)) {
       // Создаем текстуру из графики
-      this.bulletGraphic.generateTexture(key, this.options.width, this.options.height);
+      this.bulletGraphic.generateTexture(key, this.baseOptions.width, this.baseOptions.height);
     }
     
     // Создаем физический спрайт с этой текстурой
     this.sprite = scene.physics.add.sprite(x, y, key);
-    this.sprite.setSize(this.options.width, this.options.height);
-    this.sprite.setDisplaySize(this.options.width, this.options.height);
+    this.sprite.setSize(this.baseOptions.width, this.baseOptions.height);
+    this.sprite.setDisplaySize(this.baseOptions.width, this.baseOptions.height);
     
     // Настраиваем физические свойства
     this.sprite.setGravity(0, 0);
@@ -72,16 +72,16 @@ export class BaseBullet {
     this.bulletGraphic.clear();
     
     // Центрируем графику вокруг (0,0)
-    this.bulletGraphic.translateCanvas(this.options.width / 2, this.options.height / 2);
+    this.bulletGraphic.translateCanvas(this.baseOptions.width / 2, this.baseOptions.height / 2);
     
     // Рисуем прямоугольник с закругленными краями нужного цвета
-    this.bulletGraphic.fillStyle(this.options.color, 1);
+    this.bulletGraphic.fillStyle(this.baseOptions.color, 1);
     this.bulletGraphic.fillRoundedRect(
-      -this.options.width / 2, 
-      -this.options.height / 2, 
-      this.options.width, 
-      this.options.height,
-      this.options.height / 2
+      -this.baseOptions.width / 2, 
+      -this.baseOptions.height / 2, 
+      this.baseOptions.width, 
+      this.baseOptions.height,
+      this.baseOptions.height / 2
     );
   }
   
@@ -121,35 +121,12 @@ export class BaseBullet {
     // Поворачиваем спрайт в направлении движения
     this.sprite.setRotation(angle);
     
-    this.fireEffect();
-    
     logger.debug(`Пуля выпущена из (${x.toFixed(0)}, ${y.toFixed(0)}) в направлении (${targetX.toFixed(0)}, ${targetY.toFixed(0)})`);
-  }
-
-  fireEffect(): void {
-    // Добавляем специальный эффект при выстреле
-    if (this.scene.textures.exists('particle')) {
-      const particles = this.scene.add.particles(this.sprite.x, this.sprite.y, 'particle', {
-        speed: 20,
-        scale: { start: 0.2, end: 0 },
-        blendMode: 'ADD',
-        lifespan: 200,
-        emitting: false
-      });
-      
-      // Делаем одну вспышку и затем останавливаем
-      particles.explode(10);
-      
-      // Уничтожаем эмиттер через короткий промежуток времени
-      this.scene.time.delayedCall(300, () => {
-        particles.destroy();
-      });
-    }
   }
 
   hitEffect(): void {
     // Создаем небольшой эффект попадания
-    const hitEffect = this.scene.add.circle(this.sprite.x, this.sprite.y, 5, this.options.color);
+    const hitEffect = this.scene.add.circle(this.sprite.x, this.sprite.y, 5, this.baseOptions.color);
     hitEffect.setAlpha(0.8);
     
     // Анимируем эффект попадания
@@ -183,7 +160,7 @@ export class BaseBullet {
   }
 
   public getDirection(): number {
-    return this.sprite.rotation;
+    return Math.cos(this.sprite.rotation) > 0 ? 1 : -1;
   }
   
   public deactivate(): void {
