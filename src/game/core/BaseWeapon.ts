@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { GameplayScene } from '../scenes/GameplayScene';
+import { GameplayScene } from '../scenes/GameplayScene/GameplayScene';
 import { Player } from '../entities/Player';
 import { settings } from '../settings';
 import { createLogger } from '../../utils/logger';

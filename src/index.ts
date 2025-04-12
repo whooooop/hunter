@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { GameplayScene } from './game/scenes/GameplayScene';
+import { GameplayScene } from './game/scenes/GameplayScene/GameplayScene';
 import { LoadingScene } from './game/scenes/LoadingScene';
 import { settings } from './game/settings';
 import { logger } from './utils/logger';

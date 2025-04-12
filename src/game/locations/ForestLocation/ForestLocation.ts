@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import { BaseLocation, LocationBounds } from '../../core/BaseLocation';
 import { ForestLocationConfig, DEFAULT_FOREST_CONFIG, FOREST_COLORS, INTERACTIVE_OBJECTS, CLOUDS } from './ForestLocationConfig';
 import { createLogger } from '../../../utils/logger';
-import { GameplayScene } from '../../scenes/GameplayScene';
+import { GameplayScene } from '../../scenes/GameplayScene/GameplayScene';
 import { ForestShop } from './components/ForestShop';
 import { SpruceTree } from './components/SpruceTree';
 import { generateStringWithLength } from '../../../utils/stringGenerator';
@@ -12,6 +12,7 @@ import groundImage from './assets/images/ground.png';
 import rockImage from './assets/images/rock.png';
 import rockImage2 from './assets/images/rock2.png';
 import cloudImage from './assets/images/cloud.png';
+import { BaseShop } from '../../core/BaseShop';
 
 const logger = createLogger('ForestLocation');
 
@@ -61,6 +62,7 @@ export class ForestLocation extends BaseLocation {
     this.scene.load.image(CLOUD_TEXTURE, cloudImage);
     ForestShop.preload(this.scene);
     SpruceTree.preload(this.scene);
+    BaseShop.preload(this.scene);
   }
   
   public getConfig(): ForestLocationConfig {

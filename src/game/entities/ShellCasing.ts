@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { settings } from '../settings';
-import { GameplayScene } from '../scenes/GameplayScene';
+import { GameplayScene } from '../scenes/GameplayScene/GameplayScene';
 
 /**
  * Класс представляющий гильзу оружия

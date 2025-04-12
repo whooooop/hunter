@@ -1,21 +1,21 @@
 import * as Phaser from 'phaser';
-import { SceneKeys, PLAYER_POSITION_X, PLAYER_POSITION_Y } from '../core/Constants';
-import { Player } from '../entities/Player';
-import { BaseEnemy } from '../core/BaseEnemy';
-import { WaveInfo } from '../core/WaveInfo';
-import { settings } from '../settings';
-import { createLogger } from '../../utils/logger';
-import { createShellCasingTexture } from '../utils/ShellCasingTexture';
-import { LocationManager } from '../core/LocationManager';
-import { BaseLocation } from '../core/BaseLocation';
-import { WeaponManager } from '../core/WeaponManager';
-import { LocationObject } from '../core/LocationObject';
-import { WeaponStatus } from '../ui/WeaponStatus';
-import { BaseShop } from '../core/BaseShop';
-import { SquirrelEnemy } from '../entities/squireel/SquirrelEnemy';
-import { DecalManager } from '../core/DecalManager';
-import { ProjectileManager } from '../core/ProjectileManager';
-import { BaseProjectile } from '../core/BaseProjectile';
+import { SceneKeys, PLAYER_POSITION_X, PLAYER_POSITION_Y } from '../../core/Constants';
+import { Player } from '../../entities/Player';
+import { BaseEnemy } from '../../core/BaseEnemy';
+import { WaveInfo } from '../../core/WaveInfo';
+import { settings } from '../../settings';
+import { createLogger } from '../../../utils/logger';
+import { createShellCasingTexture } from '../../utils/ShellCasingTexture';
+import { LocationManager } from '../../core/LocationManager';
+import { BaseLocation } from '../../core/BaseLocation';
+import { WeaponManager } from '../../core/WeaponManager';
+import { LocationObject } from '../../core/LocationObject';
+import { WeaponStatus } from '../../ui/WeaponStatus';
+import { BaseShop } from '../../core/BaseShop';
+import { SquirrelEnemy } from '../../entities/squireel/SquirrelEnemy';
+import { DecalManager } from '../../core/DecalManager';
+import { ProjectileManager } from '../../core/ProjectileManager';
+import { BaseProjectile } from '../../core/BaseProjectile';
 
 const logger = createLogger('GameplayScene');
 
@@ -189,6 +189,8 @@ export class GameplayScene extends Phaser.Scene {
       } else {
         this.shop.setPlayerNearby(false);
       }
+      
+      this.shop.update(time, delta);
     }
   
     // Обновляем всех врагов
