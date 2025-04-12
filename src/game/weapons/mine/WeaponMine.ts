@@ -1,14 +1,14 @@
 import { BaseWeapon } from "../../core/BaseWeapon";
-import { generateStringWithLength } from "../../../utils/stringGenerator";
-import grenadeImage from './assets/grenade.png';
-import { ProjetileGrenage } from "../../projectiles/granade/ProjetileGrenage";
+import mineImage from './assets/mine.png';
+import { ProjetileMine } from "../../projectiles/mine/ProjectileMine";
+import { createTextureKey } from "../../../utils/texture";
 
-const TEXTURE = 'grenade_texture_' + generateStringWithLength(6);
+const TEXTURE = createTextureKey('mine');
 
-export class Grenade extends BaseWeapon {
+export class WeaponMine extends BaseWeapon {
     constructor(scene: Phaser.Scene) {
         super(scene, {
-            name: 'Grenade',
+            name: 'Mine',
             texture: TEXTURE,
             scale: 0.5,
             offsetX: 10,
@@ -16,26 +16,25 @@ export class Grenade extends BaseWeapon {
             reloadTime: 2000,    // Скорость перезарядки в мс
             magazineSize: 1,     // Размер магазина
             damage: 100,         // Урон от одного выстрела
-            speed: [900, 100],   // Скорость пули
+            speed: [120, -20],   // Скорость пули
             fireRate: 500,       // Задержка между выстрелами в мс
             spreadAngle: 0,      // Угол разброса при выстреле в градусах
             aimingTime: 0,       // Время прицеливания в мс
             canAim: false,
             range: 100,          // Дистанция стрельбы
             recoilForce: 0,      // Сила отдачи
-            recoilRecovery: 5,   // Скорость восстановления от отдачи
+            recoilRecovery: 0,   // Скорость восстановления от отдачи
             automatic: false,
             sight: true,
             shellCasings: false,
             autoreload: true,
             hideWhileReload: true,
-            
-            projectile: ProjetileGrenage
+            projectile: ProjetileMine
           });  
     }
 
     static preload(scene: Phaser.Scene): void {
-        scene.load.image(TEXTURE, grenadeImage);
-        ProjetileGrenage.preload(scene);
+        scene.load.image(TEXTURE, mineImage);
+        ProjetileMine.preload(scene);
     }
 }

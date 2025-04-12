@@ -4,6 +4,7 @@ import { Glock } from "../weapons/glock/Glock";
 import { MP5 } from "../weapons/MP5/MP5";
 import { Grenade } from "../weapons/grenade/Grenade";
 import { Sawed } from "../weapons/sawed/Sawed";
+import { WeaponMine } from "../weapons/mine/WeaponMine";
 
 export class WeaponManager {
   private scene: Phaser.Scene;
@@ -14,6 +15,7 @@ export class WeaponManager {
     'mp5': MP5,
     'grenade': Grenade,
     'sawed': Sawed,
+    'mine': WeaponMine,
   }
 
   constructor(scene: Phaser.Scene) {
@@ -25,8 +27,7 @@ export class WeaponManager {
     MP5.preload(scene);
     Grenade.preload(scene);
     Sawed.preload(scene);
-
-    Bullet.preload(scene);
+    WeaponMine.preload(scene);
   }
 
   public getWeapon(id: string): BaseWeapon {

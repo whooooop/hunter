@@ -87,7 +87,7 @@ export class BaseEnemy extends PhysicsObject {
 
     this.blood.createBloodSplash(x, y,
       {
-        amount: Phaser.Math.Between(50, 100), // Очень большое количество частиц
+        amount: Phaser.Math.Between(50, 100),
         direction,
         force: 20,
         size: {

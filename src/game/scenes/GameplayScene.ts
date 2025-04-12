@@ -14,7 +14,7 @@ import { WeaponStatus } from '../ui/WeaponStatus';
 import { BaseShop } from '../core/BaseShop';
 import { SquirrelEnemy } from '../entities/squireel/SquirrelEnemy';
 import { DecalManager } from '../core/DecalManager';
-import { HitManager } from '../core/HitManager';
+import { ProjectileManager } from '../core/ProjectileManager';
 import { BaseProjectile } from '../core/BaseProjectile';
 
 const logger = createLogger('GameplayScene');
@@ -39,7 +39,7 @@ export class GameplayScene extends Phaser.Scene {
   private weaponStatus!: WeaponStatus;
   private enemySpawnTimer!: Phaser.Time.TimerEvent;
   private decalManager!: DecalManager;
-  private hitManager!: HitManager;
+  private projectileManager!: ProjectileManager;
   
   constructor() {
     super({ key: SceneKeys.GAMEPLAY });
@@ -107,7 +107,7 @@ export class GameplayScene extends Phaser.Scene {
     });
     
     // Инициализируем менеджер попаданий
-    this.hitManager = new HitManager(this, this.enemies);
+    this.projectileManager = new ProjectileManager(this, this.decalManager, this.enemies);
 
     // Создаем локацию
     this.location.create();
@@ -200,7 +200,7 @@ export class GameplayScene extends Phaser.Scene {
     });
 
     // Обрабатываем попадания пуль
-    this.hitManager.update(time);
+    this.projectileManager.update(time, delta);
   }
   
   // Метод для доступа к группе пуль
@@ -266,6 +266,6 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   public addProjectile(projectile: BaseProjectile): void {
-    this.hitManager.addProjectile(projectile);
+    this.projectileManager.addProjectile(projectile);
   }
 } 

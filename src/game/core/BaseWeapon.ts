@@ -5,7 +5,7 @@ import { settings } from '../settings';
 import { createLogger } from '../../utils/logger';
 import { ShellCasing } from '../entities/ShellCasing';
 import { BaseWeaponSight, BaseWeaponSightOptions } from './BaseWeaponSight';
-import { BaseProjectile, BaseProjectileClass } from './BaseProjectile';
+import { BaseProjectileClass } from './BaseProjectile';
 
 const logger = createLogger('BaseWeapon');
 
@@ -23,7 +23,7 @@ interface BaseWeaponOptions {
 
   // Патроны
   damage: number;       // Урон от одного выстрела
-  speed: number;       // Скорость пули
+  speed: number[];      // Скорость снаряда
 
   // Параметры стрельбы
   fireRate: number; // Задержка между выстрелами в мс
@@ -32,7 +32,9 @@ interface BaseWeaponOptions {
   canAim: boolean; // Можно ли прицеливаться
   range: number; // Дистанция стрельбы
   automatic: boolean; // Является ли оружие автоматическим
-  
+  autoreload?: boolean; // Автоматическая перезарядка
+  hideWhileReload?: boolean; // Скрывать оружие при перезарядке
+
   // Параметры отдачи
   recoilForce: number; // Сила отдачи
   recoilRecovery: number; // Скорость восстановления от отдачи
@@ -146,44 +148,12 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     
     this.playReloadSound();
     this.isReloading = true;
-    logger.info(`Начало перезарядки ${this.name}, текущие патроны: ${this.currentAmmo}`);
     
     // Устанавливаем таймер на перезарядку
     this.scene.time.delayedCall(this.baseOptions.reloadTime, () => {
       this.currentAmmo = this.baseOptions.magazineSize;
       this.isReloading = false;
-      logger.info(`Перезарядка завершена. Патроны: ${this.currentAmmo}`);
     });
-  }
-
-  protected calculateTargetPoint(x: number, y: number, direction: number = 1): { targetX: number, targetY: number } {
-    const currentTime = this.scene.time.now;
-    const timeSinceLastShot = currentTime - this.lastFired;
-    
-    // Если это первый выстрел или прошло много времени с последнего выстрела
-    if (this.baseOptions.canAim && (this.lastFired === 0 || timeSinceLastShot >= this.baseOptions.aimingTime)) {
-      return {
-        targetX: x + this.baseOptions.range * direction,
-        targetY: y
-      };
-    }
-    
-    // Рассчитываем множитель разброса в зависимости от частоты стрельбы
-    // Чем меньше времени прошло с последнего выстрела, тем больше разброс
-    // const spreadMultiplier = Math.min(1, (this.baseOptions.aimingTime - timeSinceLastShot) / this.baseOptions.aimingTime);
-    const spreadMultiplier = 1;
-    const currentSpread = this.baseOptions.spreadAngle * spreadMultiplier;
-    
-    // Получаем случайный угол в пределах текущего разброса
-    const randomAngle = Phaser.Math.DegToRad(
-      Phaser.Math.Between(-currentSpread, currentSpread)
-    );
-    
-    // Рассчитываем конечную точку с учетом угла (стрельба всегда вправо)
-    return {
-      targetX: x + Math.cos(randomAngle) * this.baseOptions.range * direction,
-      targetY: y + Math.sin(randomAngle) * this.baseOptions.range
-    };
   }
 
   public fire(x: number, y: number, direction: number = 1) {
@@ -199,8 +169,6 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     if (!this.baseOptions.automatic) {
       this.canFireAgain = false;
     }
-
- 
 
     const sightX = x + 1;
     const sightY = y;
@@ -227,6 +195,10 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     
     this.lastFired = this.scene.time.now;
     this.currentAmmo--;
+
+    if (this.baseOptions.autoreload && this.currentAmmo <= 0) {
+      this.reload();
+    }
 
     this.afterFire();
   }
@@ -342,6 +314,12 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
 
     // Постепенно возвращаем оружие в нормальное положение
     this.updateWeaponTilt(time, delta);
+
+    if (this.baseOptions.hideWhileReload && this.isReloading) {
+      this.setVisible(false);
+    } else {
+      this.setVisible(true);
+    }
 
     if (this.sight && this.player) {
       const playerSprite = this.player.getSprite();

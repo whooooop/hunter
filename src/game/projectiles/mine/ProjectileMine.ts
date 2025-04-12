@@ -1,25 +1,23 @@
 import { createTextureKey } from "../../../utils/texture";
 import { BaseProjectile, ProjectileType } from "../../core/BaseProjectile";
 
-import grenadeImage from './assets/grenade.png';
+import mineImage from './assets/mine.png';
 
-const texture = createTextureKey('bullet');
-const type = ProjectileType.GRENADE;
+const texture = createTextureKey('mine');
+const type = ProjectileType.MINE;
 
-export class ProjetileGrenage extends BaseProjectile {
+export class ProjetileMine extends BaseProjectile {
   constructor() {
     super({
       type,
       texture,
       scale: 0.5,
-      drag: 1200,
-      activateDelay: 2000,
-      bounce: 1,
       radius: 100,
+      activateRadius: 20
     })
   }
 
   static preload(scene: Phaser.Scene): void {
-    scene.load.image(texture, grenadeImage);
+    scene.load.image(texture, mineImage);
   }
 }
