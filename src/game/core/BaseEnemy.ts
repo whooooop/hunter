@@ -20,9 +20,8 @@ interface EnemyOptions {
 
 interface DamageInfo {
   damage: number;
-  direction: number;
-  x: number;
-  y: number;
+  forceVector: number[][];
+  hitPoint: number[];
 }
 
 export class BaseEnemy extends PhysicsObject {
@@ -67,21 +66,24 @@ export class BaseEnemy extends PhysicsObject {
     this.sprite.setData('enemyRef', this);
   }
   
-  public takeDamage({ damage, direction, x, y }: DamageInfo): void {
-    console.log('takeDamage', damage);
+  public takeDamage({ damage, forceVector, hitPoint }: DamageInfo): void {
     if (this.isDead) return;
-    
+
     this.health -= damage;
 
-    this.createBloodSplash({ damage, direction, x, y });
+    this.createBloodSplash({ damage, forceVector, hitPoint });
 
     if (this.health <= 0) {
       this.onDeath();
     }
   }
 
-  private createBloodSplash({ damage, direction, x, y }: DamageInfo): void {
+  private createBloodSplash({ damage, forceVector, hitPoint }: DamageInfo): void {
     if (!this.blood) return;
+
+    const [x, y] = hitPoint;
+    const [[startX, startY], [forceX, forceY]] = forceVector;
+    const direction = forceX - startX;
 
     this.blood.createBloodSplash(x, y,
       {
@@ -121,6 +123,10 @@ export class BaseEnemy extends PhysicsObject {
     
     // Уничтожаем объект игрока
     this.destroy();
+  }
+  
+  public getBounds(): Phaser.Geom.Rectangle {
+    return this.sprite.getBounds();
   }
   
   public update(time: number, delta: number): void {

@@ -1,4 +1,5 @@
 import { BaseWeapon } from "../core/BaseWeapon";
+import { Bullet } from "../projectiles/bullet/Bullet";
 import { Glock } from "../weapons/glock/Glock";
 import { MP5 } from "../weapons/MP5/MP5";
 import { Grenade } from "../weapons/grenade/Grenade";
@@ -24,6 +25,8 @@ export class WeaponManager {
     MP5.preload(scene);
     Grenade.preload(scene);
     Sawed.preload(scene);
+
+    Bullet.preload(scene);
   }
 
   public getWeapon(id: string): BaseWeapon {

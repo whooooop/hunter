@@ -14,7 +14,7 @@ export const createShellCasingTexture = (scene: Phaser.Scene): void => {
   // Размер текстуры (увеличиваем для лучшей видимости)
   const width = 24;
   const height = 8;
-
+ 
   // Создаем новую графику для рисования гильзы
   const graphics = scene.add.graphics();
 

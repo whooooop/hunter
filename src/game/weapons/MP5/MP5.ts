@@ -1,3 +1,4 @@
+import { Bullet } from '../../projectiles/bullet/Bullet';
 import { generateStringWithLength } from "../../../utils/stringGenerator";
 import { BaseWeapon } from "../../core/BaseWeapon";
 import mp5Image from './mp5.png';
@@ -27,10 +28,10 @@ export class MP5 extends BaseWeapon {
             recoilRecovery: 5,   // Скорость восстановления от отдачи
             automatic: true,
             fireAudio: AUDIO_FIRE,
-            bullet: true,
-            bulletCount: 1,
             sight: true,
             shellCasings: true,
+
+            projectile: Bullet
           });  
     }
 

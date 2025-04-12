@@ -1,11 +1,11 @@
 import * as Phaser from 'phaser';
-import { BaseBullet, BaseBulletOptions } from './BaseBullet';
 import { GameplayScene } from '../scenes/GameplayScene';
 import { Player } from '../entities/Player';
 import { settings } from '../settings';
 import { createLogger } from '../../utils/logger';
 import { ShellCasing } from '../entities/ShellCasing';
 import { BaseWeaponSight, BaseWeaponSightOptions } from './BaseWeaponSight';
+import { BaseProjectile, BaseProjectileClass } from './BaseProjectile';
 
 const logger = createLogger('BaseWeapon');
 
@@ -40,13 +40,13 @@ interface BaseWeaponOptions {
   // Звуки
   emptyAudio?: string;
   reloadAudio?: string;
+  afterFireAudio?: string;
   fireAudio?: string;
 
-  bulletCount: number;
-
   sight: BaseWeaponSightOptions | boolean;
-  bullet: BaseBulletOptions | boolean;
   shellCasings: boolean;
+
+  projectile?: BaseProjectileClass
 }
 
 
@@ -54,6 +54,7 @@ type AudioAssets = {
   fire: Phaser.Sound.BaseSound | null;
   empty: Phaser.Sound.BaseSound | null;
   reload: Phaser.Sound.BaseSound | null;
+  afterFire: Phaser.Sound.BaseSound | null;
 }
 
 export class BaseWeapon extends Phaser.GameObjects.Sprite {
@@ -64,13 +65,15 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
   protected currentAmmo: number = 0;
   protected currentRecoil: number = 0;
   protected canFireAgain: boolean = true; // Флаг для неавтоматического оружия
+  protected weaponAngle: number = 0; // Текущий угол наклона оружия
 
   private baseOptions: BaseWeaponOptions;
 
   private audioAssets: AudioAssets = {
     fire: null,
     empty: null,
-    reload: null
+    reload: null,
+    afterFire: null,
   }
 
   private sight: BaseWeaponSight | null = null;
@@ -110,6 +113,9 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     }
     if (this.baseOptions.reloadAudio) {
       this.audioAssets.reload = this.scene.sound.add(this.baseOptions.reloadAudio, { volume: settings.audio.weaponsVolume });
+    }
+    if (this.baseOptions.afterFireAudio) {
+      this.audioAssets.afterFire = this.scene.sound.add(this.baseOptions.afterFireAudio, { volume: settings.audio.weaponsVolume });
     }
   }
 
@@ -180,33 +186,6 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     };
   }
 
-  /**
-   * Создает пулю в зависимости от типа оружия
-   */
-  protected createBullet(x: number, y: number, targetX: number, targetY: number, direction: number) {
-    if (!this.baseOptions.bullet) {
-      return;
-    }
-
-    // Проверяем, что сцена - это GameplayScene
-    if (!(this.scene instanceof GameplayScene)) {
-      return;
-    }
-    
-    const gameScene = this.scene as GameplayScene;
-    const bulletOptions = typeof this.baseOptions.bullet === 'boolean' ? undefined : this.baseOptions.bullet;
-    const bullet = new BaseBullet(this.scene, x, y, bulletOptions);
-
-    // Используем предиктивное создание пули
-    gameScene.addPredictiveBullet(
-      x, y, targetX, targetY,
-      this.baseOptions.speed,
-      this.baseOptions.damage,
-      this.baseOptions.range,
-      bulletOptions
-    );
-  }
-
   public fire(x: number, y: number, direction: number = 1) {
     if (!this.canFire(this.scene.time.now)) {
       if (this.isEmpty()) {
@@ -220,12 +199,16 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     if (!this.baseOptions.automatic) {
       this.canFireAgain = false;
     }
+
+ 
+
+    const sightX = x + 1;
+    const sightY = y;
+
+    // Учитываем текущий наклон при создании снаряда
+    const adjustedSightY = y + Math.tan(this.weaponAngle) * (sightX - x);
     
-    for (let i = 0; i < this.baseOptions.bulletCount; i++) {
-      // Рассчитываем точку прицеливания с учетом разброса и направления
-      const { targetX, targetY } = this.calculateTargetPoint(x, y, direction);
-      this.createBullet(x, y, targetX, targetY, direction);
-    }
+    this.createProjectile(x, y, sightX, adjustedSightY);
 
     // Создаем гильзу после выстрела
     if (this.baseOptions.shellCasings && this.scene instanceof GameplayScene) {
@@ -238,8 +221,28 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     }
 
     this.playFireSound();
+    
+    // Наклоняем оружие после выстрела
+    this.applyWeaponTilt();
+    
     this.lastFired = this.scene.time.now;
     this.currentAmmo--;
+
+    this.afterFire();
+  }
+
+  protected createProjectile(x: number, y: number, sightX: number, sightY: number): void {
+    if (!this.baseOptions.projectile || !(this.scene instanceof GameplayScene)) {
+      return;
+    }
+
+    const projectile = new this.baseOptions.projectile();
+    projectile
+      .create(this.scene, x, y)
+      .setForceVector(sightX, sightY, this.baseOptions.speed, this.baseOptions.damage);
+    
+    const gameScene = this.scene as GameplayScene;
+    gameScene.addProjectile(projectile);
   }
 
   /**
@@ -298,6 +301,14 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     return recoilForce;
   }
 
+  protected afterFire(): void {
+    if (this.currentAmmo > 0) {
+      this.scene.time.delayedCall(500, () => {
+        this.playAfterFireSound();
+      });
+    }
+  }
+
   // Звук пустого магазина
   protected playEmptySound(): void {
     if (this.audioAssets.empty) {
@@ -319,8 +330,18 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     }
   }
 
+  // Звук после выстрела
+  protected playAfterFireSound(): void {
+    if (this.audioAssets.afterFire) {
+      this.audioAssets.afterFire.play();
+    }
+  }
+
   public update(time: number, delta: number): void {
     super.update(time, delta);
+
+    // Постепенно возвращаем оружие в нормальное положение
+    this.updateWeaponTilt(time, delta);
 
     if (this.sight && this.player) {
       const playerSprite = this.player.getSprite();
@@ -334,6 +355,31 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     } 
     if (this.player) {
       this.setPosition(this.player.x, this.player.y);
+    }
+  }
+
+  /**
+   * Обновляет наклон оружия, постепенно возвращая его в нормальное положение
+   */
+  private updateWeaponTilt(time: number, delta: number): void {
+    if (this.weaponAngle === 0) return;
+
+    // Если прошло меньше времени, чем aimingTime с момента последнего выстрела
+    const timeSinceLastShot = time - this.lastFired;
+    
+    if (timeSinceLastShot < this.baseOptions.aimingTime) {
+      // Рассчитываем коэффициент прогресса (0 -> 1)
+      const progress = timeSinceLastShot / this.baseOptions.aimingTime;
+      
+      // Линейно интерполируем от текущего угла к 0
+      this.weaponAngle = Phaser.Math.Linear(this.weaponAngle, 0, progress);
+      
+      // Применяем текущий угол наклона
+      this.setRotation(this.weaponAngle);
+    } else {
+      // Полностью выравниваем оружие
+      this.weaponAngle = 0;
+      this.setRotation(0);
     }
   }
 
@@ -376,4 +422,26 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
       this.sight = null;
     }
   }
+
+  /**
+   * Применяет случайный наклон к оружию после выстрела
+   */
+  private applyWeaponTilt(): void {
+    // Генерируем случайный угол в рамках диапазона разброса
+    const angleRange = Phaser.Math.DegToRad(this.baseOptions.spreadAngle);
+    this.weaponAngle = Phaser.Math.FloatBetween(-angleRange, angleRange);
+    
+    // Применяем наклон к спрайту оружия
+    this.setRotation(this.weaponAngle);
+  }
 } 
+
+
+// После выстрела оружие может наколоняться что внияет на последующие выстрелы
+// в момент выстрела мы определяем вектор направления (две точки, старта и прицеливания)
+// создание снаряда происходит в момент выстрела
+// далее снаряд активируется и действует по своим правилам
+// снаряд определяет траекторию исходя из своих настроек и вектора направления и приложенной силы
+// Также после создания мы добавить снаряд в HitManager, а в хитменеджере проверрять активацию снаряда
+// активация снаряда может быть моментальной, с задержкой или по внешнему воздействию
+// В момент активации ицем объекты взаимодействия и передем им разрушение

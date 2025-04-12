@@ -1,6 +1,7 @@
 import { BaseWeapon } from "../../core/BaseWeapon";
 import { generateStringWithLength } from "../../../utils/stringGenerator";
 import grenadeImage from './assets/grenade.png';
+import { ProjetileGrenage } from "../../projectiles/granade/ProjetileGrenage";
 
 const TEXTURE = 'grenade_texture_' + generateStringWithLength(6);
 
@@ -15,7 +16,7 @@ export class Grenade extends BaseWeapon {
             reloadTime: 400,     // Скорость перезарядки в мс
             magazineSize: 1,     // Размер магазина
             damage: 100,         // Урон от одного выстрела
-            speed: 400,          // Скорость пули
+            speed: 900,          // Скорость пули
             fireRate: 500,       // Задержка между выстрелами в мс
             spreadAngle: 0,      // Угол разброса при выстреле в градусах
             aimingTime: 0,       // Время прицеливания в мс
@@ -24,14 +25,15 @@ export class Grenade extends BaseWeapon {
             recoilForce: 0,      // Сила отдачи
             recoilRecovery: 5,   // Скорость восстановления от отдачи
             automatic: false,
-            bullet: false,
-            bulletCount: 1,
             sight: true,
             shellCasings: false,
+
+            projectile: ProjetileGrenage
           });  
     }
 
     static preload(scene: Phaser.Scene): void {
         scene.load.image(TEXTURE, grenadeImage);
+        ProjetileGrenage.preload(scene);
     }
 }

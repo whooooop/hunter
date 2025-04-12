@@ -2,9 +2,10 @@ import * as Phaser from 'phaser';
 import { BaseWeapon } from '../../core/BaseWeapon';
 import { generateStringWithLength } from '../../../utils/stringGenerator';
 
-import glockImage from './glock.png';
-import fireSound from './shot.mp3';
-import emptySound from './empty.mp3';
+import glockImage from './assets/glock.png';
+import fireSound from './assets/shot.mp3';
+import emptySound from './assets/empty.mp3';
+import { Bullet } from '../../projectiles/bullet/Bullet';
 
 const TEXTURE = 'glock_texture_' + generateStringWithLength(6);
 const AUDIO_FIRE = 'glock_fire_' + generateStringWithLength(6);
@@ -23,19 +24,19 @@ export class Glock extends BaseWeapon {
       damage: 10,          // Урон от одного выстрела
       speed: 4000,         // Скорость пули
       fireRate: 100,       // Задержка между выстрелами в мс
-      spreadAngle: 1,     // Угол разброса при выстреле в градусах
+      spreadAngle: 30,     // Угол разброса при выстреле в градусах
       aimingTime: 250,     // Время прицеливания в мс
       canAim: true,
       range: 1000,         // Дистанция стрельбы
       recoilForce: 2,      // Сила отдачи
       recoilRecovery: 5,   // Скорость восстановления от отдачи
-      automatic: false,     // Пистолет автоматический
+      automatic: true,     // Пистолет автоматический
       fireAudio: AUDIO_FIRE,
       emptyAudio: AUDIO_EMPTY,
-      bullet: true,
-      bulletCount: 1,
       sight: true,
       shellCasings: true,
+
+      projectile: Bullet
     });    
   }
 
