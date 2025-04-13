@@ -4,6 +4,7 @@ import { WeaponEntity } from "../entities/WeaponEntity";
 import { Grenade } from "../../weapons/grenade/Grenade";
 import { Sawed } from "../../weapons/sawed/Sawed";
 import { WeaponMine } from "../../weapons/mine/WeaponMine";
+import { WeaponAWP } from "../../weapons/AWP/WeaponAWP";
 
 export enum Weapon {
   GLOCK = 'glock',
@@ -11,6 +12,7 @@ export enum Weapon {
   GRENADE = 'grenade',
   SAWED = 'sawed',
   MINE = 'mine',
+  AWP = 'awp',
 }
 
 export class WeaponController {
@@ -34,6 +36,8 @@ export class WeaponController {
         return new Sawed(this.scene);
       case Weapon.MINE:
         return new WeaponMine(this.scene);
+      case Weapon.AWP:
+        return new WeaponAWP(this.scene);
     }
   }
 

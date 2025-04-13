@@ -23,6 +23,7 @@ import { DamageableEntity } from '../../core/entities/DamageableEntity';
 import { EnemyEntity } from '../../core/entities/EnemyEntity';
 import { createShellCasingTexture, ShellCasingEvents } from '../../core/entities/ShellCasingEntity';
 import { DecalEventPayload } from '../../core/types/decals';
+import { WeaponAWP } from '../../weapons/AWP/WeaponAWP';
 
 const logger = createLogger('GameplayScene');
 
@@ -74,6 +75,7 @@ export class GameplayScene extends Phaser.Scene {
     Grenade.preload(this);
     Sawed.preload(this);
     WeaponMine.preload(this);
+    WeaponAWP.preload(this);
   }
   
   async create(): Promise<void> {
@@ -107,7 +109,7 @@ export class GameplayScene extends Phaser.Scene {
     // Создаем игрока
     this.player = new Player(this, PLAYER_POSITION_X, PLAYER_POSITION_Y);
 
-    this.player.setWeapon(Weapon.MP5);
+    this.player.setWeapon(Weapon.AWP);
     this.player.setLocationBounds(this.location.bounds);
     
     // Устанавливаем оружие в интерфейс

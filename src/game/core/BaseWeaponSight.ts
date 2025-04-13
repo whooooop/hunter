@@ -1,10 +1,17 @@
 import * as Phaser from 'phaser';
 import { hexToNumber } from '../utils/colors';
 import { createLogger } from '../../utils/logger';
+import { settings } from '../settings';
 
 const logger = createLogger('WeaponSight');
 
+export enum WeaponSightType {
+  RAY = 'ray',
+  CROSSHAIR = 'crosshair',
+}
+
 export interface BaseWeaponSightOptions {
+  type: WeaponSightType;
   lineThickness?: number;
   lineLength?: number;
   gapSize?: number;
@@ -15,6 +22,7 @@ export interface BaseWeaponSightOptions {
 }
 
 const defaultOptions: Required<BaseWeaponSightOptions> = {
+  type: WeaponSightType.CROSSHAIR,
   lineThickness: 1,
   lineLength: 10,
   gapSize: 4,
@@ -74,6 +82,21 @@ export class BaseWeaponSight {
   }
 
   private drawSight(): void {
+    if (this.options.type === WeaponSightType.RAY) {
+      if (this.active) {
+        this.drawRay();
+      }
+    } else if (this.options.type === WeaponSightType.CROSSHAIR) {
+      this.drawCrosshair();
+    } 
+  }
+
+  private drawRay(): void {
+    this.graphics.lineStyle(this.options.lineThickness, this.color, this.options.alpha);
+    this.graphics.lineBetween(this.x + this.range, this.y, this.x + settings.display.width * this.direction, this.y);
+  } 
+
+  private drawCrosshair(): void {
     const targetX = this.x + this.range * this.direction;
     // Устанавливаем стиль линии
     this.graphics.lineStyle(this.options.lineThickness, this.color, this.options.alpha);
