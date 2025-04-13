@@ -45,6 +45,8 @@ export class GameplayScene extends Phaser.Scene {
   private enemySpawnTimer!: Phaser.Time.TimerEvent;
   private decalController!: DecalController;
   private projectileManager!: ProjectileManager;
+
+  private changeWeaponKey!: Phaser.Input.Keyboard.Key;
   
   constructor() {
     super({ key: SceneKeys.GAMEPLAY });
@@ -80,6 +82,8 @@ export class GameplayScene extends Phaser.Scene {
 
     this.decalController = new DecalController(this, 0, 0, settings.display.width, settings.display.height);
     this.decalController.setDepth(5);
+
+    this.changeWeaponKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.G);
 
     // Устанавливаем границы мира
     this.physics.world.setBounds(0, 0, settings.display.width, settings.display.height);
@@ -199,6 +203,10 @@ export class GameplayScene extends Phaser.Scene {
         enemy.update(time, delta);
       }
     });
+
+    if (this.changeWeaponKey.isDown) {
+      this.player.setWeapon(Weapon.MINE);
+    }
 
     // Обрабатываем попадания пуль
     this.projectileManager.update(time, delta);
