@@ -19,7 +19,7 @@ interface ShopOptions {
     scale: number;
     interactionRadius: number; // Радиус взаимодействия
     debug: boolean;
-    depthOffset: number;
+    depthOffset?: number;
 }
 
 export class BaseShop extends Phaser.GameObjects.Sprite {
@@ -39,7 +39,7 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
         this.setScale(this.options.scale);
         
         // Устанавливаем глубину отображения
-        this.setDepth(y + settings.gameplay.depthOffset + options.depthOffset);
+        this.setDepth(y + this.height / 2 * this.scale + settings.gameplay.depthOffset + (this.options.depthOffset || 0));
         
         // Создаем зону взаимодействия
         this.createInteractionZone();

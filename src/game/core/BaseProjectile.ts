@@ -119,7 +119,9 @@ export class BaseProjectile {
     this.scene.physics.world.enable(this.gameObject);
     const body = this.gameObject.body as Phaser.Physics.Arcade.Body;
     // Устанавливаем скорость
-    body.setVelocity(velocityX, velocityY);
+    body
+      .setAllowGravity(false)  
+      .setVelocity(velocityX, velocityY);
   }
 
   /**

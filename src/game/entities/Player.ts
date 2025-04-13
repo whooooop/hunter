@@ -6,6 +6,7 @@ import { WeaponEntity } from '../core/entities/WeaponEntity';
 import { MotionController } from '../core/controllers/MotionController';
 
 import playerImage from '../../assets/images/player.png';
+import { ShadowEntity } from '../core/entities/ShadowEntity';
 
 const TEXTURE_PLAYER = 'player';
 
@@ -43,19 +44,17 @@ export class Player {
   // Границы локации
   private locationBounds: LocationBounds | null = null;
 
+  private shadow: ShadowEntity;
+
   constructor(scene: Phaser.Scene, x: number, y: number) {
     this.scene = scene;
     this.gameObject = scene.physics.add.sprite(x, y, TEXTURE_PLAYER);
     this.gameObject.setScale(0.5);
-    // shadow: {
-    //   scale: 1,
-    //   offsetX: 5,
-    //   offsetY: 4,
-    // },
+
+    this.shadow = new ShadowEntity(scene, this.gameObject);
 
     this.weaponController = new WeaponController(scene);
     this.motionController = new MotionController(scene, this.gameObject, {
-      depthOffset: 10,
       acceleration: 15,
       deceleration: 8,
       friction: 6,
@@ -106,37 +105,29 @@ export class Player {
     this.handleMovement();
     
     // Обрабатываем прыжок
-    this.handleJump(time, delta);
+    // this.handleJump(time, delta);
 
     
     // Применяем смещение от прыжка к визуальной позиции
-    if (this.isJumping) {
-      this.gameObject.setPosition(this.gameObject.x, this.gameObject.y - this.jumpOffsetY);
-      
-      // При прыжке тень должна оставаться на земле
-      // if (this.shadowSprite) {
-      //   this.shadowSprite.setPosition(
-      //     this.x + 5,
-      //     this.y + this.sprite.height / 2 + 4
-      //   );
-      // }
-    }
+    // if (this.isJumping) {
+    //   this.gameObject.setPosition(this.gameObject.x, this.gameObject.y - this.jumpOffsetY);
+    // }
     
     // Ограничиваем позицию игрока внутри границ локации
     if (this.locationBounds) {
       this.constrainPosition(this.locationBounds);
     }
-
+    this.motionController.update(time, delta);
+    this.shadow.update(time, delta);
+     
     // Обрабатываем стрельбу и обновляем оружие только если оно назначено
     if (this.currentWeapon) {
       this.handleFiring(time);
       this.handleReloading();
       this.currentWeapon.setPosition(this.gameObject.x, this.gameObject.y, this.direction);
-      this.currentWeapon.setDepth(this.gameObject.depth + 10);
+      this.currentWeapon.setDepth(this.gameObject.depth + 1);
       this.currentWeapon.update(time, delta);
     }
-
-    this.motionController.update(time, delta);
   }
   
   private handleMovement(): void {

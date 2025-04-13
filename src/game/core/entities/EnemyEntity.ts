@@ -2,10 +2,11 @@ import { BloodController } from "../controllers/BloodController";
 import { MotionController } from "../controllers/MotionController";
 import { Demage } from "../types/demage";
 import { DamageableEntity } from "./DamageableEntity";
+import { ShadowEntity } from "./ShadowEntity";
 
 interface EnemyEntityOptions {
   health: number;
-  depthOffset: number;
+  depthOffset?: number;
   acceleration: number;
   deceleration: number;
   maxVelocityX: number;
@@ -19,15 +20,13 @@ export class EnemyEntity extends DamageableEntity {
   protected bloodController: BloodController;
   protected motionController: MotionController;
 
+  protected shadow: ShadowEntity;
+
   constructor(scene: Phaser.Scene, gameObject: Phaser.Physics.Arcade.Sprite, x: number, y: number, options: EnemyEntityOptions) {
     super(gameObject, { health: options.health });
 
     this.bloodController = new BloodController(scene);
     this.motionController = new MotionController(scene, this.gameObject, {
-      debug: {
-        showPositions: true,
-        showPath: true,
-      },
       depthOffset: options.depthOffset,
       acceleration: options.acceleration,
       deceleration: options.deceleration,
@@ -36,6 +35,8 @@ export class EnemyEntity extends DamageableEntity {
       friction: options.friction,
       direction: options.direction,
     });
+
+    this.shadow = new ShadowEntity(scene, gameObject);
 
     scene.add.existing(gameObject);
   }
@@ -91,6 +92,7 @@ export class EnemyEntity extends DamageableEntity {
   public update(time: number, delta: number): void {
     super.update(time, delta);
     this.motionController.update(time, delta);
+    this.shadow.update(time, delta);
   }
 
   public getDestroyed(): boolean {
@@ -104,5 +106,6 @@ export class EnemyEntity extends DamageableEntity {
     this.gameObject.destroy();
     this.motionController.destroy();
     this.destroyed = true;
+    this.shadow.destroy();
   }
 }

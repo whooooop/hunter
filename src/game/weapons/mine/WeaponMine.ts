@@ -12,8 +12,8 @@ export class WeaponMine extends WeaponEntity {
         super(scene, {
             texture: TEXTURE,
             scale: 0.5,
-            offsetX: 10,
-            offsetY: 10,
+            offsetX: 20,
+            offsetY: 20,
             reloadTime: 2000,    // Скорость перезарядки в мс
             magazineSize: 1,     // Размер магазина
             damage: 5000,         // Урон от одного выстрела
@@ -22,7 +22,6 @@ export class WeaponMine extends WeaponEntity {
             spreadAngle: 0,      // Угол разброса при выстреле в градусах
             aimingTime: 0,       // Время прицеливания в мс
             canAim: false,
-            range: 100,          // Дистанция стрельбы
             recoilForce: 0,      // Сила отдачи
             recoilRecovery: 0,   // Скорость восстановления от отдачи
             automatic: false,

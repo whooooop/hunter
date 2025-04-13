@@ -4,15 +4,14 @@ import { Player } from '../../entities/Player';
 import { WaveInfo } from '../../core/WaveInfo';
 import { settings } from '../../settings';
 import { createLogger } from '../../../utils/logger';
-import { createShellCasingTexture } from '../../utils/ShellCasingTexture';
 import { LocationManager } from '../../core/LocationManager';
 import { BaseLocation } from '../../core/BaseLocation';
 import { WeaponStatus } from '../../ui/WeaponStatus';
 import { BaseShop } from '../../core/BaseShop';
 import { SquirrelEnemy } from '../../entities/squireel/SquirrelEnemy';
-import { ProjectileManager } from '../../core/ProjectileManager';
+import { ProjectileController } from '../../core/controllers/ProjectileController';
 import { BaseProjectile } from '../../core/BaseProjectile';
-import { BloodController, BloodEvents, BloodParticleDecalEvent } from '../../core/controllers/BloodController';
+import { BloodController, BloodEvents } from '../../core/controllers/BloodController';
 import { DecalController } from '../../core/controllers/DecalController';
 import { WeaponMine } from '../../weapons/mine/WeaponMine';
 import { Grenade } from '../../weapons/grenade/Grenade';
@@ -22,6 +21,8 @@ import { Sawed } from '../../weapons/sawed/Sawed';
 import { Weapon } from '../../core/controllers/WeaponController';
 import { DamageableEntity } from '../../core/entities/DamageableEntity';
 import { EnemyEntity } from '../../core/entities/EnemyEntity';
+import { createShellCasingTexture, ShellCasingEvents } from '../../core/entities/ShellCasingEntity';
+import { DecalEventPayload } from '../../core/types/decals';
 
 const logger = createLogger('GameplayScene');
 
@@ -44,7 +45,7 @@ export class GameplayScene extends Phaser.Scene {
   private weaponStatus!: WeaponStatus;
   private enemySpawnTimer!: Phaser.Time.TimerEvent;
   private decalController!: DecalController;
-  private projectileManager!: ProjectileManager;
+  private projectileController!: ProjectileController;
 
   private changeWeaponKey!: Phaser.Input.Keyboard.Key;
   
@@ -95,18 +96,10 @@ export class GameplayScene extends Phaser.Scene {
     this.weaponStatus = new WeaponStatus(this);
 
     // Инициализируем группу для гильз
-    this.shellCasings = this.physics.add.group({
-      bounceX: settings.gameplay.shellCasings.bounce,
-      bounceY: settings.gameplay.shellCasings.bounce,
-      collideWorldBounds: true,
-      runChildUpdate: true,
-      dragX: settings.gameplay.shellCasings.dragX,
-      dragY: 0,
-      gravityY: settings.gameplay.shellCasings.gravity
-    });
+    this.shellCasings = this.physics.add.group();
     
     // Инициализируем менеджер попаданий
-    this.projectileManager = new ProjectileManager(this, this.damageableObjects);
+    this.projectileController = new ProjectileController(this, this.damageableObjects);
 
     // Создаем локацию
     this.location.create();
@@ -131,12 +124,16 @@ export class GameplayScene extends Phaser.Scene {
 
     this.spawnEnemy();
 
-    if (settings.gameplay.blood.keepDecals) {
-      this.events.on(BloodEvents.bloodParticleDecal, this.handleBloodParticleDecal, this);
+    if (settings.gameplay.blood.decals) {
+      this.events.on(BloodEvents.bloodParticleDecal, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
+    }
+
+    if (settings.gameplay.shellCasings.decals) {
+      this.events.on(ShellCasingEvents.shellCasingParticleDecal, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
     }
   }
 
-  private handleBloodParticleDecal(payload: BloodParticleDecalEvent): void {
+  private handleDrowDecal(payload: DecalEventPayload): void {
     this.decalController.drawParticle(payload.particle, payload.x, payload.y);
   }
 
@@ -150,19 +147,6 @@ export class GameplayScene extends Phaser.Scene {
 
   public addShop(shop: BaseShop): void {
     this.shop = shop;
-  }
-
-  /**
-   * Добавляет созданную гильзу в группу гильз
-   * @param shell Спрайт гильзы для добавления в группу
-   */
-  public addShellCasing(shell: Phaser.Physics.Arcade.Sprite): void {
-    const allShells = this.getShellCasingsGroup().getChildren();
-    if (allShells.length >= settings.gameplay.shellCasings.maxShells) {
-      const oldestShell = allShells[0];
-      oldestShell.destroy();
-    }
-    this.shellCasings.add(shell);
   }
   
   update(time: number, delta: number): void {
@@ -209,7 +193,7 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     // Обрабатываем попадания пуль
-    this.projectileManager.update(time, delta);
+    this.projectileController.update(time, delta);
   }
   
   // Метод для доступа к группе гильз
@@ -260,6 +244,6 @@ export class GameplayScene extends Phaser.Scene {
   // }
 
   public addProjectile(projectile: BaseProjectile): void {
-    this.projectileManager.addProjectile(projectile);
+    this.projectileController.addProjectile(projectile);
   }
 } 

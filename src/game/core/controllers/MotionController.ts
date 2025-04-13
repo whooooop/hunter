@@ -4,14 +4,8 @@ import { forceToTargetOffset, easeOutQuart, easeOutQuint } from "../../utils/For
 
 const logger = createLogger('MotionController');
 
-export interface DebugSettings {
-  showPositions: boolean;
-  showPath: boolean;
-}
-
 interface MotionControllerOptions {
-  depthOffset: number;
-  debug?: DebugSettings;
+  depthOffset?: number;
   acceleration: number;
   deceleration: number;
   maxVelocityX: number;
@@ -58,43 +52,12 @@ export class MotionController {
   protected defaultForceStrength: number = 0.15; // Сила воздействия (чем больше, тем быстрее)
   protected forceThreshold: number = 0.01; // Порог для удаления силы
 
-  protected debugObjects: Phaser.GameObjects.GameObject[] = [];
-  protected debugTexts: {[key: string]: Phaser.GameObjects.Text} = {};
-  protected debugGraphics: {[key: string]: Phaser.GameObjects.Graphics} = {};
-
   constructor(scene: Phaser.Scene, gameObject: Phaser.Physics.Arcade.Sprite, options: MotionControllerOptions) {
     this.scene = scene;
     this.gameObject = gameObject;
     this.options = options;
 
     this.setupPhysics();
-
-    if (this.options.debug) {
-      this.setupDebug();
-    }
-  }
-
-  private setupDebug(): void {
-    this.addDebugPosition();
-  } 
-
-  // Добавляем отображение позиции
-  protected addDebugPosition(): void {
-    if (!this.options.debug?.showPositions) return;
-
-    // Добавляем отладочный круг на позиции объекта
-    const debugCircle = this.scene.add.circle(this.gameObject.x, this.gameObject.y, 10, 0xff0000, 0.7);
-    debugCircle.setDepth(100);
-    this.debugObjects.push(debugCircle);
-  
-    // Добавляем текст с именем объекта и координатами
-    const debugText = this.scene.add.text(0, 0, ``, {
-      fontSize: '10px',
-      color: '#ffffff'
-    }).setOrigin(0.5, 0.5);
-    debugText.setDepth(1000);
-    this.debugObjects.push(debugText);
-    this.debugTexts['position'] = debugText;
   }
 
   private setupPhysics(): void {
@@ -102,12 +65,9 @@ export class MotionController {
     // this.gameObject.setCollideWorldBounds(true);
   }
 
-  // public setDepth(depth: number): void {
-  //   this.gameObject.setDepth(depth);
-  // }
-
   public getDepth(): number {
-    return this.gameObject.y + this.options.depthOffset + settings.gameplay.depthOffset;
+    const depthOffset = this.options.depthOffset || 0;
+    return this.gameObject.y + (this.gameObject.height / 2) * this.gameObject.scale + depthOffset + settings.gameplay.depthOffset;
   }
 
   public setMove(moveX: number, moveY: number): void {
@@ -137,15 +97,8 @@ export class MotionController {
     this.gameObject.x += this.velocityX * (delta / 1000);
     this.gameObject.y += this.velocityY * (delta / 1000);
     
-    // Устанавливаем позицию спрайта
-    this.gameObject.setPosition(this.gameObject.x, this.gameObject.y);
-    
     // Обновляем глубину отображения
     this.gameObject.setDepth(this.getDepth());
-    
-    if (this.options.debug) {
-      this.updateDebugVisuals();
-    }
   }
 
   private handleMovementWithAcceleration(): void {
@@ -177,34 +130,6 @@ export class MotionController {
         this.velocityY = Math.max(this.velocityY - this.options.deceleration, 0);
       } else if (this.velocityY < 0) {
         this.velocityY = Math.min(this.velocityY + this.options.deceleration, 0);
-      }
-    }
-  }
-  
-  // Обновляем позицию отладочных объектов
-  protected updateDebugVisuals(): void {
-    // Обновляем основной позиционный текст
-    const positionText = this.debugTexts['position'];
-    if (positionText) {
-      positionText.setPosition(this.gameObject.x, this.gameObject.y - 20);
-      positionText.setText(`(${Math.floor(this.gameObject.x)},${Math.floor(this.gameObject.y)}, ${Math.floor(this.gameObject.depth)})`);
-    }
-
-    // Обновляем первый дебаг-объект (круг)
-    if (this.debugObjects.length > 0 && this.options.debug?.showPositions) {
-      const circle = this.debugObjects[0] as Phaser.GameObjects.Arc;
-      if (circle) {
-        circle.setPosition(this.gameObject.x, this.gameObject.y);
-      }
-    }
-    
-    // Обновляем пути перемещения
-    if (this.options.debug?.showPath) {
-      const pathGraphics = this.debugGraphics['path'];
-      if (pathGraphics) {
-        pathGraphics.clear();
-        pathGraphics.lineStyle(2, 0xff0000, 1);
-        pathGraphics.lineBetween(this.gameObject.x, this.gameObject.y, this.gameObject.x + this.direction * 50, this.gameObject.y);
       }
     }
   }
@@ -246,8 +171,6 @@ export class MotionController {
     
     // Добавляем силу в список активных
     this.externalForces.push(externalForce);
-    
-    logger.debug(`Применена сила: угол=${angle.toFixed(2)}, сила=${force.toFixed(2)}`);
   }
   
   /**
@@ -305,21 +228,11 @@ export class MotionController {
     // Делим на 16, чтобы нормализовать смещение относительно дельты (~16ms за фрейм при 60 FPS)
     this.gameObject.x += totalOffsetX * (delta / 16);
     this.gameObject.y += totalOffsetY * (delta / 16);
-    
-    logger.debug(`Смещение от внешних сил: (${totalOffsetX.toFixed(2)}, ${totalOffsetY.toFixed(2)})`);
   }
 
   public getDirection(): number {
     return this.direction;
   }
 
-  public destroy(): void {
-    // Уничтожаем отладочные объекты
-    this.debugObjects.forEach(obj => obj.destroy());
-    this.debugObjects = [];
-    
-    // Очищаем ссылки на тексты и графику
-    this.debugTexts = {};
-    this.debugGraphics = {};
-  }
+  public destroy(): void {}
 }

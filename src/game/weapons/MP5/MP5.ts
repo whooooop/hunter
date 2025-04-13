@@ -1,43 +1,38 @@
 import { Bullet } from '../../projectiles/bullet/Bullet';
-import { generateStringWithLength } from "../../../utils/stringGenerator";
 import { WeaponEntity } from "../../core/entities/WeaponEntity";
-import mp5Image from './mp5.png';
-import fireSound from './shot.mp3';
-
-const TEXTURE = 'mp5_texture_' + generateStringWithLength(6);
-const AUDIO_FIRE = 'mp5_fire_' + generateStringWithLength(6);
+import { MP5_AUDIO_FIRE, MP5_TEXTURE } from './assets';
 
 export class MP5 extends WeaponEntity {
     name: string = 'MP5';
 
     constructor(scene: Phaser.Scene) {
         super(scene, {
-            texture: TEXTURE,
+            texture: MP5_TEXTURE.key,
             scale: 0.5,
             offsetX: 20,
             offsetY: 25,
             reloadTime: 400,     // Скорость перезарядки в мс
             magazineSize: 30,    // Размер магазина
             damage: 10,          // Урон от одного выстрела
-            speed: [4000, 0],         // Скорость пули
+            speed: [4000, 4000],    // Скорость пули
             fireRate: 100,       // Задержка между выстрелами в мс
-            spreadAngle: 10,     // Угол разброса при выстреле в градусах
-            aimingTime: 250,     // Время прицеливания в мс
+            spreadAngle: 8,      // Угол разброса при выстреле в градусах
+            aimingTime: 2500,    // Время прицеливания в мс
             canAim: true,
-            range: 1000,         // Дистанция стрельбы
             recoilForce: 1,      // Сила отдачи
             recoilRecovery: 5,   // Скорость восстановления от отдачи
             automatic: true,
-            fireAudio: AUDIO_FIRE,
+            fireAudio: MP5_AUDIO_FIRE.key,
             sight: true,
             shellCasings: true,
 
+            firePointOffset: [0, -8],
             projectile: Bullet
           });  
     }
 
     static preload(scene: Phaser.Scene): void {
-        scene.load.image(TEXTURE, mp5Image);
-        scene.load.audio(AUDIO_FIRE, fireSound);
+        scene.load.image(MP5_TEXTURE.key, MP5_TEXTURE.url);
+        scene.load.audio(MP5_AUDIO_FIRE.key, MP5_AUDIO_FIRE.url);
     }
 }

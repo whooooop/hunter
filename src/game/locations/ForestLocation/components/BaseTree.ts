@@ -24,7 +24,7 @@ interface ParticleEffectOptions {
 }
 
 interface TreeOptions {
-    depthOffset: number;
+    depthOffset?: number;
     scale: number;
     health: number;
     texture: string;
@@ -35,12 +35,10 @@ export class BaseTree extends DecorEntity {
   protected frameIndex: number = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, options: TreeOptions) {
-    const gameObject = scene.physics.add.sprite(x, y, options.texture, 0);
+    const gameObject = scene.physics.add.sprite(x, y, options.texture, 0).setScale(options.scale);
     super(gameObject, { health: options.health });
     
     this.scene = scene;
-    this.gameObject.setDepth(y + settings.gameplay.depthOffset + options.depthOffset);
-    this.gameObject.setScale(options.scale);
     this.scene.add.existing(this.gameObject);
   }
 

@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
-import { BaseProjectile, ProjectileType } from './BaseProjectile';
-import { rayRectIntersectionRobust } from '../utils/GeometryUtils';
-import { DamageableEntity } from './entities/DamageableEntity';
+import { BaseProjectile, ProjectileType } from '../BaseProjectile';
+import { rayRectIntersectionRobust } from '../../utils/GeometryUtils';
+import { DamageableEntity } from '../entities/DamageableEntity';
 
 interface Hit {
   time: number;
@@ -12,7 +12,7 @@ interface Hit {
   distance?: number;
 }
 
-export class ProjectileManager {
+export class ProjectileController {
   private debug: boolean = true;
   private scene: Phaser.Scene;
   private damageableObjects: Set<DamageableEntity>;

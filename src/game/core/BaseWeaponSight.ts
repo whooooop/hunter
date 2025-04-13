@@ -5,13 +5,13 @@ import { createLogger } from '../../utils/logger';
 const logger = createLogger('WeaponSight');
 
 export interface BaseWeaponSightOptions {
-  lineThickness: number;
-  lineLength: number;
-  gapSize: number;
-  alpha: number;
-  color: number;
-  range: number;
-  emptyColor: number;
+  lineThickness?: number;
+  lineLength?: number;
+  gapSize?: number;
+  alpha?: number;
+  color?: number;
+  range?: number;
+  emptyColor?: number;
 }
 
 const defaultOptions: Required<BaseWeaponSightOptions> = {
@@ -44,6 +44,10 @@ export class BaseWeaponSight {
     // Создаем графический объект для прицела
     this.graphics = this.scene.add.graphics();
     this.graphics.setDepth(1000); // Устанавливаем высокую глубину отображения
+  }
+
+  public getSightPoint(): [number, number] {
+    return [this.x, this.y];
   }
 
   public setPosition(x: number, y: number, direction: number): void {

@@ -1,11 +1,24 @@
 import * as Phaser from 'phaser';
-import { settings } from '../settings';
-import { GameplayScene } from '../scenes/GameplayScene/GameplayScene';
+import { hexToNumber } from '../../utils/colors';
+import { DecalEventPayload } from '../types/decals';
+
+const defaultOptions = {
+  ejectionSpeed: 180,  // Скорость выброса гильз
+  ejectionAngle: 1,    // Угол выброса гильз (в градусах) - увеличен для выброса вверх и назад
+  gravity: 700,        // Гравитация для гильз
+  bounce: 1,           // Коэффициент отскока
+  scale: 0.35,         // Масштаб гильз
+  dragX: 100,          // Трение по X для остановки гильз
+}
+
+export enum ShellCasingEvents {
+  shellCasingParticleDecal = 'shellCasingParticleDecal',
+}
 
 /**
  * Класс представляющий гильзу оружия
  */
-export class ShellCasing extends Phaser.Physics.Arcade.Sprite {
+export class ShellCasingEntity extends Phaser.Physics.Arcade.Sprite {
   private floorLevel: number;
   private hasHitFloor: boolean = false;
   
@@ -29,24 +42,15 @@ export class ShellCasing extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
     
-    this.setScale(settings.gameplay.shellCasings.scale);
+    this.setScale(defaultOptions.scale);
     this.setDepth(100); // Устанавливаем высокую глубину отображения
     
     // Устанавливаем пол для гильзы немного ниже места появления
     // Y + 20 должно быть близко к ногам персонажа, не давая гильзе упасть слишком низко
-    this.floorLevel = y + 20;
-    
-    // Добавляем гильзу в группу гильз сцены
-    if (scene instanceof GameplayScene) {
-      const gameScene = scene as GameplayScene;    
-      gameScene.addShellCasing(this);
-    }
-    
+    this.floorLevel = y + 20 + Phaser.Math.Between(-25, 25);
+  
     // Применяем физические свойства
     this.applyPhysics(direction);
-    
-    // Устанавливаем время жизни гильзы, если оно настроено
-    this.setupLifetime();
   }
   
   /**
@@ -56,11 +60,11 @@ export class ShellCasing extends Phaser.Physics.Arcade.Sprite {
   private applyPhysics(direction: number): void {
     // Рассчитываем угол выброса гильзы (с небольшой случайностью)
     const ejectionAngle = Phaser.Math.DegToRad(
-      settings.gameplay.shellCasings.ejectionAngle + Phaser.Math.Between(-15, 15)
+      defaultOptions.ejectionAngle + Phaser.Math.Between(-15, 15)
     );
     
     // Скорость выброса с небольшой случайностью
-    const ejectionSpeed = settings.gameplay.shellCasings.ejectionSpeed + Phaser.Math.Between(-20, 20);
+    const ejectionSpeed = defaultOptions.ejectionSpeed + Phaser.Math.Between(-20, 20);
     
     // Определяем базовый угол в зависимости от направления стрельбы
     // Если direction = 1 (вправо), гильза должна вылетать назад и вверх
@@ -77,23 +81,12 @@ export class ShellCasing extends Phaser.Physics.Arcade.Sprite {
     this.setAngularVelocity(Phaser.Math.Between(-200, 200));
     
     // Устанавливаем свойства физики
-    this.setDragX(settings.gameplay.shellCasings.dragX);
-    this.setBounce(settings.gameplay.shellCasings.bounce);
-    this.setGravityY(settings.gameplay.shellCasings.gravity);
+    this.setDragX(defaultOptions.dragX);
+    this.setBounce(defaultOptions.bounce);
+    this.setGravityY(defaultOptions.gravity);
   }
   
-  /**
-   * Настраивает время жизни гильзы
-   */
-  private setupLifetime(): void {
-    // Если задано время жизни гильз, добавляем таймер на удаление
-    if (settings.gameplay.shellCasings.lifetime > 0) {
-      this.scene.time.delayedCall(settings.gameplay.shellCasings.lifetime, () => {
-        this.destroy();
-      });
-    }
-  }
-  
+
   /**
    * Обновляет состояние гильзы (вызывается каждый кадр)
    */
@@ -139,27 +132,62 @@ export class ShellCasing extends Phaser.Physics.Arcade.Sprite {
     }
     
     // Добавляем трение для быстрой остановки
-    this.setDragX(settings.gameplay.shellCasings.dragX * 2);
+    this.setDragX(defaultOptions.dragX * 2);
     
     // Гасим вертикальную скорость и устанавливаем позицию точно на уровне пола
     this.setVelocityY(0);
     this.y = this.floorLevel;
-    
+
     // Устанавливаем задержку для проверки, остановилась ли гильза
     this.scene.time.delayedCall(500, () => {
       if (this.active && this.body) {
         // Если скорость гильзы близка к нулю, она лежит спокойно
         if (Math.abs(this.body.velocity.x) < 5) {
-          // Отключаем обновление физики для этой гильзы
-          this.disableBody(true, false);
-          
-          // Отключаем автоматический вызов preUpdate для этого объекта
-          this.setActive(false);
-          
-          // Оставляем гильзу видимой
-          this.setVisible(true);
+          const payload: DecalEventPayload = { particle: this, x: this.x, y: this.y };
+          this.scene.events.emit(ShellCasingEvents.shellCasingParticleDecal, payload);
+          this.destroy();
         }
       }
     });
   }
 } 
+
+/**
+ * Скрипт для программного создания текстуры гильзы
+ * Этот подход позволяет не зависеть от внешних файлов изображений
+ */
+export const createShellCasingTexture = (scene: Phaser.Scene): void => {
+  // Проверяем, существует ли уже такая текстура
+  if (scene.textures.exists('shell_casing')) {
+    scene.textures.remove('shell_casing'); // Удаляем существующую текстуру для пересоздания
+  }
+
+  // Размер текстуры (увеличиваем для лучшей видимости)
+  const width = 24;
+  const height = 8;
+ 
+  // Создаем новую графику для рисования гильзы
+  const graphics = scene.add.graphics();
+
+  // Цвета для гильзы - делаем более яркими
+  const shellColor = hexToNumber('#FFD700');       // Основной цвет гильзы (ярко-желтый)
+  const shellStrokeColor = hexToNumber('#FF8800'); // Контур гильзы (оранжевый для контраста)
+
+  // Рисуем гильзу в виде яркой желтой палочки с оранжевым контуром
+  graphics.fillStyle(shellColor, 1);
+  graphics.lineStyle(1, shellStrokeColor, 1);
+  
+  // Рисуем прямоугольник для основной части гильзы
+  graphics.fillRect(2, 1, 20, 6);
+  graphics.strokeRect(2, 1, 20, 6);
+  
+  // Добавляем дополнительные элементы для лучшей видимости
+  graphics.fillStyle(0xFF8800, 1); // Оранжевый для торца гильзы
+  graphics.fillRect(2, 1, 3, 6);   // Торец гильзы
+  
+  // Создаем текстуру из графики
+  graphics.generateTexture('shell_casing', width, height);
+  
+  // Удаляем графику после создания текстуры
+  graphics.destroy();
+}; 

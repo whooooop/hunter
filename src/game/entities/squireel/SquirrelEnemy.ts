@@ -27,7 +27,6 @@ export class SquirrelEnemy extends EnemyEntity {
       maxVelocityY: 2,
       direction: -1,
       friction: 0,
-      depthOffset: 0,
     });
     
     this.motionController.setMove(-1, 1);

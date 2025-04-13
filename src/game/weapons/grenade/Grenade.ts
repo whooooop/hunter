@@ -22,7 +22,6 @@ export class Grenade extends WeaponEntity {
             spreadAngle: 0,      // Угол разброса при выстреле в градусах
             aimingTime: 0,       // Время прицеливания в мс
             canAim: false,
-            range: 100,          // Дистанция стрельбы
             recoilForce: 0,      // Сила отдачи
             recoilRecovery: 5,   // Скорость восстановления от отдачи
             automatic: false,

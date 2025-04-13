@@ -11,7 +11,7 @@ import { BaseWeaponSight, BaseWeaponSightOptions } from "../BaseWeaponSight";
 import { settings } from '../../settings';
 import { createLogger } from "../../../utils/logger";
 import { GameplayScene } from "../../scenes/GameplayScene/GameplayScene";
-import { ShellCasing } from "../../entities/ShellCasing";
+import { ShellCasingEntity } from "./ShellCasingEntity";
 import { BaseProjectileClass } from "../BaseProjectile";
 import { RecoilForceType } from "../types/recoilForce";
 
@@ -28,17 +28,18 @@ interface WeaponOptions {
   offsetX: number;
   offsetY: number;
 
+  firePointOffset?: [number, number];
+
   // Перезарядка
   reloadTime: number; // Скорость перезарядки в мс
   magazineSize: number; // Размер магазина
 
   // Параметры стрельбы
   fireRate: number; // Задержка между выстрелами в мс
-  spreadAngle: number; // Угол разброса при выстреле в градусах
-  aimingTime: number; // Время прицеливания в секундах
+  spreadAngle?: number; // Угол разброса при выстреле в градусах
+  aimingTime?: number; // Время прицеливания в секундах
   canAim: boolean; // Можно ли прицеливаться
-  range: number; // Дистанция стрельбы
-  automatic: boolean; // Является ли оружие автоматическим
+  automatic?: boolean; // Является ли оружие автоматическим
   autoreload?: boolean; // Автоматическая перезарядка
   hideWhileReload?: boolean; // Скрывать оружие при перезарядке
 
@@ -51,8 +52,8 @@ interface WeaponOptions {
   afterFireAudio?: string;
   fireAudio?: string;
 
-  shellCasings: boolean;
-  sight: BaseWeaponSightOptions | boolean;
+  shellCasings?: boolean;
+  sight?: BaseWeaponSightOptions | boolean;
   projectile?: BaseProjectileClass
 }
 
@@ -176,6 +177,14 @@ export class WeaponEntity {
     });
   }
 
+  public getFirePoint(): [number, number] {
+    const offsetX = this.options?.firePointOffset?.[0] || 0;
+    const offsetY = this.options?.firePointOffset?.[1] || 0;
+    const x = this.gameObject.x + this.gameObject.width * this.gameObject.scale / 2;
+    const y = this.gameObject.y;
+    return [x + offsetX, y + offsetY];
+  }
+
   public fire(): RecoilForceType | null {
     if (!this.canFire(this.scene.time.now)) {
       if (this.isEmpty()) {
@@ -190,13 +199,13 @@ export class WeaponEntity {
       this.canFireAgain = false;
     }
 
-    const sightX = this.x + 1;
-    const sightY = this.y;
+    const [firePointX, firePointY] = this.getFirePoint();
 
     // Учитываем текущий наклон при создании снаряда
-    const adjustedSightY = this.y + Math.tan(this.weaponAngle) * (sightX - this.x);
-    
-    this.createProjectile(this.x, this.y, sightX, adjustedSightY);
+    const sightX = firePointX + 150;
+    const sightY = firePointY + Math.tan(this.weaponAngle) * (sightX - firePointX);
+
+    this.createProjectile(firePointX, firePointY, sightX, sightY);
 
     // Создаем гильзу после выстрела
     if (this.options.shellCasings && this.scene instanceof GameplayScene) {
@@ -278,8 +287,9 @@ export class WeaponEntity {
     const timeSinceLastShot = currentTime - this.lastFired;
     
     // Если прошло мало времени с последнего выстрела, увеличиваем отдачу
-    if (this.lastFired !== 0 && timeSinceLastShot < this.options.aimingTime) {
-      const recoilMultiplier = 1 + (this.options.aimingTime - timeSinceLastShot) / this.options.aimingTime;
+    const aimingTime = this.options.aimingTime || 0;
+    if (this.lastFired !== 0 && timeSinceLastShot < aimingTime) {
+      const recoilMultiplier = 1 + (aimingTime - timeSinceLastShot) / aimingTime;
       recoilForce *= recoilMultiplier;
     }
     
@@ -329,6 +339,12 @@ export class WeaponEntity {
   public update(time: number, delta: number): void {
     // Постепенно возвращаем оружие в нормальное положение
     this.updateWeaponTilt(time, delta);
+
+    if (this.sight) {
+      const [firePointX, firePointY] = this.getFirePoint();
+      const [sightX, sightY] = this.sight.getSightPoint();
+      this.sight.setPosition(sightX, firePointY, this.direction);
+    }
   }
 
   /**
@@ -339,10 +355,11 @@ export class WeaponEntity {
 
     // Если прошло меньше времени, чем aimingTime с момента последнего выстрела
     const timeSinceLastShot = time - this.lastFired;
-    
-    if (timeSinceLastShot < this.options.aimingTime) {
+    const aimingTime = this.options.aimingTime || 0;
+
+    if (timeSinceLastShot < aimingTime) {
       // Рассчитываем коэффициент прогресса (0 -> 1)
-      const progress = timeSinceLastShot / this.options.aimingTime;
+      const progress = timeSinceLastShot / aimingTime;
       
       // Линейно интерполируем от текущего угла к 0
       this.weaponAngle = Phaser.Math.Linear(this.weaponAngle, 0, progress);
@@ -401,7 +418,7 @@ export class WeaponEntity {
     }
     
     // Создаем новую гильзу
-    new ShellCasing(this.scene, x, y, direction);
+    new ShellCasingEntity(this.scene, x, y, direction);
   }
 
   public destroy(): void {
@@ -416,7 +433,7 @@ export class WeaponEntity {
    */
   private applyWeaponTilt(): void {
     // Генерируем случайный угол в рамках диапазона разброса
-    const angleRange = Phaser.Math.DegToRad(this.options.spreadAngle);
+    const angleRange = Phaser.Math.DegToRad(this.options.spreadAngle || 0);
     this.weaponAngle = Phaser.Math.FloatBetween(-angleRange, angleRange);
     
     // Применяем наклон к спрайту оружия

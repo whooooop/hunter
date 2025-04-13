@@ -14,7 +14,6 @@ export class SpruceTree extends BaseTree {
     constructor(scene: Phaser.Scene, x: number, y: number, options: SpruceTreeOptions) {
         super(scene, x, y, {
             texture: TEXTURE,
-            depthOffset: 14,
             scale: options.scale,
             health: options.health
         });

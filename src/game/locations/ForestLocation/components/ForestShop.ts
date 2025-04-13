@@ -10,8 +10,7 @@ export class ForestShop extends BaseShop {
             texture: TEXTURE_SHOP,
             scale: 0.5,
             interactionRadius: 100,
-            debug: false,
-            depthOffset: 20
+            debug: false
         });
     }
 

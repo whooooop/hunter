@@ -32,7 +32,6 @@ export class Sawed extends WeaponEntity {
       spreadAngle: 10,      // Угол разброса при выстреле в градусах
       aimingTime: 250,     // Время прицеливания в мс
       canAim: false,
-      range: 1000,         // Дистанция стрельбы
       recoilForce: 30,      // Сила отдачи
       recoilRecovery: 5,   // Скорость восстановления от отдачи
       automatic: false,
