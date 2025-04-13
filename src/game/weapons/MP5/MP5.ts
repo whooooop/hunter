@@ -14,18 +14,18 @@ export class MP5 extends WeaponEntity {
         super(scene, {
             texture: TEXTURE,
             scale: 0.5,
-            offsetX: 10,
-            offsetY: 10,
+            offsetX: 20,
+            offsetY: 25,
             reloadTime: 400,     // Скорость перезарядки в мс
             magazineSize: 30,    // Размер магазина
             damage: 10,          // Урон от одного выстрела
             speed: [4000, 0],         // Скорость пули
             fireRate: 100,       // Задержка между выстрелами в мс
-            spreadAngle: 1,     // Угол разброса при выстреле в градусах
+            spreadAngle: 10,     // Угол разброса при выстреле в градусах
             aimingTime: 250,     // Время прицеливания в мс
             canAim: true,
             range: 1000,         // Дистанция стрельбы
-            recoilForce: 2,      // Сила отдачи
+            recoilForce: 1,      // Сила отдачи
             recoilRecovery: 5,   // Скорость восстановления от отдачи
             automatic: true,
             fireAudio: AUDIO_FIRE,

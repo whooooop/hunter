@@ -58,6 +58,8 @@ export class GameplayScene extends Phaser.Scene {
   async preload(): Promise<void> {
     this.location.preload();
     
+    Player.preload(this);
+
     // Создаем текстуру гильзы программно
     createShellCasingTexture(this);
     BloodController.preload(this);
@@ -108,7 +110,7 @@ export class GameplayScene extends Phaser.Scene {
     // Создаем игрока
     this.player = new Player(this, PLAYER_POSITION_X, PLAYER_POSITION_Y);
 
-    this.player.setWeapon(Weapon.MINE);
+    this.player.setWeapon(Weapon.MP5);
     this.player.setLocationBounds(this.location.bounds);
     
     // Устанавливаем оружие в интерфейс
@@ -174,9 +176,10 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     if (this.shop && this.player) {
+      const playerPosition = this.player.getPosition();
       const distanceToPlayer = Phaser.Math.Distance.Between(
         this.shop.x, this.shop.y,
-        this.player.x, this.player.y
+        playerPosition[0], playerPosition[1]
       );
 
       if (distanceToPlayer <= this.shop.getInteractionRadius()) {

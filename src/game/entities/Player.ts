@@ -1,16 +1,24 @@
 import * as Phaser from 'phaser';
-import { PhysicsObject } from '../core/PhysicsObject';
 import { createLogger } from '../../utils/logger';
 import { LocationBounds } from '../core/BaseLocation';
 import { Weapon, WeaponController } from '../core/controllers/WeaponController';
 import { WeaponEntity } from '../core/entities/WeaponEntity';
+import { MotionController } from '../core/controllers/MotionController';
+
+import playerImage from '../../assets/images/player.png';
+
+const TEXTURE_PLAYER = 'player';
 
 const logger = createLogger('Player');
 
-export class Player extends PhysicsObject {
+export class Player {
   name = 'Player';
 
+  private scene: Phaser.Scene;
+  private gameObject: Phaser.Physics.Arcade.Sprite;
+
   private weaponController: WeaponController;
+  private motionController: MotionController;
 
   canChangeDirection: boolean = false;
 
@@ -20,6 +28,10 @@ export class Player extends PhysicsObject {
   private reloadKey: Phaser.Input.Keyboard.Key;
   private jumpKey: Phaser.Input.Keyboard.Key;
   
+  private moveX: number = 0;
+  private moveY: number = 0;
+  private direction: number = 1;
+
   // Параметры прыжка
   public isJumping: boolean = false;
   private jumpHeight: number = 40; // Максимальная высота прыжка
@@ -32,43 +44,43 @@ export class Player extends PhysicsObject {
   private locationBounds: LocationBounds | null = null;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, {
-      name: 'Player',
-      moveX: 0,
-      moveY: 0,
-      direction: 1,
-      depthOffset: 0,
+    this.scene = scene;
+    this.gameObject = scene.physics.add.sprite(x, y, TEXTURE_PLAYER);
+    this.gameObject.setScale(0.5);
+    // shadow: {
+    //   scale: 1,
+    //   offsetX: 5,
+    //   offsetY: 4,
+    // },
+
+    this.weaponController = new WeaponController(scene);
+    this.motionController = new MotionController(scene, this.gameObject, {
+      depthOffset: 10,
       acceleration: 15,
       deceleration: 8,
       friction: 6,
       maxVelocityX: 300,
       maxVelocityY: 300,
-      shadow: {
-        scale: 1,
-        offsetX: 5,
-        offsetY: 4,
-      },
-      debug: {
-        enabled: true,
-        showPositions: true,
-        showPhysics: true,
-        showSprites: true,
-        logCreation: true,
-        showPath: true,
-      },
+      direction: 1,
     });
-    
-    this.weaponController = new WeaponController(scene);
 
     // Настраиваем курсоры для управления
     this.cursors = scene.input.keyboard!.createCursorKeys();
     this.fireKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.reloadKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
     this.jumpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.direction = 1;
-    this.sprite.setData('playerRef', this);
+
+    scene.add.existing(this.gameObject);
   }
   
+  static preload(scene: Phaser.Scene): void {
+    scene.load.image(TEXTURE_PLAYER, playerImage);
+  }
+
+  public getPosition(): [number, number] {
+    return [this.gameObject.x, this.gameObject.y];
+  }
+
   /**
    * Назначает игроку указанное оружие
    * @param weapon Оружие для назначения
@@ -95,21 +107,19 @@ export class Player extends PhysicsObject {
     
     // Обрабатываем прыжок
     this.handleJump(time, delta);
-    
-    // Вызываем базовый метод обновления физического объекта
-    super.update(time, delta);
+
     
     // Применяем смещение от прыжка к визуальной позиции
     if (this.isJumping) {
-      this.sprite.setPosition(this.x, this.y - this.jumpOffsetY);
+      this.gameObject.setPosition(this.gameObject.x, this.gameObject.y - this.jumpOffsetY);
       
       // При прыжке тень должна оставаться на земле
-      if (this.shadowSprite) {
-        this.shadowSprite.setPosition(
-          this.x + 5,
-          this.y + this.sprite.height / 2 + 4
-        );
-      }
+      // if (this.shadowSprite) {
+      //   this.shadowSprite.setPosition(
+      //     this.x + 5,
+      //     this.y + this.sprite.height / 2 + 4
+      //   );
+      // }
     }
     
     // Ограничиваем позицию игрока внутри границ локации
@@ -121,10 +131,12 @@ export class Player extends PhysicsObject {
     if (this.currentWeapon) {
       this.handleFiring(time);
       this.handleReloading();
-      this.currentWeapon.setPosition(this.sprite.x, this.sprite.y, this.direction);
-      this.currentWeapon.setDepth(this.getDepth() + 1);
+      this.currentWeapon.setPosition(this.gameObject.x, this.gameObject.y, this.direction);
+      this.currentWeapon.setDepth(this.gameObject.depth + 10);
       this.currentWeapon.update(time, delta);
     }
+
+    this.motionController.update(time, delta);
   }
   
   private handleMovement(): void {
@@ -146,6 +158,8 @@ export class Player extends PhysicsObject {
       this.moveY = 0;
     }
     
+    this.motionController.setMove(this.moveX, this.moveY);
+
     // Проверяем нажатие клавиши прыжка
     if (this.jumpKey.isDown && !this.isJumping) {
       this.startJump();
@@ -188,7 +202,7 @@ export class Player extends PhysicsObject {
   private handleDirectionChange(direction: number): void {
     if (this.canChangeDirection) {
       this.direction = direction;
-      this.sprite.setFlipX(direction === -1);
+      this.gameObject.setFlipX(direction === -1);
     }
   }
 
@@ -196,7 +210,7 @@ export class Player extends PhysicsObject {
     if (this.fireKey.isDown) {
       const recoilForce = this.currentWeapon?.fire();
       if (recoilForce) {
-        this.applyForce(
+        this.motionController.applyForce(
           recoilForce.recoilVectorX,
           recoilForce.recoilVectorY,
           recoilForce.boostedForce,
@@ -214,10 +228,10 @@ export class Player extends PhysicsObject {
    */
   private constrainPosition(bounds: LocationBounds): void {
     if (bounds) {
-      if (this.x < bounds.left) this.x = bounds.left;
-      if (this.x > bounds.right) this.x = bounds.right;
-      if (this.y < bounds.top) this.y = bounds.top;
-      if (this.y > bounds.bottom) this.y = bounds.bottom;
+      if (this.gameObject.x < bounds.left) this.gameObject.x = bounds.left;
+      if (this.gameObject.x > bounds.right) this.gameObject.x = bounds.right;
+      if (this.gameObject.y < bounds.top) this.gameObject.y = bounds.top;
+      if (this.gameObject.y > bounds.bottom) this.gameObject.y = bounds.bottom;
     }
   }
 
@@ -230,10 +244,5 @@ export class Player extends PhysicsObject {
   // Геттер для получения текущего направления игрока
   public getDirection(): number {
     return this.direction;
-  }
-  
-  // Геттер для получения спрайта игрока
-  public getSprite(): Phaser.Physics.Arcade.Sprite {
-    return this.sprite;
   }
 } 

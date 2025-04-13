@@ -1,4 +1,3 @@
-import { BaseWeapon } from "../../core/BaseWeapon";
 import mineImage from './assets/mine.png';
 import { ProjetileMine } from "../../projectiles/mine/ProjectileMine";
 import { createTextureKey } from "../../../utils/texture";

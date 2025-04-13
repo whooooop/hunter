@@ -362,12 +362,13 @@ export class WeaponEntity {
   }
 
   public setPosition(x: number, y: number, direction: number) {
+    this.direction = direction;
     const offsetX = this.options?.offsetX || 0;
     const offsetY = this.options?.offsetY || 0;
-    this.direction = direction;
+
     this.x = x + offsetX;
     this.y = y + offsetY;
-    this.gameObject.setPosition(x, y);
+    this.gameObject.setPosition(this.x, this.y);
 
     if (this.sight) {
       this.sight.setPosition(x, y, direction);

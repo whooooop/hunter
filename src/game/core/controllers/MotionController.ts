@@ -106,7 +106,7 @@ export class MotionController {
   //   this.gameObject.setDepth(depth);
   // }
 
-  protected getDepth(): number {
+  public getDepth(): number {
     return this.gameObject.y + this.options.depthOffset + settings.gameplay.depthOffset;
   }
 
