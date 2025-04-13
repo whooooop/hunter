@@ -1,18 +1,23 @@
-import * as Phaser from 'phaser';
-import { forceToTargetOffset, easeOutQuart, easeOutQuint } from '../utils/ForceUtils';
-import { createLogger } from '../../utils/logger';
-import { settings } from '../settings';
+import { settings } from "../../settings";
+import { createLogger } from "../../../utils/logger";
+import { forceToTargetOffset, easeOutQuart, easeOutQuint } from "../../utils/ForceUtils";
 
-const logger = createLogger('PhysicsObject');
+const logger = createLogger('MotionController');
 
-// Интерфейс для настроек отладки
 export interface DebugSettings {
-  enabled: boolean;
   showPositions: boolean;
-  showPhysics: boolean;
-  showSprites: boolean;
-  logCreation: boolean;
   showPath: boolean;
+}
+
+interface MotionControllerOptions {
+  depthOffset: number;
+  debug?: DebugSettings;
+  acceleration: number;
+  deceleration: number;
+  maxVelocityX: number;
+  maxVelocityY: number;
+  friction: number;
+  direction: number;
 }
 
 // Интерфейс для внешней силы с целевым смещением
@@ -36,31 +41,10 @@ interface ExternalForce {
   friction: number;        // Коэффициент трения для этой силы
 }
 
-interface PhysicsObjectOptions {
-  name: string;
-  depthOffset: number;
-  debug?: DebugSettings;
-  acceleration: number;
-  deceleration: number;
-  maxVelocityX: number;
-  maxVelocityY: number;
-  friction: number;
-  shadow: PhysicsObjectShadowOptions | false;
-  moveX: number;
-  moveY: number;
-  direction: number;
-}
-
-interface PhysicsObjectShadowOptions {
-  scale: number;
-  offsetX: number;
-  offsetY: number;
-}
-
-export class PhysicsObject {
-  protected scene: Phaser.Scene;
-  protected sprite: Phaser.Physics.Arcade.Sprite;
-  protected name: string;
+export class MotionController {
+  private gameObject: Phaser.Physics.Arcade.Sprite;
+  private scene: Phaser.Scene;
+  private options: MotionControllerOptions;
 
   protected moveX: number = 0;
   protected moveY: number = 0;
@@ -68,15 +52,8 @@ export class PhysicsObject {
   protected velocityY: number = 0;     // Текущая скорость по Y
   protected direction: number = 0;
 
-  // Тень объекта
-  protected shadowSprite: Phaser.GameObjects.Ellipse | null = null;
-  
-  protected options: PhysicsObjectOptions;
-
   // Параметры для внешних сил (отдача, ветер и т.д.)
   protected externalForces: ExternalForce[] = [];
-  
-  // Настройки затухания по умолчанию
   protected defaultDecayRate: number = 0.05; // Скорость затухания (чем меньше, тем медленнее)
   protected defaultForceStrength: number = 0.15; // Сила воздействия (чем больше, тем быстрее)
   protected forceThreshold: number = 0.01; // Порог для удаления силы
@@ -85,138 +62,57 @@ export class PhysicsObject {
   protected debugTexts: {[key: string]: Phaser.GameObjects.Text} = {};
   protected debugGraphics: {[key: string]: Phaser.GameObjects.Graphics} = {};
 
-  public x: number = 0;
-  public y: number = 0;
-
-  // Настройки отладки для каждого объекта
-  protected debug: DebugSettings = {
-    enabled: true,
-    showPositions: true,
-    showPhysics: true,
-    showSprites: true,
-    logCreation: true,
-    showPath: true
-  };
-
-  constructor(scene: Phaser.Scene, x: number, y: number, options: PhysicsObjectOptions) {
-    this.name = options.name;
-    this.x = x;
-    this.y = y;
+  constructor(scene: Phaser.Scene, gameObject: Phaser.Physics.Arcade.Sprite, options: MotionControllerOptions) {
     this.scene = scene;
-    this.sprite = scene.physics.add.sprite(x, y, 'enemy_placeholder');
+    this.gameObject = gameObject;
     this.options = options;
-    this.moveX = options.moveX;
-    this.moveY = options.moveY;
-    this.direction = options.direction;
 
     this.setupPhysics();
 
-    if (this.options.debug?.enabled) {
+    if (this.options.debug) {
       this.setupDebug();
     }
-    
-    if (this.options.debug?.logCreation) {
-      logger.info(`Создан на позиции (${x}, ${y})`);
-    }
   }
 
-  public getSprite(): Phaser.Physics.Arcade.Sprite {
-    return this.sprite;
-  }
-  
-  protected setupPhysics(): void {
-    // Базовая настройка физики
-    this.sprite.setCollideWorldBounds(true);
-    
-    // Добавляем имя объекта для отладки
-    this.sprite.setName(this.name);
-    
-    // Делаем спрайт видимым
-    if (this.options.debug?.showSprites) {
-      this.sprite.setVisible(true);
-    }
-    
-    // Создаем тень, если она включена в опциях
-    if (this.options.shadow) {
-      this.createShadow();
-    }
-    
-    // Включаем отображение тела для отладки, если включен режим отладки
-    if (this.options.debug?.showPhysics && this.scene.physics.world.drawDebug) {
-      // В Phaser 3 отладка физики включается на уровне мира, а не отдельных объектов
-      this.scene.physics.world.debugGraphic.visible = true;
-    }
-  }
-
-  /**
-   * Создает тень (овал) для объекта
-   */
-  private createShadow(): void {
-    // Определяем размеры тени на основе размеров спрайта
-    const width = this.sprite.width * 0.7; // Немного меньше ширины спрайта
-    const height = this.sprite.height * 0.3; // Плоский овал
-    
-    // Создаем овал для тени
-    this.shadowSprite = this.scene.add.ellipse(
-      this.x,
-      this.y + this.sprite.height / 2, // Тень находится снизу спрайта
-      width,
-      height,
-      0x000000, // Черный цвет
-      0.1 // Прозрачность
-    );
-    
-    // Устанавливаем глубину отображения тени (ниже объекта)
-    this.shadowSprite.setDepth(this.getDepth() - 1);
-  }
-
-  /**
-   * Обновляет позицию и размер тени
-   */
-  private updateShadow(): void {
-    if (!this.shadowSprite || !this.options.shadow) return;
-    
-    // Обновляем позицию тени под объектом
-    this.shadowSprite.setPosition(
-      this.x + (this.options.shadow as PhysicsObjectShadowOptions).offsetX,
-      this.y + this.sprite.height / 2 + (this.options.shadow as PhysicsObjectShadowOptions).offsetY
-    );
-    
-    // Обновляем глубину отображения
-    this.shadowSprite.setDepth(this.getDepth() - 1);
-  }
-
-  protected getDepth(): number {
-    return this.y + this.options.depthOffset + settings.gameplay.depthOffset;
-  }
-
-  // Главный метод настройки отладки
-  protected setupDebug(): void {
-    // Создаем базовые элементы отладки
+  private setupDebug(): void {
     this.addDebugPosition();
-  }
+  } 
 
   // Добавляем отображение позиции
   protected addDebugPosition(): void {
-    if (!this.debug.showPositions) return;
+    if (!this.options.debug?.showPositions) return;
 
     // Добавляем отладочный круг на позиции объекта
-    const debugCircle = this.scene.add.circle(this.x, this.y, 10, 0xff0000, 0.7);
+    const debugCircle = this.scene.add.circle(this.gameObject.x, this.gameObject.y, 10, 0xff0000, 0.7);
     debugCircle.setDepth(100);
     this.debugObjects.push(debugCircle);
   
     // Добавляем текст с именем объекта и координатами
-    const debugText = this.scene.add.text(this.x, this.y, `${this.name} (${Math.floor(this.x)},${Math.floor(this.y)}, ${this.sprite.depth})`, {
+    const debugText = this.scene.add.text(0, 0, ``, {
       fontSize: '10px',
       color: '#ffffff'
     }).setOrigin(0.5, 0.5);
-    debugText.setDepth(100);
+    debugText.setDepth(1000);
     this.debugObjects.push(debugText);
     this.debugTexts['position'] = debugText;
   }
 
-  public setDepth(depth: number): void {
-    this.sprite.setDepth(depth);
+  private setupPhysics(): void {
+    // Базовая настройка физики
+    // this.gameObject.setCollideWorldBounds(true);
+  }
+
+  // public setDepth(depth: number): void {
+  //   this.gameObject.setDepth(depth);
+  // }
+
+  protected getDepth(): number {
+    return this.gameObject.y + this.options.depthOffset + settings.gameplay.depthOffset;
+  }
+
+  public setMove(moveX: number, moveY: number): void {
+    this.moveX = moveX;
+    this.moveY = moveY;
   }
 
   public update(time: number, delta: number): void {
@@ -238,21 +134,16 @@ export class PhysicsObject {
     this.updateExternalForces(delta);
     
     // Обновляем позицию игрока на основе текущей скорости
-    this.x += this.velocityX * (delta / 1000);
-    this.y += this.velocityY * (delta / 1000);
+    this.gameObject.x += this.velocityX * (delta / 1000);
+    this.gameObject.y += this.velocityY * (delta / 1000);
     
     // Устанавливаем позицию спрайта
-    this.sprite.setPosition(this.x, this.y);
+    this.gameObject.setPosition(this.gameObject.x, this.gameObject.y);
     
     // Обновляем глубину отображения
-    this.sprite.setDepth(this.getDepth());
+    this.gameObject.setDepth(this.getDepth());
     
-    // Обновляем тень, если она включена
-    if (this.options.shadow) {
-      this.updateShadow();
-    }
-
-    if (this.debug.enabled) {
+    if (this.options.debug) {
       this.updateDebugVisuals();
     }
   }
@@ -295,47 +186,26 @@ export class PhysicsObject {
     // Обновляем основной позиционный текст
     const positionText = this.debugTexts['position'];
     if (positionText) {
-      positionText.setPosition(this.x, this.y - 20);
-      positionText.setText(`${this.name} (${Math.floor(this.x)},${Math.floor(this.y)}, ${Math.floor(this.sprite.depth)})`);
+      positionText.setPosition(this.gameObject.x, this.gameObject.y - 20);
+      positionText.setText(`(${Math.floor(this.gameObject.x)},${Math.floor(this.gameObject.y)}, ${Math.floor(this.gameObject.depth)})`);
     }
 
     // Обновляем первый дебаг-объект (круг)
-    if (this.debugObjects.length > 0 && this.debug.showPositions) {
+    if (this.debugObjects.length > 0 && this.options.debug?.showPositions) {
       const circle = this.debugObjects[0] as Phaser.GameObjects.Arc;
       if (circle) {
-        circle.setPosition(this.x, this.y);
+        circle.setPosition(this.gameObject.x, this.gameObject.y);
       }
     }
     
     // Обновляем пути перемещения
-    if (this.debug.showPath) {
+    if (this.options.debug?.showPath) {
       const pathGraphics = this.debugGraphics['path'];
       if (pathGraphics) {
         pathGraphics.clear();
         pathGraphics.lineStyle(2, 0xff0000, 1);
-        pathGraphics.lineBetween(this.x, this.y, this.x + this.direction * 50, this.y);
+        pathGraphics.lineBetween(this.gameObject.x, this.gameObject.y, this.gameObject.x + this.direction * 50, this.gameObject.y);
       }
-    }
-  }
-
-  public destroy(): void {
-    // Уничтожаем отладочные объекты
-    this.debugObjects.forEach(obj => obj.destroy());
-    this.debugObjects = [];
-    
-    // Очищаем ссылки на тексты и графику
-    this.debugTexts = {};
-    this.debugGraphics = {};
-    
-    // Уничтожаем тень, если она есть
-    if (this.shadowSprite) {
-      this.shadowSprite.destroy();
-      this.shadowSprite = null;
-    }
-    
-    // Уничтожаем спрайт
-    if (this.sprite) {
-      this.sprite.destroy();
     }
   }
 
@@ -433,8 +303,8 @@ export class PhysicsObject {
     
     // Применяем итоговое смещение к спрайту с учетом дельты времени
     // Делим на 16, чтобы нормализовать смещение относительно дельты (~16ms за фрейм при 60 FPS)
-    this.x += totalOffsetX * (delta / 16);
-    this.y += totalOffsetY * (delta / 16);
+    this.gameObject.x += totalOffsetX * (delta / 16);
+    this.gameObject.y += totalOffsetY * (delta / 16);
     
     logger.debug(`Смещение от внешних сил: (${totalOffsetX.toFixed(2)}, ${totalOffsetY.toFixed(2)})`);
   }
@@ -442,4 +312,14 @@ export class PhysicsObject {
   public getDirection(): number {
     return this.direction;
   }
-} 
+
+  public destroy(): void {
+    // Уничтожаем отладочные объекты
+    this.debugObjects.forEach(obj => obj.destroy());
+    this.debugObjects = [];
+    
+    // Очищаем ссылки на тексты и графику
+    this.debugTexts = {};
+    this.debugGraphics = {};
+  }
+}

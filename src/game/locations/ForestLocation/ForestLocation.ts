@@ -35,9 +35,6 @@ export class ForestLocation extends BaseLocation {
     bottom: 0
   };
 
-  // Ссылка на шейдер травы
-  private grassShader: Phaser.GameObjects.Shader | null = null;
-  
   // Массив для хранения облаков
   private clouds: Phaser.GameObjects.Image[] = [];
   
@@ -92,7 +89,6 @@ export class ForestLocation extends BaseLocation {
 
     this.createShop();
     
-    // Создаем деревья
     this.createTrees();
   }
 
@@ -207,22 +203,11 @@ export class ForestLocation extends BaseLocation {
   public update(time: number, delta: number = 16): void {
     // Обновляем облака
     this.updateClouds(delta);
-    
-    if (this.grassShader) {
-      // Обновляем время для анимации в шейдере
-      this.grassShader.setUniform('time', time / 1000);
-    }
   }
   
   // Переопределяем метод destroy для очистки ресурсов
   public override destroy(): void {
     logger.info('Уничтожение лесной локации');
-    
-    // Уничтожаем шейдер травы
-    if (this.grassShader) {
-      this.grassShader.destroy();
-      this.grassShader = null;
-    }
     
     // Вызываем метод базового класса
     super.destroy();
@@ -232,25 +217,16 @@ export class ForestLocation extends BaseLocation {
    * Создает ёлку и размещает ее справа на сцене
    */
   private createTrees(): void {
-    // this.createTrees(this.width / 2, this.skyHeight + 300);
-    // this.createTree(this.width / 2 - 30, this.skyHeight + 230);
-
     INTERACTIVE_OBJECTS.forEach(({ type, position, scale, health }) => {    
       const object = new SpruceTree(this.scene, position[0], position[1], {
         scale,
         health
       });
-
-      // Добавляем её на сцену
-      this.scene.add.existing(object);
-    
+      
       // Добавляем дерево в группу интерактивных объектов
       if (this.scene instanceof GameplayScene) {
         const gameScene = this.scene as GameplayScene;
-        // Т.к. Tree наследуется от LocationObject, а LocationObject от Sprite,
-        // мы можем безопасно привести его к типу Phaser.Physics.Arcade.Sprite
-        // Это решит проблему несоответствия типов между Tree и ожидаемым Sprite
-        gameScene.addInteractiveObject(object as unknown as Phaser.Physics.Arcade.Sprite);
+        gameScene.addDamageableObject(object);
       }
     });
   }

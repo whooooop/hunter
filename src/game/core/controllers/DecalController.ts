@@ -1,4 +1,4 @@
-export class DecalManager {
+export class DecalController {
   private texture: Phaser.GameObjects.RenderTexture;
 
   constructor(scene: Phaser.Scene, x: number, y: number, width: number, height: number) {

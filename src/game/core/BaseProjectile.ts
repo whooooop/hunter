@@ -58,7 +58,6 @@ export class BaseProjectile {
   public create(scene: Phaser.Scene, x: number, y: number): BaseProjectile {
     this.scene = scene;
     this.startPoint = [x, y];
-    
     if (this.options.texture) {
       this.gameObject = new Phaser.GameObjects.Sprite(scene, x, y, this.options.texture);
       this.gameObject.setPosition(x, y);
@@ -117,8 +116,8 @@ export class BaseProjectile {
     this.gameObject.setRotation(angle);
 
     // Добавляем физику, если спрайт существует
+    this.scene.physics.world.enable(this.gameObject);
     const body = this.gameObject.body as Phaser.Physics.Arcade.Body;
-
     // Устанавливаем скорость
     body.setVelocity(velocityX, velocityY);
   }
@@ -168,7 +167,7 @@ export class BaseProjectile {
   
   public activate(): void {
     this.activated = true;
-    console.log('activate', this.options.type);
+    // console.log('activate', this.options.type);
     if (this.options.type === ProjectileType.GRENADE || this.options.type === ProjectileType.MINE) {
       this.scene.time.delayedCall(1000, () => {
         this.destroy();
@@ -225,7 +224,6 @@ export class BaseProjectile {
   }
 
   public destroy () {
-    console.log('destroy projectile');
     this.destroyed = true;
     
     if (this.gameObject) {

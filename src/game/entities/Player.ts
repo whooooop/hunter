@@ -1,17 +1,20 @@
 import * as Phaser from 'phaser';
 import { PhysicsObject } from '../core/PhysicsObject';
-import { BaseWeapon } from '../core/BaseWeapon';
 import { createLogger } from '../../utils/logger';
 import { LocationBounds } from '../core/BaseLocation';
+import { Weapon, WeaponController } from '../core/controllers/WeaponController';
+import { WeaponEntity } from '../core/entities/WeaponEntity';
 
 const logger = createLogger('Player');
 
 export class Player extends PhysicsObject {
   name = 'Player';
 
+  private weaponController: WeaponController;
+
   canChangeDirection: boolean = false;
 
-  private weapon!: BaseWeapon;
+  private currentWeapon!: WeaponEntity | null;
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private fireKey: Phaser.Input.Keyboard.Key;
   private reloadKey: Phaser.Input.Keyboard.Key;
@@ -55,6 +58,8 @@ export class Player extends PhysicsObject {
       },
     });
     
+    this.weaponController = new WeaponController(scene);
+
     // Настраиваем курсоры для управления
     this.cursors = scene.input.keyboard!.createCursorKeys();
     this.fireKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F);
@@ -68,16 +73,9 @@ export class Player extends PhysicsObject {
    * Назначает игроку указанное оружие
    * @param weapon Оружие для назначения
    */
-  public setWeapon(weapon: BaseWeapon): void {
-    // Если у игрока уже есть оружие, уничтожаем его
-    if (this.weapon) {
-      this.weapon.destroy();
-    }
-    
-    weapon.create(this);
-    // Добавляем оружие на сцену
-    this.scene.add.existing(weapon);
-    this.weapon = weapon;
+  public setWeapon(weapon: Weapon): void {
+    this.weaponController.setCurrentWeapon(weapon);
+    this.currentWeapon = this.weaponController.getCurrentWeapon();
   }
 
   public setLocationBounds(bounds: LocationBounds): void {
@@ -87,8 +85,8 @@ export class Player extends PhysicsObject {
   /**
    * Возвращает текущее оружие игрока
    */
-  public getWeapon(): BaseWeapon | null {
-    return this.weapon || null;
+  public getWeapon(): WeaponEntity | null {
+    return this.currentWeapon || null;
   }
   
   public update(time: number, delta: number): void {
@@ -120,11 +118,12 @@ export class Player extends PhysicsObject {
     }
 
     // Обрабатываем стрельбу и обновляем оружие только если оно назначено
-    if (this.weapon) {
+    if (this.currentWeapon) {
       this.handleFiring(time);
       this.handleReloading();
-      this.weapon.setDepth(this.getDepth() + 1);
-      this.weapon.update(time, delta);
+      this.currentWeapon.setPosition(this.sprite.x, this.sprite.y, this.direction);
+      this.currentWeapon.setDepth(this.getDepth() + 1);
+      this.currentWeapon.update(time, delta);
     }
   }
   
@@ -195,9 +194,18 @@ export class Player extends PhysicsObject {
 
   private handleFiring(time: number): void {
     if (this.fireKey.isDown) {
-      this.weapon.fire(this.sprite.x, this.sprite.y, this.direction);
+      const recoilForce = this.currentWeapon?.fire();
+      if (recoilForce) {
+        this.applyForce(
+          recoilForce.recoilVectorX,
+          recoilForce.recoilVectorY,
+          recoilForce.boostedForce,
+          recoilForce.strength,
+          recoilForce.decayRate
+        );
+      }
     } else {
-      this.weapon.resetTrigger();
+      this.currentWeapon?.resetTrigger();
     }
   }
 
@@ -215,7 +223,7 @@ export class Player extends PhysicsObject {
 
   private handleReloading(): void {
     if (this.reloadKey.isDown) {
-      this.weapon.reload();
+      this.currentWeapon?.reload();
     }
   }
   

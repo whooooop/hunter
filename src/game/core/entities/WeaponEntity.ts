@@ -1,29 +1,36 @@
-import * as Phaser from 'phaser';
-import { GameplayScene } from '../scenes/GameplayScene/GameplayScene';
-import { Player } from '../entities/Player';
-import { settings } from '../settings';
-import { createLogger } from '../../utils/logger';
-import { ShellCasing } from '../entities/ShellCasing';
-import { BaseWeaponSight, BaseWeaponSightOptions } from './BaseWeaponSight';
-import { BaseProjectileClass } from './BaseProjectile';
+// После выстрела оружие может наколоняться что внияет на последующие выстрелы
+// в момент выстрела мы определяем вектор направления (две точки, старта и прицеливания)
+// создание снаряда происходит в момент выстрела
+// далее снаряд активируется и действует по своим правилам
+// снаряд определяет траекторию исходя из своих настроек и вектора направления и приложенной силы
+// Также после создания мы добавить снаряд в HitManager, а в хитменеджере проверрять активацию снаряда
+// активация снаряда может быть моментальной, с задержкой или по внешнему воздействию
+// В момент активации ицем объекты взаимодействия и передем им разрушение
 
-const logger = createLogger('BaseWeapon');
+import { BaseWeaponSight, BaseWeaponSightOptions } from "../BaseWeaponSight";
+import { settings } from '../../settings';
+import { createLogger } from "../../../utils/logger";
+import { GameplayScene } from "../../scenes/GameplayScene/GameplayScene";
+import { ShellCasing } from "../../entities/ShellCasing";
+import { BaseProjectileClass } from "../BaseProjectile";
+import { RecoilForceType } from "../types/recoilForce";
 
-interface BaseWeaponOptions {
-  name: string;
+const logger = createLogger('WeaponEntity');
+
+interface WeaponOptions {
   texture: string;
-  scale: number;
 
+  // Патроны
+  damage: number;       // Урон от одного выстрела
+  speed: number[];      // Скорость снаряда
+
+  scale: number;
   offsetX: number;
   offsetY: number;
 
   // Перезарядка
   reloadTime: number; // Скорость перезарядки в мс
   magazineSize: number; // Размер магазина
-
-  // Патроны
-  damage: number;       // Урон от одного выстрела
-  speed: number[];      // Скорость снаряда
 
   // Параметры стрельбы
   fireRate: number; // Задержка между выстрелами в мс
@@ -39,18 +46,15 @@ interface BaseWeaponOptions {
   recoilForce: number; // Сила отдачи
   recoilRecovery: number; // Скорость восстановления от отдачи
 
-  // Звуки
   emptyAudio?: string;
   reloadAudio?: string;
   afterFireAudio?: string;
   fireAudio?: string;
 
-  sight: BaseWeaponSightOptions | boolean;
   shellCasings: boolean;
-
+  sight: BaseWeaponSightOptions | boolean;
   projectile?: BaseProjectileClass
 }
-
 
 type AudioAssets = {
   fire: Phaser.Sound.BaseSound | null;
@@ -59,17 +63,23 @@ type AudioAssets = {
   afterFire: Phaser.Sound.BaseSound | null;
 }
 
-export class BaseWeapon extends Phaser.GameObjects.Sprite {
-  protected player: Player | null = null;
-  
+export class WeaponEntity {
+  private active: boolean = false;
+  private scene: Phaser.Scene;
+  private gameObject: Phaser.GameObjects.Sprite;
+
   protected lastFired: number = 0;
   protected isReloading: boolean = false;
   protected currentAmmo: number = 0;
   protected canFireAgain: boolean = true; // Флаг для неавтоматического оружия
   protected weaponAngle: number = 0; // Текущий угол наклона оружия
+  protected options: WeaponOptions;
 
-  private baseOptions: BaseWeaponOptions;
+  protected x: number = 0;
+  protected y: number = 0;
+  protected direction: number = 1;
 
+  private sight: BaseWeaponSight | null = null;
   private audioAssets: AudioAssets = {
     fire: null,
     empty: null,
@@ -77,47 +87,52 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     afterFire: null,
   }
 
-  private sight: BaseWeaponSight | null = null;
+  constructor(scene: Phaser.Scene, options: WeaponOptions) {
+    this.scene = scene;
+    this.options = options;
+    this.currentAmmo = this.options.magazineSize;
 
-  constructor(scene: Phaser.Scene, options: BaseWeaponOptions) {
-    super(scene, 0, 0, options.texture);
-    this.name = options.name;
-    this.baseOptions = options;
-    this.setScale(this.baseOptions.scale);
-  }
+    if (this.options.sight) {
+      this.createSight(this.options.sight)
+    }
 
-  create(player: Player): void {
-    this.player = player;
-    this.currentAmmo = this.baseOptions.magazineSize;
-
-    this.createSight()
+    this.gameObject = this.scene.add.sprite(0, 0, this.options.texture);
+    this.gameObject.setScale(this.options.scale);
+    this.scene.add.existing(this.gameObject);
+    
     this.createAudioAssets()
   }
 
-  protected createSight(): void {
-    if (!this.baseOptions.sight) {
-      return;
-    }
-    if (typeof this.baseOptions.sight === 'boolean') {
+  protected createSight(options: BaseWeaponSightOptions | boolean): void {
+    if (typeof options === 'boolean') {
       this.sight = new BaseWeaponSight(this.scene);
     } else {
-      this.sight = new BaseWeaponSight(this.scene, this.baseOptions.sight);
+      this.sight = new BaseWeaponSight(this.scene, options);
     }
+    this.updateSightState();
   }
 
   protected createAudioAssets(): void {
-    if (this.baseOptions.fireAudio) {
-      this.audioAssets.fire = this.scene.sound.add(this.baseOptions.fireAudio, { volume: settings.audio.weaponsVolume });
+    if (this.options.fireAudio) {
+      this.audioAssets.fire = this.scene.sound.add(this.options.fireAudio, { volume: settings.audio.weaponsVolume });
     }
-    if (this.baseOptions.emptyAudio) {
-      this.audioAssets.empty = this.scene.sound.add(this.baseOptions.emptyAudio, { volume: settings.audio.weaponsVolume });
+    if (this.options.emptyAudio) {
+      this.audioAssets.empty = this.scene.sound.add(this.options.emptyAudio, { volume: settings.audio.weaponsVolume });
     }
-    if (this.baseOptions.reloadAudio) {
-      this.audioAssets.reload = this.scene.sound.add(this.baseOptions.reloadAudio, { volume: settings.audio.weaponsVolume });
+    if (this.options.reloadAudio) {
+      this.audioAssets.reload = this.scene.sound.add(this.options.reloadAudio, { volume: settings.audio.weaponsVolume });
     }
-    if (this.baseOptions.afterFireAudio) {
-      this.audioAssets.afterFire = this.scene.sound.add(this.baseOptions.afterFireAudio, { volume: settings.audio.weaponsVolume });
+    if (this.options.afterFireAudio) {
+      this.audioAssets.afterFire = this.scene.sound.add(this.options.afterFireAudio, { volume: settings.audio.weaponsVolume });
     }
+  }
+
+  public activate(active: boolean): void {
+    this.active = active;
+  }
+
+  public getActive(): boolean {
+    return this.active;
   }
 
   public getCurrentAmmo(): number {
@@ -132,10 +147,10 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     if (this.currentAmmo <= 0) return false;
     
     // Для неавтоматического оружия проверяем, был ли отпущен курок
-    if (!this.baseOptions.automatic && !this.canFireAgain) return false;
+    if (!this.options.automatic && !this.canFireAgain) return false;
     
     // Проверяем задержку между выстрелами
-    return time - this.lastFired >= this.baseOptions.fireRate;
+    return time - this.lastFired >= this.options.fireRate;
   }
 
   public isEmpty(): boolean {
@@ -143,19 +158,25 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
   }
 
   public reload(): void {
-    if (this.isReloading || this.currentAmmo === this.baseOptions.magazineSize) return;
+    if (this.isReloading || this.currentAmmo === this.options.magazineSize) return;
     
     this.playReloadSound();
     this.isReloading = true;
     
+    if (this.options.hideWhileReload) {
+      this.gameObject.setVisible(false);
+    }
+
     // Устанавливаем таймер на перезарядку
-    this.scene.time.delayedCall(this.baseOptions.reloadTime, () => {
-      this.currentAmmo = this.baseOptions.magazineSize;
+    this.scene.time.delayedCall(this.options.reloadTime, () => {
+      this.currentAmmo = this.options.magazineSize;
       this.isReloading = false;
+      this.gameObject.setVisible(true);
+      this.updateSightState();
     });
   }
 
-  public fire(x: number, y: number, direction: number = 1) {
+  public fire(): RecoilForceType | null {
     if (!this.canFire(this.scene.time.now)) {
       if (this.isEmpty()) {
         this.playEmptySound();
@@ -165,27 +186,25 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     }
     
     // Для неавтоматического оружия блокируем следующий выстрел
-    if (!this.baseOptions.automatic) {
+    if (!this.options.automatic) {
       this.canFireAgain = false;
     }
 
-    const sightX = x + 1;
-    const sightY = y;
+    const sightX = this.x + 1;
+    const sightY = this.y;
 
     // Учитываем текущий наклон при создании снаряда
-    const adjustedSightY = y + Math.tan(this.weaponAngle) * (sightX - x);
+    const adjustedSightY = this.y + Math.tan(this.weaponAngle) * (sightX - this.x);
     
-    this.createProjectile(x, y, sightX, adjustedSightY);
+    this.createProjectile(this.x, this.y, sightX, adjustedSightY);
 
     // Создаем гильзу после выстрела
-    if (this.baseOptions.shellCasings && this.scene instanceof GameplayScene) {
-      this.ejectShellCasing(x, y, direction);
+    if (this.options.shellCasings && this.scene instanceof GameplayScene) {
+      this.ejectShellCasing(this.x, this.y, this.direction);
     }
 
     // Применяем отдачу к игроку с учетом направления
-    if (this.baseOptions.recoilForce) {
-      this.applyRecoil(direction);
-    }
+    const recoil = this.options.recoilForce ? this.applyRecoil(this.direction) : null;
 
     this.playFireSound();
     
@@ -195,22 +214,25 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     this.lastFired = this.scene.time.now;
     this.currentAmmo--;
 
-    if (this.baseOptions.autoreload && this.currentAmmo <= 0) {
+    if (this.options.autoreload && this.currentAmmo <= 0) {
       this.reload();
     }
 
+    this.updateSightState();
     this.afterFire();
+
+    return recoil;
   }
 
   protected createProjectile(x: number, y: number, sightX: number, sightY: number): void {
-    if (!this.baseOptions.projectile || !(this.scene instanceof GameplayScene)) {
+    if (!this.options.projectile || !(this.scene instanceof GameplayScene)) {
       return;
     }
 
-    const projectile = new this.baseOptions.projectile();
+    const projectile = new this.options.projectile();
     projectile
       .create(this.scene, x, y)
-      .setForceVector(sightX, sightY, this.baseOptions.speed, this.baseOptions.damage);
+      .setForceVector(sightX, sightY, this.options.speed, this.options.damage);
     
     const gameScene = this.scene as GameplayScene;
     gameScene.addProjectile(projectile);
@@ -219,11 +241,7 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
   /**
    * Применяет отдачу от выстрела к игроку
    */
-  private applyRecoil(direction: number): void {
-    if (!this.player) {
-      return;
-    }
-    
+  private applyRecoil(direction: number): RecoilForceType {
     // Рассчитываем силу отдачи
     const recoilForce = this.calculateRecoilForce();
     
@@ -245,7 +263,7 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     
     // Применяем отдачу к игроку с экспоненциальным затуханием
     // Параметры: (направление по X, направление по Y, сила, скорость, затухание)
-    this.player.applyForce(recoilVectorX, recoilVectorY, boostedForce, strength, decayRate);
+    return { recoilVectorX, recoilVectorY, boostedForce, strength, decayRate }; 
   }
 
   /**
@@ -253,15 +271,15 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
    */
   private calculateRecoilForce(): number {
     // Базовая сила отдачи из настроек оружия
-    let recoilForce = this.baseOptions.recoilForce;
+    let recoilForce = this.options.recoilForce;
     
     // Увеличиваем отдачу при быстрой стрельбе
     const currentTime = this.scene.time.now;
     const timeSinceLastShot = currentTime - this.lastFired;
     
     // Если прошло мало времени с последнего выстрела, увеличиваем отдачу
-    if (this.lastFired !== 0 && timeSinceLastShot < this.baseOptions.aimingTime) {
-      const recoilMultiplier = 1 + (this.baseOptions.aimingTime - timeSinceLastShot) / this.baseOptions.aimingTime;
+    if (this.lastFired !== 0 && timeSinceLastShot < this.options.aimingTime) {
+      const recoilMultiplier = 1 + (this.options.aimingTime - timeSinceLastShot) / this.options.aimingTime;
       recoilForce *= recoilMultiplier;
     }
     
@@ -309,30 +327,8 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
   }
 
   public update(time: number, delta: number): void {
-    super.update(time, delta);
-
     // Постепенно возвращаем оружие в нормальное положение
     this.updateWeaponTilt(time, delta);
-
-    if (this.baseOptions.hideWhileReload && this.isReloading) {
-      this.setVisible(false);
-    } else {
-      this.setVisible(true);
-    }
-
-    if (this.sight && this.player) {
-      const playerSprite = this.player.getSprite();
-      // Обновляем позицию прицела используя координаты спрайта игрока
-      // this.sight.update(
-      //   playerSprite.x,
-      //   playerSprite.y,
-      //   this.player.getDirection(),
-      //   this.currentAmmo > 0
-      // );
-    } 
-    if (this.player) {
-      this.setPosition(this.player.x, this.player.y);
-    }
   }
 
   /**
@@ -344,37 +340,51 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
     // Если прошло меньше времени, чем aimingTime с момента последнего выстрела
     const timeSinceLastShot = time - this.lastFired;
     
-    if (timeSinceLastShot < this.baseOptions.aimingTime) {
+    if (timeSinceLastShot < this.options.aimingTime) {
       // Рассчитываем коэффициент прогресса (0 -> 1)
-      const progress = timeSinceLastShot / this.baseOptions.aimingTime;
+      const progress = timeSinceLastShot / this.options.aimingTime;
       
       // Линейно интерполируем от текущего угла к 0
       this.weaponAngle = Phaser.Math.Linear(this.weaponAngle, 0, progress);
       
       // Применяем текущий угол наклона
-      this.setRotation(this.weaponAngle);
+      this.gameObject.setRotation(this.weaponAngle);
     } else {
       // Полностью выравниваем оружие
       this.weaponAngle = 0;
-      this.setRotation(0);
+      this.gameObject.setRotation(0);
     }
   }
 
   public setDepth(depth: number) {
-    super.setDepth(depth);
+    this.gameObject.setDepth(depth);
     return this;
   }
 
-  public setPosition(x: number, y: number) {
-    const offsetX = this.baseOptions?.offsetX || 0;
-    const offsetY = this.baseOptions?.offsetY || 0;
-    super.setPosition(x + offsetX, y + offsetY);
+  public setPosition(x: number, y: number, direction: number) {
+    const offsetX = this.options?.offsetX || 0;
+    const offsetY = this.options?.offsetY || 0;
+    this.direction = direction;
+    this.x = x + offsetX;
+    this.y = y + offsetY;
+    this.gameObject.setPosition(x, y);
+
+    if (this.sight) {
+      this.sight.setPosition(x, y, direction);
+    } 
+
     return this;
   }
 
   // Метод для сброса блокировки выстрела (вызывается при отпускании кнопки)
   public resetTrigger(): void {
     this.canFireAgain = true;
+  }
+
+  public updateSightState(): void {
+    if (this.sight) {
+      this.sight.setActive(this.currentAmmo > 0);
+    }
   }
 
   /**
@@ -405,10 +415,10 @@ export class BaseWeapon extends Phaser.GameObjects.Sprite {
    */
   private applyWeaponTilt(): void {
     // Генерируем случайный угол в рамках диапазона разброса
-    const angleRange = Phaser.Math.DegToRad(this.baseOptions.spreadAngle);
+    const angleRange = Phaser.Math.DegToRad(this.options.spreadAngle);
     this.weaponAngle = Phaser.Math.FloatBetween(-angleRange, angleRange);
     
     // Применяем наклон к спрайту оружия
-    this.setRotation(this.weaponAngle);
+    this.gameObject.setRotation(this.weaponAngle);
   }
-} 
+}

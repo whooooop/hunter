@@ -1,13 +1,12 @@
 import * as Phaser from 'phaser';
-import { BaseEnemy } from './BaseEnemy';
 import { BaseProjectile, ProjectileType } from './BaseProjectile';
 import { rayRectIntersectionRobust } from '../utils/GeometryUtils';
-import { DecalManager } from './DecalManager';
+import { DamageableEntity } from './entities/DamageableEntity';
 
 interface Hit {
   time: number;
   projectile: BaseProjectile;
-  targetEntity: BaseEnemy;
+  targetEntity: DamageableEntity;
   hitPoint: number[];
   forceVector: number[][];
   distance?: number;
@@ -16,18 +15,17 @@ interface Hit {
 export class ProjectileManager {
   private debug: boolean = true;
   private scene: Phaser.Scene;
-  private enemies: Phaser.Physics.Arcade.Group;
+  private damageableObjects: Set<DamageableEntity>;
   private projectiles: Map<BaseProjectile, BaseProjectile> = new Map();
   private projectilesNotActivated: Map<BaseProjectile, BaseProjectile> = new Map();
   private projectileHits: Hit[] = [];
 
   constructor(
     scene: Phaser.Scene, 
-    decalManager: DecalManager,
-    enemies: Phaser.Physics.Arcade.Group, 
+    damageableObjects: Set<DamageableEntity>, 
   ) {
     this.scene = scene;
-    this.enemies = enemies;
+    this.damageableObjects = damageableObjects;
   }
   
   public addProjectile(projectile: BaseProjectile): void {
@@ -67,14 +65,8 @@ export class ProjectileManager {
     const normalizedDirY = dirY / length;
 
     // Проверяем каждого врага на пересечение с продленным лучом
-    this.enemies.getChildren().forEach((enemyObj: any) => {
-      if (!enemyObj.active) return;
-      
-      const enemy = enemyObj.getData('enemyRef') as BaseEnemy;
-      if (!enemy) {
-        console.warn('Не найдена ссылка на BaseEnemy:', enemyObj);
-        return;
-      }
+    this.damageableObjects.forEach((enemy) => {
+      if (enemy.getDead()) return;
       
       // Получаем границы тела врага
       const enemyBounds = enemy.getBounds();
@@ -121,50 +113,43 @@ export class ProjectileManager {
     
     // Время активации взрыва (текущее время)
     const explosionTime = this.scene.time.now;
-    
     // Проверяем всех врагов на нахождение в радиусе взрыва
-    this.enemies.getChildren().forEach((enemyObj: any) => {
-        if (!enemyObj.active) return;
-        
-        const enemy = enemyObj.getData('enemyRef') as BaseEnemy;
-        if (!enemy) {
-            console.warn('[ProjectileManager] Отсутствует ссылка на BaseEnemy:', enemyObj);
-            return;
-        }
-        
-        // Получаем границы врага
-        const enemyBounds = enemy.getBounds();
-        if (!enemyBounds) return;
-        
-        // Получаем центр врага
-        const enemyCenter = {
-            x: enemyBounds.x + enemyBounds.width / 2,
-            y: enemyBounds.y + enemyBounds.height / 2
-        };
-        
-        // Вычисляем расстояние от центра взрыва до центра врага
-        const distance = Phaser.Math.Distance.Between(x, y, enemyCenter.x, enemyCenter.y);
-        // Проверяем, находится ли враг в радиусе взрыва
-        if (distance <= radius) {
-            // Вычисляем точку попадания (на прямой между центром взрыва и врагом)
-            const angle = Math.atan2(enemyCenter.y - y, enemyCenter.x - x);
-            const hitPoint = {
-                x: x + Math.cos(angle) * Math.min(distance, radius),
-                y: y + Math.sin(angle) * Math.min(distance, radius)
-            };
-            
-            hits.push({
-                time: explosionTime,
-                projectile,
-                distance,
-                targetEntity: enemy,
-                hitPoint: [hitPoint.x, hitPoint.y],
-                forceVector: [
-                  [x, y],
-                  [hitPoint.x, hitPoint.y]
-                ]
-            });
-        }
+    this.damageableObjects.forEach((enemy) => {
+      if (enemy.getDead()) return;
+      
+      // Получаем границы врага
+      const enemyBounds = enemy.getBounds();
+      if (!enemyBounds) return;
+      
+      // Получаем центр врага
+      const enemyCenter = {
+          x: enemyBounds.x + enemyBounds.width / 2,
+          y: enemyBounds.y + enemyBounds.height / 2
+      };
+      
+      // Вычисляем расстояние от центра взрыва до центра врага
+      const distance = Phaser.Math.Distance.Between(x, y, enemyCenter.x, enemyCenter.y);
+      // Проверяем, находится ли враг в радиусе взрыва
+      if (distance <= radius) {
+          // Вычисляем точку попадания (на прямой между центром взрыва и врагом)
+          const angle = Math.atan2(enemyCenter.y - y, enemyCenter.x - x);
+          const hitPoint = {
+              x: x + Math.cos(angle) * Math.min(distance, radius),
+              y: y + Math.sin(angle) * Math.min(distance, radius)
+          };
+          
+          hits.push({
+              time: explosionTime,
+              projectile,
+              distance,
+              targetEntity: enemy,
+              hitPoint: [hitPoint.x, hitPoint.y],
+              forceVector: [
+                [x, y],
+                [hitPoint.x, hitPoint.y]
+              ]
+          });
+      }
     });
     
     // Отображаем отладочный круг взрыва, если включен режим отладки
@@ -218,7 +203,7 @@ export class ProjectileManager {
    * Обрабатывает попадания пуль в нужное время
    */
   public update(currentTime: number, delta: number): void {
-    // console.log('size', this.projectilesNotActivated.size, this.projectiles.size,f this.projectileHits.length);
+    // console.log('size', this.projectilesNotActivated.size, this.projectiles.size, this.projectileHits.length, this.enemies.size);
     // Ищем активные снаряды и запускаем проверку взаимодействия с объектами
     this.updateNotActivatedProjectiles(currentTime);
 
@@ -256,14 +241,8 @@ export class ProjectileManager {
         return;
       }
 
-      this.enemies.getChildren().forEach((enemyObj: any) => {
-        if (!enemyObj.active) return;
-        
-        const enemy = enemyObj.getData('enemyRef') as BaseEnemy;
-        if (!enemy) {
-            console.warn('[ProjectileManager] Отсутствует ссылка на BaseEnemy:', enemyObj);
-            return;
-        }
+      this.damageableObjects.forEach((enemy) => {
+        if (enemy.getDead()) return;
         
         // Получаем границы врага
         const enemyBounds = enemy.getBounds();
@@ -289,17 +268,16 @@ export class ProjectileManager {
     const currentHits = this.sliceCurrentHits(currentTime);
     
     currentHits.forEach(hit => {
-      console.log('hit', hit);
       // Проверяем, что цель все еще активна
-      console.warn('Проверить, что цель все еще активна');
-      // if (!hit.targetEntity.getActive()) return;
+      if (hit.targetEntity.getDead()) return;
+
       const damage = hit.projectile.getDamage(hit.distance);            
 
       // Обрабатываем урон врагу или объекту
       hit.targetEntity.takeDamage({
         forceVector: hit.forceVector,
         hitPoint: hit.hitPoint,
-        damage
+        value: damage
       });
       
       hit.projectile.onHit();

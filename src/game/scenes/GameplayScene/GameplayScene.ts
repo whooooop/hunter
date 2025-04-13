@@ -1,21 +1,27 @@
 import * as Phaser from 'phaser';
 import { SceneKeys, PLAYER_POSITION_X, PLAYER_POSITION_Y } from '../../core/Constants';
 import { Player } from '../../entities/Player';
-import { BaseEnemy } from '../../core/BaseEnemy';
 import { WaveInfo } from '../../core/WaveInfo';
 import { settings } from '../../settings';
 import { createLogger } from '../../../utils/logger';
 import { createShellCasingTexture } from '../../utils/ShellCasingTexture';
 import { LocationManager } from '../../core/LocationManager';
 import { BaseLocation } from '../../core/BaseLocation';
-import { WeaponManager } from '../../core/WeaponManager';
-import { LocationObject } from '../../core/LocationObject';
 import { WeaponStatus } from '../../ui/WeaponStatus';
 import { BaseShop } from '../../core/BaseShop';
 import { SquirrelEnemy } from '../../entities/squireel/SquirrelEnemy';
-import { DecalManager } from '../../core/DecalManager';
 import { ProjectileManager } from '../../core/ProjectileManager';
 import { BaseProjectile } from '../../core/BaseProjectile';
+import { BloodController, BloodEvents, BloodParticleDecalEvent } from '../../core/controllers/BloodController';
+import { DecalController } from '../../core/controllers/DecalController';
+import { WeaponMine } from '../../weapons/mine/WeaponMine';
+import { Grenade } from '../../weapons/grenade/Grenade';
+import { Glock } from '../../weapons/glock/Glock';
+import { MP5 } from '../../weapons/MP5/MP5';
+import { Sawed } from '../../weapons/sawed/Sawed';
+import { Weapon } from '../../core/controllers/WeaponController';
+import { DamageableEntity } from '../../core/entities/DamageableEntity';
+import { EnemyEntity } from '../../core/entities/EnemyEntity';
 
 const logger = createLogger('GameplayScene');
 
@@ -25,20 +31,19 @@ interface GameplaySceneData {
 
 export class GameplayScene extends Phaser.Scene {
   private locationManager!: LocationManager;
-  private weaponManager!: WeaponManager;
 
   private location!: BaseLocation;
   
   private player!: Player;
   private shop!: BaseShop;
-  private enemies!: Phaser.Physics.Arcade.Group;
-  private bullets!: Phaser.Physics.Arcade.Group;
+  private enemies: Set<EnemyEntity> = new Set();
   private shellCasings!: Phaser.Physics.Arcade.Group; // Группа для гильз
-  private interactiveObjects!: Phaser.Physics.Arcade.Group; // Группа для объектов, взаимодействующих с пулями
+  private damageableObjects: Set<DamageableEntity> = new Set();
+
   private waveInfo!: WaveInfo;
   private weaponStatus!: WeaponStatus;
   private enemySpawnTimer!: Phaser.Time.TimerEvent;
-  private decalManager!: DecalManager;
+  private decalController!: DecalController;
   private projectileManager!: ProjectileManager;
   
   constructor() {
@@ -47,7 +52,6 @@ export class GameplayScene extends Phaser.Scene {
   
   init({ locationId } : GameplaySceneData) {
     this.locationManager = new LocationManager(this);
-    this.weaponManager = new WeaponManager(this);
     this.location = this.locationManager.loadLocation(locationId);
   }
 
@@ -56,31 +60,33 @@ export class GameplayScene extends Phaser.Scene {
     
     // Создаем текстуру гильзы программно
     createShellCasingTexture(this);
+    BloodController.preload(this);
 
-    WeaponManager.preload(this);
+    SquirrelEnemy.preload(this);
+
+    Glock.preload(this);
+    MP5.preload(this);
+    Grenade.preload(this);
+    Sawed.preload(this);
+    WeaponMine.preload(this);
   }
   
   async create(): Promise<void> {
     logger.info('create');
+    
+    // this.physics.world.debugGraphic.visible = true;
+
+    this.decalController = new DecalController(this, 0, 0, settings.display.width, settings.display.height);
+    this.decalController.setDepth(5);
 
     // Устанавливаем границы мира
     this.physics.world.setBounds(0, 0, settings.display.width, settings.display.height);
-    
-    this.decalManager = new DecalManager(this, 0, 0,settings.display.width, settings.display.height);
-    this.decalManager.setDepth(5); // Устанавливаем ниже, чем у активных объектов
     
     // Создаем информацию о волне
     this.waveInfo = new WaveInfo(this);
     
     // Создаем интерфейс отображения состояния оружия
     this.weaponStatus = new WeaponStatus(this);
-
-    // Инициализируем группы врагов и пуль
-    // this.bullets = this.physics.add.group({
-    //   classType: BaseBullet,
-    //   runChildUpdate: true,
-    //   allowGravity: false
-    // });
 
     // Инициализируем группу для гильз
     this.shellCasings = this.physics.add.group({
@@ -93,52 +99,47 @@ export class GameplayScene extends Phaser.Scene {
       gravityY: settings.gameplay.shellCasings.gravity
     });
     
-    // Инициализируем группу для интерактивных объектов
-    this.interactiveObjects = this.physics.add.group({
-      classType: LocationObject,
-      runChildUpdate: true,
-      allowGravity: false
-    });
-
-    this.enemies = this.physics.add.group({
-      classType: BaseEnemy,
-      runChildUpdate: true,
-      allowGravity: false
-    });
-    
     // Инициализируем менеджер попаданий
-    this.projectileManager = new ProjectileManager(this, this.decalManager, this.enemies);
+    this.projectileManager = new ProjectileManager(this, this.damageableObjects);
 
     // Создаем локацию
     this.location.create();
 
     // Создаем игрока
     this.player = new Player(this, PLAYER_POSITION_X, PLAYER_POSITION_Y);
-    const weapon = this.weaponManager.getWeapon('grenade');
-    this.player.setWeapon(weapon);
+
+    this.player.setWeapon(Weapon.MINE);
     this.player.setLocationBounds(this.location.bounds);
     
     // Устанавливаем оружие в интерфейс
-    this.weaponStatus.setWeapon(weapon);
+    this.weaponStatus.setWeapon(this.player.getWeapon());
     
     // Настраиваем коллизии между игроком и врагами
-    this.physics.add.overlap(
-      this.player.getSprite(),
-      this.enemies,
-      this.handlePlayerEnemyCollision as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
-      undefined,
-      this
-    );
+    // this.physics.add.overlap(
+    //   this.player.getSprite(),
+    //   this.enemies,
+    //   this.handlePlayerEnemyCollision as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
+    //   undefined,
+    //   this
+    // );
 
     this.spawnEnemy();
+
+    if (settings.gameplay.blood.keepDecals) {
+      this.events.on(BloodEvents.bloodParticleDecal, this.handleBloodParticleDecal, this);
+    }
+  }
+
+  private handleBloodParticleDecal(payload: BloodParticleDecalEvent): void {
+    this.decalController.drawParticle(payload.particle, payload.x, payload.y);
   }
 
   /**
    * Добавляет интерактивный объект в группу объектов, взаимодействующих с пулями
    * @param object Спрайт объекта для добавления в группу
    */
-  public addInteractiveObject(object: Phaser.Physics.Arcade.Sprite): void {
-    this.interactiveObjects.add(object);
+  public addDamageableObject(object: DamageableEntity): void {
+    this.damageableObjects.add(object);
   }
 
   public addShop(shop: BaseShop): void {
@@ -146,21 +147,15 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   /**
-   * Удаляет интерактивный объект из группы объектов, взаимодействующих с пулями
-   * @param object Спрайт объекта для удаления из группы
-   * @param destroy Флаг, указывающий, нужно ли уничтожить объект
-   */
-  public removeInteractiveObject(object: Phaser.GameObjects.Sprite, destroy: boolean = false): void {
-    if (this.interactiveObjects.contains(object)) {
-      this.interactiveObjects.remove(object, destroy);
-    }
-  }
-
-  /**
    * Добавляет созданную гильзу в группу гильз
    * @param shell Спрайт гильзы для добавления в группу
    */
   public addShellCasing(shell: Phaser.Physics.Arcade.Sprite): void {
+    const allShells = this.getShellCasingsGroup().getChildren();
+    if (allShells.length >= settings.gameplay.shellCasings.maxShells) {
+      const oldestShell = allShells[0];
+      oldestShell.destroy();
+    }
     this.shellCasings.add(shell);
   }
   
@@ -189,14 +184,15 @@ export class GameplayScene extends Phaser.Scene {
       } else {
         this.shop.setPlayerNearby(false);
       }
-      
+
       this.shop.update(time, delta);
     }
   
     // Обновляем всех врагов
-    this.enemies.getChildren().forEach(enemySprite => {
-      const enemy = (enemySprite as Phaser.Physics.Arcade.Sprite).getData('enemyRef');
-      if (enemy && typeof enemy.update === 'function') {
+    this.enemies.forEach(enemy => {
+      if (enemy.getDestroyed()) {
+        this.enemies.delete(enemy);
+      } else {
         enemy.update(time, delta);
       }
     });
@@ -205,24 +201,9 @@ export class GameplayScene extends Phaser.Scene {
     this.projectileManager.update(time, delta);
   }
   
-  // Метод для доступа к группе пуль
-  public getBulletsGroup(): Phaser.Physics.Arcade.Group {
-    return this.bullets;
-  }
-  
   // Метод для доступа к группе гильз
   public getShellCasingsGroup(): Phaser.Physics.Arcade.Group {
     return this.shellCasings;
-  }
-  
-  // Метод для доступа к группе врагов
-  public getEnemiesGroup(): Phaser.Physics.Arcade.Group {
-    return this.enemies;
-  }
-  
-  // Метод для доступа к группе интерактивных объектов
-  public getInteractiveObjectsGroup(): Phaser.Physics.Arcade.Group {
-    return this.interactiveObjects;
   }
   
   private spawnEnemy(): void {
@@ -234,38 +215,38 @@ export class GameplayScene extends Phaser.Scene {
       moveX: -1,
       moveY: 0,
       direction: -1,
-      decalManager: this.decalManager
     });
-    this.enemies.add(enemy.getSprite());
+    this.enemies.add(enemy);
+    this.damageableObjects.add(enemy);
   }
   
-  private handlePlayerEnemyCollision(
-    playerObj: Phaser.Types.Physics.Arcade.GameObjectWithBody, 
-    enemyObj: Phaser.Types.Physics.Arcade.GameObjectWithBody
-  ): void {
-    // Проверяем, что enemyObj - это спрайт
-    if (!(enemyObj instanceof Phaser.Physics.Arcade.Sprite)) {
-      return;
-    }
+  // private handlePlayerEnemyCollision(
+  //   playerObj: Phaser.Types.Physics.Arcade.GameObjectWithBody, 
+  //   enemyObj: Phaser.Types.Physics.Arcade.GameObjectWithBody
+  // ): void {
+  //   // Проверяем, что enemyObj - это спрайт
+  //   if (!(enemyObj instanceof Phaser.Physics.Arcade.Sprite)) {
+  //     return;
+  //   }
     
-    // Проверяем, что playerObj - это спрайт
-    if (!(playerObj instanceof Phaser.Physics.Arcade.Sprite)) {
-      return;
-    }
+  //   // Проверяем, что playerObj - это спрайт
+  //   if (!(playerObj instanceof Phaser.Physics.Arcade.Sprite)) {
+  //     return;
+  //   }
     
-    // Получаем объект врага из свойства данных спрайта
-    const enemy = enemyObj.getData('enemyRef') as BaseEnemy;
-    if (!enemy) {
-      console.error('Спрайт врага не содержит ссылку на объект BaseEnemy');
-      return;
-    }
-    const direction = enemy.getDirection();
-    const player = playerObj.getData('playerRef') as Player;
+  //   // Получаем объект врага из свойства данных спрайта
+  //   const enemy = enemyObj.getData('enemyRef') as BaseEnemy;
+  //   if (!enemy) {
+  //     console.error('Спрайт врага не содержит ссылку на объект BaseEnemy');
+  //     return;
+  //   }
+  //   const direction = enemy.getDirection();
+  //   const player = playerObj.getData('playerRef') as Player;
 
-    if (!player.isJumping) {
-      player.applyForce(direction, 0, 10, 0.5, 0.1);  
-    }
-  }
+  //   if (!player.isJumping) {
+  //     player.applyForce(direction, 0, 10, 0.5, 0.1);  
+  //   }
+  // }
 
   public addProjectile(projectile: BaseProjectile): void {
     this.projectileManager.addProjectile(projectile);

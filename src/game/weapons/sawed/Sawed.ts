@@ -1,5 +1,4 @@
 import * as Phaser from 'phaser';
-import { BaseWeapon } from '../../core/BaseWeapon';
 import { generateStringWithLength } from '../../../utils/stringGenerator';
 import { Bullet } from '../../projectiles/bullet/Bullet';
 
@@ -8,6 +7,7 @@ import sawedFireAudio from './assets/fire.mp3';
 import sawedEmptyAudio from './assets/empty.mp3';
 import sawedReloadAudio from './assets/reload.mp3';
 import sawedAfterFireAudio from './assets/after_fire.mp3';
+import { WeaponEntity } from '../../core/entities/WeaponEntity';
 
 const TEXTURE = 'sawed_texture_' + generateStringWithLength(6);
 const FIRE_AUDIO = 'sawed_fire' + generateStringWithLength(6);
@@ -15,10 +15,11 @@ const EMPTY_AUDIO = 'sawed_empty' + generateStringWithLength(6);
 const RELOAD_AUDIO = 'sawed_reload' + generateStringWithLength(6);
 const AFTER_FIRE_AUDIO = 'sawed_after_fire' + generateStringWithLength(6);
 
-export class Sawed extends BaseWeapon {
+export class Sawed extends WeaponEntity {
+  name: string = 'Sawed';
+
   constructor(scene: Phaser.Scene) {
     super(scene, {
-      name: 'Sawed',
       texture: TEXTURE,
       scale: 0.5,
       offsetX: 35,

@@ -2,6 +2,8 @@ import * as Phaser from 'phaser';
 import { hexToNumber } from '../utils/colors';
 import { createLogger } from '../../utils/logger';
 
+const logger = createLogger('WeaponSight');
+
 export interface BaseWeaponSightOptions {
   lineThickness: number;
   lineLength: number;
@@ -22,14 +24,17 @@ const defaultOptions: Required<BaseWeaponSightOptions> = {
   range: 150
 };
 
-const logger = createLogger('WeaponSight');
-
 export class BaseWeaponSight {
   private scene: Phaser.Scene;
   private graphics: Phaser.GameObjects.Graphics;
   private range: number;
   private color: number;
   private options: Required<BaseWeaponSightOptions>;
+
+  private x: number = 0;
+  private y: number = 0;
+  private active: boolean = false;
+  private direction: number = 1;
 
   constructor(scene: Phaser.Scene, options?: BaseWeaponSightOptions) {
     this.scene = scene;
@@ -41,50 +46,62 @@ export class BaseWeaponSight {
     this.graphics.setDepth(1000); // Устанавливаем высокую глубину отображения
   }
 
-  public update(x: number, y: number, direction: number, hasAmmo: boolean): void {
+  public setPosition(x: number, y: number, direction: number): void {
+    this.x = x;
+    this.y = y;
+    this.direction = direction;
+    this.renderSight();
+  }
+
+  public setActive(active: boolean): void {
+    this.active = active;
+    this.renderSight();
+  }
+
+  private renderSight(): void {
     // Очищаем предыдущий прицел
     this.graphics.clear();
     
     // Устанавливаем цвет в зависимости от наличия патронов
-    this.color = hasAmmo ? this.options.color : this.options.emptyColor;
+    this.color = this.active ? this.options.color : this.options.emptyColor;
     
     // Рисуем прицел
-    this.drawSight(x, y, direction);
+    this.drawSight();
   }
 
-  private drawSight(x: number, y: number, direction: number): void {
-    const targetX = x + this.range * direction;
+  private drawSight(): void {
+    const targetX = this.x + this.range * this.direction;
     // Устанавливаем стиль линии
     this.graphics.lineStyle(this.options.lineThickness, this.color, this.options.alpha);
     
     // Рисуем горизонтальные линии
     this.graphics.lineBetween(
       targetX - this.options.lineLength - this.options.gapSize,
-      y,
+      this.y,
       targetX - this.options.gapSize,
-      y
+      this.y
     );
     
     this.graphics.lineBetween(
       targetX + this.options.gapSize,
-      y,
+      this.y,
       targetX + this.options.lineLength + this.options.gapSize,
-      y
+      this.y
     );
     
     // Рисуем вертикальные линии
     this.graphics.lineBetween(
       targetX,
-      y - this.options.lineLength - this.options.gapSize,
+      this.y - this.options.lineLength - this.options.gapSize,
       targetX,
-      y - this.options.gapSize
+      this.y - this.options.gapSize
     );
     
     this.graphics.lineBetween(
       targetX,
-      y + this.options.gapSize,
+      this.y + this.options.gapSize,
       targetX,
-      y + this.options.lineLength + this.options.gapSize
+      this.y + this.options.lineLength + this.options.gapSize
     );
   }
 

@@ -1,20 +1,22 @@
 import * as Phaser from 'phaser';
-import { BaseWeapon } from '../../core/BaseWeapon';
 import { generateStringWithLength } from '../../../utils/stringGenerator';
 
 import glockImage from './assets/glock.png';
 import fireSound from './assets/shot.mp3';
 import emptySound from './assets/empty.mp3';
 import { Bullet } from '../../projectiles/bullet/Bullet';
+import { WeaponEntity } from '../../core/entities/WeaponEntity';
 
 const TEXTURE = 'glock_texture_' + generateStringWithLength(6);
 const AUDIO_FIRE = 'glock_fire_' + generateStringWithLength(6);
 const AUDIO_EMPTY = 'glock_empty_' + generateStringWithLength(6);
 
-export class Glock extends BaseWeapon {
+export class Glock extends WeaponEntity {
+  name: string = 'Glock';
+
   constructor(scene: Phaser.Scene) {
     super(scene, {
-      name: 'Glock',
+      
       texture: TEXTURE,
       scale: 0.5,
       offsetX: 35,

@@ -1,16 +1,17 @@
 import { Bullet } from '../../projectiles/bullet/Bullet';
 import { generateStringWithLength } from "../../../utils/stringGenerator";
-import { BaseWeapon } from "../../core/BaseWeapon";
+import { WeaponEntity } from "../../core/entities/WeaponEntity";
 import mp5Image from './mp5.png';
 import fireSound from './shot.mp3';
 
 const TEXTURE = 'mp5_texture_' + generateStringWithLength(6);
 const AUDIO_FIRE = 'mp5_fire_' + generateStringWithLength(6);
 
-export class MP5 extends BaseWeapon {
+export class MP5 extends WeaponEntity {
+    name: string = 'MP5';
+
     constructor(scene: Phaser.Scene) {
         super(scene, {
-            name: 'MP5',
             texture: TEXTURE,
             scale: 0.5,
             offsetX: 10,

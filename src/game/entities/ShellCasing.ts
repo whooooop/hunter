@@ -38,18 +38,7 @@ export class ShellCasing extends Phaser.Physics.Arcade.Sprite {
     
     // Добавляем гильзу в группу гильз сцены
     if (scene instanceof GameplayScene) {
-      const gameScene = scene as GameplayScene;
-      
-      // Проверяем, не превышено ли количество гильз на сцене
-      if (gameScene.getShellCasingsGroup().getLength() >= settings.gameplay.shellCasings.maxShells) {
-        const allShells = gameScene.getShellCasingsGroup().getChildren();
-        if (allShells.length > 0) {
-            // Берем первый элемент в группе (самый старый)
-            const oldestShell = allShells[0];
-            oldestShell.destroy();
-        }
-      }
-      
+      const gameScene = scene as GameplayScene;    
       gameScene.addShellCasing(this);
     }
     
