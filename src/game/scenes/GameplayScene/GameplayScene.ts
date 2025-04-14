@@ -24,6 +24,7 @@ import { EnemyEntity } from '../../core/entities/EnemyEntity';
 import { createShellCasingTexture, ShellCasingEvents } from '../../core/entities/ShellCasingEntity';
 import { DecalEventPayload } from '../../core/types/decals';
 import { WeaponAWP } from '../../weapons/AWP/WeaponAWP';
+import { ExplosionEntity } from '../../core/entities/ExplosionEntity';
 
 const logger = createLogger('GameplayScene');
 
@@ -76,6 +77,7 @@ export class GameplayScene extends Phaser.Scene {
     Sawed.preload(this);
     WeaponMine.preload(this);
     WeaponAWP.preload(this);
+    ExplosionEntity.preload(this);
   }
   
   async create(): Promise<void> {
@@ -191,7 +193,7 @@ export class GameplayScene extends Phaser.Scene {
     });
 
     if (this.changeWeaponKey.isDown) {
-      this.player.setWeapon(Weapon.MINE);
+      this.player.setWeapon(Weapon.GRENADE);
     }
 
     // Обрабатываем попадания пуль

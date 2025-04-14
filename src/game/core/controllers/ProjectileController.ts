@@ -13,7 +13,7 @@ interface Hit {
 }
 
 export class ProjectileController {
-  private debug: boolean = true;
+  private debug: boolean = false;
   private scene: Phaser.Scene;
   private damageableObjects: Set<DamageableEntity>;
   private projectiles: Map<BaseProjectile, BaseProjectile> = new Map();

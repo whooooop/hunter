@@ -1,5 +1,6 @@
 import { settings } from "../settings";
 import { hexToNumber } from "../utils/colors";
+import { ExplosionEntity } from "./entities/ExplosionEntity";
 
 export enum ProjectileType {
   BULLET = 'bullet',
@@ -171,14 +172,17 @@ export class BaseProjectile {
     this.activated = true;
     // console.log('activate', this.options.type);
     if (this.options.type === ProjectileType.GRENADE || this.options.type === ProjectileType.MINE) {
-      this.scene.time.delayedCall(1000, () => {
+      this.activateExplosion();
+      this.gameObject.setAlpha(0);
+      this.scene.time.delayedCall(1000, () => { 
         this.destroy();
       });
     }
   }
 
-  protected activateGrenade(): void {
+  protected activateExplosion(): void {
     // эффект взрыва
+    ExplosionEntity.create(this.scene, this.gameObject.x, this.gameObject.y);
   }
 
   public onHit(): void {
