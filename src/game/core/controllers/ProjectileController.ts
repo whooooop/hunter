@@ -4,12 +4,17 @@ import { rayRectIntersectionRobust } from '../../utils/GeometryUtils';
 import { DamageableEntity } from '../entities/DamageableEntity';
 
 interface Hit {
-  time: number;
   projectile: BaseProjectile;
   targetEntity: DamageableEntity;
   hitPoint: number[];
   forceVector: number[][];
   distance?: number;
+  time: number;
+}
+
+interface HitGroup {
+  hits: Hit[];
+  time: number;
 }
 
 export class ProjectileController {
@@ -18,7 +23,7 @@ export class ProjectileController {
   private damageableObjects: Set<DamageableEntity>;
   private projectiles: Map<BaseProjectile, BaseProjectile> = new Map();
   private projectilesNotActivated: Map<BaseProjectile, BaseProjectile> = new Map();
-  private projectileHits: Hit[] = [];
+  private projectileHits: HitGroup[] = [];
 
   constructor(
     scene: Phaser.Scene, 
@@ -43,7 +48,10 @@ export class ProjectileController {
   }
 
   private predictRayHits(projectile: BaseProjectile): void {
-    const hits: Hit[] = [];
+    const group: HitGroup = {
+      hits: [],
+      time: 0
+    };
     
     // Получаем вектор движения снаряда (две точки)
     const vectorPoints = projectile.getForceVector();
@@ -83,7 +91,7 @@ export class ProjectileController {
         const { hitX, hitY, distance } = intersection;
         const time = this.scene.time.now + (distance / speed[0] * 1000);
         
-        hits.push({
+        group.hits.push({
           time,
           projectile,
           targetEntity: enemy,
@@ -94,9 +102,11 @@ export class ProjectileController {
     });
 
     // Сортируем попадания по времени (сначала ближайшие)
-    hits.sort((a, b) => a.time - b.time);
-    
-    this.projectileHits.push(...hits);
+    if (group.hits.length > 0) {
+      group.hits.sort((a, b) => a.time - b.time);
+      group.time = group.hits[0].time;
+      this.projectileHits.push(group);
+    }
   }
 
   private predictRadiusHits(projectile: BaseProjectile): void {
@@ -109,7 +119,10 @@ export class ProjectileController {
     const radius = projectile.getRadius();
     
     // Массив для хранения обнаруженных попаданий
-    const hits: Hit[] = [];
+    const group: HitGroup = {
+      hits: [],
+      time: 0
+    };
     
     // Время активации взрыва (текущее время)
     const explosionTime = this.scene.time.now;
@@ -138,7 +151,7 @@ export class ProjectileController {
               y: y + Math.sin(angle) * Math.min(distance, radius)
           };
           
-          hits.push({
+          group.hits.push({
               time: explosionTime,
               projectile,
               distance,
@@ -158,7 +171,10 @@ export class ProjectileController {
     }
     
     // Добавляем все попадания в общий список
-    this.projectileHits.push(...hits);
+    if (group.hits.length > 0) {
+      group.time = group.hits[0].time;
+      this.projectileHits.push(group);
+    }
   }
 
   /**
@@ -189,11 +205,11 @@ export class ProjectileController {
     });
   }
   
-  private sliceCurrentHits(currentTime: number): Hit[] {
-    const currentHits: Hit[] = [];
-    this.projectileHits = this.projectileHits.reduce((acc: Hit[], hit: Hit) => {
-      if (hit.time <= currentTime) currentHits.push(hit);
-      else acc.push(hit);
+  private sliceCurrentHits(currentTime: number): HitGroup[] {
+    const currentHits: HitGroup[] = [];
+    this.projectileHits = this.projectileHits.reduce((acc: HitGroup[], group: HitGroup) => {
+      if (group.time <= currentTime) currentHits.push(group);
+      else acc.push(group);
       return acc;
     }, []);
     return currentHits;
@@ -266,21 +282,23 @@ export class ProjectileController {
   private updateProjectileHits(currentTime: number): void {
     // Получаем все попадания, которые должны произойти в текущий момент
     const currentHits = this.sliceCurrentHits(currentTime);
-    
-    currentHits.forEach(hit => {
-      // Проверяем, что цель все еще активна
-      if (hit.targetEntity.getDead()) return;
 
-      const damage = hit.projectile.getDamage(hit.distance);            
+    currentHits.forEach(group => {
+      for (const [index, hit] of group.hits.entries()) {
+        if (hit.targetEntity.getDead()) return;
 
-      // Обрабатываем урон врагу или объекту
-      hit.targetEntity.takeDamage({
-        forceVector: hit.forceVector,
-        hitPoint: hit.hitPoint,
-        value: damage
-      });
-      
-      hit.projectile.onHit();
+        const damage = hit.projectile.getDamage(hit.distance);     
+        const damageResult = hit.targetEntity.takeDamage({
+          forceVector: hit.forceVector,
+          hitPoint: hit.hitPoint,
+          value: damage
+        });       
+        hit.projectile.onHit();
+
+        if (hit.projectile.getType() === ProjectileType.BULLET && !damageResult.isPenetrated) {
+          break;
+        }
+      }
     });
   }
 } 

@@ -28,6 +28,27 @@ module.exports = {
         generator: {
           filename: 'assets/images/[hash][ext]'
         }
+      },
+      {
+        test: /\.atlas\.png$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/atlas/[name][ext]'
+        }
+      },
+      {
+        test: /\.atlas$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/atlas/[hash][ext]'
+        }
+      },
+      {
+        test: /\.json$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/json/[hash][ext]'
+        }
       }
     ]
   },
@@ -39,9 +60,12 @@ module.exports = {
     path: path.resolve(__dirname, './')
   },
   devServer: {
-    static: {
-      directory: path.join(__dirname, './'),
-    },
+    static: [
+      {
+        directory: path.join(__dirname, './'),
+        watch: true
+      }
+    ],
     compress: true,
     port: 8080
   }

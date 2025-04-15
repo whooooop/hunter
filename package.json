@@ -20,6 +20,7 @@
   "homepage": "https://github.com/whooooop/hunter#readme",
   "description": "",
   "dependencies": {
+    "@esotericsoftware/spine-phaser": "~4.1.0",
     "phaser": "^3.60.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.3",

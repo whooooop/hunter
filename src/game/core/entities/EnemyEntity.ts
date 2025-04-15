@@ -1,7 +1,8 @@
 import { BloodController } from "../controllers/BloodController";
 import { MotionController } from "../controllers/MotionController";
 import { Demage } from "../types/demage";
-import { DamageableEntity } from "./DamageableEntity";
+import { ScoreKill } from "../../../types/score";
+import { DamageableEntity, DamageResult } from "./DamageableEntity";
 import { ShadowEntity } from "./ShadowEntity";
 
 interface EnemyEntityOptions {
@@ -13,17 +14,23 @@ interface EnemyEntityOptions {
   maxVelocityY: number;
   friction: number;
   direction: number;
+  score: ScoreKill;
+  debug?: boolean;
 }
 
 export class EnemyEntity extends DamageableEntity {
   protected destroyed: boolean = false;
   protected bloodController: BloodController;
   protected motionController: MotionController;
+  protected debug: boolean;
 
+  private graphics: Phaser.GameObjects.Graphics;
   protected shadow: ShadowEntity;
 
   constructor(scene: Phaser.Scene, gameObject: Phaser.Physics.Arcade.Sprite, x: number, y: number, options: EnemyEntityOptions) {
-    super(gameObject, { health: options.health });
+    super(gameObject, { health: options.health, permeability: 0 });
+
+    this.debug = options.debug || false;
 
     this.bloodController = new BloodController(scene);
     this.motionController = new MotionController(scene, this.gameObject, {
@@ -37,13 +44,13 @@ export class EnemyEntity extends DamageableEntity {
     });
 
     this.shadow = new ShadowEntity(scene, gameObject);
+    this.graphics = scene.add.graphics();
 
     scene.add.existing(gameObject);
   }
 
-  public takeDamage(damage: Demage): void {
-    super.takeDamage(damage);
-
+  public takeDamage(damage: Demage): DamageResult {
+    const result = super.takeDamage(damage);
     const health = this.damageController.getHealth();
 
     this.createBloodSplash(damage);
@@ -51,6 +58,8 @@ export class EnemyEntity extends DamageableEntity {
     if (health <= 0) {
       this.destroy();
     }
+
+    return result;
   }
 
   protected createBloodSplash({ forceVector, hitPoint }: Demage): void {
@@ -91,8 +100,31 @@ export class EnemyEntity extends DamageableEntity {
 
   public update(time: number, delta: number): void {
     super.update(time, delta);
+  
     this.motionController.update(time, delta);
     this.shadow.update(time, delta);
+
+    if (this.debug) {
+      this.graphics.clear();
+      this.drawHead();
+    }
+  }
+
+  private drawHead(): void {
+    const [HeadX, HeadY, HeadWidth, HeadHeight] = this.getHeadBounds();
+    this.graphics.setDepth(1000);
+    this.graphics.fillStyle(0x000000);
+    this.graphics.setAlpha(0.5);
+    this.graphics.fillRect(HeadX, HeadY, HeadWidth, HeadHeight);
+  }
+
+  protected getHeadBounds(): [number, number, number, number] {
+    const width = this.gameObject.width * this.gameObject.scaleX;
+    const height = this.gameObject.height * this.gameObject.scaleY;
+    const x = this.gameObject.x - width / 2;
+    const y = this.gameObject.y - height / 2;
+
+    return [x, y, width, height];
   }
 
   public getDestroyed(): boolean {

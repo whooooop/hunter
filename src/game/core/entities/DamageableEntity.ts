@@ -1,19 +1,35 @@
 import { DamageController, DamageControllerOptions } from "../controllers/DamageController";
 import { Demage } from "../types/demage";
 
+export interface DamageResult {
+  health: number;
+  isDead: boolean;
+  isPenetrated: boolean;
+  permeability: number;
+}
+
 export class DamageableEntity {
   protected damageController: DamageController;
   protected isDead: boolean = false;
   protected gameObject: Phaser.Physics.Arcade.Sprite;
-  
+  protected permeability: number;
+
   constructor(gameObject: Phaser.Physics.Arcade.Sprite, options: DamageControllerOptions) {
     this.gameObject = gameObject;
+    this.permeability = options.permeability;
     this.damageController = new DamageController(options);
   }
 
-  public takeDamage(damage: Demage): void {
+  public takeDamage(damage: Demage): DamageResult {
     this.damageController.takeDamage(damage);
     this.isDead = this.damageController.getDead();
+
+    return {
+      health: this.damageController.getHealth(),
+      isDead: this.isDead,
+      permeability :this.permeability,
+      isPenetrated: !!this.permeability || this.isDead
+    };
   }
 
   public getBounds(): Phaser.Geom.Rectangle {

@@ -2,6 +2,7 @@ import { Demage } from "../types/demage";
 
 export interface DamageControllerOptions {
   health: number;
+  permeability: number;
 }
 
 export class DamageController {

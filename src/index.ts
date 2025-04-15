@@ -3,10 +3,11 @@ import { GameplayScene } from './game/scenes/GameplayScene/GameplayScene';
 import { LoadingScene } from './game/scenes/LoadingScene';
 import { settings } from './game/settings';
 import { logger } from './utils/logger';
+import { SpinePlugin } from "@esotericsoftware/spine-phaser"
 
 // Конфигурация игры
 const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO,
+  type: Phaser.WEBGL,
   parent: 'game-container',
   width: settings.display.width,
   height: settings.display.height,
@@ -18,6 +19,13 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false
     }
   },
+  plugins: {
+    scene: [{
+      key: "spine.SpinePlugin",
+      plugin: SpinePlugin,
+      mapping: "spine"
+    }]
+  },
   scene: [LoadingScene, GameplayScene]
 };
 
@@ -27,7 +35,6 @@ function initGame() {
     
     // Создаем экземпляр игры
     const game = new Phaser.Game(config);
-    
     logger.info('Игра инициализирована успешно');
   } catch (error) {
     logger.error('Ошибка при инициализации игры:', error);

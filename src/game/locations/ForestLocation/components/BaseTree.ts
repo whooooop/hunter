@@ -6,6 +6,7 @@ import woodChipImage from '../assets/images/wood_chip.png';
 import { settings } from '../../../settings';
 import { Demage } from '../../../core/types/demage';
 import { DecorEntity } from '../../../core/entities/DecorEntity';
+import { DamageResult } from '../../../core/entities/DamageableEntity';
 
 const logger = createLogger('Tree');
 
@@ -50,15 +51,13 @@ export class BaseTree extends DecorEntity {
   /**
    * Обработка получения урона
    */
-  public takeDamage(damage: Demage): void {
-    super.takeDamage(damage);
-
-    const health = this.damageController.getHealth();
+  public takeDamage(damage: Demage): DamageResult {
+    const result = super.takeDamage(damage);
 
     // Обновляем визуальное состояние объекта
     this.updateVisualState();
 
-    if (health <= 0) {
+    if (result.health <= 0) {
       // Отключаем автоматический вызов preUpdate для этого объекта
       this.gameObject.setActive(false);
       // Оставляем объект видимым
@@ -66,6 +65,8 @@ export class BaseTree extends DecorEntity {
     } else {
       this.createHitParticles();
     }
+
+    return result;
   }
 
   /**

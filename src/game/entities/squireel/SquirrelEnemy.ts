@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { generateStringWithLength } from '../../../utils/stringGenerator';
 import { EnemyEntity } from '../../core/entities/EnemyEntity';
-
+import { ScoreKill } from '../../../types/score';
 import squirrelImage from './assets/images/squirrel.png';
 
 const TEXTURE_SQUIRREL = 'squirrel' + generateStringWithLength(6);
@@ -16,10 +16,14 @@ interface SquirrelEnemyOptions {
 export class SquirrelEnemy extends EnemyEntity {
   name: string = 'Squirrel';
 
+  static preload(scene: Phaser.Scene): void {
+    scene.load.image(TEXTURE_SQUIRREL, squirrelImage);
+  }
+
   constructor(scene: Phaser.Scene, x: number, y: number, options: SquirrelEnemyOptions) {
     const gameObject = scene.physics.add.sprite(x, y, TEXTURE_SQUIRREL);
 
-    super(scene, gameObject,x, y, {
+    super(scene, gameObject, x, y, {
       health: options.health,
       acceleration: 10,
       deceleration: 8,
@@ -27,18 +31,19 @@ export class SquirrelEnemy extends EnemyEntity {
       maxVelocityY: 2,
       direction: -1,
       friction: 0,
+      score: {
+        value: 100,
+        headMultiplier: 2,
+      },
+      debug: true,
     });
     
     this.motionController.setMove(-1, 1);
-    // Дополнительная настройка для белки
-    this.setupSquirrel();
+    this.gameObject.setScale(0.5);
   }
   
-  static preload(scene: Phaser.Scene): void {
-    scene.load.image(TEXTURE_SQUIRREL, squirrelImage);
-  }
-
-  private setupSquirrel(): void {
-    this.gameObject.setScale(0.5);
+  protected getHeadBounds(): [number, number, number, number] {
+    const [HeadX, HeadY, HeadWidth, HeadHeight] = super.getHeadBounds();
+    return [HeadX, HeadY, HeadWidth / 2, HeadHeight - 18];
   }
 } 

@@ -50,9 +50,11 @@ export class GameplayScene extends Phaser.Scene {
   private projectileController!: ProjectileController;
 
   private changeWeaponKey!: Phaser.Input.Keyboard.Key;
-  
+
   constructor() {
-    super({ key: SceneKeys.GAMEPLAY });
+    super({
+      key: SceneKeys.GAMEPLAY
+    });
   }
   
   init({ locationId } : GameplaySceneData) {
@@ -62,7 +64,7 @@ export class GameplayScene extends Phaser.Scene {
 
   async preload(): Promise<void> {
     this.location.preload();
-    
+
     Player.preload(this);
 
     // Создаем текстуру гильзы программно
@@ -70,6 +72,7 @@ export class GameplayScene extends Phaser.Scene {
     BloodController.preload(this);
 
     SquirrelEnemy.preload(this);
+    // TestEnemy.preload(this);
 
     Glock.preload(this);
     MP5.preload(this);
@@ -82,7 +85,6 @@ export class GameplayScene extends Phaser.Scene {
   
   async create(): Promise<void> {
     logger.info('create');
-    
     // this.physics.world.debugGraphic.visible = true;
 
     this.decalController = new DecalController(this, 0, 0, settings.display.width, settings.display.height);
@@ -111,7 +113,7 @@ export class GameplayScene extends Phaser.Scene {
     // Создаем игрока
     this.player = new Player(this, PLAYER_POSITION_X, PLAYER_POSITION_Y);
 
-    this.player.setWeapon(Weapon.AWP);
+    this.player.setWeapon(Weapon.GLOCK);
     this.player.setLocationBounds(this.location.bounds);
     
     // Устанавливаем оружие в интерфейс
@@ -125,6 +127,7 @@ export class GameplayScene extends Phaser.Scene {
     //   undefined,
     //   this
     // );
+
 
     this.spawnEnemy();
 
@@ -155,7 +158,7 @@ export class GameplayScene extends Phaser.Scene {
   
   update(time: number, delta: number): void {
     this.location.update(time, delta);
-    
+
     // Обновляем игрока
     if (this.player) {
       this.player.update(time, delta);
@@ -210,13 +213,22 @@ export class GameplayScene extends Phaser.Scene {
     const y = 400;
     
     const enemy = new SquirrelEnemy(this, x, y, {
-      health: 1000,
+      health: 300,
       moveX: -1,
       moveY: 0,
       direction: -1,
     });
     this.enemies.add(enemy);
     this.damageableObjects.add(enemy);
+
+    this.time.delayedCall(4000, () => {
+      this.spawnEnemy();
+    });
+
+    // Создаем нового персонажа с анимацией (на другой позиции)
+    // new TestEnemy(this, 500, 350);
+    // this.enemies.add(testEnemy);
+    // this.damageableObjects.add(testEnemy);
   }
   
   // private handlePlayerEnemyCollision(

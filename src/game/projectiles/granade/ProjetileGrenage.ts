@@ -13,7 +13,7 @@ export class ProjetileGrenage extends BaseProjectile {
       texture,
       scale: 0.5,
       drag: 1200,
-      activateDelay: 2000,
+      activateDelay: 1200,
       bounce: 1,
       radius: 100,
     })

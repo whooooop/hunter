@@ -5,8 +5,8 @@ const texture = {
   url: explosionTextureUrl,
   frameWidth: 250,
   frameHeight: 250,
-  scale: 0.5,
-  frameRate: 30,
+  scale: 0.8,
+  frameRate: 20,
   frameCount: 9
 }
 
