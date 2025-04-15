@@ -6,7 +6,7 @@ const texture = {
   frameWidth: 250,
   frameHeight: 250,
   scale: 0.8,
-  frameRate: 20,
+  frameRate: 30,
   frameCount: 9
 }
 

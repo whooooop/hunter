@@ -5,7 +5,7 @@ import { ScoreKill } from "../../../types/score";
 import { DamageableEntity, DamageResult } from "./DamageableEntity";
 import { ShadowEntity } from "./ShadowEntity";
 
-interface EnemyEntityOptions {
+export interface EnemyEntityOptions {
   health: number;
   depthOffset?: number;
   acceleration: number;
@@ -49,17 +49,23 @@ export class EnemyEntity extends DamageableEntity {
     scene.add.existing(gameObject);
   }
 
-  public takeDamage(damage: Demage): DamageResult {
+  public takeDamage(damage: Demage): DamageResult | null {
+    if (this.isDead) return null;
+
     const result = super.takeDamage(damage);
     const health = this.damageController.getHealth();
 
     this.createBloodSplash(damage);
 
     if (health <= 0) {
-      this.destroy();
+      this.onDead();
     }
 
     return result;
+  }
+
+  protected onDead(): void {
+    this.destroy();
   }
 
   protected createBloodSplash({ forceVector, hitPoint }: Demage): void {

@@ -295,7 +295,7 @@ export class ProjectileController {
         });       
         hit.projectile.onHit();
 
-        if (hit.projectile.getType() === ProjectileType.BULLET && !damageResult.isPenetrated) {
+        if (hit.projectile.getType() === ProjectileType.BULLET && damageResult && !damageResult.isPenetrated) {
           break;
         }
       }

@@ -5,6 +5,11 @@ import { MP5_AUDIO_FIRE, MP5_TEXTURE } from './assets';
 export class MP5 extends WeaponEntity {
     name: string = 'MP5';
 
+    static preload(scene: Phaser.Scene): void {
+        scene.load.image(MP5_TEXTURE.key, MP5_TEXTURE.url);
+        scene.load.audio(MP5_AUDIO_FIRE.key, MP5_AUDIO_FIRE.url);
+    }
+
     constructor(scene: Phaser.Scene) {
         super(scene, {
             texture: MP5_TEXTURE.key,
@@ -13,7 +18,7 @@ export class MP5 extends WeaponEntity {
             offsetY: 25,
             reloadTime: 400,     // Скорость перезарядки в мс
             magazineSize: 30,    // Размер магазина
-            damage: 10,          // Урон от одного выстрела
+            damage: 50,          // Урон от одного выстрела
             speed: [4000, 4000],    // Скорость пули
             fireRate: 100,       // Задержка между выстрелами в мс
             spreadAngle: 8,      // Угол разброса при выстреле в градусах
@@ -29,10 +34,5 @@ export class MP5 extends WeaponEntity {
             firePointOffset: [0, -8],
             projectile: Bullet
           });  
-    }
-
-    static preload(scene: Phaser.Scene): void {
-        scene.load.image(MP5_TEXTURE.key, MP5_TEXTURE.url);
-        scene.load.audio(MP5_AUDIO_FIRE.key, MP5_AUDIO_FIRE.url);
     }
 }

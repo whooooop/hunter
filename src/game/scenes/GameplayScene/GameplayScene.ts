@@ -20,11 +20,12 @@ import { MP5 } from '../../weapons/MP5/MP5';
 import { Sawed } from '../../weapons/sawed/Sawed';
 import { Weapon } from '../../core/controllers/WeaponController';
 import { DamageableEntity } from '../../core/entities/DamageableEntity';
-import { EnemyEntity } from '../../core/entities/EnemyEntity';
 import { createShellCasingTexture, ShellCasingEvents } from '../../core/entities/ShellCasingEntity';
 import { DecalEventPayload } from '../../core/types/decals';
 import { WeaponAWP } from '../../weapons/AWP/WeaponAWP';
 import { ExplosionEntity } from '../../core/entities/ExplosionEntity';
+import { RabbitEnemy } from '../../entities/rabbit/RabbitEntity';
+import { WaveController, WaveEvents } from '../../core/controllers/WaveController';
 
 const logger = createLogger('GameplayScene');
 
@@ -39,7 +40,7 @@ export class GameplayScene extends Phaser.Scene {
   
   private player!: Player;
   private shop!: BaseShop;
-  private enemies: Set<EnemyEntity> = new Set();
+  private enemies: Set<DamageableEntity> = new Set();
   private shellCasings!: Phaser.Physics.Arcade.Group; // Группа для гильз
   private damageableObjects: Set<DamageableEntity> = new Set();
 
@@ -48,6 +49,7 @@ export class GameplayScene extends Phaser.Scene {
   private enemySpawnTimer!: Phaser.Time.TimerEvent;
   private decalController!: DecalController;
   private projectileController!: ProjectileController;
+  private waveController!: WaveController;
 
   private changeWeaponKey!: Phaser.Input.Keyboard.Key;
 
@@ -72,6 +74,7 @@ export class GameplayScene extends Phaser.Scene {
     BloodController.preload(this);
 
     SquirrelEnemy.preload(this);
+    RabbitEnemy.preload(this);
     // TestEnemy.preload(this);
 
     Glock.preload(this);
@@ -113,7 +116,7 @@ export class GameplayScene extends Phaser.Scene {
     // Создаем игрока
     this.player = new Player(this, PLAYER_POSITION_X, PLAYER_POSITION_Y);
 
-    this.player.setWeapon(Weapon.GLOCK);
+    this.player.setWeapon(Weapon.MP5);
     this.player.setLocationBounds(this.location.bounds);
     
     // Устанавливаем оружие в интерфейс
@@ -128,8 +131,25 @@ export class GameplayScene extends Phaser.Scene {
     //   this
     // );
 
+    this.waveController = new WaveController(this, [
+      {
+        delay: 1000,
+        spawns: [
+          {
+            delay: 1000,
+            entity: RabbitEnemy,
+            position: [settings.display.width - 50, 400],
+            options: {
+              moveX: -1,
+              moveY: 0,
+              direction: -1,
+            },
+          },
+        ],
+      }
+    ]);
 
-    this.spawnEnemy();
+    this.waveController.start();
 
     if (settings.gameplay.blood.decals) {
       this.events.on(BloodEvents.bloodParticleDecal, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
@@ -138,10 +158,17 @@ export class GameplayScene extends Phaser.Scene {
     if (settings.gameplay.shellCasings.decals) {
       this.events.on(ShellCasingEvents.shellCasingParticleDecal, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
     }
+
+    this.events.on(WaveEvents.spawnEnemy, (payload: DamageableEntity) => this.handleSpawnEnemy(payload));
   }
 
   private handleDrowDecal(payload: DecalEventPayload): void {
     this.decalController.drawParticle(payload.particle, payload.x, payload.y);
+  }
+
+  private handleSpawnEnemy(payload: DamageableEntity): void {
+    this.enemies.add(payload);
+    this.damageableObjects.add(payload);
   }
 
   /**
@@ -188,11 +215,11 @@ export class GameplayScene extends Phaser.Scene {
   
     // Обновляем всех врагов
     this.enemies.forEach(enemy => {
-      if (enemy.getDestroyed()) {
-        this.enemies.delete(enemy);
-      } else {
+      // if (enemy.getDestroyed()) {
+      //   this.enemies.delete(enemy);
+      // } else {
         enemy.update(time, delta);
-      }
+      // }
     });
 
     if (this.changeWeaponKey.isDown) {
@@ -206,29 +233,6 @@ export class GameplayScene extends Phaser.Scene {
   // Метод для доступа к группе гильз
   public getShellCasingsGroup(): Phaser.Physics.Arcade.Group {
     return this.shellCasings;
-  }
-  
-  private spawnEnemy(): void {
-    const x = settings.display.width - 50;
-    const y = 400;
-    
-    const enemy = new SquirrelEnemy(this, x, y, {
-      health: 300,
-      moveX: -1,
-      moveY: 0,
-      direction: -1,
-    });
-    this.enemies.add(enemy);
-    this.damageableObjects.add(enemy);
-
-    this.time.delayedCall(4000, () => {
-      this.spawnEnemy();
-    });
-
-    // Создаем нового персонажа с анимацией (на другой позиции)
-    // new TestEnemy(this, 500, 350);
-    // this.enemies.add(testEnemy);
-    // this.damageableObjects.add(testEnemy);
   }
   
   // private handlePlayerEnemyCollision(

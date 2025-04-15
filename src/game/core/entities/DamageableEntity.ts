@@ -20,7 +20,9 @@ export class DamageableEntity {
     this.damageController = new DamageController(options);
   }
 
-  public takeDamage(damage: Demage): DamageResult {
+  public takeDamage(damage: Demage): DamageResult | null {
+    if (this.isDead) return null;
+
     this.damageController.takeDamage(damage);
     this.isDead = this.damageController.getDead();
 

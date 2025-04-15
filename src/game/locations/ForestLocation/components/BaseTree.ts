@@ -51,8 +51,10 @@ export class BaseTree extends DecorEntity {
   /**
    * Обработка получения урона
    */
-  public takeDamage(damage: Demage): DamageResult {
+  public takeDamage(damage: Demage): DamageResult | null {
     const result = super.takeDamage(damage);
+
+    if (!result) return null;
 
     // Обновляем визуальное состояние объекта
     this.updateVisualState();
