@@ -33,7 +33,6 @@ export class SquirrelEnemy extends EnemyEntity {
       friction: 0,
       score: {
         value: 100,
-        headMultiplier: 2,
       },
       debug: true,
     });

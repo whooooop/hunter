@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { hexToNumber } from '../utils/colors';
-import { COLORS } from './Constants';
+import { COLORS } from '../core/Constants';
 import { waveStartEventPayload } from '../core/controllers/WaveController';
 import { settings } from '../settings';
 
@@ -16,6 +16,7 @@ export class WaveInfo {
   private width: number = 322;
   private height: number = 58;
   private offsetY: number = 45;
+  private skewX: number = -0.2;
   
   private readonly WAVE_BG_COLOR = hexToNumber(COLORS.INTERFACE_BLOCK_BACKGROUND);
   private readonly PROGRESS_COLOR = hexToNumber('#30444f');
@@ -61,14 +62,13 @@ export class WaveInfo {
       this.container.setDepth(1000);
       
       // Применяем наклон к фоновой графике
-      const skewX = -0.2;
       // В Phaser Graphics не имеет прямого метода для skew
       // Создаем трансформацию путем искажения координат при отрисовке
       bg.clear();
       bg.fillStyle(this.WAVE_BG_COLOR);
       
       // Рисуем искаженный прямоугольник (трапецию)
-      const skewOffset = this.height * skewX; // Смещение для создания эффекта наклона
+      const skewOffset = this.height * this.skewX; // Смещение для создания эффекта наклона
       bg.beginPath();
       bg.moveTo(-this.width/2 + skewOffset, -this.height/2);
       bg.lineTo(this.width/2 + skewOffset, -this.height/2);
@@ -127,7 +127,7 @@ export class WaveInfo {
       scaleX: originalScale.x * 1.3,
       scaleY: originalScale.y * 1.3,
       rotation: originalRotation - 0.15, // Небольшой наклон
-      duration: 150,
+      duration: 350,
       ease: 'Power2',
       onComplete: () => {
         // 2. Анимация возврата к оригинальному состоянию с небольшим отскоком
@@ -136,7 +136,7 @@ export class WaveInfo {
           scaleX: originalScale.x,
           scaleY: originalScale.y,
           rotation: originalRotation,
-          duration: 300,
+          duration: 400,
           ease: 'Elastic.Out',
           easeParams: [1.5, 0.5]
         });

@@ -3,7 +3,12 @@ import { MotionController } from "../controllers/MotionController";
 import { Demage } from "../types/demage";
 import { ScoreKill } from "../../../types/score";
 import { DamageableEntity, DamageResult } from "./DamageableEntity";
-import { ShadowEntity } from "./ShadowEntity";
+import { ShadowEntity, ShadowEntityOptions } from "./ShadowEntity";
+import { DecalEventPayload } from "../types/decals";
+
+export enum EnemyEntityEvents {
+  enemyDeath = 'enemyDeath',
+}
 
 export interface EnemyEntityOptions {
   health: number;
@@ -16,10 +21,12 @@ export interface EnemyEntityOptions {
   direction: number;
   score: ScoreKill;
   debug?: boolean;
+  shadow?: ShadowEntityOptions
 }
 
 export class EnemyEntity extends DamageableEntity {
   protected destroyed: boolean = false;
+  protected scene: Phaser.Scene;
   protected bloodController: BloodController;
   protected motionController: MotionController;
   protected debug: boolean;
@@ -43,8 +50,9 @@ export class EnemyEntity extends DamageableEntity {
       direction: options.direction,
     });
 
-    this.shadow = new ShadowEntity(scene, gameObject);
+    this.shadow = new ShadowEntity(scene, gameObject, options.shadow);
     this.graphics = scene.add.graphics();
+    this.scene = scene;
 
     scene.add.existing(gameObject);
   }
@@ -61,6 +69,8 @@ export class EnemyEntity extends DamageableEntity {
   }
 
   protected onDeath(): void {
+    const payload: DecalEventPayload = { particle: this.gameObject, x: this.gameObject.x, y: this.gameObject.y };
+    this.scene.events.emit(EnemyEntityEvents.enemyDeath, payload);
     this.destroy();
   }
 
@@ -73,6 +83,10 @@ export class EnemyEntity extends DamageableEntity {
   }
 
   public update(time: number, delta: number): void {
+    if (!this.gameObject || !this.gameObject.active) {
+      return; 
+    }
+    
     super.update(time, delta);
   
     this.motionController.update(time, delta);

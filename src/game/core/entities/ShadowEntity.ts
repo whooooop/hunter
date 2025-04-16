@@ -1,20 +1,31 @@
+export interface ShadowEntityOptions {
+  scale?: [number, number];
+  offset?: [number, number];
+  color?: number;
+  alpha?: number;
+}
+
+const defaultOptions: ShadowEntityOptions = {
+  scale: [0.9, 0.3],
+  offset: [0, 4],
+  color: 0x000000,
+  alpha: 0.1
+}
+
 export class ShadowEntity extends Phaser.GameObjects.Ellipse {
   private gameObject: Phaser.Physics.Arcade.Sprite;
-  private offsetX: number;
-  private offsetY: number;
+  private options: ShadowEntityOptions;
 
   constructor(
     scene: Phaser.Scene, 
     gameObject: Phaser.Physics.Arcade.Sprite,
-    offsetX: number = 0,
-    offsetY: number = 4,
-    fillColor: number = 0x000000,
-    fillAlpha: number = 0.1
+    options?: ShadowEntityOptions
   ) {
-    super(scene, 0, 0, gameObject.width * 0.9, gameObject.height * 0.3, fillColor, fillAlpha);
+    const _options: ShadowEntityOptions = { ...defaultOptions, ...options };
+    super(scene, 0, 0, 0, 0, _options.color, _options.alpha);
+
     this.gameObject = gameObject;
-    this.offsetX = offsetX;
-    this.offsetY = offsetY;
+    this.options = _options;
     this.setScale(gameObject.scale);
     scene.add.existing(this);
   }
@@ -22,7 +33,8 @@ export class ShadowEntity extends Phaser.GameObjects.Ellipse {
   public update(time: number, delta: number): void {
     const scale = this.gameObject.scale;
     this
-      .setPosition(this.gameObject.x + this.offsetX, this.gameObject.y + this.gameObject.height * scale / 2 + this.offsetY)
+      .setPosition(this.gameObject.x + this.options.offset![0], this.gameObject.y + this.gameObject.height * scale / 2 + this.options.offset![1])
+      .setSize(this.gameObject.width * this.options.scale![0], this.gameObject.height * this.options.scale![1])
       .setScale(this.gameObject.scale)
       .setDepth(this.gameObject.depth - 1);
   }

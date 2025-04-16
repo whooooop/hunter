@@ -12,10 +12,14 @@ export const entityConfig: EnemyEntityOptions = {
   direction: -1,
   friction: 0,
   score: {
-    value: 100,
-    headMultiplier: 2,
+    value: 50,
+    headScore: 100,
   },
-  debug: false,
+  shadow: {
+    scale: [0.5, 0.2],
+    offset: [-20, -10],
+  },
+  debug: true,
 }
 
 export const walkConfig: SpriteSheetConfig = {

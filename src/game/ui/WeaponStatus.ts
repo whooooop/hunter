@@ -13,14 +13,18 @@ export class WeaponStatus {
     private weaponCircle!: Phaser.GameObjects.Graphics;
     private coinsText!: Phaser.GameObjects.Text;
     private ammoIcons: Phaser.GameObjects.Image[] = [];
-    
+
+    private width: number = 380;
+    private height: number = 58;
+    private offsetY: number = 45;
+    private offsetX: number = 60;
+    private skewX: number = -0.2;
+    private radius: number = 55;
+
     // Константы для внешнего вида
     private readonly BG_COLOR = hexToNumber(COLORS.INTERFACE_BLOCK_BACKGROUND);
     private readonly WEAPON_CIRCLE_COLOR = hexToNumber(COLORS.INTERACTIVE_BUTTON_BACKGROUND);
     private readonly TEXT_COLOR = COLORS.INTERFACE_BLOCK_TEXT;
-    private readonly PANEL_WIDTH = 350; // Увеличенная ширина блока
-    private readonly PANEL_HEIGHT = 60; // Увеличенная высота блока
-    private readonly CIRCLE_RADIUS = 45; // Ещё больший радиус круга
     
     // Данные (хардкод для начала)
     private coins: number = 9999;
@@ -38,8 +42,8 @@ export class WeaponStatus {
     private create(): void {
         // Создаем контейнер для всех элементов
         this.container = this.scene.add.container(
-            this.scene.cameras.main.width - this.PANEL_WIDTH / 2 - 20,
-            this.PANEL_HEIGHT / 2 + 10
+            this.scene.cameras.main.width - this.width / 2 - this.offsetX,
+            this.height / 2 + this.offsetY
         );
         
         // Создаем круг для отображения текущего оружия
@@ -51,7 +55,7 @@ export class WeaponStatus {
         this.drawBackground();
         
         // Создаем текст для отображения количества монет
-        this.coinsText = this.scene.add.text(-this.PANEL_WIDTH / 2 + 40, 0, this.coins.toString(), {
+        this.coinsText = this.scene.add.text(-this.width / 2 + 40, 0, this.coins.toString(), {
             fontFamily: 'Arial',
             fontSize: '24px',
             color: this.TEXT_COLOR.toString(),
@@ -75,10 +79,10 @@ export class WeaponStatus {
         this.background.fillStyle(this.BG_COLOR, 1);
         
         // Рисуем скошенный прямоугольник с наклонами в другие стороны
-        const skewLeft = -15; // Левая сторона скошена ВПРАВО (отрицательное значение)
-        const skewRight = 15; // Правая сторона скошена ВЛЕВО (положительное значение)
-        const width = this.PANEL_WIDTH;
-        const height = this.PANEL_HEIGHT;
+        const skewLeft = this.height * this.skewX; // Левая сторона скошена ВПРАВО (отрицательное значение)
+        const skewRight = this.height * this.skewX * -1; // Правая сторона скошена ВЛЕВО (положительное значение)
+        const width = this.width;
+        const height = this.height;
         
         this.background.beginPath();
         // Верхняя линия
@@ -95,7 +99,7 @@ export class WeaponStatus {
     private drawWeaponCircle(): void {
         this.weaponCircle.clear();
         this.weaponCircle.fillStyle(this.WEAPON_CIRCLE_COLOR, 1);
-        this.weaponCircle.fillCircle(0, 0, this.CIRCLE_RADIUS);
+        this.weaponCircle.fillCircle(0, 0, this.radius);
     }
     
     private createAmmoIcons(): void {

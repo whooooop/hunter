@@ -38,7 +38,7 @@ export class RabbitEnemy extends EnemyEntity {
   protected onDeath(): void {
     this.motionController.setMove(0, 0);
     this.gameObject.play(deathConfig.key).on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
-      // super.onDeath();
+      super.onDeath();
     });
   }
   

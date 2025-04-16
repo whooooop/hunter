@@ -1,7 +1,7 @@
 export type ScoreKill = {
   value: number;
-  headMultiplier?: number;
+  headScore?: number;
   // bodyMultiplier?: number;
-  // tailMultiplier?: number;
+  // tailScore?: number;
 };
 
