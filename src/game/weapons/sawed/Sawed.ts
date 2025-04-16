@@ -16,10 +16,9 @@ const RELOAD_AUDIO = 'sawed_reload' + generateStringWithLength(6);
 const AFTER_FIRE_AUDIO = 'sawed_after_fire' + generateStringWithLength(6);
 
 export class Sawed extends WeaponEntity {
-  name: string = 'Sawed';
-
   constructor(scene: Phaser.Scene) {
     super(scene, {
+      name: 'Sawed',
       texture: TEXTURE,
       scale: 0.5,
       offsetX: 35,

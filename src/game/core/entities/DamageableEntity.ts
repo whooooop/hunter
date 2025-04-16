@@ -14,13 +14,15 @@ export interface DamageResult {
 }
 
 export class DamageableEntity {
+  protected id: string;
   protected isDead: boolean = false;
   protected gameObject: Phaser.Physics.Arcade.Sprite;
   protected permeability: number;
   protected health: number;
   protected initialHealth: number;
 
-  constructor(gameObject: Phaser.Physics.Arcade.Sprite, options: DamageableEntityOptions) {
+  constructor(gameObject: Phaser.Physics.Arcade.Sprite, id: string, options: DamageableEntityOptions) {
+    this.id = id;
     this.gameObject = gameObject;
     this.permeability = options.permeability;
     this.health = options.health;

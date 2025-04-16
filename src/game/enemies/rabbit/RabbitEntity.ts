@@ -18,11 +18,11 @@ export class RabbitEnemy extends EnemyEntity {
     loadSpriteSheet(scene, deathConfig);
   }
 
-  constructor(scene: Phaser.Scene, x: number, y: number, options: RabbitEnemyOptions) {
+  constructor(scene: Phaser.Scene, id: string, x: number, y: number, options: RabbitEnemyOptions) {
     const gameObject = scene.physics.add.sprite(x, y, walkConfig.key);
     gameObject.setScale(walkConfig.scale);
 
-    super(scene, gameObject, x, y, {
+    super(scene, id, gameObject, x, y, {
       ...entityConfig,
       health: options.health || entityConfig.health,
     });

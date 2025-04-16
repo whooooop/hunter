@@ -1,3 +1,4 @@
+import { generateId } from "../../utils/stringGenerator";
 import { settings } from "../settings";
 import { hexToNumber } from "../utils/colors";
 import { ExplosionEntity } from "./entities/ExplosionEntity";
@@ -36,6 +37,7 @@ const defaultOptions = {
 }
 
 export class BaseProjectile {
+  protected id: string;
   protected scene!: Phaser.Scene;
   protected gameObject!: Phaser.GameObjects.Sprite;
 
@@ -46,6 +48,9 @@ export class BaseProjectile {
   protected damage: number = 1;
   protected speed: number[] = [100, 0];
   
+  protected playerId!: string;
+  protected weaponName!: string;
+  
   // Точки, определяющие вектор
   protected startPoint: number[] = [0, 0];
   protected forcePoint: number[] = [0, 0];
@@ -53,12 +58,27 @@ export class BaseProjectile {
   protected floorY: number = 0; // Минимальная Y-координата (пол)
 
   constructor(options?: BaseProjectileOptions) {
+    this.id = generateId();
     this.options = { ...defaultOptions, ...options };
   }
 
-  public create(scene: Phaser.Scene, x: number, y: number): BaseProjectile {
+  public getId(): string {
+    return this.id;
+  }
+
+  public getPlayerId(): string {
+    return this.playerId;
+  }
+
+  public getWeaponName(): string {
+    return this.weaponName;
+  }
+
+  public create(scene: Phaser.Scene, x: number, y: number, params: { playerId: string, weaponName: string }): BaseProjectile {
     this.scene = scene;
     this.startPoint = [x, y];
+    this.playerId = params.playerId;
+
     if (this.options.texture) {
       this.gameObject = new Phaser.GameObjects.Sprite(scene, x, y, this.options.texture);
       this.gameObject.setPosition(x, y);

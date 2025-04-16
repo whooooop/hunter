@@ -6,10 +6,9 @@ import { WeaponEntity } from "../../core/entities/WeaponEntity";
 const TEXTURE = 'grenade_texture_' + generateStringWithLength(6);
 
 export class Grenade extends WeaponEntity {
-    name: string = 'Grenade';
-
     constructor(scene: Phaser.Scene) {
         super(scene, {
+            name: 'Grenade',
             texture: TEXTURE,
             scale: 0.5,
             offsetX: 10,

@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { hexToNumber } from '../../utils/colors';
 import { DecalEventPayload } from '../types/decals';
+import { emitEvent } from '../Events';
 
 const defaultOptions = {
   ejectionSpeed: 180,  // Скорость выброса гильз
@@ -143,8 +144,7 @@ export class ShellCasingEntity extends Phaser.Physics.Arcade.Sprite {
       if (this.active && this.body) {
         // Если скорость гильзы близка к нулю, она лежит спокойно
         if (Math.abs(this.body.velocity.x) < 5) {
-          const payload: DecalEventPayload = { particle: this, x: this.x, y: this.y };
-          this.scene.events.emit(ShellCasingEvents.shellCasingParticleDecal, payload);
+          emitEvent(this.scene, ShellCasingEvents.shellCasingParticleDecal, { particle: this, x: this.x, y: this.y });
           this.destroy();
         }
       }

@@ -5,10 +5,9 @@ import { hexToNumber } from '../../utils/colors';
 import { WeaponSightType } from '../../core/BaseWeaponSight';
 
 export class WeaponAWP extends WeaponEntity {
-    name: string = 'AWP';
-
     constructor(scene: Phaser.Scene) {
         super(scene, {
+            name: 'AWP',
             texture: AWP_TEXTURE.key,
             scale: 0.5,
             offsetX: 40,

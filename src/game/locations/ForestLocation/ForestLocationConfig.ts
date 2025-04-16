@@ -28,8 +28,8 @@ export const CLOUDS = [
 ];
 
 export const INTERACTIVE_OBJECTS = [
-  { type: 'spruce', position: [1200, 190], scale: 0.6, health: 500 },
-  { type: 'spruce', position: [1100, 380], scale: 0.7, health: 4000 },
-  { type: 'spruce', position: [1050, 600], scale: 0.9, health: 1000 },
-  { type: 'spruce', position: [1100, 630], scale: 0.9, health: 1000 },
+  { id: 'object_spruce_1', type: 'spruce', position: [1200, 190], scale: 0.6, health: 500 },
+  { id: 'object_spruce_2', type: 'spruce', position: [1100, 380], scale: 0.7, health: 4000 },
+  { id: 'object_spruce_3', type: 'spruce', position: [1050, 600], scale: 0.9, health: 1000 },
+  { id: 'object_spruce_4', type: 'spruce', position: [1100, 630], scale: 0.9, health: 1000 },
 ];

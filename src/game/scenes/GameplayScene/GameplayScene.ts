@@ -8,7 +8,7 @@ import { LocationManager } from '../../core/LocationManager';
 import { BaseLocation } from '../../core/BaseLocation';
 import { WeaponStatus } from '../../ui/WeaponStatus';
 import { BaseShop } from '../../core/BaseShop';
-import { SquirrelEnemy } from '../../entities/squireel/SquirrelEnemy';
+import { SquirrelEnemy } from '../../enemies/squireel/SquirrelEnemy';
 import { ProjectileController } from '../../core/controllers/ProjectileController';
 import { BaseProjectile } from '../../core/BaseProjectile';
 import { BloodController, BloodEvents } from '../../core/controllers/BloodController';
@@ -24,10 +24,16 @@ import { createShellCasingTexture, ShellCasingEvents } from '../../core/entities
 import { DecalEventPayload } from '../../core/types/decals';
 import { WeaponAWP } from '../../weapons/AWP/WeaponAWP';
 import { ExplosionEntity } from '../../core/entities/ExplosionEntity';
-import { RabbitEnemy } from '../../entities/rabbit/RabbitEntity';
-import { WaveController, WaveEvents, waveStartEventPayload } from '../../core/controllers/WaveController';
+import { RabbitEnemy } from '../../enemies/rabbit/RabbitEntity';
+import { WaveController } from '../../core/controllers/WaveController';
 import { createWavesConfig } from '../../levels/test/wavesConfig'
-import { EnemyEntityEvents } from '../../core/entities/EnemyEntity';
+import { EnemyEntity, EnemyEntityEvents } from '../../core/entities/EnemyEntity';
+import { WaveStartEventPayload, WaveEvents } from '../../core/controllers/WaveController';
+import { generateId } from '../../../utils/stringGenerator';
+import { WeaponEvents, WeaponFireEventsPayload } from '../../core/entities/WeaponEntity';
+import { onEvent } from '../../core/Events';
+import { EnemyType } from '../../enemies';
+import { preloadEnemies } from '../../enemies';
 
 const logger = createLogger('GameplayScene');
 
@@ -72,12 +78,12 @@ export class GameplayScene extends Phaser.Scene {
 
     Player.preload(this);
 
+    preloadEnemies(this, [EnemyType.RABBIT, EnemyType.SQUIRREL]);
+    
     // Создаем текстуру гильзы программно
     createShellCasingTexture(this);
     BloodController.preload(this);
 
-    SquirrelEnemy.preload(this);
-    RabbitEnemy.preload(this);
     // TestEnemy.preload(this);
 
     Glock.preload(this);
@@ -126,28 +132,28 @@ export class GameplayScene extends Phaser.Scene {
     // );
 
     this.waveController = new WaveController(this, createWavesConfig());
-
     this.waveController.start();
 
     if (settings.gameplay.blood.decals) {
-      this.events.on(BloodEvents.bloodParticleDecal, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
+      onEvent(this, BloodEvents.bloodParticleDecal, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
     }
 
     if (settings.gameplay.shellCasings.decals) {
-      this.events.on(ShellCasingEvents.shellCasingParticleDecal, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
+      onEvent(this, ShellCasingEvents.shellCasingParticleDecal, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
     }
 
-    this.events
-      .on(WaveEvents.spawnEnemy, (payload: DamageableEntity) => this.handleSpawnEnemy(payload))
-      .on(WaveEvents.waveStart, (payload: waveStartEventPayload) => this.handleWaveStart(payload))
-      .on(EnemyEntityEvents.enemyDeath, (payload: DecalEventPayload) => this.handleEnemyDeath(payload))
+    onEvent(this, WeaponEvents.FireEvent, (payload: WeaponFireEventsPayload) => this.handleFireProjectile(payload));
+    onEvent(this, WaveEvents.WaveStartEvent, (payload: WaveStartEventPayload) => this.handleWaveStart(payload));
+    onEvent(this, WaveEvents.SpawnEnemyEvent, (payload: DamageableEntity) => this.handleSpawnEnemy(payload));
+    onEvent(this, EnemyEntityEvents.enemyDeath, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
+  }
+
+  private handleFireProjectile({ projectile }: WeaponFireEventsPayload): void {
+    console.log('WeaponEvents.FireEvent', projectile);
+    this.projectileController.addProjectile(projectile);
   }
 
   private handleDrowDecal(payload: DecalEventPayload): void {
-    this.decalController.drawParticle(payload.particle, payload.x, payload.y);
-  }
-
-  private handleEnemyDeath(payload: DecalEventPayload): void {
     this.decalController.drawParticle(payload.particle, payload.x, payload.y);
   }
 
@@ -156,12 +162,12 @@ export class GameplayScene extends Phaser.Scene {
     this.damageableObjects.add(payload);
   }
 
-  private handleWaveStart(payload: waveStartEventPayload) {
+  private handleWaveStart(payload: WaveStartEventPayload) {
     this.waveInfo.start(payload)
   }
 
   private createPlayer(x: number, y: number, isMain: boolean = false): void {
-    const player = new Player(this, x, y);
+    const player = new Player(this, generateId(), x, y);
     player.setWeapon(Weapon.GLOCK);
     player.setLocationBounds(this.location.bounds);
 
@@ -266,8 +272,4 @@ export class GameplayScene extends Phaser.Scene {
   //     player.applyForce(direction, 0, 10, 0.5, 0.1);  
   //   }
   // }
-
-  public addProjectile(projectile: BaseProjectile): void {
-    this.projectileController.addProjectile(projectile);
-  }
 } 

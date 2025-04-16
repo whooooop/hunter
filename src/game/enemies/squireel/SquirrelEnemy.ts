@@ -20,10 +20,10 @@ export class SquirrelEnemy extends EnemyEntity {
     scene.load.image(TEXTURE_SQUIRREL, squirrelImage);
   }
 
-  constructor(scene: Phaser.Scene, x: number, y: number, options: SquirrelEnemyOptions) {
+  constructor(scene: Phaser.Scene, id: string, x: number, y: number, options: SquirrelEnemyOptions) {
     const gameObject = scene.physics.add.sprite(x, y, TEXTURE_SQUIRREL);
 
-    super(scene, gameObject, x, y, {
+    super(scene, id, gameObject, x, y, {
       health: options.health,
       acceleration: 10,
       deceleration: 8,

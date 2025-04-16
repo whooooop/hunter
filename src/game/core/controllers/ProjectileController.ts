@@ -3,6 +3,10 @@ import { BaseProjectile, ProjectileType } from '../BaseProjectile';
 import { rayRectIntersectionRobust } from '../../utils/GeometryUtils';
 import { DamageableEntity } from '../entities/DamageableEntity';
 
+export enum ProjectileEvents {
+  ProjectileHit = 'ProjectileHit',
+}
+
 interface Hit {
   projectile: BaseProjectile;
   targetEntity: DamageableEntity;
@@ -294,6 +298,8 @@ export class ProjectileController {
           value: damage
         });       
         hit.projectile.onHit();
+        
+        this.scene.events.emit(ProjectileEvents.ProjectileHit, hit);
 
         if (hit.projectile.getType() === ProjectileType.BULLET && damageResult && !damageResult.isPenetrated) {
           break;

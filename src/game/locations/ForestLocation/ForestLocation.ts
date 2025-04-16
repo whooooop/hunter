@@ -217,8 +217,8 @@ export class ForestLocation extends BaseLocation {
    * Создает ёлку и размещает ее справа на сцене
    */
   private createTrees(): void {
-    INTERACTIVE_OBJECTS.forEach(({ type, position, scale, health }) => {    
-      const object = new SpruceTree(this.scene, position[0], position[1], {
+    INTERACTIVE_OBJECTS.forEach(({ id, type, position, scale, health }) => {    
+      const object = new SpruceTree(this.scene, id, position[0], position[1], {
         scale,
         health
       });

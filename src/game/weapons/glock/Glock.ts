@@ -12,11 +12,9 @@ const AUDIO_FIRE = 'glock_fire_' + generateStringWithLength(6);
 const AUDIO_EMPTY = 'glock_empty_' + generateStringWithLength(6);
 
 export class Glock extends WeaponEntity {
-  name: string = 'Glock';
-
   constructor(scene: Phaser.Scene) {
     super(scene, {
-      
+      name: 'Glock',
       texture: TEXTURE,
       scale: 0.5,
       offsetX: 15,

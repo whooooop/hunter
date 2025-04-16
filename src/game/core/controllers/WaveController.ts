@@ -1,11 +1,13 @@
-import { DamageableEntity } from "../entities/DamageableEntity";
+/// <reference path="../types/events.d.ts" /> 
+import { createEnemy, EnemyType } from "../../enemies";
+import { emitEvent } from "../Events";
 
 export enum WaveEvents {
-  spawnEnemy = 'spawnEnemy',
-  waveStart = 'waveStart'
+  WaveStartEvent = 'WaveStartEvent',
+  SpawnEnemyEvent = 'SpawnEnemyEvent',
 }
 
-export interface waveStartEventPayload {
+export interface WaveStartEventPayload {
   duration: number;
   number: number
 }
@@ -18,7 +20,7 @@ export interface Wave {
 export interface Spawn {
   delay: number;
   position: [number, number];
-  entity: new (scene: Phaser.Scene, x: number, y: number, options: any) => DamageableEntity;
+  enemyType: EnemyType;
   options: any;
 }
 
@@ -41,15 +43,14 @@ export class WaveController {
     const wave = this.waves[waveIndex];
 
     if (wave) {
-      const spawns = wave.spawns;
       const waveDuration = this.calculateWaweDuration(waveIndex);
   
       this.scene.time.delayedCall(wave.delay, () => {
-        const startWaveEventPayload: waveStartEventPayload = {
+        const startWaveEventPayload: WaveStartEventPayload = {
           duration: waveDuration,
-          number: waveIndex + 1
+          number: waveIndex + 1 
         }
-        this.scene.events.emit(WaveEvents.waveStart, startWaveEventPayload);
+        emitEvent(this.scene, WaveEvents.WaveStartEvent, startWaveEventPayload);
         this.nextSpawn(waveIndex, 0);
       });
     } else {
@@ -64,8 +65,8 @@ export class WaveController {
     const nextSpawn = spawns[spawnIndex + 1];
 
     this.scene.time.delayedCall(spawn.delay, () => {
-      const enemy = new spawn.entity(this.scene, spawn.position[0], spawn.position[1], spawn.options);
-      this.scene.events.emit(WaveEvents.spawnEnemy, enemy);
+      const enemy = createEnemy(spawn.enemyType, this.scene, spawn.position[0], spawn.position[1], spawn.options);
+      emitEvent(this.scene, WaveEvents.SpawnEnemyEvent, enemy);
 
       if (nextSpawn) {
         this.nextSpawn(waveIndex, spawnIndex + 1);
@@ -91,5 +92,4 @@ export class WaveController {
       this.waves[this.currentWave].delay -= delta;
     }
   } 
-  
 }

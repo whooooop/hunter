@@ -15,6 +15,7 @@ const logger = createLogger('Player');
 export class Player {
   name = 'Player';
 
+  private id: string;
   private scene: Phaser.Scene;
   private gameObject: Phaser.Physics.Arcade.Sprite;
 
@@ -46,7 +47,8 @@ export class Player {
 
   private shadow: ShadowEntity;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
+  constructor(scene: Phaser.Scene, id: string, x: number, y: number) {
+    this.id = id;
     this.scene = scene;
     this.gameObject = scene.physics.add.sprite(x, y, TEXTURE_PLAYER);
     this.gameObject.setScale(0.5);
@@ -55,9 +57,9 @@ export class Player {
 
     this.weaponController = new WeaponController(scene);
     this.motionController = new MotionController(scene, this.gameObject, {
-      acceleration: 15,
-      deceleration: 8,
-      friction: 6,
+      acceleration: 20,
+      deceleration: 14,
+      friction: 10,
       maxVelocityX: 300,
       maxVelocityY: 300,
       direction: 1,
@@ -199,15 +201,17 @@ export class Player {
 
   private handleFiring(time: number): void {
     if (this.fireKey.isDown) {
-      const recoilForce = this.currentWeapon?.fire();
-      if (recoilForce) {
-        this.motionController.applyForce(
-          recoilForce.recoilVectorX,
-          recoilForce.recoilVectorY,
-          recoilForce.boostedForce,
-          recoilForce.strength,
-          recoilForce.decayRate
-        );
+      if (this.currentWeapon) {
+        const recoilForce = this.currentWeapon.fire({ playerId: this.id });
+        if (recoilForce) {
+          this.motionController.applyForce(
+            recoilForce.recoilVectorX,
+            recoilForce.recoilVectorY,
+            recoilForce.boostedForce,
+            recoilForce.strength,
+            recoilForce.decayRate
+          );
+        }
       }
     } else {
       this.currentWeapon?.resetTrigger();

@@ -12,12 +12,22 @@ import { settings } from '../../settings';
 import { createLogger } from "../../../utils/logger";
 import { GameplayScene } from "../../scenes/GameplayScene/GameplayScene";
 import { ShellCasingEntity } from "./ShellCasingEntity";
-import { BaseProjectileClass } from "../BaseProjectile";
+import { BaseProjectile, BaseProjectileClass } from "../BaseProjectile";
 import { RecoilForceType } from "../types/recoilForce";
+import { emitEvent } from "../Events";
 
 const logger = createLogger('WeaponEntity');
 
+export enum WeaponEvents {
+  FireEvent = 'FireEvent',
+}
+
+export interface WeaponFireEventsPayload {
+  projectile: BaseProjectile;
+}
+
 interface WeaponOptions {
+  name: string;
   texture: string;
 
   // Патроны
@@ -57,6 +67,10 @@ interface WeaponOptions {
   projectile?: BaseProjectileClass
 }
 
+export interface FireParams {
+  playerId: string;
+}
+
 type AudioAssets = {
   fire: Phaser.Sound.BaseSound | null;
   empty: Phaser.Sound.BaseSound | null;
@@ -65,6 +79,7 @@ type AudioAssets = {
 }
 
 export class WeaponEntity {
+  private name: string;
   private active: boolean = false;
   private scene: Phaser.Scene;
   private gameObject: Phaser.GameObjects.Sprite;
@@ -90,6 +105,7 @@ export class WeaponEntity {
 
   constructor(scene: Phaser.Scene, options: WeaponOptions) {
     this.scene = scene;
+    this.name = options.name;
     this.options = options;
     this.currentAmmo = this.options.magazineSize;
 
@@ -185,7 +201,7 @@ export class WeaponEntity {
     return [x + offsetX, y + offsetY];
   }
 
-  public fire(): RecoilForceType | null {
+  public fire({ playerId }: FireParams): RecoilForceType | null {
     if (!this.canFire(this.scene.time.now)) {
       if (this.isEmpty()) {
         this.playEmptySound();
@@ -205,7 +221,7 @@ export class WeaponEntity {
     const sightX = firePointX + 150;
     const sightY = firePointY + Math.tan(this.weaponAngle) * (sightX - firePointX);
 
-    this.createProjectile(firePointX, firePointY, sightX, sightY);
+    this.createProjectile(playerId, firePointX, firePointY, sightX, sightY);
 
     // Создаем гильзу после выстрела
     if (this.options.shellCasings && this.scene instanceof GameplayScene) {
@@ -233,18 +249,21 @@ export class WeaponEntity {
     return recoil;
   }
 
-  protected createProjectile(x: number, y: number, sightX: number, sightY: number): void {
+  protected createProjectile(playerId: string, x: number, y: number, sightX: number, sightY: number): void {
     if (!this.options.projectile || !(this.scene instanceof GameplayScene)) {
       return;
     }
 
     const projectile = new this.options.projectile();
+    
     projectile
-      .create(this.scene, x, y)
+      .create(this.scene, x, y, {
+        playerId,
+        weaponName: this.name
+      })
       .setForceVector(sightX, sightY, this.options.speed, this.options.damage);
     
-    const gameScene = this.scene as GameplayScene;
-    gameScene.addProjectile(projectile);
+    emitEvent(this.scene, WeaponEvents.FireEvent, { projectile });
   }
 
   /**

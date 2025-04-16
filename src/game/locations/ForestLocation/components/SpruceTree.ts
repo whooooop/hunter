@@ -11,8 +11,8 @@ interface SpruceTreeOptions {
 const TEXTURE = 'tree_' + generateStringWithLength(6);
 
 export class SpruceTree extends BaseTree {
-    constructor(scene: Phaser.Scene, x: number, y: number, options: SpruceTreeOptions) {
-        super(scene, x, y, {
+    constructor(scene: Phaser.Scene, id: string, x: number, y: number, options: SpruceTreeOptions) {
+        super(scene, id, x, y, {
             texture: TEXTURE,
             scale: options.scale,
             health: options.health

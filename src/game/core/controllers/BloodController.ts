@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { createLogger } from '../../../utils/logger';
 import { settings } from '../../settings';
 import { DecalEventPayload } from '../types/decals';
+import { emitEvent } from '../Events';
 
 const logger = createLogger('BaseBlood');
 
@@ -325,8 +326,7 @@ export class BloodController {
   }
   
   drawDecal(particle: Phaser.GameObjects.Sprite): void {
-    const payload: DecalEventPayload = { particle, x: particle.x, y: particle.y };
-    this.scene.events.emit(BloodEvents.bloodParticleDecal, payload);
+    emitEvent(this.scene, BloodEvents.bloodParticleDecal, { particle, x: particle.x, y: particle.y });
   }
 }
 

@@ -34,9 +34,9 @@ export class BaseTree extends DecorEntity {
   protected scene: Phaser.Scene;
   protected frameIndex: number = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, options: TreeOptions) {
+  constructor(scene: Phaser.Scene, id: string, x: number, y: number, options: TreeOptions) {
     const gameObject = scene.physics.add.sprite(x, y, options.texture, 0).setScale(options.scale);
-    super(gameObject, { health: options.health });
+    super(gameObject, id, { health: options.health });
     
     this.scene = scene;
     this.scene.add.existing(this.gameObject);

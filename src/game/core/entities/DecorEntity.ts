@@ -7,8 +7,8 @@ interface DecorEntityOptions {
 }
 
 export class DecorEntity extends DamageableEntity {
-  constructor(gameObject: Phaser.Physics.Arcade.Sprite, options: DecorEntityOptions) {
-    super(gameObject, { 
+  constructor(gameObject: Phaser.Physics.Arcade.Sprite, id: string, options: DecorEntityOptions) {
+    super(gameObject, id, { 
       health: options.health,
       permeability: typeof options.permeability === 'number' ? options.permeability : 1
     });

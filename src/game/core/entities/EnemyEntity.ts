@@ -5,6 +5,7 @@ import { ScoreKill } from "../../../types/score";
 import { DamageableEntity, DamageResult } from "./DamageableEntity";
 import { ShadowEntity, ShadowEntityOptions } from "./ShadowEntity";
 import { DecalEventPayload } from "../types/decals";
+import { emitEvent } from "../Events";
 
 export enum EnemyEntityEvents {
   enemyDeath = 'enemyDeath',
@@ -34,8 +35,8 @@ export class EnemyEntity extends DamageableEntity {
   private graphics: Phaser.GameObjects.Graphics;
   protected shadow: ShadowEntity;
 
-  constructor(scene: Phaser.Scene, gameObject: Phaser.Physics.Arcade.Sprite, x: number, y: number, options: EnemyEntityOptions) {
-    super(gameObject, { health: options.health, permeability: 0 });
+  constructor(scene: Phaser.Scene, id: string, gameObject: Phaser.Physics.Arcade.Sprite, x: number, y: number, options: EnemyEntityOptions) {
+    super(gameObject, id, { health: options.health, permeability: 0 });
 
     this.debug = options.debug || false;
 
@@ -70,7 +71,7 @@ export class EnemyEntity extends DamageableEntity {
 
   protected onDeath(): void {
     const payload: DecalEventPayload = { particle: this.gameObject, x: this.gameObject.x, y: this.gameObject.y };
-    this.scene.events.emit(EnemyEntityEvents.enemyDeath, payload);
+    emitEvent(this.scene, EnemyEntityEvents.enemyDeath, payload);
     this.destroy();
   }
 

@@ -3,7 +3,6 @@ import { WeaponEntity } from "../../core/entities/WeaponEntity";
 import { MP5_AUDIO_FIRE, MP5_TEXTURE } from './assets';
 
 export class MP5 extends WeaponEntity {
-    name: string = 'MP5';
 
     static preload(scene: Phaser.Scene): void {
         scene.load.image(MP5_TEXTURE.key, MP5_TEXTURE.url);
@@ -12,6 +11,7 @@ export class MP5 extends WeaponEntity {
 
     constructor(scene: Phaser.Scene) {
         super(scene, {
+            name: 'MP5',
             texture: MP5_TEXTURE.key,
             scale: 0.5,
             offsetX: 20,

@@ -64,6 +64,10 @@ export function generateStringWithLength(length: number, charset: string = CHARS
   return result;
 }
 
+export function generateId(): string {
+  return generateStringWithLength(5, CHARS.ALL);
+}
+
 /**
  * Экспортируем наборы символов для удобного использования в других модулях
  */
