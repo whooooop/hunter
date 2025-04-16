@@ -1,4 +1,5 @@
 export const settings = {
+    fontFamily: 'Arial',
     display: {
         width: 1280,
         height: 720,

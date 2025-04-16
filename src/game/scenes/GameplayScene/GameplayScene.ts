@@ -25,7 +25,8 @@ import { DecalEventPayload } from '../../core/types/decals';
 import { WeaponAWP } from '../../weapons/AWP/WeaponAWP';
 import { ExplosionEntity } from '../../core/entities/ExplosionEntity';
 import { RabbitEnemy } from '../../entities/rabbit/RabbitEntity';
-import { WaveController, WaveEvents } from '../../core/controllers/WaveController';
+import { WaveController, WaveEvents, waveStartEventPayload } from '../../core/controllers/WaveController';
+import { createWavesConfig } from '../../levels/test/wavesConfig'
 
 const logger = createLogger('GameplayScene');
 
@@ -116,7 +117,7 @@ export class GameplayScene extends Phaser.Scene {
     // Создаем игрока
     this.player = new Player(this, PLAYER_POSITION_X, PLAYER_POSITION_Y);
 
-    this.player.setWeapon(Weapon.MP5);
+    this.player.setWeapon(Weapon.GLOCK);
     this.player.setLocationBounds(this.location.bounds);
     
     // Устанавливаем оружие в интерфейс
@@ -131,23 +132,7 @@ export class GameplayScene extends Phaser.Scene {
     //   this
     // );
 
-    this.waveController = new WaveController(this, [
-      {
-        delay: 1000,
-        spawns: [
-          {
-            delay: 1000,
-            entity: RabbitEnemy,
-            position: [settings.display.width - 50, 400],
-            options: {
-              moveX: -1,
-              moveY: 0,
-              direction: -1,
-            },
-          },
-        ],
-      }
-    ]);
+    this.waveController = new WaveController(this, createWavesConfig());
 
     this.waveController.start();
 
@@ -159,7 +144,9 @@ export class GameplayScene extends Phaser.Scene {
       this.events.on(ShellCasingEvents.shellCasingParticleDecal, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
     }
 
-    this.events.on(WaveEvents.spawnEnemy, (payload: DamageableEntity) => this.handleSpawnEnemy(payload));
+    this.events
+      .on(WaveEvents.spawnEnemy, (payload: DamageableEntity) => this.handleSpawnEnemy(payload))
+      .on(WaveEvents.waveStart, (payload: waveStartEventPayload) => this.handleWaveStart(payload))
   }
 
   private handleDrowDecal(payload: DecalEventPayload): void {
@@ -169,6 +156,10 @@ export class GameplayScene extends Phaser.Scene {
   private handleSpawnEnemy(payload: DamageableEntity): void {
     this.enemies.add(payload);
     this.damageableObjects.add(payload);
+  }
+
+  private handleWaveStart(payload: waveStartEventPayload) {
+    this.waveInfo.start(payload)
   }
 
   /**
@@ -228,6 +219,7 @@ export class GameplayScene extends Phaser.Scene {
 
     // Обрабатываем попадания пуль
     this.projectileController.update(time, delta);
+    this.waveInfo.update(time, delta);
   }
   
   // Метод для доступа к группе гильз

@@ -330,10 +330,10 @@ export class BloodController {
   }
 }
 
- /**
+/**
  * Создает базовую текстуру для капель крови
  */
- export function createBasicBloodTexture(scene: Phaser.Scene, textureKey: string): void {
+export function createBasicBloodTexture(scene: Phaser.Scene, textureKey: string): void {
   if (scene.textures.exists(textureKey)) {
       return;
   }
@@ -357,8 +357,8 @@ export class BloodController {
 }
 
 /**
-* Создает текстуру с несколькими каплями крови
-*/
+ * Создает текстуру с несколькими каплями крови
+ */
 export function createBloodDropsTexture(scene: Phaser.Scene, textureKey: string): void {
   if (scene.textures.exists(textureKey)) {
       return;
@@ -392,8 +392,8 @@ export function createBloodDropsTexture(scene: Phaser.Scene, textureKey: string)
 }
 
 /**
-* Создает текстуру брызг крови с пятнами
-*/
+ * Создает текстуру брызг крови с пятнами
+ */
 export function createBloodSplatterTexture(scene: Phaser.Scene, textureKey: string): void {
   if (scene.textures.exists(textureKey)) {
       return;
@@ -432,4 +432,34 @@ export function createBloodSplatterTexture(scene: Phaser.Scene, textureKey: stri
   
   // Удаляем графику после создания текстуры
   graphics.destroy();
+}
+
+export function createSimpleBloodConfig(direction: number) {
+  return {
+    amount: Phaser.Math.Between(50, 100),
+    direction,
+    force: 20,
+    size: {
+      min: 0.2,
+      max: 0.3
+    },
+    speed: {
+      min: 500,
+      max: 1080,
+      multiplier: 0.6
+    },
+    gravity: 700,
+    spread: {
+      angle: Math.PI/14,
+      height: {
+        min: -3, // Разброс вверх от точки попадания
+        max: 2   // Разброс вниз от точки попадания
+      }
+    },
+    fallDistance: {
+      min: 15,
+      max: 25
+    },
+    // minXDistance: 380      // Минимальная дистанция разлета по оси X
+  }
 }

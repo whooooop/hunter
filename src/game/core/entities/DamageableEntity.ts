@@ -1,5 +1,10 @@
-import { DamageController, DamageControllerOptions } from "../controllers/DamageController";
 import { Demage } from "../types/demage";
+
+
+export interface DamageableEntityOptions {
+  health: number;
+  permeability: number;
+}
 
 export interface DamageResult {
   health: number;
@@ -9,37 +14,53 @@ export interface DamageResult {
 }
 
 export class DamageableEntity {
-  protected damageController: DamageController;
   protected isDead: boolean = false;
   protected gameObject: Phaser.Physics.Arcade.Sprite;
   protected permeability: number;
+  protected health: number;
+  protected initialHealth: number;
 
-  constructor(gameObject: Phaser.Physics.Arcade.Sprite, options: DamageControllerOptions) {
+  constructor(gameObject: Phaser.Physics.Arcade.Sprite, options: DamageableEntityOptions) {
     this.gameObject = gameObject;
     this.permeability = options.permeability;
-    this.damageController = new DamageController(options);
+    this.health = options.health;
+    this.initialHealth = options.health;
+  }
+
+  public getHealth(): number {
+    return this.health;
+  }
+
+  public getHealthPercent(): number {
+    return this.health / this.initialHealth;
   }
 
   public takeDamage(damage: Demage): DamageResult | null {
     if (this.isDead) return null;
 
-    this.damageController.takeDamage(damage);
-    this.isDead = this.damageController.getDead();
+    this.health = Math.max(0, this.health - damage.value);
+
+    if (this.health === 0) {
+      this.isDead = true;
+      this.onDeath();
+    }
 
     return {
-      health: this.damageController.getHealth(),
+      health: this.health,
       isDead: this.isDead,
       permeability :this.permeability,
       isPenetrated: !!this.permeability || this.isDead
     };
   }
 
+  protected onDeath() {}
+
   public getBounds(): Phaser.Geom.Rectangle {
     return this.gameObject.getBounds();
   }
 
   public getDead(): boolean {
-    return this.damageController.getDead();
+    return this.isDead;
   }
 
   public update(time: number, delta: number): void {}

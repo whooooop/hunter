@@ -1,4 +1,4 @@
-import { BloodController } from "../controllers/BloodController";
+import { BloodController, createSimpleBloodConfig } from "../controllers/BloodController";
 import { MotionController } from "../controllers/MotionController";
 import { Demage } from "../types/demage";
 import { ScoreKill } from "../../../types/score";
@@ -53,18 +53,14 @@ export class EnemyEntity extends DamageableEntity {
     if (this.isDead) return null;
 
     const result = super.takeDamage(damage);
-    const health = this.damageController.getHealth();
+    const health = this.getHealth();
 
     this.createBloodSplash(damage);
-
-    if (health <= 0) {
-      this.onDead();
-    }
 
     return result;
   }
 
-  protected onDead(): void {
+  protected onDeath(): void {
     this.destroy();
   }
 
@@ -73,35 +69,7 @@ export class EnemyEntity extends DamageableEntity {
     const [[startX, startY], [forceX, forceY]] = forceVector;
     const direction = forceX - startX;
 
-    this.bloodController.createBloodSplash(x, y,
-      {
-        amount: Phaser.Math.Between(50, 100),
-        direction,
-        force: 20,
-        size: {
-          min: 0.2,
-          max: 0.3
-        },
-        speed: {
-          min: 500,
-          max: 1080,
-          multiplier: 0.6
-        },
-        gravity: 700,
-        spread: {
-          angle: Math.PI/14,
-          height: {
-            min: -3, // Разброс вверх от точки попадания
-            max: 2   // Разброс вниз от точки попадания
-          }
-        },
-        fallDistance: {
-          min: 15,
-          max: 25
-        },
-        // minXDistance: 380      // Минимальная дистанция разлета по оси X
-      }
-    );
+    this.bloodController.createBloodSplash(x, y, createSimpleBloodConfig(direction));
   }
 
   public update(time: number, delta: number): void {

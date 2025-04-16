@@ -3,7 +3,6 @@ import { generateStringWithLength } from '../../../../utils/stringGenerator';
 
 import leafImage from '../assets/images/leaf.png';
 import woodChipImage from '../assets/images/wood_chip.png';
-import { settings } from '../../../settings';
 import { Demage } from '../../../core/types/demage';
 import { DecorEntity } from '../../../core/entities/DecorEntity';
 import { DamageResult } from '../../../core/entities/DamageableEntity';
@@ -75,7 +74,7 @@ export class BaseTree extends DecorEntity {
    * Обновляет визуальное состояние дерева в зависимости от текущего здоровья
    */
   private updateVisualState(): void {
-      const healthPercent = this.damageController.getHealthPercent();
+      const healthPercent = this.getHealthPercent();
       this.frameIndex = this.calculateFrameIndex(healthPercent);
       this.gameObject.setFrame(this.frameIndex);
   }
@@ -102,7 +101,7 @@ export class BaseTree extends DecorEntity {
    * Используем прямой подход со спрайтами вместо системы частиц
    */
   private createHitParticles(): void {
-    const healthPercent = this.damageController.getHealthPercent();
+    const healthPercent = this.getHealthPercent();
 
     // Небольшое количество частиц
     const woodChipCount = healthPercent > 0.4 ? 0 : healthPercent > 0.1 ? 4 : 1;
