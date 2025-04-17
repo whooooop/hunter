@@ -40,18 +40,22 @@ export class DamageableEntity {
   public takeDamage(damage: Demage): DamageResult | null {
     if (this.isDead) return null;
 
-    this.health = Math.max(0, this.health - damage.value);
+    const health = Math.max(0, this.health - damage.value);
+    const isDead = health === 0;
 
-    if (this.health === 0) {
-      this.isDead = true;
-      this.onDeath();
+    if (!damage.simulate) {
+      this.health = health;
+      this.isDead = isDead;
+      if (isDead) {
+        this.onDeath();
+      }
     }
 
     return {
-      health: this.health,
-      isDead: this.isDead,
-      permeability :this.permeability,
-      isPenetrated: !!this.permeability || this.isDead
+      health,
+      isDead,
+      permeability: this.permeability,
+      isPenetrated: !!this.permeability || isDead
     };
   }
 

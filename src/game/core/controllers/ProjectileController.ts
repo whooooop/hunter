@@ -21,6 +21,10 @@ interface HitGroup {
   time: number;
 }
 
+interface ProjectileControllerOptions {
+  simulate: boolean;
+}
+
 export class ProjectileController {
   private debug: boolean = false;
   private scene: Phaser.Scene;
@@ -28,13 +32,16 @@ export class ProjectileController {
   private projectiles: Map<BaseProjectile, BaseProjectile> = new Map();
   private projectilesNotActivated: Map<BaseProjectile, BaseProjectile> = new Map();
   private projectileHits: HitGroup[] = [];
+  private simulate: boolean;
 
   constructor(
     scene: Phaser.Scene, 
     damageableObjects: Set<DamageableEntity>, 
+    options: ProjectileControllerOptions
   ) {
     this.scene = scene;
     this.damageableObjects = damageableObjects;
+    this.simulate = options.simulate;
   }
   
   public addProjectile(projectile: BaseProjectile): void {
@@ -293,9 +300,10 @@ export class ProjectileController {
 
         const damage = hit.projectile.getDamage(hit.distance);     
         const damageResult = hit.targetEntity.takeDamage({
+          simulate: this.simulate,
           forceVector: hit.forceVector,
           hitPoint: hit.hitPoint,
-          value: damage
+          value: damage,
         });       
         hit.projectile.onHit();
         

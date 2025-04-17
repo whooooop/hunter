@@ -69,7 +69,8 @@ export class GameplayScene extends Phaser.Scene {
 
     WaveController.preloadEnemies(this, createWavesConfig());
     preloadWeapons(this);
-
+    
+    // Создаем текстуру гильзы программно
     createShellCasingTexture(this);
     BloodController.preload(this);
   }
@@ -93,7 +94,9 @@ export class GameplayScene extends Phaser.Scene {
     this.shellCasings = this.physics.add.group();
     
     // Инициализируем менеджер попаданий
-    this.projectileController = new ProjectileController(this, this.damageableObjects);
+    this.projectileController = new ProjectileController(this, this.damageableObjects, {
+      simulate: true,
+    });
 
     // Создаем локацию
     this.location.create();
