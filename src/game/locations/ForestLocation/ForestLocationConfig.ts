@@ -1,5 +1,5 @@
 import { hexToNumber } from '../../utils/colors';
-
+import { CloudOptions } from '../../ui/Clouds';
 
 export interface ForestLocationConfig {
   background: string;
@@ -18,7 +18,7 @@ export const DEFAULT_FOREST_CONFIG: ForestLocationConfig = {
   background: 'forest_background',
 }; 
 
-export const CLOUDS = [
+export const CLOUDS: CloudOptions[] = [
   { position: [120, 90], scale: 0.5, alpha: 1, speed: 0.2, depth: 1, direction: 1 },
   { position: [300, 80], scale: 0.7, alpha: 1, speed: 0.15, depth: 3, direction: -1 },
   { position: [550, 40], scale: 0.4, alpha: 1, speed: 0.3, depth: 5, direction: 1 },

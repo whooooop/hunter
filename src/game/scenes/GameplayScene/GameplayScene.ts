@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
-import { SceneKeys, PLAYER_POSITION_X, PLAYER_POSITION_Y } from '../../core/Constants';
+import { PLAYER_POSITION_X, PLAYER_POSITION_Y } from '../../core/Constants';
+import { SceneKeys } from '../index';
 import { Player } from '../../entities/Player';
 import { WaveInfo } from '../../ui/WaveInfo';
 import { settings } from '../../settings';
@@ -95,7 +96,7 @@ export class GameplayScene extends Phaser.Scene {
     
     // Инициализируем менеджер попаданий
     this.projectileController = new ProjectileController(this, this.damageableObjects, {
-      simulate: true,
+      simulate: false,
     });
 
     // Создаем локацию

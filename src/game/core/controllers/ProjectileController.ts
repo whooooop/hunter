@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { BaseProjectile, ProjectileType } from '../BaseProjectile';
+import { ProjectileEntity, ProjectileType } from '../entities/ProjectileEntity';
 import { rayRectIntersectionRobust } from '../../utils/GeometryUtils';
 import { DamageableEntity } from '../entities/DamageableEntity';
 
@@ -8,7 +8,7 @@ export enum ProjectileEvents {
 }
 
 interface Hit {
-  projectile: BaseProjectile;
+  projectile: ProjectileEntity;
   targetEntity: DamageableEntity;
   hitPoint: number[];
   forceVector: number[][];
@@ -29,8 +29,8 @@ export class ProjectileController {
   private debug: boolean = false;
   private scene: Phaser.Scene;
   private damageableObjects: Set<DamageableEntity>;
-  private projectiles: Map<BaseProjectile, BaseProjectile> = new Map();
-  private projectilesNotActivated: Map<BaseProjectile, BaseProjectile> = new Map();
+  private projectiles: Map<ProjectileEntity, ProjectileEntity> = new Map();
+  private projectilesNotActivated: Map<ProjectileEntity, ProjectileEntity> = new Map();
   private projectileHits: HitGroup[] = [];
   private simulate: boolean;
 
@@ -44,12 +44,12 @@ export class ProjectileController {
     this.simulate = options.simulate;
   }
   
-  public addProjectile(projectile: BaseProjectile): void {
+  public addProjectile(projectile: ProjectileEntity): void {
     this.projectiles.set(projectile, projectile);
     this.projectilesNotActivated.set(projectile, projectile);
   }
 
-  private activateProjectile(projectile: BaseProjectile): void {
+  private activateProjectile(projectile: ProjectileEntity): void {
     const type = projectile.getType();
     if (type === ProjectileType.BULLET) {
       this.predictRayHits(projectile);
@@ -58,7 +58,7 @@ export class ProjectileController {
     }
   }
 
-  private predictRayHits(projectile: BaseProjectile): void {
+  private predictRayHits(projectile: ProjectileEntity): void {
     const group: HitGroup = {
       hits: [],
       time: 0
@@ -120,7 +120,7 @@ export class ProjectileController {
     }
   }
 
-  private predictRadiusHits(projectile: BaseProjectile): void {
+  private predictRadiusHits(projectile: ProjectileEntity): void {
     if (!this.scene || projectile.isDestroyed()) return;
     
     // Получаем актуальные координаты проектиля
@@ -304,6 +304,8 @@ export class ProjectileController {
           forceVector: hit.forceVector,
           hitPoint: hit.hitPoint,
           value: damage,
+          playerId: hit.projectile.getPlayerId(),
+          weaponName: hit.projectile.getWeaponName(),
         });       
         hit.projectile.onHit();
         

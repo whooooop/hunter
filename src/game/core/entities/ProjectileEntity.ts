@@ -1,7 +1,7 @@
-import { generateId } from "../../utils/stringGenerator";
-import { settings } from "../settings";
-import { hexToNumber } from "../utils/colors";
-import { ExplosionEntity } from "./entities/ExplosionEntity";
+import { generateId } from "../../../utils/stringGenerator";
+import { settings } from "../../settings";
+import { hexToNumber } from "../../utils/colors";
+import { ExplosionEntity } from "./ExplosionEntity";
 
 export enum ProjectileType {
   BULLET = 'bullet',
@@ -9,7 +9,7 @@ export enum ProjectileType {
   MINE = 'mine',
 }
 
-export interface BaseProjectileOptions {
+export interface ProjectileEntityOptions {
   type: ProjectileType;
 
   texture?: string;
@@ -26,7 +26,7 @@ export interface BaseProjectileOptions {
   gravity?: number;
 }
 
-export type BaseProjectileClass = new (options?: BaseProjectileOptions) => BaseProjectile;
+export type ProjectileEntityClass = new (options?: ProjectileEntityOptions) => ProjectileEntity;
 
 const defaultOptions = {
   type: ProjectileType.BULLET,
@@ -36,7 +36,7 @@ const defaultOptions = {
   radius: 200
 }
 
-export class BaseProjectile {
+export class ProjectileEntity {
   protected id: string;
   protected scene!: Phaser.Scene;
   protected gameObject!: Phaser.GameObjects.Sprite;
@@ -44,7 +44,7 @@ export class BaseProjectile {
   protected destroyed: boolean = false;
   protected activated: boolean = false;
   
-  protected options: BaseProjectileOptions;
+  protected options: ProjectileEntityOptions;
   protected damage: number = 1;
   protected speed: number[] = [100, 0];
   
@@ -57,7 +57,7 @@ export class BaseProjectile {
 
   protected floorY: number = 0; // Минимальная Y-координата (пол)
 
-  constructor(options?: BaseProjectileOptions) {
+  constructor(options?: ProjectileEntityOptions) {
     this.id = generateId();
     this.options = { ...defaultOptions, ...options };
   }
@@ -74,7 +74,7 @@ export class BaseProjectile {
     return this.weaponName;
   }
 
-  public create(scene: Phaser.Scene, x: number, y: number, params: { playerId: string, weaponName: string }): BaseProjectile {
+  public create(scene: Phaser.Scene, x: number, y: number, params: { playerId: string, weaponName: string }): this {
     this.scene = scene;
     this.startPoint = [x, y];
     this.playerId = params.playerId;
@@ -93,7 +93,7 @@ export class BaseProjectile {
     return this;
   }
 
-  public setForceVector(forceX: number, forceY: number, speed: number[], damage: number): BaseProjectile {
+  public setForceVector(forceX: number, forceY: number, speed: number[], damage: number): this {
     this.damage = damage; // Сохраняем значение урона
     this.speed = speed;
     this.forcePoint = [forceX, forceY];
@@ -151,7 +151,7 @@ export class BaseProjectile {
    * @param targetY Y-координата цели
    * @returns Экземпляр проектила для цепочки вызовов
    */
-  public setThrowForce(targetX: number, targetY: number): BaseProjectile {
+  public setThrowForce(targetX: number, targetY: number): this {
     if (!this.gameObject || !this.scene) return this;
     
     // Устанавливаем floorY равным начальной Y-координате гранаты

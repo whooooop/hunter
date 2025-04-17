@@ -1,12 +1,17 @@
 import { createTextureKey } from "../../../utils/texture";
-import { BaseProjectile, ProjectileType } from "../../core/BaseProjectile";
+import { ProjectileEntity, ProjectileType } from "../../core/entities/ProjectileEntity";
 
 import grenadeImage from './assets/grenade.png';
 
 const texture = createTextureKey('bullet');
 const type = ProjectileType.GRENADE;
 
-export class ProjetileGrenage extends BaseProjectile {
+export class ProjetileGrenage extends ProjectileEntity {
+
+  static preload(scene: Phaser.Scene): void {
+    scene.load.image(texture, grenadeImage);
+  }
+
   constructor() {
     super({
       type,
@@ -18,8 +23,5 @@ export class ProjetileGrenage extends BaseProjectile {
       radius: 100,
     })
   }
-
-  static preload(scene: Phaser.Scene): void {
-    scene.load.image(texture, grenadeImage);
-  }
+  
 }

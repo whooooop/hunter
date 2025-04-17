@@ -12,7 +12,7 @@ import { settings } from '../../settings';
 import { createLogger } from "../../../utils/logger";
 import { GameplayScene } from "../../scenes/GameplayScene/GameplayScene";
 import { ShellCasingEntity } from "./ShellCasingEntity";
-import { BaseProjectile, BaseProjectileClass } from "../BaseProjectile";
+import { ProjectileEntity, ProjectileEntityClass } from "./ProjectileEntity";
 import { RecoilForceType } from "../types/recoilForce";
 import { emitEvent } from "../Events";
 
@@ -23,7 +23,7 @@ export enum WeaponEvents {
 }
 
 export interface WeaponFireEventsPayload {
-  projectile: BaseProjectile;
+  projectile: ProjectileEntity;
 }
 
 interface WeaponOptions {
@@ -64,7 +64,7 @@ interface WeaponOptions {
 
   shellCasings?: boolean;
   sight?: SightEntityOptions | boolean;
-  projectile?: BaseProjectileClass
+  projectile?: ProjectileEntityClass
 }
 
 export interface FireParams {

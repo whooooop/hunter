@@ -13,6 +13,7 @@ import rockImage from './assets/images/rock.png';
 import rockImage2 from './assets/images/rock2.png';
 import cloudImage from './assets/images/cloud.png';
 import { BaseShop } from '../../core/BaseShop';
+import { Clouds } from '../../ui/Clouds';
 
 const logger = createLogger('ForestLocation');
 
@@ -20,7 +21,6 @@ const GROUND_TEXTURE = 'ground_texture_' + generateStringWithLength(6);
 const ROCK_TEXTURE = 'rock_texture_' + generateStringWithLength(6);
 const ROCK_TEXTURE_2 = 'rock_texture_2_' + generateStringWithLength(6);
 const SKY_TEXTURE = 'sky_texture_' + generateStringWithLength(6);
-const CLOUD_TEXTURE = 'cloud_texture_' + generateStringWithLength(6);
 
 export class ForestLocation extends BaseLocation {
   private config: ForestLocationConfig;
@@ -35,8 +35,7 @@ export class ForestLocation extends BaseLocation {
     bottom: 0
   };
 
-  // Массив для хранения облаков
-  private clouds: Phaser.GameObjects.Image[] = [];
+  private clouds!: Clouds;
   
   constructor(scene: Phaser.Scene, config: Partial<ForestLocationConfig> = {}) {
     super(scene);
@@ -56,7 +55,7 @@ export class ForestLocation extends BaseLocation {
     this.scene.load.image(GROUND_TEXTURE, groundImage);
     this.scene.load.image(ROCK_TEXTURE, rockImage);
     this.scene.load.image(ROCK_TEXTURE_2, rockImage2);  
-    this.scene.load.image(CLOUD_TEXTURE, cloudImage);
+    Clouds.preload(this.scene);
     ForestShop.preload(this.scene);
     SpruceTree.preload(this.scene);
     BaseShop.preload(this.scene);
@@ -85,7 +84,7 @@ export class ForestLocation extends BaseLocation {
     
     this.createBackground();
 
-    this.createClouds();
+    this.clouds = new Clouds(this.scene, CLOUDS);
 
     this.createShop();
     
@@ -144,65 +143,9 @@ export class ForestLocation extends BaseLocation {
     
   }
   
-  private createClouds(): void {
-    // Удаляем существующие облака, если они есть
-    this.clouds.forEach(cloud => cloud.destroy());
-    this.clouds = [];
-    
-    // Создаем облака из конфигурации
-    CLOUDS.forEach(cloudConfig => {
-      const [x, y] = cloudConfig.position;
-      
-      // Создаем спрайт облака
-      const cloud = this.scene.add.image(x, y, CLOUD_TEXTURE);
-      
-      // Настраиваем размер (масштаб)
-      cloud.setScale(cloudConfig.scale);
-      
-      // Настраиваем прозрачность
-      cloud.setAlpha(cloudConfig.alpha);
-      
-      // Сохраняем параметры движения в данных спрайта
-      cloud.setData('speed', cloudConfig.speed);
-      cloud.setData('direction', cloudConfig.direction);
-      
-      // Устанавливаем низкий приоритет отображения
-      cloud.setDepth(cloudConfig.depth);
-      
-      // Добавляем в массив для обновления
-      this.clouds.push(cloud);
-    });
-  }
-  
-  /**
-   * Обновляет положение облаков для создания эффекта движения
-   */
-  private updateClouds(delta: number): void {
-    // Нормализуем дельту времени (для стабильного движения)
-    const normalizedDelta = delta / 16;
-    
-    // Обновляем положение каждого облака
-    this.clouds.forEach(cloud => {
-      // Получаем скорость и направление из данных облака
-      const speed = cloud.getData('speed');
-      const direction = cloud.getData('direction');
-      
-      // Обновляем позицию
-      cloud.x += speed * direction * normalizedDelta;
-      
-      // Если облако вышло за границы экрана, перемещаем его на противоположную сторону
-      if (cloud.x > this.width + cloud.width) {
-        cloud.x = -cloud.width;
-      } else if (cloud.x < -cloud.width) {
-        cloud.x = this.width + cloud.width;
-      }
-    });
-  }
-  
   // Метод для обновления анимации травы
   public update(time: number, delta: number = 16): void {
-    // Обновляем облака
-    this.updateClouds(delta);
+    this.clouds.update(time, delta);
   }
   
   // Переопределяем метод destroy для очистки ресурсов

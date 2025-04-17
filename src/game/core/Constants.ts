@@ -1,9 +1,3 @@
-// Ключи сцен
-export enum SceneKeys {
-  LOADING = 'loading',
-  MENU = 'menu',
-  GAMEPLAY = 'gameplay',
-}
 
 // Константы для игрока
 export const PLAYER_POSITION_X = 100;

@@ -1,8 +1,7 @@
 import * as Phaser from 'phaser';
-import { SceneKeys } from '../core/Constants';
 import { settings } from '../settings';
 import { createLogger } from '../../utils/logger';
-
+import { SceneKeys } from './index';
 const logger = createLogger('LoadingScene');
 
 /**

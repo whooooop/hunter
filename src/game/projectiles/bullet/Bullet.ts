@@ -1,10 +1,15 @@
 import { createTextureKey } from "../../../utils/texture";
-import { BaseProjectile, createBulletTexture, ProjectileType } from "../../core/BaseProjectile";
+import { ProjectileEntity, createBulletTexture, ProjectileType } from "../../core/entities/ProjectileEntity";
 
 const texture = createTextureKey('bullet');
 const type = ProjectileType.BULLET;
 
-export class Bullet extends BaseProjectile {
+export class Bullet extends ProjectileEntity {
+
+  static preload(scene: Phaser.Scene): void {
+    createBulletTexture(scene, texture);
+  }
+
   constructor() {
     super({
       type,
@@ -12,7 +17,4 @@ export class Bullet extends BaseProjectile {
     })
   }
 
-  static preload(scene: Phaser.Scene): void {
-    createBulletTexture(scene, texture);
-  }
 }

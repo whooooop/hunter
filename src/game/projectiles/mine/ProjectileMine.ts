@@ -1,12 +1,12 @@
 import { createTextureKey } from "../../../utils/texture";
-import { BaseProjectile, ProjectileType } from "../../core/BaseProjectile";
+import { ProjectileEntity, ProjectileType } from "../../core/entities/ProjectileEntity";
 
 import mineImage from './assets/mine.png';
 
 const texture = createTextureKey('mine');
 const type = ProjectileType.MINE;
 
-export class ProjetileMine extends BaseProjectile {
+  export class ProjetileMine extends ProjectileEntity {
   constructor() {
     super({
       type,

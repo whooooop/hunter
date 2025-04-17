@@ -4,6 +4,7 @@ import { LoadingScene } from './game/scenes/LoadingScene';
 import { settings } from './game/settings';
 import { logger } from './utils/logger';
 import { SpinePlugin } from "@esotericsoftware/spine-phaser"
+import { MainMenuScene } from './game/scenes/MainMenu/MainMenuScene';
 
 // Конфигурация игры
 const config: Phaser.Types.Core.GameConfig = {
@@ -26,7 +27,7 @@ const config: Phaser.Types.Core.GameConfig = {
       mapping: "spine"
     }]
   },
-  scene: [LoadingScene, GameplayScene]
+  scene: [MainMenuScene, LoadingScene, GameplayScene]
 };
 
 function initGame() {
