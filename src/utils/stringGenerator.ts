@@ -65,7 +65,7 @@ export function generateStringWithLength(length: number, charset: string = CHARS
 }
 
 export function generateId(): string {
-  return generateStringWithLength(5, CHARS.ALL);
+  return generateStringWithLength(5, CHARS.LOWERCASE + CHARS.UPPERCASE);
 }
 
 /**

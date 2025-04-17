@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { EnemyEntity } from '../../core/entities/EnemyEntity';
 import { createSpriteAnimation, loadSpriteSheet } from '../../utils/sprite';
 import { entityConfig, deathConfig,walkConfig } from './configs';
+import { DamageableEntityBounds } from '../../core/entities/DamageableEntity';
 
 interface RabbitEnemyOptions {
   moveX: number;
@@ -42,8 +43,23 @@ export class RabbitEnemy extends EnemyEntity {
     });
   }
   
-  protected getHeadBounds(): [number, number, number, number] {
-    const [HeadX, HeadY, HeadWidth, HeadHeight] = super.getHeadBounds();
-    return [HeadX, HeadY, HeadWidth / 2, HeadHeight - 18];
+  public getBounds(): DamageableEntityBounds {
+    const bounds = super.getBounds();
+    return {
+      x: bounds.x,
+      y: bounds.y + 24,
+      width: bounds.width - 56,
+      height: bounds.height - 38,
+    };
+  }
+
+  public getHeadBounds(): DamageableEntityBounds | null {
+    const bounds = this.getBounds();
+    return {
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width - 10,
+      height: bounds.height - 24,
+    };
   }
 } 

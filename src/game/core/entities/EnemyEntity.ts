@@ -2,10 +2,11 @@ import { BloodController, createSimpleBloodConfig } from "../controllers/BloodCo
 import { MotionController } from "../controllers/MotionController";
 import { Demage } from "../types/demage";
 import { ScoreKill } from "../../../types/score";
-import { DamageableEntity, DamageResult } from "./DamageableEntity";
+import { DamageableEntity, DamageableEntityBounds, DamageResult } from "./DamageableEntity";
 import { ShadowEntity, ShadowEntityOptions } from "./ShadowEntity";
 import { DecalEventPayload } from "../types/decals";
 import { emitEvent } from "../Events";
+import { hexToNumber } from "../../utils/colors";
 
 export enum EnemyEntityEvents {
   enemyDeath = 'enemyDeath',
@@ -31,9 +32,9 @@ export class EnemyEntity extends DamageableEntity {
   protected bloodController: BloodController;
   protected motionController: MotionController;
   protected debug: boolean;
-
-  private graphics: Phaser.GameObjects.Graphics;
+  private graphics!: Phaser.GameObjects.Graphics;
   protected shadow: ShadowEntity;
+  protected score: ScoreKill;
 
   constructor(scene: Phaser.Scene, id: string, gameObject: Phaser.Physics.Arcade.Sprite, x: number, y: number, options: EnemyEntityOptions) {
     super(gameObject, id, { health: options.health, permeability: 0 });
@@ -52,19 +53,22 @@ export class EnemyEntity extends DamageableEntity {
     });
 
     this.shadow = new ShadowEntity(scene, gameObject, options.shadow);
-    this.graphics = scene.add.graphics();
+    
     this.scene = scene;
+    this.score = options.score;
+    if (this.debug) {
+      this.graphics = scene.add.graphics();
+    }
 
     scene.add.existing(gameObject);
   }
 
   public takeDamage(damage: Demage): DamageResult | null {
     if (this.isDead) return null;
-
+    const isHeadHit = this.isHeadHit(damage);
     const result = super.takeDamage(damage);
-    const health = this.getHealth();
 
-    this.createBloodSplash(damage);
+    this.createBloodSplash(damage, isHeadHit);
 
     return result;
   }
@@ -75,12 +79,14 @@ export class EnemyEntity extends DamageableEntity {
     this.destroy();
   }
 
-  protected createBloodSplash({ forceVector, hitPoint }: Demage): void {
+  protected createBloodSplash({ forceVector, hitPoint }: Demage, isHeadHit: boolean): void {
     const [x, y] = hitPoint;
     const [[startX, startY], [forceX, forceY]] = forceVector;
     const direction = forceX - startX;
-
-    this.bloodController.createBloodSplash(x, y, createSimpleBloodConfig(direction));
+    const multiplier = isHeadHit ? 1.2 : 1;
+    const forceOrigin = { x: forceVector[0][0], y: forceVector[0][1] }; // Откуда летела пуля
+    const bulletConfig = createSimpleBloodConfig(multiplier);
+    this.bloodController.createBloodSplash(hitPoint[0], hitPoint[1], forceOrigin, bulletConfig);
   }
 
   public update(time: number, delta: number): void {
@@ -95,25 +101,40 @@ export class EnemyEntity extends DamageableEntity {
 
     if (this.debug) {
       this.graphics.clear();
+      this.drawBody();
       this.drawHead();
     }
   }
 
   private drawHead(): void {
-    const [HeadX, HeadY, HeadWidth, HeadHeight] = this.getHeadBounds();
+    const bounds = this.getHeadBounds();
+    if (!bounds) return;
+
     this.graphics.setDepth(1000);
-    this.graphics.fillStyle(0x000000);
+    this.graphics.fillStyle(hexToNumber('#f71414'));
     this.graphics.setAlpha(0.5);
-    this.graphics.fillRect(HeadX, HeadY, HeadWidth, HeadHeight);
+    this.graphics.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
   }
 
-  protected getHeadBounds(): [number, number, number, number] {
-    const width = this.gameObject.width * this.gameObject.scaleX;
-    const height = this.gameObject.height * this.gameObject.scaleY;
-    const x = this.gameObject.x - width / 2;
-    const y = this.gameObject.y - height / 2;
+  private drawBody(): void {
+    const bounds = this.getBounds();
 
-    return [x, y, width, height];
+    this.graphics.setDepth(1000);
+    this.graphics.fillStyle(hexToNumber('#27ed89'));
+    this.graphics.setAlpha(0.5);
+    this.graphics.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+  }
+
+  private isHeadHit(demage: Demage): boolean {
+    const headBounds = this.getHeadBounds();
+    if (!headBounds) return false;
+
+    const { x, y, width, height } = headBounds;
+    return demage.hitPoint[0] >= x && demage.hitPoint[0] <= x + width && demage.hitPoint[1] >= y && demage.hitPoint[1] <= y + height;
+  }
+
+  public getHeadBounds(): DamageableEntityBounds | null {
+    return null
   }
 
   public getDestroyed(): boolean {

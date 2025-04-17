@@ -12,7 +12,19 @@ export function createWavesConfig(): Wave[] {
       delay: 2000,
       spawns: [
         {
-          delay: 1000,
+          delay: 0,
+          enemyType: EnemyType.RABBIT,
+          position: [rightStartPointX, 300],
+          options: { health: 1000, moveX: -1, moveY: 0, direction: -1 },
+        },
+        {
+          delay: 0,
+          enemyType: EnemyType.RABBIT,
+          position: [rightStartPointX, 500],
+          options: { health: 1000, moveX: -1, moveY: 0, direction: -1 },
+        },
+        {
+          delay: 60000,
           enemyType: EnemyType.RABBIT,
           position: [rightStartPointX, 400],
           options: { moveX: -1, moveY: 0, direction: -1 },

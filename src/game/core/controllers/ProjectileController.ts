@@ -95,7 +95,7 @@ export class ProjectileController {
         startX, startY, 
         normalizedDirX, normalizedDirY,
         enemyBounds.x, enemyBounds.y, 
-        enemyBounds.right - enemyBounds.x, enemyBounds.bottom - enemyBounds.y
+        enemyBounds.width, enemyBounds.height
       );
       
       if (intersection) {

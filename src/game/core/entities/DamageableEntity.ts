@@ -6,6 +6,13 @@ export interface DamageableEntityOptions {
   permeability: number;
 }
 
+export interface DamageableEntityBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface DamageResult {
   health: number;
   isDead: boolean;
@@ -61,8 +68,14 @@ export class DamageableEntity {
 
   protected onDeath() {}
 
-  public getBounds(): Phaser.Geom.Rectangle {
-    return this.gameObject.getBounds();
+  public getBounds(): DamageableEntityBounds {
+    const bounds = this.gameObject.getBounds();
+    return {
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+    };
   }
 
   public getDead(): boolean {

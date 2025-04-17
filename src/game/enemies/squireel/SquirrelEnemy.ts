@@ -3,6 +3,7 @@ import { generateStringWithLength } from '../../../utils/stringGenerator';
 import { EnemyEntity } from '../../core/entities/EnemyEntity';
 import { ScoreKill } from '../../../types/score';
 import squirrelImage from './assets/images/squirrel.png';
+import { DamageableEntityBounds } from '../../core/entities/DamageableEntity';
 
 const TEXTURE_SQUIRREL = 'squirrel' + generateStringWithLength(6);
 
@@ -39,10 +40,5 @@ export class SquirrelEnemy extends EnemyEntity {
     
     this.motionController.setMove(-1, 1);
     this.gameObject.setScale(0.5);
-  }
-  
-  protected getHeadBounds(): [number, number, number, number] {
-    const [HeadX, HeadY, HeadWidth, HeadHeight] = super.getHeadBounds();
-    return [HeadX, HeadY, HeadWidth / 2, HeadHeight - 18];
   }
 } 

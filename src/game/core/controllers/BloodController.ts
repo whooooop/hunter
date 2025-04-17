@@ -15,7 +15,6 @@ export enum BLOOD_TEXTURES {
 // Интерфейс с параметрами для настройки эффекта брызг крови
 export interface BloodSplashOptions {
     amount?: number;           // Количество частиц
-    direction?: number;        // Направление (-10 до 10), где 0 - вертикально вверх
     size?: {                   // Размер частиц
         min: number;           // Минимальный размер (масштаб)
         max: number;           // Максимальный размер (масштаб)
@@ -40,14 +39,11 @@ export interface BloodSplashOptions {
     fallDistance?: {           // Максимальная дистанция падения
         min: number;          
         max: number;
+        factor: number;
     };
     drag?: {                   // Сопротивление воздуха
         x: number;
         y: number;
-    };
-    rotation?: {               // Скорость вращения
-        min: number;
-        max: number;
     };
     alpha?: {                  // Прозрачность
         min: number;
@@ -61,7 +57,6 @@ export interface BloodSplashOptions {
 // Дефолтные настройки для эффекта крови
 const defaultBloodOptions: BloodSplashOptions = {
     amount: 5,
-    direction: 0,
     size: {
         min: 0.3,
         max: 0.7
@@ -85,15 +80,12 @@ const defaultBloodOptions: BloodSplashOptions = {
     },
     fallDistance: {
         min: 15,
-        max: 25
+        max: 25,
+        factor: 0.5
     },
     drag: {
         x: 20,
         y: 10
-    },
-    rotation: {
-        min: -150,
-        max: 150
     },
     alpha: {
         min: 0.6,
@@ -157,13 +149,15 @@ export class BloodController {
   
   /**
    * Создает брызги крови в указанной позиции с настраиваемыми параметрами
-   * @param x Координата X
-   * @param y Координата Y
+   * @param x Координата X точки попадания
+   * @param y Координата Y точки попадания
+   * @param originPoint Координаты точки, откуда был произведен выстрел {x, y}
    * @param options Настройки эффекта брызг крови
    */
   public createBloodSplash(
       x: number, 
       y: number, 
+      originPoint: { x: number, y: number },
       splashOptions?: Partial<BloodSplashOptions>
   ): void {
       if (!settings.gameplay.blood.enabled) {
@@ -172,14 +166,30 @@ export class BloodController {
       // Объединяем переданные параметры с дефолтными
       const options = { ...defaultBloodOptions, ...splashOptions };
 
+      // Вычисляем базовый угол на основе originPoint и hitPoint (x, y)
+      const baseAngle = Math.atan2(y - originPoint.y, x - originPoint.x);
+
+      // --- Расчет модификатора угла разброса --- 
+      // Берем абсолютный угол от горизонтали (0 до PI)
+      const absBaseAngle = Math.abs(baseAngle);
+      // Максимальное увеличение угла для строго вертикального попадания (90 градусов = PI/2)
+      const maxSpreadIncreaseFactor = 1.8; // Увеличиваем разброс почти в 2 раза при вертикальном попадании
+      // Интерполируем коэффициент от 1 (горизонтально) до maxSpreadIncreaseFactor (вертикально)
+      // Используем (PI/2 - absBaseAngle) / (PI/2) для получения значения от 0 (вертикально) до 1 (горизонтально), но нам нужен обратный эффект
+      // Используем absBaseAngle / (Math.PI / 2) для получения значения от 0 (горизонтально) до 1 (вертикально)
+      // Чтобы получить множитель от 1 до max, используем: 1 + (1 - abs(угол)/(PI/2)) * (max - 1) - не совсем то
+      // Проще: 1 + (вертикальность) * (макс_увеличение - 1)
+      // Вертикальность = 1 - (absBaseAngle / (Math.PI / 2)) ? Нет, наоборот.
+      // Вертикальность = abs( PI/2 - absBaseAngle ) / (PI/2) - значение от 0 (вертикально) до 1 (горизонтально) ? Тоже нет
+      // Синус может подойти: sin(absBaseAngle) дает 0 для горизонтали и 1 для вертикали
+      const verticalityFactor = Math.sin(absBaseAngle); // 0 для горизонтали, 1 для вертикали
+      const spreadAngleMultiplier = 1 + verticalityFactor * (maxSpreadIncreaseFactor - 1);
+      // Применяем модификатор к углу разброса из настроек
+      const effectiveSpreadAngle = options.spread!.angle * spreadAngleMultiplier;
+      // --- Конец расчета модификатора --- 
+      
       // Создаем массив для физических брызг
       const physicsParticles: Phaser.Physics.Arcade.Sprite[] = [];
-      
-      // Вычисляем максимальную высоту падения для псевдо-3D
-      const maxFallDistance = Phaser.Math.Between(
-          options.fallDistance!.min, 
-          options.fallDistance!.max
-      );
       
       // Создаем новые частицы крови с физикой
       for (let i = 0; i < options.amount!; i++) {
@@ -189,7 +199,7 @@ export class BloodController {
               options.spread!.height.max
           );
           
-          // Создаем композитную частицу крови с учетом настроек капель
+          // Создаем композитную частицу крови
           const bloodParticle = this.createCompositeBloodParticle(
               x,
               y + heightSpread,
@@ -197,75 +207,59 @@ export class BloodController {
           );
           
           // Устанавливаем размер, вращение и прозрачность
-          bloodParticle.setScale(Phaser.Math.FloatBetween(
-              options.size!.min, 
-              options.size!.max
-          ));
-          bloodParticle.setRotation(Phaser.Math.FloatBetween(0, Math.PI * 2));
-          bloodParticle.setAlpha(Phaser.Math.FloatBetween(
-              options.alpha!.min, 
-              options.alpha!.max
-          ));
-          
-          // Устанавливаем глубину отображения
+          bloodParticle.setScale(Phaser.Math.FloatBetween(options.size!.min, options.size!.max));
+          bloodParticle.setAlpha(Phaser.Math.FloatBetween(options.alpha!.min, options.alpha!.max));
           bloodParticle.setDepth(options.depth!);
-          
-          // Отключаем стандартную коллизию с границами мира
           bloodParticle.setCollideWorldBounds(false);
           
-          // Рассчитываем случайный угол разлета
-          const spreadAngle = Phaser.Math.FloatBetween(
+          // Рассчитываем угол
+          const spreadAngleOffset = Phaser.Math.FloatBetween(
               -options.spread!.angle, 
               options.spread!.angle
           );
-          const bulletAngle = (options.direction! > 0) ? 0 : Math.PI; // 0 - вправо, PI - влево
-          const angle = bulletAngle + spreadAngle;
+          const angle = baseAngle + spreadAngleOffset;
           
-          // Вычисляем силу разлета
+          // Рассчитываем силу
           const force = Phaser.Math.Between(
               options.speed!.min, 
               options.speed!.max
-          ) * Math.min(Math.abs(options.force!), 10) / 5;
+          ) * Math.min(Math.abs(options.force || 1), 10) / 5;
           
-          // Рассчитываем компоненты скорости с учетом настроек начальной вертикальной скорости
-          let vx = Math.cos(angle) * force * options.speed!.multiplier;
+          // Рассчитываем НАЧАЛЬНУЮ ВЕРТИКАЛЬНУЮ СКОРОСТЬ
           const initialYVelocity = Phaser.Math.Between(
               options.initialVelocityY!.min,
               options.initialVelocityY!.max
           );
-          const vy = Math.sin(angle) * force - initialYVelocity;
           
-          // Применяем минимальную дистанцию разлета по X, если она задана
-          // if (options.minXDistance && options.minXDistance > 0) {
-          //     // Определяем направление по X
-          //     const directionX = Math.sign(vx);
-              
-          //     // Если скорость по X ниже минимально необходимой для заданной дистанции,
-          //     // корректируем её, сохраняя направление
-          //     const minVxRequired = options.minXDistance * 0.2; // Коэффициент для примерного подбора скорости
-          //     if (Math.abs(vx) < minVxRequired) {
-          //         vx = directionX * minVxRequired;
-          //     }
-          // }
+          // Рассчитываем компоненты скорости
+          const vx = Math.cos(angle) * force * options.speed!.multiplier;
+          const vy = Math.sin(angle) * force - initialYVelocity; // Обратите внимание на минус
           
+          // --- Расчет maxFallDistance на основе initialYVelocity --- 
+          let maxFallDistance = Phaser.Math.Between(
+              options.fallDistance!.min, 
+              options.fallDistance!.max
+          );
+          // Коэффициент влияния начальной скорости на дистанцию падения (подбирается экспериментально)
+          // если initialYVelocity < 0 (летит вверх), maxFallDistance УМЕНЬШАЕТСЯ
+          // если initialYVelocity > 0 (летит вниз), maxFallDistance УВЕЛИЧИВАЕТСЯ
+          maxFallDistance += initialYVelocity * options.fallDistance!.factor;
+          // Ограничиваем минимальное/максимальное значение, чтобы не улетело слишком далеко
+          maxFallDistance = Phaser.Math.Clamp(maxFallDistance, 5, 500); // Примерные границы
+          // --- Конец расчета maxFallDistance ---
+
           // Применяем скорость
           bloodParticle.setVelocity(vx, vy);
           
           // Устанавливаем гравитацию
           bloodParticle.setGravityY(options.gravity!);
           
-          // Добавляем вращение
-          bloodParticle.setAngularVelocity(Phaser.Math.Between(
-              options.rotation!.min, 
-              options.rotation!.max
-          ));
-          
           // Настраиваем сопротивление
-          bloodParticle.setDrag(options.drag!.x, options.drag!.y);
+          // bloodParticle.setDrag(options.drag!.x, options.drag!.y);
           
-          // Сохраняем начальную позицию с учетом разброса по высоте
+          // Сохраняем данные для псевдо-3D
           bloodParticle.setData('initialY', y + heightSpread);
-          bloodParticle.setData('maxFallDistance', maxFallDistance);
+          bloodParticle.setData('maxFallDistance', maxFallDistance); // Используем рассчитанное значение
           
           // Добавляем в массив частиц
           this.bloodParticles.push(bloodParticle);
@@ -286,15 +280,6 @@ export class BloodController {
                       
                       // Проверяем, не превысили ли мы максимальную дистанцию падения для псевдо-3D
                       if (particle.y >= initialY + maxFallDistance) {
-                          // Если частица упала на максимальное расстояние - останавливаем ее
-                          particle.setVelocity(0, 0);
-                          particle.setAngularVelocity(0);
-                          particle.setGravityY(0);
-                          particle.setDrag(0, 0);
-                          
-                          // Отключаем физику, оставляя частицу видимой
-                          particle.disableBody(true, false);
-                          
                           // Добавляем частицу на слой декалей и удаляем её
                           this.addToDecalLayer(particle);
                       } else {
@@ -321,8 +306,6 @@ export class BloodController {
           callbackScope: this,
           loop: true
       });
-      
-      logger.debug(`Создано ${options.amount} динамических частиц крови в позиции (${x}, ${y})`);
   }
   
   drawDecal(particle: Phaser.GameObjects.Sprite): void {
@@ -434,11 +417,10 @@ export function createBloodSplatterTexture(scene: Phaser.Scene, textureKey: stri
   graphics.destroy();
 }
 
-export function createSimpleBloodConfig(direction: number) {
+export function createSimpleBloodConfig(multiplier: number): BloodSplashOptions {
   return {
-    amount: Phaser.Math.Between(50, 100),
-    direction,
-    force: 20,
+    amount: Phaser.Math.Between(50, 100) * multiplier,
+    force: 20 * multiplier,
     size: {
       min: 0.2,
       max: 0.3
@@ -457,9 +439,9 @@ export function createSimpleBloodConfig(direction: number) {
       }
     },
     fallDistance: {
-      min: 15,
-      max: 25
+      min: 1,
+      max: 15,
+      factor: 0.5 * multiplier
     },
-    // minXDistance: 380      // Минимальная дистанция разлета по оси X
   }
 }

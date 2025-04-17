@@ -19,7 +19,7 @@ export const entityConfig: EnemyEntityOptions = {
     scale: [0.5, 0.2],
     offset: [-20, -10],
   },
-  debug: true,
+  debug: false,
 }
 
 export const walkConfig: SpriteSheetConfig = {

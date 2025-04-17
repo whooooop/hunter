@@ -8,6 +8,7 @@ import { MainMenuScene } from './game/scenes/MainMenuScene/MainMenuScene';
 import { ShopScene } from './game/scenes/ShopScene/ShopScene';
 import { SettingsScene } from './game/scenes/SettingsScene/SettingsScene';
 import { MultiplayerScene } from './game/scenes/MultiplayerScene/MultiplayerScene';
+import { SceneKeys } from './game/scenes';
 
 // Конфигурация игры
 const config: Phaser.Types.Core.GameConfig = {
@@ -31,9 +32,9 @@ const config: Phaser.Types.Core.GameConfig = {
     }]
   },
   scene: [
+    GameplayScene,
     MainMenuScene,
     LoadingScene,
-    GameplayScene,
     ShopScene,
     SettingsScene,
     MultiplayerScene
@@ -46,6 +47,8 @@ function initGame() {
     
     // Создаем экземпляр игры
     const game = new Phaser.Game(config);
+    // game.scene.start(SceneKeys.MAIN_MENU);
+    game.scene.start(SceneKeys.LOADING);
     logger.info('Игра инициализирована успешно');
   } catch (error) {
     logger.error('Ошибка при инициализации игры:', error);

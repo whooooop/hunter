@@ -103,7 +103,7 @@ export class GameplayScene extends Phaser.Scene {
     this.location.create();
 
     this.createPlayer(PLAYER_POSITION_X, PLAYER_POSITION_Y, true);
-    this.createPlayer(PLAYER_POSITION_X + 50, PLAYER_POSITION_Y + 200);
+    // this.createPlayer(PLAYER_POSITION_X + 50, PLAYER_POSITION_Y + 200);
     
     // Настраиваем коллизии между игроком и врагами
     // this.physics.add.overlap(
