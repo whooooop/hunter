@@ -4,7 +4,10 @@ import { LoadingScene } from './game/scenes/LoadingScene';
 import { settings } from './game/settings';
 import { logger } from './utils/logger';
 import { SpinePlugin } from "@esotericsoftware/spine-phaser"
-import { MainMenuScene } from './game/scenes/MainMenu/MainMenuScene';
+import { MainMenuScene } from './game/scenes/MainMenuScene/MainMenuScene';
+import { ShopScene } from './game/scenes/ShopScene/ShopScene';
+import { SettingsScene } from './game/scenes/SettingsScene/SettingsScene';
+import { MultiplayerScene } from './game/scenes/MultiplayerScene/MultiplayerScene';
 
 // Конфигурация игры
 const config: Phaser.Types.Core.GameConfig = {
@@ -27,7 +30,14 @@ const config: Phaser.Types.Core.GameConfig = {
       mapping: "spine"
     }]
   },
-  scene: [MainMenuScene, LoadingScene, GameplayScene]
+  scene: [
+    MainMenuScene,
+    LoadingScene,
+    GameplayScene,
+    ShopScene,
+    SettingsScene,
+    MultiplayerScene
+  ]
 };
 
 function initGame() {
