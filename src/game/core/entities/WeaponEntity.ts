@@ -7,7 +7,7 @@
 // активация снаряда может быть моментальной, с задержкой или по внешнему воздействию
 // В момент активации ицем объекты взаимодействия и передем им разрушение
 
-import { BaseWeaponSight, BaseWeaponSightOptions } from "../BaseWeaponSight";
+import { SightEntity, SightEntityOptions } from "./SightEntity";
 import { settings } from '../../settings';
 import { createLogger } from "../../../utils/logger";
 import { GameplayScene } from "../../scenes/GameplayScene/GameplayScene";
@@ -63,7 +63,7 @@ interface WeaponOptions {
   fireAudio?: string;
 
   shellCasings?: boolean;
-  sight?: BaseWeaponSightOptions | boolean;
+  sight?: SightEntityOptions | boolean;
   projectile?: BaseProjectileClass
 }
 
@@ -95,7 +95,7 @@ export class WeaponEntity {
   protected y: number = 0;
   protected direction: number = 1;
 
-  private sight: BaseWeaponSight | null = null;
+  private sight: SightEntity | null = null;
   private audioAssets: AudioAssets = {
     fire: null,
     empty: null,
@@ -120,11 +120,11 @@ export class WeaponEntity {
     this.createAudioAssets()
   }
 
-  protected createSight(options: BaseWeaponSightOptions | boolean): void {
+  protected createSight(options: SightEntityOptions | boolean): void {
     if (typeof options === 'boolean') {
-      this.sight = new BaseWeaponSight(this.scene);
+      this.sight = new SightEntity(this.scene);
     } else {
-      this.sight = new BaseWeaponSight(this.scene, options);
+      this.sight = new SightEntity(this.scene, options);
     }
     this.updateSightState();
   }

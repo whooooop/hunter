@@ -2,6 +2,7 @@ import { generateStringWithLength } from "../../../utils/stringGenerator";
 import grenadeImage from './assets/grenade.png';
 import { ProjetileGrenage } from "../../projectiles/granade/ProjetileGrenage";
 import { WeaponEntity } from "../../core/entities/WeaponEntity";
+import { ExplosionEntity } from "../../core/entities/ExplosionEntity";
 
 const TEXTURE = 'grenade_texture_' + generateStringWithLength(6);
 
@@ -36,5 +37,6 @@ export class Grenade extends WeaponEntity {
     static preload(scene: Phaser.Scene): void {
         scene.load.image(TEXTURE, grenadeImage);
         ProjetileGrenage.preload(scene);
+        ExplosionEntity.preload(scene);
     }
 }

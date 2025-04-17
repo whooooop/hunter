@@ -25,9 +25,8 @@ export const WeaponCollection = {
   [WeaponType.AWP]: WeaponAWP,
 }
 
-export function preloadWeapons(scene: Phaser.Scene, weapons: WeaponType[]): void {
-  weapons.forEach(weapon => {
-    const WeaponClass = WeaponCollection[weapon];
+export function preloadWeapons(scene: Phaser.Scene): void {
+  Object.values(WeaponCollection).forEach(WeaponClass => {
     WeaponClass.preload(scene);
   });
 }

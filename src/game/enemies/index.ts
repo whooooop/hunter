@@ -1,5 +1,5 @@
 import { RabbitEnemy } from "./rabbit/RabbitEntity";
-import { EnemyEntity } from "../core/entities/EnemyEntity";
+import { EnemyEntity, EnemyEntityOptions } from "../core/entities/EnemyEntity";
 import { SquirrelEnemy } from "./squireel/SquirrelEnemy";
 import { generateId } from "../../utils/stringGenerator";
 
@@ -20,7 +20,7 @@ export function preloadEnemies(scene: Phaser.Scene, enemies: EnemyType[]): void 
   });
 }
 
-export function createEnemy(enemyType: EnemyType, scene: Phaser.Scene, x: number, y: number, options?: any): EnemyEntity {
+export function createEnemy(enemyType: EnemyType, scene: Phaser.Scene, x: number, y: number, options?: any | EnemyEntityOptions): EnemyEntity {
   const EnemyClass = EnemyCollection[enemyType];
   const id = generateId();
   return new EnemyClass(scene, id, x, y, options);

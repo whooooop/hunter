@@ -2,7 +2,7 @@ import { Bullet } from '../../projectiles/bullet/Bullet';
 import { WeaponEntity } from "../../core/entities/WeaponEntity";
 import { AWP_TEXTURE } from './assets';
 import { hexToNumber } from '../../utils/colors';
-import { WeaponSightType } from '../../core/BaseWeaponSight';
+import { WeaponSightType } from '../../core/entities/SightEntity';
 
 export class WeaponAWP extends WeaponEntity {
     constructor(scene: Phaser.Scene) {

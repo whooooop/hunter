@@ -8,32 +8,21 @@ import { LocationManager } from '../../core/LocationManager';
 import { BaseLocation } from '../../core/BaseLocation';
 import { WeaponStatus } from '../../ui/WeaponStatus';
 import { BaseShop } from '../../core/BaseShop';
-import { SquirrelEnemy } from '../../enemies/squireel/SquirrelEnemy';
 import { ProjectileController } from '../../core/controllers/ProjectileController';
-import { BaseProjectile } from '../../core/BaseProjectile';
 import { BloodController, BloodEvents } from '../../core/controllers/BloodController';
 import { DecalController } from '../../core/controllers/DecalController';
-import { WeaponMine } from '../../weapons/mine/WeaponMine';
-import { Grenade } from '../../weapons/grenade/Grenade';
-import { Glock } from '../../weapons/glock/Glock';
-import { MP5 } from '../../weapons/MP5/MP5';
-import { Sawed } from '../../weapons/sawed/Sawed';
 import { Weapon } from '../../core/controllers/WeaponController';
 import { DamageableEntity } from '../../core/entities/DamageableEntity';
 import { createShellCasingTexture, ShellCasingEvents } from '../../core/entities/ShellCasingEntity';
 import { DecalEventPayload } from '../../core/types/decals';
-import { WeaponAWP } from '../../weapons/AWP/WeaponAWP';
-import { ExplosionEntity } from '../../core/entities/ExplosionEntity';
-import { RabbitEnemy } from '../../enemies/rabbit/RabbitEntity';
 import { WaveController } from '../../core/controllers/WaveController';
 import { createWavesConfig } from '../../levels/test/wavesConfig'
-import { EnemyEntity, EnemyEntityEvents } from '../../core/entities/EnemyEntity';
+import { EnemyEntityEvents } from '../../core/entities/EnemyEntity';
 import { WaveStartEventPayload, WaveEvents } from '../../core/controllers/WaveController';
 import { generateId } from '../../../utils/stringGenerator';
 import { WeaponEvents, WeaponFireEventsPayload } from '../../core/entities/WeaponEntity';
 import { onEvent } from '../../core/Events';
-import { EnemyType } from '../../enemies';
-import { preloadEnemies } from '../../enemies';
+import { preloadWeapons } from '../../weapons';
 
 const logger = createLogger('GameplayScene');
 
@@ -78,21 +67,11 @@ export class GameplayScene extends Phaser.Scene {
 
     Player.preload(this);
 
-    preloadEnemies(this, [EnemyType.RABBIT, EnemyType.SQUIRREL]);
-    
-    // Создаем текстуру гильзы программно
+    WaveController.preloadEnemies(this, createWavesConfig());
+    preloadWeapons(this);
+
     createShellCasingTexture(this);
     BloodController.preload(this);
-
-    // TestEnemy.preload(this);
-
-    Glock.preload(this);
-    MP5.preload(this);
-    Grenade.preload(this);
-    Sawed.preload(this);
-    WeaponMine.preload(this);
-    WeaponAWP.preload(this);
-    ExplosionEntity.preload(this);
   }
   
   async create(): Promise<void> {
@@ -149,7 +128,6 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private handleFireProjectile({ projectile }: WeaponFireEventsPayload): void {
-    console.log('WeaponEvents.FireEvent', projectile);
     this.projectileController.addProjectile(projectile);
   }
 

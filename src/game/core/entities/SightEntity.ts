@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
-import { hexToNumber } from '../utils/colors';
-import { createLogger } from '../../utils/logger';
-import { settings } from '../settings';
+import { hexToNumber } from '../../utils/colors';
+import { createLogger } from '../../../utils/logger';
+import { settings } from '../../settings';
 
 const logger = createLogger('WeaponSight');
 
@@ -10,7 +10,7 @@ export enum WeaponSightType {
   CROSSHAIR = 'crosshair',
 }
 
-export interface BaseWeaponSightOptions {
+export interface SightEntityOptions {
   type: WeaponSightType;
   lineThickness?: number;
   lineLength?: number;
@@ -21,7 +21,7 @@ export interface BaseWeaponSightOptions {
   emptyColor?: number;
 }
 
-const defaultOptions: Required<BaseWeaponSightOptions> = {
+const defaultOptions: Required<SightEntityOptions> = {
   type: WeaponSightType.CROSSHAIR,
   lineThickness: 1,
   lineLength: 10,
@@ -32,19 +32,19 @@ const defaultOptions: Required<BaseWeaponSightOptions> = {
   range: 150
 };
 
-export class BaseWeaponSight {
+export class SightEntity {
   private scene: Phaser.Scene;
   private graphics: Phaser.GameObjects.Graphics;
   private range: number;
   private color: number;
-  private options: Required<BaseWeaponSightOptions>;
+  private options: Required<SightEntityOptions>;
 
   private x: number = 0;
   private y: number = 0;
   private active: boolean = false;
   private direction: number = 1;
 
-  constructor(scene: Phaser.Scene, options?: BaseWeaponSightOptions) {
+  constructor(scene: Phaser.Scene, options?: SightEntityOptions) {
     this.scene = scene;
     this.options = {...defaultOptions, ...options};
     this.color = this.options.color;

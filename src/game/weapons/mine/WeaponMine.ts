@@ -2,7 +2,7 @@ import mineImage from './assets/mine.png';
 import { ProjetileMine } from "../../projectiles/mine/ProjectileMine";
 import { createTextureKey } from "../../../utils/texture";
 import { WeaponEntity } from "../../core/entities/WeaponEntity";
-
+import { ExplosionEntity } from "../../core/entities/ExplosionEntity";
 const TEXTURE = createTextureKey('mine');
 
 export class WeaponMine extends WeaponEntity {
@@ -35,5 +35,6 @@ export class WeaponMine extends WeaponEntity {
     static preload(scene: Phaser.Scene): void {
         scene.load.image(TEXTURE, mineImage);
         ProjetileMine.preload(scene);
+        ExplosionEntity.preload(scene);
     }
 }

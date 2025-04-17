@@ -1,5 +1,4 @@
-/// <reference path="../types/events.d.ts" /> 
-import { createEnemy, EnemyType } from "../../enemies";
+import { createEnemy, EnemyType, preloadEnemies } from "../../enemies";
 import { emitEvent } from "../Events";
 
 export enum WaveEvents {
@@ -37,6 +36,16 @@ export class WaveController {
 
   public start(): void {
     this.nextWave(0);
+  }
+
+  static preloadEnemies(scene: Phaser.Scene, waves: Wave[]) {
+    const enemys = new Set<EnemyType>();
+    waves.forEach(wave => {
+      wave.spawns.forEach(spawn => {
+        enemys.add(spawn.enemyType);
+      });
+    });
+    return preloadEnemies(scene, Array.from(enemys));
   }
 
   private nextWave(waveIndex: number) {
