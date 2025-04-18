@@ -75,16 +75,16 @@ export class WeaponEntity {
 
   protected createAudioAssets(): void {
     if (this.options.fireAudio) {
-      this.audioAssets.fire = this.scene.sound.add(this.options.fireAudio, { volume: settings.audio.weaponsVolume });
+      this.audioAssets.fire = this.scene.sound.add(this.options.fireAudio.key, { volume: settings.audio.weaponsVolume });
     }
     if (this.options.emptyAudio) {
-      this.audioAssets.empty = this.scene.sound.add(this.options.emptyAudio, { volume: settings.audio.weaponsVolume });
+      this.audioAssets.empty = this.scene.sound.add(this.options.emptyAudio.key, { volume: settings.audio.weaponsVolume });
     }
     if (this.options.reloadAudio) {
-      this.audioAssets.reload = this.scene.sound.add(this.options.reloadAudio, { volume: settings.audio.weaponsVolume });
+      this.audioAssets.reload = this.scene.sound.add(this.options.reloadAudio.key, { volume: settings.audio.weaponsVolume });
     }
     if (this.options.afterFireAudio) {
-      this.audioAssets.afterFire = this.scene.sound.add(this.options.afterFireAudio, { volume: settings.audio.weaponsVolume });
+      this.audioAssets.afterFire = this.scene.sound.add(this.options.afterFireAudio.key, { volume: settings.audio.weaponsVolume });
     }
   }
 
@@ -98,6 +98,10 @@ export class WeaponEntity {
 
   public getCurrentAmmo(): number {
     return this.currentAmmo;
+  }
+
+  public getMaxAmmo(): number {
+    return this.options.magazineSize;
   }
 
   public canFire(time: number): boolean {

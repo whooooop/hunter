@@ -7,4 +7,6 @@ export enum PlayerEvents {
 export interface PlayerSetWeaponEventPayload {
   playerId: string;
   weaponType: WeaponType;
+  ammo: number;
+  maxAmmo: number;
 }

@@ -47,10 +47,10 @@ export interface WeaponOptions {
   recoilForce: number; // Сила отдачи
   recoilRecovery: number; // Скорость восстановления от отдачи
 
-  emptyAudio?: string;
-  reloadAudio?: string;
-  afterFireAudio?: string;
-  fireAudio?: string;
+  emptyAudio?: WeaponAudio;
+  reloadAudio?: WeaponAudio;
+  afterFireAudio?: WeaponAudio;
+  fireAudio?: WeaponAudio;
 
   shellCasings?: boolean;
   sight?: SightEntityOptions | boolean;

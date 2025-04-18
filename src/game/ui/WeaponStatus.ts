@@ -3,6 +3,9 @@ import { hexToNumber } from '../utils/colors';
 import { createLogger } from '../../utils/logger';
 import { COLORS } from '../core/Constants';
 import { WeaponType } from '../weapons/WeaponTypes';
+import { PlayerSetWeaponEventPayload } from '../core/types/playerTypes';
+import { getWeaponConfig } from '../weapons';
+import { WeaponOptions } from '../core/types/weaponTypes';
 
 const logger = createLogger('WeaponStatus');
 
@@ -13,6 +16,7 @@ export class WeaponStatus {
     private weaponCircle!: Phaser.GameObjects.Graphics;
     private coinsText!: Phaser.GameObjects.Text;
     private ammoIcons: Phaser.GameObjects.Image[] = [];
+    private weaponIcon!: Phaser.GameObjects.Image;
 
     private width: number = 380;
     private height: number = 58;
@@ -35,7 +39,6 @@ export class WeaponStatus {
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
         this.create();
-        this.update();
         logger.info('Создан интерфейс отображения состояния оружия');
     }
     
@@ -45,16 +48,37 @@ export class WeaponStatus {
             this.scene.cameras.main.width - this.width / 2 - this.offsetX,
             this.height / 2 + this.offsetY
         );
-        
-        // Создаем круг для отображения текущего оружия
-        this.weaponCircle = this.scene.add.graphics();
-        this.drawWeaponCircle();
-        
-        // Создаем фоновую графику со скошенными углами
+        this.container.setDepth(1000);
+
+        // Создаем элементы UI с помощью отдельных методов
+        this.createBackground();
+        this.createWeaponCircle();
+        this.createCoinsText();
+        this.createAmmoIcons();
+        this.createWeaponIcon();
+
+        // Устанавливаем правильный порядок слоев в контейнере
+        this.container.add([ 
+            this.background, 
+            this.weaponCircle, 
+            this.weaponIcon,
+            this.coinsText, 
+        ]);
+        // Переносим иконки патронов наверх, если они уже созданы
+        this.ammoIcons.forEach(icon => this.container.bringToTop(icon));
+    }
+    
+    private createBackground(): void {
         this.background = this.scene.add.graphics();
         this.drawBackground();
-        
-        // Создаем текст для отображения количества монет
+    }
+    
+    private createWeaponCircle(): void {
+        this.weaponCircle = this.scene.add.graphics();
+        this.drawWeaponCircle();
+    }
+
+    private createCoinsText(): void {
         this.coinsText = this.scene.add.text(-this.width / 2 + 40, 0, this.coins.toString(), {
             fontFamily: 'Arial',
             fontSize: '24px',
@@ -62,18 +86,15 @@ export class WeaponStatus {
             fontStyle: 'bold'
         });
         this.coinsText.setOrigin(0, 0.5);
-        
-        // Устанавливаем правильный порядок элементов в контейнере
-        // Фон должен быть под кругом оружия, а круг должен быть под текстом и иконками патронов
-        this.container.add([this.background, this.weaponCircle, this.coinsText]);
-        
-        // Устанавливаем глубину отображения (поверх всего)
-        this.container.setDepth(1000);
-        
-        // Создаем иконки патронов
-        this.createAmmoIcons();
     }
-    
+
+    private createWeaponIcon(): void {
+        this.weaponIcon = this.scene.add.image(0, 0, ' ');
+        this.weaponIcon.setVisible(false);
+        this.weaponIcon.setOrigin(0.5);
+        this.weaponIcon.setDepth(1);
+    }
+
     private drawBackground(): void {
         this.background.clear();
         this.background.fillStyle(this.BG_COLOR, 1);
@@ -103,92 +124,76 @@ export class WeaponStatus {
     }
     
     private createAmmoIcons(): void {
-        // Удаляем существующие иконки
-        this.ammoIcons.forEach(icon => {
-            icon.destroy();
-            this.container.remove(icon);
-        });
+        this.ammoIcons.forEach(icon => icon.destroy());
         this.ammoIcons = [];
         
-        // Создаем новые иконки патронов
-        const startX = 70; // Увеличенное смещение от центра из-за большего круга
-        const padding = 15; // Расстояние между патронами
-        const maxPerRow = 6; // Максимальное количество патронов в ряду
+        const startX = 70;
+        const padding = 15;
+        const maxPerRow = 6;
         
         for (let i = 0; i < this.maxAmmo; i++) {
             const row = Math.floor(i / maxPerRow);
             const col = i % maxPerRow;
             
-            // Создаем иконку патрона как маленький золотистый прямоугольник
             const ammoIcon = this.scene.add.rectangle(
                 startX + col * padding, 
-                -15 + row * 20, // Увеличенное смещение рядов для лучшего размещения
+                -15 + row * 20,
                 10, 
                 20, 
-                hexToNumber('#ffd700') // Золотистый цвет
+                hexToNumber('#ffd700')
             );
             
-            // Если патрон "использован", делаем его полупрозрачным
-            if (i >= this.currentAmmo) {
-                ammoIcon.setAlpha(0.3);
-            }
+            ammoIcon.setAlpha(i < this.currentAmmo ? 1 : 0.3);
             
-            this.ammoIcons.push(ammoIcon as unknown as Phaser.GameObjects.Image);
             this.container.add(ammoIcon);
+            this.ammoIcons.push(ammoIcon as unknown as Phaser.GameObjects.Image);
         }
-    }
-    
-    public update(): void {
-        // Обновляем текст монет
-        this.coinsText.setText(this.coins.toString());
-        
-        // Обновляем иконки патронов в зависимости от текущего боезапаса
-        this.updateAmmoIcons();
     }
     
     private updateAmmoIcons(): void {
-        // Обновляем прозрачность иконок патронов
         for (let i = 0; i < this.ammoIcons.length; i++) {
-            if (i < this.currentAmmo) {
-                this.ammoIcons[i].setAlpha(1);
-            } else {
-                this.ammoIcons[i].setAlpha(0.3);
-            }
+            this.ammoIcons[i].setAlpha(i < this.currentAmmo ? 1 : 0.3);
         }
     }
     
-    /**
-     * Устанавливает текущее оружие и обновляет интерфейс
-     */
-    public setWeapon(weapon: WeaponType): void {
-        this.currentWeapon = weapon;
-        this.currentAmmo = 0;
-        this.maxAmmo = 12; // Хардкод для примера
-        this.createAmmoIcons(); // Пересоздаем иконки патронов
-        this.update();
+    public setWeapon(payload: PlayerSetWeaponEventPayload): void {
+        logger.info(`Вызван setWeapon с payload: ${JSON.stringify(payload)}`);
+        this.currentWeapon = payload.weaponType;
+        this.currentAmmo = payload.ammo;
+        this.maxAmmo = payload.maxAmmo;
+
+        const config = getWeaponConfig(this.currentWeapon);
+        logger.info(`Получен конфиг для оружия ${this.currentWeapon}: ${JSON.stringify(config)}`);
+        if (!config || !this.weaponIcon) {
+            logger.error(`Конфиг для оружия ${this.currentWeapon} не найден!`);
+            this.weaponIcon?.setVisible(false);
+            return;
+        }
+
+        logger.info(`Установка текстуры: ${config.texture.key}`);
+        this.weaponIcon.setTexture(config.texture.key);
+        this.weaponIcon.setVisible(true);
+
+        const iconScale = (this.radius * 2 * 0.7) / Math.max(this.weaponIcon.width, this.weaponIcon.height);
+        logger.info(`Установка масштаба иконки: ${iconScale}`);
+        this.weaponIcon.setScale(iconScale);
+        
+        this.createAmmoIcons();
+        this.coinsText.setText(this.coins.toString());
     }
     
-    /**
-     * Обновляет количество патронов
-     */
     public setAmmo(current: number, max: number): void {
+        // logger.info(`Вызван setAmmo: current=${current}, max=${max}`);
         this.currentAmmo = current;
         this.maxAmmo = max;
-        this.createAmmoIcons(); // Пересоздаем иконки патронов
-        this.update();
+        this.updateAmmoIcons();
     }
     
-    /**
-     * Устанавливает количество монет
-     */
     public setCoins(coins: number): void {
         this.coins = coins;
-        this.update();
+        this.coinsText.setText(this.coins.toString());
     }
     
-    /**
-     * Уничтожает все ресурсы
-     */
     public destroy(): void {
         this.container.destroy();
     }

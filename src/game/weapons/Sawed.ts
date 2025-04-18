@@ -52,10 +52,10 @@ export const SawedConfig: WeaponOptions = {
   recoilForce: 30,      // Сила отдачи
   recoilRecovery: 5,   // Скорость восстановления от отдачи
   automatic: false,
-  fireAudio: SawedFireAudio.key,
-  emptyAudio: SawedEmptyAudio.key,
-  reloadAudio: SawedReloadAudio.key,
-  afterFireAudio: SawedAfterFireAudio.key,
+  fireAudio: SawedFireAudio,
+  emptyAudio: SawedEmptyAudio,
+  reloadAudio: SawedReloadAudio,
+  afterFireAudio: SawedAfterFireAudio,
   sight: true,
   shellCasings: true,
   

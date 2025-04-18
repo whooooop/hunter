@@ -1,31 +1,48 @@
 import { generateId } from "../../utils/stringGenerator";
 import { WeaponEntity } from "../core/entities/WeaponEntity";
-
-import { WeaponGlock } from "./Glock";
-import { WeaponMP5 } from "./MP5";
-import { WeaponGrenade } from "./Grenade";
-import { WeaponSawed } from "./Sawed";
-import { WeaponMine } from "./Mine";
-import { WeaponAWP } from "./AWP";
 import { WeaponType } from "./WeaponTypes";
+import { WeaponOptions } from "../core/types/weaponTypes";
 
-export const WeaponCollection = {
-  [WeaponType.GLOCK]: WeaponGlock,
-  [WeaponType.MP5]: WeaponMP5,
-  [WeaponType.GRENADE]: WeaponGrenade,
-  [WeaponType.SAWED]: WeaponSawed,
-  [WeaponType.MINE]: WeaponMine,
-  [WeaponType.AWP]: WeaponAWP,
+import { GlockConfig } from "./Glock";
+import { MP5Config } from "./MP5";
+import { GrenadeConfig } from "./Grenade";
+import { SawedConfig } from "./Sawed";
+import { MineConfig } from "./Mine";
+import { AWPConfig } from "./AWP";
+
+export const WeaponConfigs: Record<WeaponType, WeaponOptions> = {
+  [WeaponType.GLOCK]: GlockConfig,
+  [WeaponType.MP5]: MP5Config,
+  [WeaponType.GRENADE]: GrenadeConfig,
+  [WeaponType.SAWED]: SawedConfig,
+  [WeaponType.MINE]: MineConfig,
+  [WeaponType.AWP]: AWPConfig,
 }
 
 export function preloadWeapons(scene: Phaser.Scene): void {
-  Object.values(WeaponCollection).forEach(WeaponClass => {
-    WeaponClass.preload(scene);
+  Object.values(WeaponConfigs).forEach(WeaponConfig => {
+    scene.load.image(WeaponConfig.texture.key, WeaponConfig.texture.url);
+    if (WeaponConfig.fireAudio) {
+      scene.load.audio(WeaponConfig.fireAudio.key, WeaponConfig.fireAudio.url);
+    }
+    if (WeaponConfig.emptyAudio) {
+      scene.load.audio(WeaponConfig.emptyAudio.key, WeaponConfig.emptyAudio.url);
+    }
+    if (WeaponConfig.reloadAudio) {
+      scene.load.audio(WeaponConfig.reloadAudio.key, WeaponConfig.reloadAudio.url);
+    }
+    if (WeaponConfig.afterFireAudio) {
+      scene.load.audio(WeaponConfig.afterFireAudio.key, WeaponConfig.afterFireAudio.url);
+    }
   });
 }
 
+export function getWeaponConfig(weaponType: WeaponType): WeaponOptions {
+  return WeaponConfigs[weaponType];
+}
+
 export function createWeapon(weaponType: WeaponType, scene: Phaser.Scene): WeaponEntity {
-  const WeaponClass = WeaponCollection[weaponType];
+  const WeaponConfig = WeaponConfigs[weaponType];
   const id = generateId();
-  return new WeaponClass(scene, id);
+  return new WeaponEntity(scene, id, WeaponConfig);
 }

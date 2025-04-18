@@ -41,8 +41,8 @@ export const GlockConfig: WeaponOptions = {
   recoilForce: 0,      // Сила отдачи
   recoilRecovery: 0,   // Скорость восстановления от отдачи
   automatic: false,    // Пистолет автоматический
-  fireAudio: GlockFireAudio.key,
-  emptyAudio: GlockEmptyAudio.key,
+  fireAudio: GlockFireAudio,
+  emptyAudio: GlockEmptyAudio,
   sight: true,
   shellCasings: true,
 

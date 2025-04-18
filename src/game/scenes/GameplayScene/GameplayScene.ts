@@ -19,7 +19,7 @@ import { WaveController } from '../../core/controllers/WaveController';
 import { createWavesConfig } from '../../levels/test/wavesConfig'
 import { WaveStartEventPayload, WaveEvents } from '../../core/controllers/WaveController';
 import { generateId } from '../../../utils/stringGenerator';
-import { emitEvent, onEvent } from '../../core/Events';
+import { onEvent } from '../../core/Events';
 import { preloadWeapons } from '../../weapons';
 import { WeaponType } from '../../weapons/WeaponTypes';
 import { preloadProjectiles } from '../../projectiles';
@@ -90,16 +90,12 @@ export class GameplayScene extends Phaser.Scene {
     this.decalController = new DecalController(this, 0, 0, settings.display.width, settings.display.height);
     this.decalController.setDepth(5);
 
-
     this.changeWeaponKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.G);
 
     // Устанавливаем границы мира
     this.physics.world.setBounds(0, 0, settings.display.width, settings.display.height);
     
-    // Создаем информацию о волне
     this.waveInfo = new WaveInfo(this);
-    
-    // Создаем интерфейс отображения состояния оружия
     this.weaponStatus = new WeaponStatus(this);
 
     // Инициализируем группу для гильз
@@ -112,18 +108,6 @@ export class GameplayScene extends Phaser.Scene {
 
     // Создаем локацию
     this.location.create();
-
-    this.createPlayer(PLAYER_POSITION_X, PLAYER_POSITION_Y, true);
-    // this.createPlayer(PLAYER_POSITION_X + 50, PLAYER_POSITION_Y + 200);
-    
-    // Настраиваем коллизии между игроком и врагами
-    // this.physics.add.overlap(
-    //   this.player.getSprite(),
-    //   this.enemies,
-    //   this.handlePlayerEnemyCollision as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
-    //   undefined,
-    //   this
-    // );
 
     this.waveController = new WaveController(this, createWavesConfig());
     this.waveController.start();
@@ -142,6 +126,18 @@ export class GameplayScene extends Phaser.Scene {
     onEvent(this, EnemyEntityEvents.enemyDeath, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
     onEvent(this, ScoreEvents.UpdateScoreEvent, (payload: UpdateScoreEventPayload) => this.handleUpdateScore(payload));
     onEvent(this, PlayerEvents.PlayerSetWeaponEvent, (payload: PlayerSetWeaponEventPayload) => this.handleSetWeapon(payload));
+
+    this.createPlayer(PLAYER_POSITION_X, PLAYER_POSITION_Y, true);
+    // this.createPlayer(PLAYER_POSITION_X + 50, PLAYER_POSITION_Y + 200);
+    
+    // Настраиваем коллизии между игроком и врагами
+    // this.physics.add.overlap(
+    //   this.player.getSprite(),
+    //   this.enemies,
+    //   this.handlePlayerEnemyCollision as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
+    //   undefined,
+    //   this
+    // );
   }
 
   private handleFireProjectile({ projectile }: WeaponFireEventsPayload): void {
@@ -168,8 +164,10 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private handleSetWeapon(payload: PlayerSetWeaponEventPayload): void {
+    console.log('handleSetWeapon', payload);
+
     if (payload.playerId === this.mainPlayerId) {
-      this.weaponStatus.setWeapon(payload.weaponType);
+      this.weaponStatus.setWeapon(payload);
     }
   }
 
@@ -177,14 +175,12 @@ export class GameplayScene extends Phaser.Scene {
     const playerId = generateId();
     const player = new Player(this, playerId, x, y);
 
+    this.mainPlayerId = isMain ?playerId : this.mainPlayerId;
+
     this.players.set(playerId, player);
     this.weaponController.setWeapon(playerId, WeaponType.GLOCK);
 
     player.setLocationBounds(this.location.bounds);
-
-    if (isMain) {
-      this.mainPlayerId = playerId;
-    }
   }
 
   /**
@@ -211,7 +207,7 @@ export class GameplayScene extends Phaser.Scene {
       // Обновляем состояние оружия в интерфейсе
       const weapon = this.players.get(this.mainPlayerId)!.getWeapon();
       if (weapon) {
-        this.weaponStatus.setAmmo(weapon.getCurrentAmmo(), 12); // Хардкод для размера магазина
+        this.weaponStatus.setAmmo(weapon.getCurrentAmmo(), weapon.getMaxAmmo());
       }
     }
 

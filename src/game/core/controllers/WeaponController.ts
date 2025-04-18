@@ -45,7 +45,9 @@ export class WeaponController {
 
     this.currentWeapon.set(playerId, weapon);
     this.players.get(playerId)!.setWeapon(weapon);
-    
-    emitEvent(this.scene, PlayerEvents.PlayerSetWeaponEvent, { playerId, weaponType });
+
+    const ammo = weapon.getCurrentAmmo();
+    const maxAmmo = weapon.getMaxAmmo();
+    emitEvent(this.scene, PlayerEvents.PlayerSetWeaponEvent, { playerId, weaponType, ammo, maxAmmo });
   }
 }

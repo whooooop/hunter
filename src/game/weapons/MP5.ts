@@ -36,7 +36,7 @@ export const MP5Config: WeaponOptions = {
   recoilForce: 1,      // Сила отдачи
   recoilRecovery: 5,   // Скорость восстановления от отдачи
   automatic: true,
-  fireAudio: MP5FireAudio.key,
+  fireAudio: MP5FireAudio,
   sight: true,
   shellCasings: true,
 
@@ -54,5 +54,5 @@ export class WeaponMP5 extends WeaponEntity {
   constructor(scene: Phaser.Scene, id: string) {
       super(scene, id, MP5Config);
   }
-  
+
 }
