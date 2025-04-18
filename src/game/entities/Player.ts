@@ -1,12 +1,13 @@
 import * as Phaser from 'phaser';
 import { createLogger } from '../../utils/logger';
 import { LocationBounds } from '../core/BaseLocation';
-import { Weapon, WeaponController } from '../core/controllers/WeaponController';
+import { WeaponController } from '../core/controllers/WeaponController';
 import { WeaponEntity } from '../core/entities/WeaponEntity';
 import { MotionController } from '../core/controllers/MotionController';
 
 import playerImage from '../../assets/images/player.png';
 import { ShadowEntity } from '../core/entities/ShadowEntity';
+import { WeaponType } from '../weapons/WeaponTypes';
 
 const TEXTURE_PLAYER = 'player';
 
@@ -86,7 +87,7 @@ export class Player {
    * Назначает игроку указанное оружие
    * @param weapon Оружие для назначения
    */
-  public setWeapon(weapon: Weapon): void {
+  public setWeapon(weapon: WeaponType): void {
     this.weaponController.setCurrentWeapon(weapon);
     this.currentWeapon = this.weaponController.getCurrentWeapon();
   }

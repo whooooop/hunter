@@ -6,9 +6,8 @@ import { hexToNumber } from "../utils/colors";
 const logger = createLogger('Shop');
 
 import weaponSlotImage from '../../assets/images/weapon_slot.png';
-import { createTextureKey } from "../../utils/texture";
 
-const weaponSlotTexture = createTextureKey('weapon_slot');
+const weaponSlotTexture = 'weapon_slot_0';
 
 const interactiveBlockColor = hexToNumber(COLORS.INTERACTIVE_BUTTON_BACKGROUND);
 const interactiveBlockBorderColor = hexToNumber(COLORS.INTERACTIVE_BUTTON_BORDER);

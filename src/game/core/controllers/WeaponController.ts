@@ -1,47 +1,17 @@
-import { Glock } from "../../weapons/glock/Glock";
-import { MP5 } from "../../weapons/MP5/MP5";
 import { WeaponEntity } from "../entities/WeaponEntity";
-import { Grenade } from "../../weapons/grenade/Grenade";
-import { Sawed } from "../../weapons/sawed/Sawed";
-import { WeaponMine } from "../../weapons/mine/WeaponMine";
-import { WeaponAWP } from "../../weapons/AWP/WeaponAWP";
-
-export enum Weapon {
-  GLOCK = 'glock',
-  MP5 = 'mp5',
-  GRENADE = 'grenade',
-  SAWED = 'sawed',
-  MINE = 'mine',
-  AWP = 'awp',
-}
+import { createWeapon } from "../../weapons";
+import { WeaponType } from "../../weapons/WeaponTypes";
 
 export class WeaponController {
   private scene: Phaser.Scene;
-  private weapons: Map<Weapon, WeaponEntity> = new Map();
-  private currentWeapon: Weapon | null = null;
+  private weapons: Map<WeaponType, WeaponEntity> = new Map();
+  private currentWeapon: WeaponType | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
 
-  private createWeapon(weapon: Weapon): WeaponEntity {
-    switch (weapon) {
-      case Weapon.GLOCK:
-          return new Glock(this.scene);
-      case Weapon.MP5:
-        return new MP5(this.scene); 
-      case Weapon.GRENADE:
-        return new Grenade(this.scene);
-      case Weapon.SAWED:
-        return new Sawed(this.scene);
-      case Weapon.MINE:
-        return new WeaponMine(this.scene);
-      case Weapon.AWP:
-        return new WeaponAWP(this.scene);
-    }
-  }
-
-  public setCurrentWeapon(name: Weapon): void {
+  public setCurrentWeapon(name: WeaponType): void {
     if (this.currentWeapon === name) {
       return;
     }
@@ -54,7 +24,7 @@ export class WeaponController {
     }
 
     if (!this.weapons.has(name)) {
-      const weapon = this.createWeapon(name);
+      const weapon = createWeapon(name, this.scene);
       this.weapons.set(name, weapon);
     }
 

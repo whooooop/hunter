@@ -12,7 +12,6 @@ import { BaseShop } from '../../core/BaseShop';
 import { ProjectileController } from '../../core/controllers/ProjectileController';
 import { BloodController, BloodEvents } from '../../core/controllers/BloodController';
 import { DecalController } from '../../core/controllers/DecalController';
-import { Weapon } from '../../core/controllers/WeaponController';
 import { DamageableEntity } from '../../core/entities/DamageableEntity';
 import { createShellCasingTexture, ShellCasingEvents } from '../../core/entities/ShellCasingEntity';
 import { DecalEventPayload } from '../../core/types/decals';
@@ -21,9 +20,12 @@ import { createWavesConfig } from '../../levels/test/wavesConfig'
 import { EnemyEntityEvents } from '../../core/entities/EnemyEntity';
 import { WaveStartEventPayload, WaveEvents } from '../../core/controllers/WaveController';
 import { generateId } from '../../../utils/stringGenerator';
-import { WeaponEvents, WeaponFireEventsPayload } from '../../core/entities/WeaponEntity';
 import { onEvent } from '../../core/Events';
 import { preloadWeapons } from '../../weapons';
+import { WeaponType } from '../../weapons/WeaponTypes';
+import { preloadProjectiles } from '../../projectiles';
+import { WeaponFireEventsPayload } from '../../core/types/weaponTypes';
+import { WeaponEvents } from '../../core/types/weaponTypes';
 
 const logger = createLogger('GameplayScene');
 
@@ -70,7 +72,8 @@ export class GameplayScene extends Phaser.Scene {
 
     WaveController.preloadEnemies(this, createWavesConfig());
     preloadWeapons(this);
-    
+    preloadProjectiles(this);
+
     // Создаем текстуру гильзы программно
     createShellCasingTexture(this);
     BloodController.preload(this);
@@ -150,7 +153,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private createPlayer(x: number, y: number, isMain: boolean = false): void {
     const player = new Player(this, generateId(), x, y);
-    player.setWeapon(Weapon.GLOCK);
+    player.setWeapon(WeaponType.GLOCK);
     player.setLocationBounds(this.location.bounds);
 
     if (isMain) {
@@ -214,7 +217,7 @@ export class GameplayScene extends Phaser.Scene {
     });
 
     if (this.changeWeaponKey.isDown) {
-      this.mainPlayer.setWeapon(Weapon.GRENADE);
+      this.mainPlayer.setWeapon(WeaponType.GRENADE);
     }
 
     // Обрабатываем попадания пуль

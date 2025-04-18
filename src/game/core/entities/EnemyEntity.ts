@@ -80,9 +80,6 @@ export class EnemyEntity extends DamageableEntity {
   }
 
   protected createBloodSplash({ forceVector, hitPoint }: Demage, isHeadHit: boolean): void {
-    const [x, y] = hitPoint;
-    const [[startX, startY], [forceX, forceY]] = forceVector;
-    const direction = forceX - startX;
     const multiplier = isHeadHit ? 1.2 : 1;
     const forceOrigin = { x: forceVector[0][0], y: forceVector[0][1] }; // Откуда летела пуля
     const bulletConfig = createSimpleBloodConfig(multiplier);

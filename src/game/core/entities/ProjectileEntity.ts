@@ -1,7 +1,7 @@
-import { generateId } from "../../../utils/stringGenerator";
 import { settings } from "../../settings";
 import { hexToNumber } from "../../utils/colors";
 import { ExplosionEntity } from "./ExplosionEntity";
+import { ImageTexture } from "../../core/types/texture";
 
 export enum ProjectileType {
   BULLET = 'bullet',
@@ -12,8 +12,7 @@ export enum ProjectileType {
 export interface ProjectileEntityOptions {
   type: ProjectileType;
 
-  texture?: string;
-  scale?: number;
+  texture: ImageTexture;
 
   radius?: number;
   useRadiusDamage?: boolean;
@@ -26,10 +25,7 @@ export interface ProjectileEntityOptions {
   gravity?: number;
 }
 
-export type ProjectileEntityClass = new (options?: ProjectileEntityOptions) => ProjectileEntity;
-
 const defaultOptions = {
-  type: ProjectileType.BULLET,
   bounce: 0.2,
   drag: 250,
   gravity: 700,
@@ -38,7 +34,7 @@ const defaultOptions = {
 
 export class ProjectileEntity {
   protected id: string;
-  protected scene!: Phaser.Scene;
+  protected scene: Phaser.Scene;
   protected gameObject!: Phaser.GameObjects.Sprite;
 
   protected destroyed: boolean = false;
@@ -57,9 +53,21 @@ export class ProjectileEntity {
 
   protected floorY: number = 0; // Минимальная Y-координата (пол)
 
-  constructor(options?: ProjectileEntityOptions) {
-    this.id = generateId();
-    this.options = { ...defaultOptions, ...options };
+  constructor(scene: Phaser.Scene, id: string, x: number, y: number, options: ProjectileEntityOptions) {
+    this.id = id;
+    this.scene = scene;
+    this.options = options;
+    this.startPoint = [x, y];
+
+    if (this.options.texture) {
+      this.gameObject = new Phaser.GameObjects.Sprite(this.scene, x, y, this.options.texture.key);
+
+      if (this.options.texture.scale) {
+        this.gameObject.setScale(this.options.texture.scale);
+      }
+      
+      this.scene.add.existing(this.gameObject);
+    }
   }
 
   public getId(): string {
@@ -74,21 +82,9 @@ export class ProjectileEntity {
     return this.weaponName;
   }
 
-  public create(scene: Phaser.Scene, x: number, y: number, params: { playerId: string, weaponName: string }): this {
-    this.scene = scene;
-    this.startPoint = [x, y];
-    this.playerId = params.playerId;
-
-    if (this.options.texture) {
-      this.gameObject = new Phaser.GameObjects.Sprite(scene, x, y, this.options.texture);
-      this.gameObject.setPosition(x, y);
-
-      if (this.options.scale) {
-        this.gameObject.setScale(this.options.scale);
-      }
-      
-      this.scene.add.existing(this.gameObject);
-    }
+  public assign(playerId: string, weaponName: string): this {
+    this.playerId = playerId;
+    this.weaponName = weaponName;
 
     return this;
   }
@@ -321,18 +317,3 @@ export class ProjectileEntity {
     ]
   }
 }
-
-export const createBulletTexture = (scene: Phaser.Scene, name: string, width: number = 40, height: number = 2, color: string = '#b7f191'): void => {
-  // Проверяем, существует ли уже такая текстура
-  if (scene.textures.exists(name)) {
-    scene.textures.remove(name);
-  }
-
-  const graphics = scene.add.graphics();
-  const textureColor = hexToNumber(color);  
-
-  graphics.fillStyle(textureColor, 1);
-  graphics.fillRoundedRect(-width / 2, -height / 2, width, height,height / 2);
-  graphics.generateTexture(name, width, height);
-  graphics.destroy();
-}; 

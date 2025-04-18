@@ -4,7 +4,7 @@ import rabbitWalkTextureUrl from './assets/images/walking.png';
 import rabbitDeathTextureUrl from './assets/images/death.png';
 
 export const entityConfig: EnemyEntityOptions = {
-  health: 100,
+  health: 47,
   acceleration: 10,
   deceleration: 8,
   maxVelocityX: 40,

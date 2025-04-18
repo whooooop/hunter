@@ -1,0 +1,48 @@
+import * as Phaser from 'phaser';
+import { WeaponType } from "./WeaponTypes";
+import { WeaponEntity } from "../core/entities/WeaponEntity";
+import { ProjectileName } from "../projectiles/ProjectileName";
+import { WeaponOptions, WeaponTexture } from "../core/types/weaponTypes";
+import { GrenadeImageTexture_0 } from '../textures/GrenadeTexture';
+
+const GrenadeTexture_0: WeaponTexture = {
+  ...GrenadeImageTexture_0,
+  offset: {
+    x: 10,
+    y: 10,
+  }
+}
+
+export const GrenadeConfig: WeaponOptions = {
+  name: WeaponType.GRENADE,
+  texture: GrenadeTexture_0,
+  reloadTime: 2000,     // Скорость перезарядки в мс
+  magazineSize: 1,      // Размер магазина
+  damage: 1000,         // Урон от одного выстрела
+  speed: [900, 100],    // Скорость пули
+  fireRate: 500,        // Задержка между выстрелами в мс
+  spreadAngle: 0,       // Угол разброса при выстреле в градусах
+  aimingTime: 0,        // Время прицеливания в мс
+  canAim: false,
+  recoilForce: 0,       // Сила отдачи
+  recoilRecovery: 5,    // Скорость восстановления от отдачи
+  automatic: false,
+  sight: true,
+  shellCasings: false,
+  autoreload: true,
+  hideWhileReload: true,
+  
+  projectile: ProjectileName.GRENADE
+}
+
+export class WeaponGrenade extends WeaponEntity {
+
+  static preload(scene: Phaser.Scene): void {
+    scene.load.image(GrenadeConfig.texture.key, GrenadeConfig.texture.url);
+  } 
+
+  constructor(scene: Phaser.Scene, id: string) {
+      super(scene, id, GrenadeConfig);  
+  }
+
+}

@@ -1,26 +1,19 @@
-import { EnemyEntity } from "../core/entities/EnemyEntity";
 import { generateId } from "../../utils/stringGenerator";
-import { Glock } from "./glock/Glock";
-import { MP5 } from "./MP5/MP5";
-import { Grenade } from "./grenade/Grenade";
-import { Sawed } from "./sawed/Sawed";
-import { WeaponMine } from "./mine/WeaponMine";
-import { WeaponAWP } from "./AWP/WeaponAWP";
+import { WeaponEntity } from "../core/entities/WeaponEntity";
 
-export enum WeaponType {
-  GLOCK = 'glock',
-  MP5 = 'mp5',
-  GRENADE = 'grenade',
-  SAWED = 'sawed',
-  MINE = 'mine',
-  AWP = 'awp',
-}
+import { WeaponGlock } from "./Glock";
+import { WeaponMP5 } from "./MP5";
+import { WeaponGrenade } from "./Grenade";
+import { WeaponSawed } from "./Sawed";
+import { WeaponMine } from "./Mine";
+import { WeaponAWP } from "./AWP";
+import { WeaponType } from "./WeaponTypes";
 
 export const WeaponCollection = {
-  [WeaponType.GLOCK]: Glock,
-  [WeaponType.MP5]: MP5,
-  [WeaponType.GRENADE]: Grenade,
-  [WeaponType.SAWED]: Sawed,
+  [WeaponType.GLOCK]: WeaponGlock,
+  [WeaponType.MP5]: WeaponMP5,
+  [WeaponType.GRENADE]: WeaponGrenade,
+  [WeaponType.SAWED]: WeaponSawed,
   [WeaponType.MINE]: WeaponMine,
   [WeaponType.AWP]: WeaponAWP,
 }
@@ -31,8 +24,8 @@ export function preloadWeapons(scene: Phaser.Scene): void {
   });
 }
 
-// export function createWeapon(weaponType: WeaponType, scene: Phaser.Scene, x: number, y: number, options?: any): WeaponEntity {
-//   const WeaponClass = WeaponCollection[weaponType];
-//   const id = generateId();
-//   return new WeaponClass(scene, id, x, y, options);
-// }
+export function createWeapon(weaponType: WeaponType, scene: Phaser.Scene): WeaponEntity {
+  const WeaponClass = WeaponCollection[weaponType];
+  const id = generateId();
+  return new WeaponClass(scene, id);
+}

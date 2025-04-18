@@ -7,78 +7,21 @@
 // активация снаряда может быть моментальной, с задержкой или по внешнему воздействию
 // В момент активации ицем объекты взаимодействия и передем им разрушение
 
+import * as Phaser from 'phaser';
 import { SightEntity, SightEntityOptions } from "./SightEntity";
 import { settings } from '../../settings';
 import { createLogger } from "../../../utils/logger";
 import { GameplayScene } from "../../scenes/GameplayScene/GameplayScene";
 import { ShellCasingEntity } from "./ShellCasingEntity";
-import { ProjectileEntity, ProjectileEntityClass } from "./ProjectileEntity";
 import { RecoilForceType } from "../types/recoilForce";
 import { emitEvent } from "../Events";
+import { createProjectile } from "../../projectiles";
+import { WeaponOptions, WeaponEvents, FireParams, AudioAssets } from "../types/weaponTypes";
 
 const logger = createLogger('WeaponEntity');
 
-export enum WeaponEvents {
-  FireEvent = 'FireEvent',
-}
-
-export interface WeaponFireEventsPayload {
-  projectile: ProjectileEntity;
-}
-
-interface WeaponOptions {
-  name: string;
-  texture: string;
-
-  // Патроны
-  damage: number;       // Урон от одного выстрела
-  speed: number[];      // Скорость снаряда
-
-  scale: number;
-  offsetX: number;
-  offsetY: number;
-
-  firePointOffset?: [number, number];
-
-  // Перезарядка
-  reloadTime: number; // Скорость перезарядки в мс
-  magazineSize: number; // Размер магазина
-
-  // Параметры стрельбы
-  fireRate: number; // Задержка между выстрелами в мс
-  spreadAngle?: number; // Угол разброса при выстреле в градусах
-  aimingTime?: number; // Время прицеливания в секундах
-  canAim: boolean; // Можно ли прицеливаться
-  automatic?: boolean; // Является ли оружие автоматическим
-  autoreload?: boolean; // Автоматическая перезарядка
-  hideWhileReload?: boolean; // Скрывать оружие при перезарядке
-
-  // Параметры отдачи
-  recoilForce: number; // Сила отдачи
-  recoilRecovery: number; // Скорость восстановления от отдачи
-
-  emptyAudio?: string;
-  reloadAudio?: string;
-  afterFireAudio?: string;
-  fireAudio?: string;
-
-  shellCasings?: boolean;
-  sight?: SightEntityOptions | boolean;
-  projectile?: ProjectileEntityClass
-}
-
-export interface FireParams {
-  playerId: string;
-}
-
-type AudioAssets = {
-  fire: Phaser.Sound.BaseSound | null;
-  empty: Phaser.Sound.BaseSound | null;
-  reload: Phaser.Sound.BaseSound | null;
-  afterFire: Phaser.Sound.BaseSound | null;
-}
-
 export class WeaponEntity {
+  private id: string; 
   private name: string;
   private active: boolean = false;
   private scene: Phaser.Scene;
@@ -103,7 +46,8 @@ export class WeaponEntity {
     afterFire: null,
   }
 
-  constructor(scene: Phaser.Scene, options: WeaponOptions) {
+  constructor(scene: Phaser.Scene, id: string, options: WeaponOptions) {
+    this.id = id;
     this.scene = scene;
     this.name = options.name;
     this.options = options;
@@ -113,8 +57,8 @@ export class WeaponEntity {
       this.createSight(this.options.sight)
     }
 
-    this.gameObject = this.scene.add.sprite(0, 0, this.options.texture);
-    this.gameObject.setScale(this.options.scale);
+    this.gameObject = this.scene.add.sprite(0, 0, this.options.texture.key);
+    this.gameObject.setScale(this.options.texture.scale);
     this.scene.add.existing(this.gameObject);
     
     this.createAudioAssets()
@@ -254,14 +198,8 @@ export class WeaponEntity {
       return;
     }
 
-    const projectile = new this.options.projectile();
-    
-    projectile
-      .create(this.scene, x, y, {
-        playerId,
-        weaponName: this.name
-      })
-      .setForceVector(sightX, sightY, this.options.speed, this.options.damage);
+    const projectile = createProjectile(this.scene, this.options.projectile, x, y, playerId, this.name);
+    projectile.setForceVector(sightX, sightY, this.options.speed, this.options.damage);
     
     emitEvent(this.scene, WeaponEvents.FireEvent, { projectile });
   }
@@ -399,8 +337,8 @@ export class WeaponEntity {
 
   public setPosition(x: number, y: number, direction: number) {
     this.direction = direction;
-    const offsetX = this.options?.offsetX || 0;
-    const offsetY = this.options?.offsetY || 0;
+    const offsetX = this.options?.texture.offset.x || 0;
+    const offsetY = this.options?.texture.offset.y || 0;
 
     this.x = x + offsetX;
     this.y = y + offsetY;

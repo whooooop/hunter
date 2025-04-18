@@ -1,5 +1,4 @@
 import * as Phaser from 'phaser';
-import { WeaponEvents, WeaponFireEventsPayload } from './entities/WeaponEntity';
 import { WaveStartEventPayload } from './controllers/WaveController';
 import { WaveEvents } from './controllers/WaveController';
 import { DamageableEntity } from './entities/DamageableEntity';
@@ -7,6 +6,7 @@ import { EnemyEntityEvents } from './entities/EnemyEntity';
 import { DecalEventPayload } from './types/decals';
 import { ShellCasingEvents } from './entities/ShellCasingEntity';
 import { BloodEvents } from './controllers/BloodController';
+import { WeaponEvents, WeaponFireEventsPayload } from './types/weaponTypes';
 
 interface EventPayloadMap {
     // Weapons
