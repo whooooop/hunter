@@ -1,4 +1,4 @@
-import { EnemyEntityOptions } from '../../core/entities/EnemyEntity';
+import { EnemyEntityOptions } from '../../core/types/enemyTypes';
 import { SpriteSheetConfig } from '../../utils/sprite';
 import rabbitWalkTextureUrl from './assets/images/walking.png';
 import rabbitDeathTextureUrl from './assets/images/death.png';

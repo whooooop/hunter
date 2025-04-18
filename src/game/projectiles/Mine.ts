@@ -5,7 +5,9 @@ const ProjectileMineConfig: ProjectileEntityOptions = {
   type: ProjectileType.MINE,
   texture: MineImageTexture_0,
   radius: 100,
-  activateRadius: 20
+  activateRadius: 20,
+  drag: 800,
+  gravity: 600,
 }
 
 export class ProjectileMine extends ProjectileEntity {

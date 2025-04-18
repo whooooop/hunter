@@ -7,6 +7,7 @@ const ProjectileGrenadeConfig: ProjectileEntityOptions = {
   drag: 1200,
   activateDelay: 1200,
   bounce: 1,
+  gravity: 600,
   radius: 100,
 }
 

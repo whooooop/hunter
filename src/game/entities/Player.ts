@@ -1,13 +1,11 @@
 import * as Phaser from 'phaser';
 import { createLogger } from '../../utils/logger';
 import { LocationBounds } from '../core/BaseLocation';
-import { WeaponController } from '../core/controllers/WeaponController';
 import { WeaponEntity } from '../core/entities/WeaponEntity';
 import { MotionController } from '../core/controllers/MotionController';
 
 import playerImage from '../../assets/images/player.png';
 import { ShadowEntity } from '../core/entities/ShadowEntity';
-import { WeaponType } from '../weapons/WeaponTypes';
 
 const TEXTURE_PLAYER = 'player';
 
@@ -20,7 +18,6 @@ export class Player {
   private scene: Phaser.Scene;
   private gameObject: Phaser.Physics.Arcade.Sprite;
 
-  private weaponController: WeaponController;
   private motionController: MotionController;
 
   canChangeDirection: boolean = false;
@@ -48,6 +45,10 @@ export class Player {
 
   private shadow: ShadowEntity;
 
+  static preload(scene: Phaser.Scene): void {
+    scene.load.image(TEXTURE_PLAYER, playerImage);
+  }
+
   constructor(scene: Phaser.Scene, id: string, x: number, y: number) {
     this.id = id;
     this.scene = scene;
@@ -56,7 +57,6 @@ export class Player {
 
     this.shadow = new ShadowEntity(scene, this.gameObject);
 
-    this.weaponController = new WeaponController(scene);
     this.motionController = new MotionController(scene, this.gameObject, {
       acceleration: 20,
       deceleration: 14,
@@ -74,22 +74,17 @@ export class Player {
 
     scene.add.existing(this.gameObject);
   }
-  
-  static preload(scene: Phaser.Scene): void {
-    scene.load.image(TEXTURE_PLAYER, playerImage);
+
+  public getId(): string {
+    return this.id;
   }
 
   public getPosition(): [number, number] {
     return [this.gameObject.x, this.gameObject.y];
   }
 
-  /**
-   * Назначает игроку указанное оружие
-   * @param weapon Оружие для назначения
-   */
-  public setWeapon(weapon: WeaponType): void {
-    this.weaponController.setCurrentWeapon(weapon);
-    this.currentWeapon = this.weaponController.getCurrentWeapon();
+  public setWeapon(weapon: WeaponEntity): void {
+    this.currentWeapon = weapon
   }
 
   public setLocationBounds(bounds: LocationBounds): void {

@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import { hexToNumber } from '../utils/colors';
 import { createLogger } from '../../utils/logger';
 import { COLORS } from '../core/Constants';
-import { WeaponEntity } from '../core/entities/WeaponEntity';
+import { WeaponType } from '../weapons/WeaponTypes';
 
 const logger = createLogger('WeaponStatus');
 
@@ -27,10 +27,10 @@ export class WeaponStatus {
     private readonly TEXT_COLOR = COLORS.INTERFACE_BLOCK_TEXT;
     
     // Данные (хардкод для начала)
-    private coins: number = 9999;
+    private coins: number = 0;
     private maxAmmo: number = 12;
     private currentAmmo: number = 12;
-    private currentWeapon: WeaponEntity | null = null;
+    private currentWeapon: WeaponType | null = null;
     
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
@@ -160,9 +160,9 @@ export class WeaponStatus {
     /**
      * Устанавливает текущее оружие и обновляет интерфейс
      */
-    public setWeapon(weapon: WeaponEntity | null): void {
+    public setWeapon(weapon: WeaponType): void {
         this.currentWeapon = weapon;
-        this.currentAmmo = weapon?.getCurrentAmmo() || 0;
+        this.currentAmmo = 0;
         this.maxAmmo = 12; // Хардкод для примера
         this.createAmmoIcons(); // Пересоздаем иконки патронов
         this.update();

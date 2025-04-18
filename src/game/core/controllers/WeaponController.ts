@@ -1,44 +1,51 @@
 import { WeaponEntity } from "../entities/WeaponEntity";
 import { createWeapon } from "../../weapons";
 import { WeaponType } from "../../weapons/WeaponTypes";
+import { Player } from "../../entities/Player";
+import { emitEvent } from "../Events";
+import { PlayerEvents } from "../types/playerTypes";
 
 export class WeaponController {
   private scene: Phaser.Scene;
-  private weapons: Map<WeaponType, WeaponEntity> = new Map();
-  private currentWeapon: WeaponType | null = null;
+  private players: Map<string, Player>;
+  private playerWeapons: Map<string, Map<WeaponType, WeaponEntity>> = new Map();
+  private currentWeapon: Map<string, WeaponEntity> = new Map();
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, players: Map<string, Player>) {
     this.scene = scene;
+    this.players = players;
   }
 
-  public setCurrentWeapon(name: WeaponType): void {
-    if (this.currentWeapon === name) {
-      return;
+  public getWeapon(playerId: string, weaponType: WeaponType): WeaponEntity {
+    if (!this.playerWeapons.has(playerId)) {
+      this.playerWeapons.set(playerId, new Map());
     }
 
-    if (this.currentWeapon) {
-      const currentWeapon = this.weapons.get(this.currentWeapon);
-      if (currentWeapon) {
-        currentWeapon.activate(false);
-      }
+    if (!this.playerWeapons.get(playerId)!.has(weaponType)) {
+      const weapon = createWeapon(weaponType, this.scene);
+      this.playerWeapons.get(playerId)!.set(weaponType, weapon);
+      return weapon;
     }
 
-    if (!this.weapons.has(name)) {
-      const weapon = createWeapon(name, this.scene);
-      this.weapons.set(name, weapon);
-    }
-
-    const setWeapon = this.weapons.get(name);
-    if (setWeapon) {
-      setWeapon.activate(true);
-      this.currentWeapon = name;
-    }
+    return this.playerWeapons.get(playerId)!.get(weaponType)!;
   }
 
-  public getCurrentWeapon(): WeaponEntity | null {
-    if (!this.currentWeapon) {
-      return null;
+  private getCurrentWeapon(playerId: string): WeaponEntity {
+    return this.currentWeapon.get(playerId)!;
+  }
+
+  public setWeapon(playerId: string, weaponType: WeaponType): void {
+    const currentWeapon = this.getCurrentWeapon(playerId);
+
+    if (currentWeapon) {
+      currentWeapon.setPosition(-2000, - 2000, 1);
     }
-    return this.weapons.get(this.currentWeapon) || null;
+
+    const weapon = this.getWeapon(playerId, weaponType);
+
+    this.currentWeapon.set(playerId, weapon);
+    this.players.get(playerId)!.setWeapon(weapon);
+    
+    emitEvent(this.scene, PlayerEvents.PlayerSetWeaponEvent, { playerId, weaponType });
   }
 }

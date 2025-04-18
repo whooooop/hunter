@@ -2,11 +2,13 @@ import * as Phaser from 'phaser';
 import { WaveStartEventPayload } from './controllers/WaveController';
 import { WaveEvents } from './controllers/WaveController';
 import { DamageableEntity } from './entities/DamageableEntity';
-import { EnemyEntityEvents } from './entities/EnemyEntity';
 import { DecalEventPayload } from './types/decals';
 import { ShellCasingEvents } from './entities/ShellCasingEntity';
 import { BloodEvents } from './controllers/BloodController';
 import { WeaponEvents, WeaponFireEventsPayload } from './types/weaponTypes';
+import { EnemyEntityEvents } from './types/enemyTypes';
+import { ScoreEvents, UpdateScoreEventPayload, IncreaseScoreEventPayload, DecreaseScoreEventPayload } from './types/scoreTypes';
+import { PlayerEvents, PlayerSetWeaponEventPayload } from './types/playerTypes';  
 
 interface EventPayloadMap {
     // Weapons
@@ -22,6 +24,14 @@ interface EventPayloadMap {
     // Decals
     [ShellCasingEvents.shellCasingParticleDecal]: DecalEventPayload;
     [BloodEvents.bloodParticleDecal]: DecalEventPayload;
+
+    // Score
+    [ScoreEvents.IncreaseScoreEvent]: IncreaseScoreEventPayload;
+    [ScoreEvents.DecreaseScoreEvent]: DecreaseScoreEventPayload;
+    [ScoreEvents.UpdateScoreEvent]: UpdateScoreEventPayload;
+
+    // Player
+    [PlayerEvents.PlayerSetWeaponEvent]: PlayerSetWeaponEventPayload;
 }
 
 // Перегрузка для emitEvent

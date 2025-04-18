@@ -1,4 +1,4 @@
-import { Demage } from "../types/demage";
+import { Damage } from "../types/damage";
 
 
 export interface DamageableEntityOptions {
@@ -27,6 +27,7 @@ export class DamageableEntity {
   protected permeability: number;
   protected health: number;
   protected initialHealth: number;
+  protected damages: { damage: Damage, result: DamageResult }[] = [];
 
   constructor(gameObject: Phaser.Physics.Arcade.Sprite, id: string, options: DamageableEntityOptions) {
     this.id = id;
@@ -44,26 +45,29 @@ export class DamageableEntity {
     return this.health / this.initialHealth;
   }
 
-  public takeDamage(damage: Demage): DamageResult | null {
+  public takeDamage(damage: Damage): DamageResult | null {
     if (this.isDead) return null;
 
     const health = Math.max(0, this.health - damage.value);
     const isDead = health === 0;
+    const result = {
+      health,
+      isDead,
+      permeability: this.permeability,
+      isPenetrated: !!this.permeability || isDead
+    }
 
     if (!damage.simulate) {
       this.health = health;
       this.isDead = isDead;
+      this.damages.push({ damage, result });
+
       if (isDead) {
         this.onDeath();
       }
     }
 
-    return {
-      health,
-      isDead,
-      permeability: this.permeability,
-      isPenetrated: !!this.permeability || isDead
-    };
+    return result;
   }
 
   protected onDeath() {}

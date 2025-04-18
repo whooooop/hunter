@@ -1,4 +1,4 @@
-export type Demage = {
+export type Damage = {
   value: number;
   forceVector: number[][];
   hitPoint: number[];

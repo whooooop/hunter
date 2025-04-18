@@ -1,5 +1,6 @@
 import { RabbitEnemy } from "./rabbit/RabbitEntity";
-import { EnemyEntity, EnemyEntityOptions } from "../core/entities/EnemyEntity";
+import { EnemyEntity } from "../core/entities/EnemyEntity";
+import { EnemyEntityOptions } from "../core/types/enemyTypes";
 import { SquirrelEnemy } from "./squireel/SquirrelEnemy";
 import { generateId } from "../../utils/stringGenerator";
 

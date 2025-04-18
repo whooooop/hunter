@@ -1,30 +1,14 @@
 import { BloodController, createSimpleBloodConfig } from "../controllers/BloodController";
 import { MotionController } from "../controllers/MotionController";
-import { Demage } from "../types/demage";
+import { Damage } from "../types/damage";
 import { ScoreKill } from "../../../types/score";
 import { DamageableEntity, DamageableEntityBounds, DamageResult } from "./DamageableEntity";
-import { ShadowEntity, ShadowEntityOptions } from "./ShadowEntity";
+import { ShadowEntity } from "./ShadowEntity";
 import { DecalEventPayload } from "../types/decals";
 import { emitEvent } from "../Events";
 import { hexToNumber } from "../../utils/colors";
-
-export enum EnemyEntityEvents {
-  enemyDeath = 'enemyDeath',
-}
-
-export interface EnemyEntityOptions {
-  health: number;
-  depthOffset?: number;
-  acceleration: number;
-  deceleration: number;
-  maxVelocityX: number;
-  maxVelocityY: number;
-  friction: number;
-  direction: number;
-  score: ScoreKill;
-  debug?: boolean;
-  shadow?: ShadowEntityOptions
-}
+import { EnemyEntityEvents, EnemyEntityOptions } from "../types/enemyTypes";
+import { ScoreEvents } from "../types/scoreTypes";
 
 export class EnemyEntity extends DamageableEntity {
   protected destroyed: boolean = false;
@@ -63,7 +47,7 @@ export class EnemyEntity extends DamageableEntity {
     scene.add.existing(gameObject);
   }
 
-  public takeDamage(damage: Demage): DamageResult | null {
+  public takeDamage(damage: Damage): DamageResult | null {
     if (this.isDead) return null;
     const isHeadHit = this.isHeadHit(damage);
     const result = super.takeDamage(damage);
@@ -73,13 +57,21 @@ export class EnemyEntity extends DamageableEntity {
     return result;
   }
 
+  private addScore(score: number, playerId: string): void {
+    emitEvent(this.scene, ScoreEvents.IncreaseScoreEvent, { score, playerId });
+  }
+
   protected onDeath(): void {
     const payload: DecalEventPayload = { particle: this.gameObject, x: this.gameObject.x, y: this.gameObject.y };
+    const lastDamage = this.damages[this.damages.length - 1];
+
     emitEvent(this.scene, EnemyEntityEvents.enemyDeath, payload);
+    
+    this.addScore(this.score.value, lastDamage.damage.playerId);
     this.destroy();
   }
 
-  protected createBloodSplash({ forceVector, hitPoint }: Demage, isHeadHit: boolean): void {
+  protected createBloodSplash({ forceVector, hitPoint }: Damage, isHeadHit: boolean): void {
     const multiplier = isHeadHit ? 1.2 : 1;
     const forceOrigin = { x: forceVector[0][0], y: forceVector[0][1] }; // Откуда летела пуля
     const bulletConfig = createSimpleBloodConfig(multiplier);
@@ -122,12 +114,12 @@ export class EnemyEntity extends DamageableEntity {
     this.graphics.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
   }
 
-  private isHeadHit(demage: Demage): boolean {
+  private isHeadHit(damage: Damage): boolean {
     const headBounds = this.getHeadBounds();
     if (!headBounds) return false;
 
     const { x, y, width, height } = headBounds;
-    return demage.hitPoint[0] >= x && demage.hitPoint[0] <= x + width && demage.hitPoint[1] >= y && demage.hitPoint[1] <= y + height;
+    return damage.hitPoint[0] >= x && damage.hitPoint[0] <= x + width && damage.hitPoint[1] >= y && damage.hitPoint[1] <= y + height;
   }
 
   public getHeadBounds(): DamageableEntityBounds | null {

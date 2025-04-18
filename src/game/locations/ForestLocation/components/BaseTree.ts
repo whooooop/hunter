@@ -3,7 +3,7 @@ import { generateStringWithLength } from '../../../../utils/stringGenerator';
 
 import leafImage from '../assets/images/leaf.png';
 import woodChipImage from '../assets/images/wood_chip.png';
-import { Demage } from '../../../core/types/demage';
+import { Damage } from '../../../core/types/damage';
 import { DecorEntity } from '../../../core/entities/DecorEntity';
 import { DamageResult } from '../../../core/entities/DamageableEntity';
 
@@ -50,7 +50,7 @@ export class BaseTree extends DecorEntity {
   /**
    * Обработка получения урона
    */
-  public takeDamage(damage: Demage): DamageResult | null {
+  public takeDamage(damage: Damage): DamageResult | null {
     const result = super.takeDamage(damage);
 
     if (!result) return null;
