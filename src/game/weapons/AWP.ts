@@ -1,5 +1,3 @@
-import * as Phaser from 'phaser';
-import { WeaponEntity } from "../core/entities/WeaponEntity";
 import { hexToNumber } from '../utils/colors';
 import { WeaponSightType } from '../core/entities/SightEntity';
 import { WeaponType } from './WeaponTypes';
@@ -37,16 +35,4 @@ export const AWPConfig: WeaponOptions = {
   shellCasings: true,
   firePointOffset: [0, -3],
   projectile: ProjectileName.BULLET
-}
-
-export class WeaponAWP extends WeaponEntity {
-
-  static preload(scene: Phaser.Scene): void {
-    scene.load.image(WeaponAWPTexture_0.key, WeaponAWPTexture_0.url);
-  }
-
-  constructor(scene: Phaser.Scene, id: string) {
-    super(scene, id, AWPConfig);  
-  }
-
 }

@@ -5,7 +5,7 @@ import { COLORS } from '../core/Constants';
 import { WeaponType } from '../weapons/WeaponTypes';
 import { PlayerSetWeaponEventPayload } from '../core/types/playerTypes';
 import { getWeaponConfig } from '../weapons';
-import { WeaponOptions } from '../core/types/weaponTypes';
+import { settings } from '../settings';
 
 const logger = createLogger('WeaponStatus');
 
@@ -15,7 +15,7 @@ export class WeaponStatus {
     private background!: Phaser.GameObjects.Graphics;
     private weaponCircle!: Phaser.GameObjects.Graphics;
     private coinsText!: Phaser.GameObjects.Text;
-    private ammoIcons: Phaser.GameObjects.Image[] = [];
+    private ammoIcons: Phaser.GameObjects.Graphics[] = [];
     private weaponIcon!: Phaser.GameObjects.Image;
 
     private width: number = 380;
@@ -29,17 +29,18 @@ export class WeaponStatus {
     private readonly BG_COLOR = hexToNumber(COLORS.INTERFACE_BLOCK_BACKGROUND);
     private readonly WEAPON_CIRCLE_COLOR = hexToNumber(COLORS.INTERACTIVE_BUTTON_BACKGROUND);
     private readonly TEXT_COLOR = COLORS.INTERFACE_BLOCK_TEXT;
+    private readonly AMMO_COLOR = hexToNumber('#ffd700');
+    private readonly AMMO_COLOR_INACTIVE = hexToNumber('#ffd700'); // Оставляем тот же цвет, но с альфой
     
-    // Данные (хардкод для начала)
+    // Данные
     private coins: number = 0;
-    private maxAmmo: number = 12;
-    private currentAmmo: number = 12;
+    private maxAmmo: number = 0; // Инициализируем нулем
+    private currentAmmo: number = 0; // Инициализируем нулем
     private currentWeapon: WeaponType | null = null;
     
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
         this.create();
-        logger.info('Создан интерфейс отображения состояния оружия');
     }
     
     private create(): void {
@@ -54,7 +55,6 @@ export class WeaponStatus {
         this.createBackground();
         this.createWeaponCircle();
         this.createCoinsText();
-        this.createAmmoIcons();
         this.createWeaponIcon();
 
         // Устанавливаем правильный порядок слоев в контейнере
@@ -64,8 +64,6 @@ export class WeaponStatus {
             this.weaponIcon,
             this.coinsText, 
         ]);
-        // Переносим иконки патронов наверх, если они уже созданы
-        this.ammoIcons.forEach(icon => this.container.bringToTop(icon));
     }
     
     private createBackground(): void {
@@ -80,7 +78,7 @@ export class WeaponStatus {
 
     private createCoinsText(): void {
         this.coinsText = this.scene.add.text(-this.width / 2 + 40, 0, this.coins.toString(), {
-            fontFamily: 'Arial',
+            fontFamily: settings.fontFamily,
             fontSize: '24px',
             color: this.TEXT_COLOR.toString(),
             fontStyle: 'bold'
@@ -89,7 +87,7 @@ export class WeaponStatus {
     }
 
     private createWeaponIcon(): void {
-        this.weaponIcon = this.scene.add.image(0, 0, ' ');
+        this.weaponIcon = this.scene.add.image(0, 0, '__DEFAULT'); 
         this.weaponIcon.setVisible(false);
         this.weaponIcon.setOrigin(0.5);
         this.weaponIcon.setDepth(1);
@@ -99,19 +97,15 @@ export class WeaponStatus {
         this.background.clear();
         this.background.fillStyle(this.BG_COLOR, 1);
         
-        // Рисуем скошенный прямоугольник с наклонами в другие стороны
-        const skewLeft = this.height * this.skewX; // Левая сторона скошена ВПРАВО (отрицательное значение)
-        const skewRight = this.height * this.skewX * -1; // Правая сторона скошена ВЛЕВО (положительное значение)
+        const skewLeft = this.height * this.skewX;
+        const skewRight = this.height * this.skewX * -1;
         const width = this.width;
         const height = this.height;
         
         this.background.beginPath();
-        // Верхняя линия
         this.background.moveTo(-width / 2 + skewLeft, -height / 2);
         this.background.lineTo(width / 2 + skewRight, -height / 2);
-        // Правая линия
         this.background.lineTo(width / 2 - skewRight, height / 2);
-        // Нижняя линия
         this.background.lineTo(-width / 2 - skewLeft, height / 2);
         this.background.closePath();
         this.background.fill();
@@ -126,67 +120,176 @@ export class WeaponStatus {
     private createAmmoIcons(): void {
         this.ammoIcons.forEach(icon => icon.destroy());
         this.ammoIcons = [];
-        
-        const startX = 70;
-        const padding = 15;
-        const maxPerRow = 6;
-        
-        for (let i = 0; i < this.maxAmmo; i++) {
-            const row = Math.floor(i / maxPerRow);
-            const col = i % maxPerRow;
-            
-            const ammoIcon = this.scene.add.rectangle(
-                startX + col * padding, 
-                -15 + row * 20,
-                10, 
-                20, 
-                hexToNumber('#ffd700')
-            );
-            
-            ammoIcon.setAlpha(i < this.currentAmmo ? 1 : 0.3);
-            
-            this.container.add(ammoIcon);
-            this.ammoIcons.push(ammoIcon as unknown as Phaser.GameObjects.Image);
+
+        if (this.maxAmmo <= 0) return; // Нечего рисовать
+
+        // Параметры
+        const baseIconWidth = 10;
+        const baseIconHeight = 18; // Чуть меньше по высоте
+        const basePaddingX = 5; 
+        const basePaddingY = 3; // Добавили вертикальный отступ
+
+        // Доступное пространство
+        const startX = 70; // Начальная позиция X для иконок
+        const marginX = 18; // Отступ справа
+        const marginY = 1;  // Отступ сверху/снизу
+        const availableWidth = (this.width / 2 - startX - marginX);
+        const availableHeight = (this.height - 2 * marginY);
+        const initialStartY = -this.height / 2 + marginY; // Базовая начальная Y до центрирования
+
+        if (availableWidth <= 0 || availableHeight <= 0) {
+            return;
+        }
+
+        // Расчет масштаба для вмещения всех иконок
+        // Сначала грубо оценим компоновку (близко к квадрату)
+        const approxIconsPerRow = Math.ceil(Math.sqrt(this.maxAmmo));
+        const approxNumRows = Math.ceil(this.maxAmmo / approxIconsPerRow);
+        const estimatedWidth = approxIconsPerRow * baseIconWidth + Math.max(0, approxIconsPerRow - 1) * basePaddingX;
+        const estimatedHeight = approxNumRows * baseIconHeight + Math.max(0, approxNumRows - 1) * basePaddingY;
+
+        let scale = 1;
+        // Рассчитываем масштаб на основе оценки и доступного пространства
+        const widthScale = estimatedWidth > availableWidth ? availableWidth / estimatedWidth : 1;
+        const heightScale = estimatedHeight > availableHeight ? availableHeight / estimatedHeight : 1;
+        scale = Math.min(widthScale, heightScale, 1); // Масштаб не должен быть больше 1
+
+        // Применяем масштаб
+        const scaledIconWidth = baseIconWidth * scale;
+        const scaledIconHeight = baseIconHeight * scale;
+        const scaledPaddingX = basePaddingX * scale;
+        const scaledPaddingY = basePaddingY * scale;
+
+        // Поиск наилучшей компоновки (numRows, iconsPerRow)
+        let validLayouts = [];
+        for (let numRows = 1; numRows <= this.maxAmmo; numRows++) {
+            const requiredIconsPerRow = Math.ceil(this.maxAmmo / numRows);
+            const currentWidth = requiredIconsPerRow * scaledIconWidth + Math.max(0, requiredIconsPerRow - 1) * scaledPaddingX;
+            const currentHeight = numRows * scaledIconHeight + Math.max(0, numRows - 1) * scaledPaddingY;
+
+            // Проверяем, влезает ли компоновка
+            if (currentWidth <= availableWidth && currentHeight <= availableHeight) {
+                // Расчет кол-ва иконок в последнем ряду (для оценки равномерности)
+                const lastRowSize = this.maxAmmo - (numRows - 1) * requiredIconsPerRow;
+                validLayouts.push({ rows: numRows, cols: requiredIconsPerRow, lastRow: lastRowSize });
+            }
+
+            // Оптимизация: если текущая высота уже не влезает, то и бОльшее кол-во рядов не влезет
+            if (currentHeight > availableHeight && numRows > 1) {
+                break;
+            }
+        }
+
+        let bestLayout = null;
+        if (validLayouts.length > 0) {
+            // Сортировка: сначала самые полные последние ряды, потом меньше рядов
+            validLayouts.sort((a, b) => {
+                if (b.lastRow !== a.lastRow) {
+                    return b.lastRow - a.lastRow; // Приоритет равномерности
+                }
+                return a.rows - b.rows; // Меньше рядов при равной равномерности
+            });
+            bestLayout = validLayouts[0];
+        } else {
+            // Запасной вариант, если ничего не подошло (маловероятно)
+            const fallbackCols = Math.max(1, Math.floor((availableWidth + scaledPaddingX) / (scaledIconWidth + scaledPaddingX)));
+            const fallbackRows = Math.ceil(this.maxAmmo / fallbackCols);
+            bestLayout = { 
+                rows: fallbackRows, 
+                cols: fallbackCols, 
+                lastRow: this.maxAmmo - (fallbackRows - 1) * fallbackCols 
+            };
+            // Убедимся, что lastRow не отрицательный в fallback
+            if (bestLayout.lastRow <= 0) bestLayout.lastRow = fallbackCols; 
+        }
+
+        const iconsPerRow = bestLayout.cols;
+        const numRows = bestLayout.rows;
+
+        // Центрирование всего блока иконок по вертикали
+        const totalHeight = numRows * scaledIconHeight + Math.max(0, numRows - 1) * scaledPaddingY;
+        const verticalOffset = (availableHeight - totalHeight) / 2;
+        const adjustedStartY = initialStartY + verticalOffset;
+
+        // Создание и позиционирование иконок
+        let iconCounter = 0;
+        for (let r = 0; r < numRows; r++) {
+            // Определяем количество иконок в текущем ряду
+            const iconsInThisRow = (r === numRows - 1 && bestLayout.lastRow > 0) ? bestLayout.lastRow : iconsPerRow;
+
+            // Горизонтальное центрирование иконок внутри ряда
+            const rowWidth = iconsInThisRow * scaledIconWidth + Math.max(0, iconsInThisRow - 1) * scaledPaddingX;
+            const horizontalOffset = (availableWidth - rowWidth) / 2;
+
+            for (let c = 0; c < iconsInThisRow; c++) {
+                if (iconCounter >= this.maxAmmo) break; // Дополнительная проверка
+
+                const iconX = startX + horizontalOffset + c * (scaledIconWidth + scaledPaddingX);
+                const iconY = adjustedStartY + r * (scaledIconHeight + scaledPaddingY);
+
+                const ammoIcon = this.scene.add.graphics();
+                // Используем iconCounter для определения альфы
+                ammoIcon.fillStyle(this.AMMO_COLOR, iconCounter < this.currentAmmo ? 1 : 0.3);
+                ammoIcon.fillRect(0, 0, scaledIconWidth, scaledIconHeight);
+                ammoIcon.setPosition(iconX, iconY);
+
+                this.container.add(ammoIcon);
+                this.ammoIcons.push(ammoIcon);
+                iconCounter++;
+            }
+            if (iconCounter >= this.maxAmmo) break; // Выход из внешнего цикла
         }
     }
     
     private updateAmmoIcons(): void {
         for (let i = 0; i < this.ammoIcons.length; i++) {
-            this.ammoIcons[i].setAlpha(i < this.currentAmmo ? 1 : 0.3);
+            if (i < this.maxAmmo) {
+                this.ammoIcons[i].setAlpha(i < this.currentAmmo ? 1 : 0.3);
+            }
         }
     }
     
     public setWeapon(payload: PlayerSetWeaponEventPayload): void {
-        logger.info(`Вызван setWeapon с payload: ${JSON.stringify(payload)}`);
         this.currentWeapon = payload.weaponType;
         this.currentAmmo = payload.ammo;
         this.maxAmmo = payload.maxAmmo;
 
         const config = getWeaponConfig(this.currentWeapon);
-        logger.info(`Получен конфиг для оружия ${this.currentWeapon}: ${JSON.stringify(config)}`);
         if (!config || !this.weaponIcon) {
-            logger.error(`Конфиг для оружия ${this.currentWeapon} не найден!`);
             this.weaponIcon?.setVisible(false);
+            this.ammoIcons.forEach(icon => icon.destroy());
+            this.ammoIcons = [];
             return;
         }
 
-        logger.info(`Установка текстуры: ${config.texture.key}`);
-        this.weaponIcon.setTexture(config.texture.key);
-        this.weaponIcon.setVisible(true);
+        try {
+            this.weaponIcon.setTexture(config.texture.key);
+            this.weaponIcon.setVisible(true);
 
-        const iconScale = (this.radius * 2 * 0.7) / Math.max(this.weaponIcon.width, this.weaponIcon.height);
-        logger.info(`Установка масштаба иконки: ${iconScale}`);
-        this.weaponIcon.setScale(iconScale);
+            const iconScale = (this.radius * 2 * 0.7) / Math.max(this.weaponIcon.width || 1, this.weaponIcon.height || 1);
+            this.weaponIcon.setScale(iconScale);
+        } catch (error) {
+            this.weaponIcon.setVisible(false);
+        }
         
-        this.createAmmoIcons();
+        this.createAmmoIcons(); 
         this.coinsText.setText(this.coins.toString());
     }
     
     public setAmmo(current: number, max: number): void {
-        // logger.info(`Вызван setAmmo: current=${current}, max=${max}`);
+        if (this.currentAmmo === current && this.maxAmmo === max) {
+            return;
+        }
+
+        const maxAmmoChanged = this.maxAmmo !== max;
         this.currentAmmo = current;
         this.maxAmmo = max;
-        this.updateAmmoIcons();
+
+        if (maxAmmoChanged) {
+            this.createAmmoIcons();
+        } else {
+            this.updateAmmoIcons();
+        }
     }
     
     public setCoins(coins: number): void {

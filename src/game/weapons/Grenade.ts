@@ -1,6 +1,4 @@
-import * as Phaser from 'phaser';
 import { WeaponType } from "./WeaponTypes";
-import { WeaponEntity } from "../core/entities/WeaponEntity";
 import { ProjectileName } from "../projectiles/ProjectileName";
 import { WeaponOptions, WeaponTexture } from "../core/types/weaponTypes";
 import { GrenadeImageTexture_0 } from '../textures/GrenadeTexture';
@@ -33,16 +31,4 @@ export const GrenadeConfig: WeaponOptions = {
   hideWhileReload: true,
   
   projectile: ProjectileName.GRENADE
-}
-
-export class WeaponGrenade extends WeaponEntity {
-
-  static preload(scene: Phaser.Scene): void {
-    scene.load.image(GrenadeConfig.texture.key, GrenadeConfig.texture.url);
-  } 
-
-  constructor(scene: Phaser.Scene, id: string) {
-      super(scene, id, GrenadeConfig);  
-  }
-
 }

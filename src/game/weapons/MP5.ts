@@ -43,16 +43,3 @@ export const MP5Config: WeaponOptions = {
   firePointOffset: [0, -8],
   projectile: ProjectileName.BULLET
 }
-
-export class WeaponMP5 extends WeaponEntity {
-
-  static preload(scene: Phaser.Scene): void {
-    scene.load.image(MP5Config.texture.key, MP5Config.texture.url);
-    scene.load.audio(MP5FireAudio.key, MP5FireAudio.url);
-  }
-
-  constructor(scene: Phaser.Scene, id: string) {
-      super(scene, id, MP5Config);
-  }
-
-}

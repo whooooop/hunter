@@ -155,13 +155,14 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   play(): void {
-    this.goToScene(SceneKeys.GAMEPLAY);
+    this.goToScene(SceneKeys.LOADING);
   }
 
   goToScene(sceneKey: SceneKeys): void {
     if (!this.ready) {
       return;
     }
+    // this.scene.start(sceneKey);
     this.leaveScene().then(() => {
       this.scene.start(sceneKey);
     });
@@ -217,5 +218,11 @@ export class MainMenuScene extends Phaser.Scene {
         this.ready = true;
       }
     });
+  }
+
+  destroy(): void {
+    this.playButton.destroy();
+    this.shopButton.destroy();
+    this.settingsButton.destroy();
   }
 }

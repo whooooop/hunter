@@ -61,19 +61,3 @@ export const SawedConfig: WeaponOptions = {
   
   projectile: ProjectileName.BULLET
 }
-
-export class WeaponSawed extends WeaponEntity {
-
-  static preload(scene: Phaser.Scene): void {
-    scene.load.image(SawedConfig.texture.key, SawedConfig.texture.url);
-    scene.load.audio(SawedFireAudio.key, SawedFireAudio.url);
-    scene.load.audio(SawedEmptyAudio.key, SawedEmptyAudio.url);
-    scene.load.audio(SawedReloadAudio.key, SawedReloadAudio.url);
-    scene.load.audio(SawedAfterFireAudio.key, SawedAfterFireAudio.url);
-  }
-
-  constructor(scene: Phaser.Scene, id: string) {
-    super(scene, id, SawedConfig);
-  }
-
-} 

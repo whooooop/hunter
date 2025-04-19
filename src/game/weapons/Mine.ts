@@ -1,4 +1,3 @@
-import { WeaponEntity } from "../core/entities/WeaponEntity";
 import { WeaponType } from './WeaponTypes';
 import { ProjectileName } from "../projectiles/ProjectileName";
 import { WeaponOptions, WeaponTexture } from "../core/types/weaponTypes";
@@ -31,16 +30,4 @@ export const MineConfig: WeaponOptions = {
   autoreload: true,
   hideWhileReload: true,
   projectile: ProjectileName.MINE
-}
-
-export class WeaponMine extends WeaponEntity {
-
-  static preload(scene: Phaser.Scene): void {
-    scene.load.image(WeaponMineTexture_0.key, WeaponMineTexture_0.url);
-  }
-
-  constructor(scene: Phaser.Scene, id: string) {
-    super(scene, id, MineConfig);  
-  }
-
 }

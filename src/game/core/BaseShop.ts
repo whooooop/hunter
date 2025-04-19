@@ -2,10 +2,16 @@ import { createLogger } from "../../utils/logger";
 import { settings } from "../settings";
 import { COLORS } from "./Constants";
 import { hexToNumber } from "../utils/colors";
+import { WeaponType } from "../weapons/WeaponTypes";
+import { getWeaponConfig } from "../weapons";
+import { emitEvent } from "./Events";
 
 const logger = createLogger('Shop');
 
 import weaponSlotImage from '../../assets/images/weapon_slot.png';
+import { ShopWeapon, ShopSlotElement, ShopEvents } from "./types/shopTypes";
+import { WeaponOptions } from "./types/weaponTypes";
+import { ScoreEvents } from "./types/scoreTypes";
 
 const weaponSlotTexture = 'weapon_slot_0';
 
@@ -26,8 +32,18 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
     protected interactionZone!: Phaser.GameObjects.Zone;
     protected interactionIcon!: Phaser.GameObjects.Sprite;
     protected interactionText!: Phaser.GameObjects.Text;
-    protected isPlayerNearby: boolean = false;
+    
+    // Храним ID ближайшего игрока, а не просто флаг
+    protected nearbyPlayerId: string | null = null;
     protected isShopOpen: boolean = false;
+    protected weapons: ShopWeapon[] = [];
+
+    // Состояние для открытого магазина
+    protected currentPlayerId: string | null = null;
+    protected currentPlayerBalance: number = 0;
+    protected purchasedWeaponTypes: Set<WeaponType> = new Set();
+    protected currentShopUI: Phaser.GameObjects.Container | null = null;
+    protected currentSlotElements: Map<WeaponType, ShopSlotElement> = new Map();
     
     constructor(scene: Phaser.Scene, x: number, y: number, options: ShopOptions) {
         super(scene, x, y, options.texture, 0);
@@ -78,62 +94,19 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
     /**
      * Создает иконку взаимодействия над магазином
      */
-    protected createInteractionIcon(): void {
-        if (!this.scene) return;
-        
-        // Создаем текст-подсказку над магазином
-        this.interactionText = this.scene.add.text(
-            150,
-            50,
-            'Нажмите E для взаимодействия',
-            {
-                fontSize: '16px',
-                color: '#ffffff',
-                stroke: '#000000',
-                strokeThickness: 4
-            }
-        );
-        
-        if (this.interactionText) {
-            this.interactionText.setOrigin(0.5);
-            this.interactionText.setVisible(false);
-            this.interactionText.setDepth(100);
-        }
-        
-        // Иконку можно добавить здесь, если есть текстура
-    }
-    
-    public setPlayerNearby(isNearby: boolean): void {
-        this.isPlayerNearby = isNearby;
-        if (this.isPlayerNearby) {
+    protected createInteractionIcon(): void {}
+
+    public setNearbyPlayer(isNearby: boolean): void {
+        if (isNearby) {
             this.showInteractionPrompt();
         } else {
             this.hideInteractionPrompt();
-        }
-    }
 
-    /**
-     * Стандартный метод update (переопределение метода Sprite)
-     */
-    public update(time: number, delta: number): void {
-        // Проверяем нажатие клавиши взаимодействия
-        if (this.isPlayerNearby && this.isInteractionKeyPressed()) {
-            this.onInteract();
+            // Если игрок отошел во время открытого магазина, закрываем его
+            if (this.isShopOpen) {
+                this.closeShop();
+            }
         }
-    }
-    
-    /**
-     * Проверяет, нажата ли клавиша взаимодействия
-     */
-    protected isInteractionKeyPressed(): boolean {
-        if (!this.scene || !this.scene.input || !this.scene.input.keyboard) return false;
-        
-        // Проверка нажатия клавиши E
-        const keys = this.scene.input.keyboard;
-        
-        return Phaser.Input.Keyboard.JustDown(
-            keys.addKey(Phaser.Input.Keyboard.KeyCodes.E)
-        );
     }
     
     /**
@@ -157,36 +130,41 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
         this.interactionText.setVisible(false);
         this.scene.tweens.killTweensOf(this.interactionText);
     }
-    
+
     /**
-     * Переопределяем действие при взаимодействии с магазином
+     * Открывает интерфейс магазина для конкретного игрока
+     * @param playerId ID игрока
      */
-    protected onInteract(): void {
-        if (!this.scene) return;
-        
-        if (!this.isShopOpen) {
-            this.openShop();
-        } else {
-            this.closeShop();
-        }
-    }
-    
-    /**
-     * Открывает интерфейс магазина
-     */
-    private openShop(): void {
+    public openShop(playerId: string, playerBalance: number, playerPurchasedWeapons: Set<WeaponType>, weapons: ShopWeapon[]): void {
+        if (this.isShopOpen) return; // Не открывать, если уже открыт
+
         this.isShopOpen = true;
+        this.currentPlayerId = playerId;
+        this.currentPlayerBalance = playerBalance
+        this.purchasedWeaponTypes = playerPurchasedWeapons;
+        this.weapons = weapons;
+        this.currentSlotElements.clear(); // Очищаем старые элементы слотов
         
         // Создаем основной контейнер интерфейса
         const shopUI = this.scene.add.container(0, 0);
         shopUI.setDepth(1000);
         shopUI.setScrollFactor(0); // Фиксирует UI на экране
         shopUI.setAlpha(0); // Начинаем с полностью прозрачного состояния
+        this.currentShopUI = shopUI; // Сохраняем ссылку
         
+        // Определяем количество слотов
+        const innerMaxSlots = 4;
+        const outerMaxSlots = 6;
+        
+        // Разделяем оружие для кругов
+        const weaponsForInner = this.weapons.slice(0, innerMaxSlots);
+        const weaponsForOuter = this.weapons.slice(innerMaxSlots, innerMaxSlots + outerMaxSlots);
+
         // Отрисовываем внутренний круг с 4 слотами
         const innerCircle = this.drawCircleWithSlots(shopUI, {
             circleRadius: 520 / 2,          // Радиус 260px
-            slotCount: 4,                   // 4 слота
+            slotCount: innerMaxSlots,        // Макс слотов
+            assignedWeapons: weaponsForInner,// Передаем оружие
             slotSize: 126,                  // Размер слота 126px
             marginFromEdge: 10,             // Отступ от края круга
             startAngle: Math.PI / 1.9,      // Начальный угол
@@ -201,7 +179,8 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
         // Отрисовываем внешний круг с 6 слотами
         const outerCircle = this.drawCircleWithSlots(shopUI, {
             circleRadius: 810 / 2,          // Радиус 405px (больше первого)
-            slotCount: 6,                   // 6 слотов
+            slotCount: outerMaxSlots,        // Макс слотов
+            assignedWeapons: weaponsForOuter,// Передаем оружие
             slotSize: 126,                  // Размер слота такой же
             marginFromEdge: 10,             // Чуть больший отступ
             startAngle: Math.PI / 1.9,        // Начальный угол (вверх)
@@ -213,8 +192,8 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
             position: { x: -290, y: -170 }   // Своя позиция для внешнего круга
         });
         
-        // Сохраняем ссылку на UI
-        this.scene.registry.set('shopUI', shopUI);
+        // Вызываем обновление доступности ПОСЛЕ создания всех слотов
+        this.updateSlotsAvailability();
         
         // Анимация появления всего интерфейса
         shopUI.setAlpha(0);
@@ -252,6 +231,7 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
      * @returns Контейнер круга для возможности анимаций
      */
     private drawCircleWithSlots(container: Phaser.GameObjects.Container, options: {
+        assignedWeapons: ShopWeapon[];
         circleRadius: number,       // Радиус основного круга
         slotCount: number,          // Количество слотов
         slotSize: number,           // Размер слота
@@ -306,6 +286,8 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
         const endAngle = Math.PI / 2 - options.angleMargin; // Конечный угол
         const angleRange = endAngle - options.startAngle; // Диапазон углов
         
+        const totalSlotsToDraw = options.slotCount; // Рисуем все слоты, чтобы сохранить позиционирование
+
         // Вычисляем положение каждого слота
         for (let i = 0; i < options.slotCount; i++) {
             // Равномерно распределяем по дуге с заданными границами
@@ -318,32 +300,90 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
             const x = centerX + Math.cos(angle) * placementRadius;
             const y = centerY + Math.sin(angle) * placementRadius;
             
-            // Создаем спрайт слота с текстурой weaponSlotTexture
-            const weaponSlot = this.scene.add.sprite(x, y, weaponSlotTexture);
-            weaponSlot.setScale(options.slotSize / weaponSlot.width); // Масштабируем до нужного размера
-            weaponSlot.setDepth(options.zIndexBase + 1);
+            // Получаем данные об оружии для этого слота, если они есть
+            const weaponData = options.assignedWeapons[i];
             
-            // Добавляем номер в центр слота
-            const slotText = this.scene.add.text(x, y, `${i+1}`, {
-                fontSize: '32px',
-                color: '#ffffff',
-                stroke: '#000000',
-                strokeThickness: 3,
-                fontStyle: 'bold'
-            });
-            slotText.setOrigin(0.5);
-            slotText.setDepth(options.zIndexBase + 2);
+            // Рисуем фоновый спрайт слота
+            const slotBackground = this.scene.add.sprite(x, y, weaponSlotTexture);
+            slotBackground.setScale(options.slotSize / slotBackground.width);
+            slotBackground.setDepth(options.zIndexBase + 1);
+            // slotBackground.setInteractive(); // Сделаем интерактивным, чтобы закрывать магазин при клике на пустое место
+            // slotBackground.on('pointerdown', () => {
+            //     this.closeShop();
+            // });
             
-            // Делаем слоты интерактивными
-            weaponSlot.setInteractive();
-            weaponSlot.on('pointerdown', () => {
-                console.log(`Выбран слот ${i+1}`);
-                // Здесь можно добавить логику выбора оружия
-            });
-            
-            // Добавляем слот и текст в контейнер круга
-            circleContainer.add(weaponSlot);
-            circleContainer.add(slotText);
+            if (weaponData) {
+                const config: WeaponOptions | undefined = getWeaponConfig(weaponData.type);
+                if (config && config.texture) {
+                    // Рисуем иконку оружия
+                    const weaponIcon = this.scene.add.sprite(x, y, config.texture.key);
+                    // Масштабируем иконку, чтобы она помещалась в слот с небольшим отступом
+                    const iconScale = (options.slotSize * 0.4) / (weaponIcon.height || 1);
+                    weaponIcon.setScale(iconScale);
+                    weaponIcon.setDepth(options.zIndexBase + 2); // Иконка над фоном
+
+                    // Рисуем цену под иконкой
+                    const priceText = this.scene.add.text(x, y + slotRadius * 0.7, weaponData.price.toString(), {
+                        fontFamily: settings.fontFamily,
+                        fontSize: `${Math.round(options.slotSize * 0.22)}px`, // Размер шрифта зависит от размера слота
+                        color: COLORS.INTERACTIVE_BUTTON_TEXT,
+                        stroke: '#000000',
+                        strokeThickness: 2,
+                        fontStyle: 'bold'
+                    });
+                    priceText.setOrigin(0.5, 0.5);
+                    priceText.setDepth(options.zIndexBase + 3); // Текст над иконкой
+
+                    // Сохраняем элементы для обновления доступности
+                    this.currentSlotElements.set(weaponData.type, { 
+                        background: slotBackground,
+                        icon: weaponIcon,
+                        priceText: priceText,
+                        weaponData: weaponData
+                    });
+
+                    // Обработчик клика для покупки
+                    weaponIcon.setInteractive(); 
+                    weaponIcon.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+                        pointer.event.stopPropagation(); // Останавливаем всплытие
+
+                        if (!this.currentPlayerId) return;
+
+                        // Проверяем, можно ли купить
+                        const canAfford = weaponData.price <= this.currentPlayerBalance;
+                        const isPurchased = this.purchasedWeaponTypes.has(weaponData.type);
+
+                        if (canAfford && !isPurchased) {
+                            this.purchasedWeapon(weaponData.type);
+                            this.closeShop();
+                        } else if (isPurchased) {
+                            // Можно добавить звук "уже куплено"
+                        } else {
+                            // Можно добавить звук "не хватает денег"
+                        }
+                    });
+
+                    // Добавляем фон, иконку и текст в контейнер
+                    circleContainer.add(slotBackground);
+                    circleContainer.add(weaponIcon);
+                    circleContainer.add(priceText);
+
+                } else {
+                    // Если конфиг не найден, делаем слот невидимым (как пустой)
+                    slotBackground.setVisible(false);
+                    // Сохраняем только фон, чтобы он мог быть скрыт/показан
+                    this.currentSlotElements.set(weaponData.type, { 
+                        background: slotBackground,
+                        weaponData: weaponData
+                    });
+                    circleContainer.add(slotBackground);
+                }
+            } else {
+                // Если оружия для этого слота нет, делаем фон невидимым
+                slotBackground.setVisible(false);
+                // Не сохраняем в currentSlotElements, так как тут нет оружия
+                circleContainer.add(slotBackground);
+            }
         }
         
         // Добавляем контейнер круга в основной контейнер
@@ -352,29 +392,48 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
         return circleContainer;
     }
     
+    protected purchasedWeapon(weaponType: WeaponType): void {
+      const weaponData = this.weapons.find(weapon => weapon.type === weaponType)!;
+
+      emitEvent(this.scene, ShopEvents.WeaponPurchasedEvent, { 
+        playerId: this.currentPlayerId!, 
+        price: weaponData.price,
+        weaponType: weaponType
+      });
+
+      emitEvent(this.scene, ScoreEvents.DecreaseScoreEvent, { 
+          playerId: this.currentPlayerId!, 
+          score: weaponData.price
+      });
+
+      this.purchasedWeaponTypes.add(weaponType);
+      this.updateSlotsAvailability();
+    }
+
     /**
      * Закрывает интерфейс магазина
      */
     private closeShop(): void {
-        this.isShopOpen = false;
-        const shopUI = this.scene.registry.get('shopUI') as Phaser.GameObjects.Container;
-        
-        if (shopUI) {
+        if (!this.isShopOpen) return; // Не закрывать, если уже закрыт
+
+        this.isShopOpen = false; // Сначала меняем флаг
+        const shopUIToClose = this.currentShopUI; // Сохраняем ссылку для анимации
+
+        if (shopUIToClose) {
             // Анимация исчезновения UI
             this.scene.tweens.add({
-                targets: shopUI,
+                targets: shopUIToClose,
                 alpha: 0,
                 duration: 200,
                 ease: 'Power2',
                 onComplete: () => {
                     // Уничтожаем после завершения анимации
-                    shopUI.destroy();
-                    this.scene.registry.remove('shopUI');
+                    shopUIToClose.destroy();
                 }
             });
             
             // Находим контейнеры кругов для отдельных анимаций
-            shopUI.getAll().forEach((gameObject: Phaser.GameObjects.GameObject, index: number) => {
+            shopUIToClose.getAll().forEach((gameObject: Phaser.GameObjects.GameObject) => {
                 if (gameObject instanceof Phaser.GameObjects.Container) {
                     // Анимация уменьшения для каждого круга с небольшой задержкой
                     this.scene.tweens.add({
@@ -387,12 +446,62 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
                 }
             });
         }
+
+        // Сбрасываем состояние ПОСЛЕ начала анимации
+        this.currentShopUI = null;
+        this.currentPlayerId = null;
+        this.currentPlayerBalance = 0;
+        this.purchasedWeaponTypes.clear();
+        this.currentSlotElements.clear();
+    }
+
+    /**
+     * Обновляет внешний вид и интерактивность всех слотов 
+     * на основе текущего баланса и купленных предметов.
+     */
+    private updateSlotsAvailability(): void {
+        if (!this.isShopOpen) return;
+
+        this.currentSlotElements.forEach((elements, weaponType) => {
+            const weaponData = elements.weaponData;
+            const isPurchased = this.purchasedWeaponTypes.has(weaponType);
+            const canAfford = weaponData.price <= this.currentPlayerBalance;
+
+            // Обновляем видимость цены
+            if (elements.priceText) {
+                elements.priceText.setVisible(!isPurchased);
+            }
+
+            // Обновляем доступность и внешний вид иконки/фона
+            const isAvailable = !isPurchased && canAfford;
+            const alpha = isPurchased ? 0.6 : (canAfford ? 1 : 0.4); // Разная прозрачность
+            const tint = isPurchased ? 0xaaaaaa : (canAfford ? 0xffffff : 0x888888); // Оттенки серого
+
+            if (elements.icon) {
+                elements.icon.setAlpha(alpha);
+                elements.icon.setTint(tint);
+                if (isAvailable) {
+                    elements.icon.setInteractive(); // Включаем интерактивность
+                } else {
+                    elements.icon.disableInteractive(); // Выключаем интерактивность
+                }
+            }
+
+            // Можно также менять фон, если нужно
+            elements.background.setAlpha(alpha); 
+            elements.background.setTint(tint);
+            // Фону оставляем интерактивность для закрытия магазина
+        });
     }
 
     /**
      * Уничтожение объекта
      */
     public destroy(): void {
+        // Принудительно закрываем магазин и отписываемся от событий, если он был открыт
+        if (this.isShopOpen) {
+            this.closeShop(); 
+        }
         if (this.interactionZone) this.interactionZone.destroy();
         if (this.interactionText) this.interactionText.destroy();
 

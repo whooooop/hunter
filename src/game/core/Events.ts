@@ -8,7 +8,8 @@ import { BloodEvents } from './controllers/BloodController';
 import { WeaponEvents, WeaponFireEventsPayload } from './types/weaponTypes';
 import { EnemyEntityEvents } from './types/enemyTypes';
 import { ScoreEvents, UpdateScoreEventPayload, IncreaseScoreEventPayload, DecreaseScoreEventPayload } from './types/scoreTypes';
-import { PlayerEvents, PlayerSetWeaponEventPayload } from './types/playerTypes';  
+import { PlayerEvents, PlayerSetWeaponEventPayload } from './types/playerTypes';
+import { ShopEvents, WeaponPurchasedPayload } from './types/shopTypes';
 
 interface EventPayloadMap {
     // Weapons
@@ -32,6 +33,9 @@ interface EventPayloadMap {
 
     // Player
     [PlayerEvents.PlayerSetWeaponEvent]: PlayerSetWeaponEventPayload;
+
+    // Shop
+    [ShopEvents.WeaponPurchasedEvent]: WeaponPurchasedPayload;
 }
 
 // Перегрузка для emitEvent

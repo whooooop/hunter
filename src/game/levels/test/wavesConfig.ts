@@ -1,4 +1,3 @@
-import { RabbitEnemy } from "../../enemies/rabbit/RabbitEntity";
 import { settings } from "../../settings";
 import { Wave } from '../../core/controllers/WaveController'
 import { EnemyType } from "../../enemies";
@@ -24,7 +23,7 @@ export function createWavesConfig(): Wave[] {
           options: { health: 1000, moveX: -1, moveY: 0, direction: -1 },
         },
         {
-          delay: 60000,
+          delay: 0,
           enemyType: EnemyType.RABBIT,
           position: [rightStartPointX, 400],
           options: { moveX: -1, moveY: 0, direction: -1 },
