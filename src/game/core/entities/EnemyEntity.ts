@@ -65,7 +65,9 @@ export class EnemyEntity extends DamageableEntity {
     const payload: DecalEventPayload = { particle: this.gameObject, x: this.gameObject.x, y: this.gameObject.y };
     const lastDamage = this.damages[this.damages.length - 1];
 
-    emitEvent(this.scene, EnemyEntityEvents.enemyDeath, payload);
+    emitEvent(this.scene, EnemyEntityEvents.enemyDeath, {
+      id: this.id,
+    });
     
     this.addScore(this.score.value, lastDamage.damage.playerId);
     this.destroy();

@@ -1,9 +1,17 @@
-import { createEnemy, EnemyType, preloadEnemies } from "../../enemies";
+import { generateId } from "../../../utils/stringGenerator";
+import { EnemyType, preloadEnemies } from "../../enemies";
 import { emitEvent } from "../Events";
 
 export enum WaveEvents {
   WaveStartEvent = 'WaveStartEvent',
   SpawnEnemyEvent = 'SpawnEnemyEvent',
+}
+
+export interface SpawnEnemyPayload {
+  id: string;
+  enemyType: EnemyType;
+  position: { x: number, y: number };
+  options: any;
 }
 
 export interface WaveStartEventPayload {
@@ -74,8 +82,12 @@ export class WaveController {
     const nextSpawn = spawns[spawnIndex + 1];
 
     this.scene.time.delayedCall(spawn.delay, () => {
-      const enemy = createEnemy(spawn.enemyType, this.scene, spawn.position[0], spawn.position[1], spawn.options);
-      emitEvent(this.scene, WaveEvents.SpawnEnemyEvent, enemy);
+      emitEvent(this.scene, WaveEvents.SpawnEnemyEvent, {
+        id: generateId(),
+        enemyType: spawn.enemyType,
+        position: { x: spawn.position[0], y: spawn.position[1] },
+        options: spawn.options
+      });
 
       if (nextSpawn) {
         this.nextSpawn(waveIndex, spawnIndex + 1);

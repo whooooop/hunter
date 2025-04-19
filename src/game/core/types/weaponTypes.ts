@@ -12,7 +12,13 @@ export enum WeaponEvents {
 }
 
 export interface WeaponFireEventsPayload {
-  projectile: ProjectileEntity;
+  playerId: string;
+  speed: number[];
+  damage: number;
+  weaponName: string;
+  projectile: ProjectileName;
+  originPoint: { x: number, y: number };
+  targetPoint: { x: number, y: number };
 }
 
 export interface WeaponAudio {

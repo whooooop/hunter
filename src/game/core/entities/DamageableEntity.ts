@@ -37,6 +37,10 @@ export class DamageableEntity {
     this.initialHealth = options.health;
   }
 
+  public getGameObject(): Phaser.Physics.Arcade.Sprite {
+    return this.gameObject;
+  }
+
   public getHealth(): number {
     return this.health;
   }

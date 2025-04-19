@@ -1,12 +1,11 @@
 import * as Phaser from 'phaser';
-import { WaveStartEventPayload } from './controllers/WaveController';
+import { SpawnEnemyPayload, WaveStartEventPayload } from './controllers/WaveController';
 import { WaveEvents } from './controllers/WaveController';
-import { DamageableEntity } from './entities/DamageableEntity';
 import { DecalEventPayload } from './types/decals';
 import { ShellCasingEvents } from './entities/ShellCasingEntity';
 import { BloodEvents } from './controllers/BloodController';
 import { WeaponEvents, WeaponFireEventsPayload } from './types/weaponTypes';
-import { EnemyEntityEvents } from './types/enemyTypes';
+import { EnemyDeathPayload, EnemyEntityEvents } from './types/enemyTypes';
 import { ScoreEvents, UpdateScoreEventPayload, IncreaseScoreEventPayload, DecreaseScoreEventPayload } from './types/scoreTypes';
 import { PlayerEvents, PlayerSetWeaponEventPayload } from './types/playerTypes';
 import { ShopEvents, WeaponPurchasedPayload } from './types/shopTypes';
@@ -17,10 +16,10 @@ interface EventPayloadMap {
 
     // Waves
     [WaveEvents.WaveStartEvent]: WaveStartEventPayload;
-    [WaveEvents.SpawnEnemyEvent]: DamageableEntity;
+    [WaveEvents.SpawnEnemyEvent]: SpawnEnemyPayload;
 
     // Enemies
-    [EnemyEntityEvents.enemyDeath]: DecalEventPayload;
+    [EnemyEntityEvents.enemyDeath]: EnemyDeathPayload;
 
     // Decals
     [ShellCasingEvents.shellCasingParticleDecal]: DecalEventPayload;

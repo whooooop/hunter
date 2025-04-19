@@ -169,7 +169,7 @@ export class ForestLocation extends BaseLocation {
       // Добавляем дерево в группу интерактивных объектов
       if (this.scene instanceof GameplayScene) {
         const gameScene = this.scene as GameplayScene;
-        gameScene.addDamageableObject(object);
+        gameScene.addDamageableObject(id, object);
       }
     });
   }

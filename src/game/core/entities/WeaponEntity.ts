@@ -169,7 +169,7 @@ export class WeaponEntity {
     const sightX = firePointX + 150;
     const sightY = firePointY + Math.tan(this.weaponAngle) * (sightX - firePointX);
 
-    this.createProjectile(playerId, firePointX, firePointY, sightX, sightY);
+    this.createProjectileEvent(playerId, firePointX, firePointY, sightX, sightY);
 
     // Создаем гильзу после выстрела
     if (this.options.shellCasings && this.scene instanceof GameplayScene) {
@@ -197,15 +197,19 @@ export class WeaponEntity {
     return recoil;
   }
 
-  protected createProjectile(playerId: string, x: number, y: number, sightX: number, sightY: number): void {
+  protected createProjectileEvent(playerId: string, x: number, y: number, sightX: number, sightY: number): void {
     if (!this.options.projectile || !(this.scene instanceof GameplayScene)) {
       return;
     }
-
-    const projectile = createProjectile(this.scene, this.options.projectile, x, y, playerId, this.name);
-    projectile.setForceVector(sightX, sightY, this.options.speed, this.options.damage);
-    
-    emitEvent(this.scene, WeaponEvents.FireEvent, { projectile });
+    emitEvent(this.scene, WeaponEvents.FireEvent, { 
+      playerId,
+      speed: this.options.speed,
+      damage: this.options.damage,
+      weaponName: this.name,
+      projectile: this.options.projectile,
+      originPoint: { x, y },
+      targetPoint: { x: sightX, y: sightY }
+    });
   }
 
   /**

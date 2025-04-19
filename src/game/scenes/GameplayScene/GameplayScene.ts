@@ -15,7 +15,7 @@ import { DecalController } from '../../core/controllers/DecalController';
 import { DamageableEntity } from '../../core/entities/DamageableEntity';
 import { createShellCasingTexture, ShellCasingEvents } from '../../core/entities/ShellCasingEntity';
 import { DecalEventPayload } from '../../core/types/decals';
-import { WaveController } from '../../core/controllers/WaveController';
+import { SpawnEnemyPayload, WaveController } from '../../core/controllers/WaveController';
 import { createWavesConfig } from '../../levels/test/wavesConfig'
 import { WaveStartEventPayload, WaveEvents } from '../../core/controllers/WaveController';
 import { generateId } from '../../../utils/stringGenerator';
@@ -25,7 +25,7 @@ import { WeaponType } from '../../weapons/WeaponTypes';
 import { preloadProjectiles } from '../../projectiles';
 import { WeaponFireEventsPayload } from '../../core/types/weaponTypes';
 import { WeaponEvents } from '../../core/types/weaponTypes';
-import { EnemyEntityEvents } from '../../core/types/enemyTypes';
+import { EnemyEntityEvents, EnemyDeathPayload } from '../../core/types/enemyTypes';
 import { ScoreController } from '../../core/controllers/ScoreController';
 import { ScoreEvents, UpdateScoreEventPayload } from '../../core/types/scoreTypes';
 import { WeaponController } from '../../core/controllers/WeaponController';
@@ -34,6 +34,8 @@ import { testLevel } from '../../levels/test';
 import { ShopController } from '../../core/controllers/ShopController';
 import { WeaponPurchasedPayload } from '../../core/types/shopTypes';
 import { ShopEvents } from '../../core/types/shopTypes';
+import { MultiplayerController } from '../../core/controllers/MultiplayerController';
+import { createEnemy } from '../../enemies';
 
 const logger = createLogger('GameplayScene');
 
@@ -47,9 +49,9 @@ export class GameplayScene extends Phaser.Scene {
   private location!: BaseLocation;
   
   private shop!: BaseShop;
-  private enemies: Set<DamageableEntity> = new Set();
+  private enemies: Map<string, DamageableEntity> = new Map();
   private shellCasings!: Phaser.Physics.Arcade.Group; // Группа для гильз
-  private damageableObjects: Set<DamageableEntity> = new Set();
+  private damageableObjects: Map<string, DamageableEntity> = new Map();
 
   private waveInfo!: WaveInfo;
   private weaponStatus!: WeaponStatus;
@@ -59,6 +61,7 @@ export class GameplayScene extends Phaser.Scene {
   private scoreController!: ScoreController;
   private weaponController!: WeaponController;
   private shopController!: ShopController;
+  private multiplayerController!: MultiplayerController;
   private changeWeaponKey!: Phaser.Input.Keyboard.Key;
 
   private mainPlayerId!: string;
@@ -98,6 +101,8 @@ export class GameplayScene extends Phaser.Scene {
     this.decalController = new DecalController(this, 0, 0, settings.display.width, settings.display.height);
     this.decalController.setDepth(5);
 
+    this.multiplayerController = new MultiplayerController(this);
+
     // Устанавливаем границы мира
     this.physics.world.setBounds(0, 0, settings.display.width, settings.display.height);
     
@@ -125,8 +130,8 @@ export class GameplayScene extends Phaser.Scene {
 
     onEvent(this, WeaponEvents.FireEvent, (payload: WeaponFireEventsPayload) => this.handleFireProjectile(payload));
     onEvent(this, WaveEvents.WaveStartEvent, (payload: WaveStartEventPayload) => this.handleWaveStart(payload));
-    onEvent(this, WaveEvents.SpawnEnemyEvent, (payload: DamageableEntity) => this.handleSpawnEnemy(payload));
-    onEvent(this, EnemyEntityEvents.enemyDeath, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
+    onEvent(this, WaveEvents.SpawnEnemyEvent, (payload: SpawnEnemyPayload) => this.handleSpawnEnemy(payload));
+    onEvent(this, EnemyEntityEvents.enemyDeath, (payload: EnemyDeathPayload) => this.handleEnemyDeath(payload));
     onEvent(this, ScoreEvents.UpdateScoreEvent, (payload: UpdateScoreEventPayload) => this.handleUpdateScore(payload));
     onEvent(this, PlayerEvents.PlayerSetWeaponEvent, (payload: PlayerSetWeaponEventPayload) => this.handleSetWeapon(payload));
     onEvent(this, ShopEvents.WeaponPurchasedEvent, (payload: WeaponPurchasedPayload) => this.handleWeaponPurchased(payload));
@@ -142,19 +147,29 @@ export class GameplayScene extends Phaser.Scene {
     //   undefined,
     //   this
     // );
+    this.multiplayerController.init();
   }
 
-  private handleFireProjectile({ projectile }: WeaponFireEventsPayload): void {
-    this.projectileController.addProjectile(projectile);
+  private handleFireProjectile(payload: WeaponFireEventsPayload): void {
+    this.projectileController.addProjectile(payload);
   }
 
   private handleDrowDecal(payload: DecalEventPayload): void {
     this.decalController.drawParticle(payload.particle, payload.x, payload.y);
   }
 
-  private handleSpawnEnemy(payload: DamageableEntity): void {
-    this.enemies.add(payload);
-    this.damageableObjects.add(payload);
+  private handleEnemyDeath({ id }: EnemyDeathPayload): void {
+    const enemy = this.enemies.get(id)!;
+    const gameObject = enemy.getGameObject();
+    this.enemies.delete(id);
+    this.damageableObjects.delete(id);
+    this.decalController.drawParticle(gameObject, gameObject.x, gameObject.y);
+  }
+
+  private handleSpawnEnemy({ id, enemyType, position, options }: SpawnEnemyPayload): void {
+    const enemy = createEnemy(id, enemyType, this, position.x, position.y, options);
+    this.enemies.set(id, enemy);
+    this.damageableObjects.set(id, enemy);
   }
 
   private handleWaveStart(payload: WaveStartEventPayload) {
@@ -196,8 +211,8 @@ export class GameplayScene extends Phaser.Scene {
    * Добавляет интерактивный объект в группу объектов, взаимодействующих с пулями
    * @param object Спрайт объекта для добавления в группу
    */
-  public addDamageableObject(object: DamageableEntity): void {
-    this.damageableObjects.add(object);
+  public addDamageableObject(id: string, object: DamageableEntity): void {
+    this.damageableObjects.set(id, object);
   }
 
   public addShop(shop: BaseShop): void {

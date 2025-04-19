@@ -2,6 +2,8 @@ import * as Phaser from 'phaser';
 import { ProjectileEntity, ProjectileType } from '../entities/ProjectileEntity';
 import { rayRectIntersectionRobust } from '../../utils/GeometryUtils';
 import { DamageableEntity } from '../entities/DamageableEntity';
+import { WeaponFireEventsPayload } from '../types/weaponTypes';
+import { createProjectile } from '../../projectiles';
 
 export enum ProjectileEvents {
   ProjectileHit = 'ProjectileHit',
@@ -28,15 +30,15 @@ interface ProjectileControllerOptions {
 export class ProjectileController {
   private debug: boolean = false;
   private scene: Phaser.Scene;
-  private damageableObjects: Set<DamageableEntity>;
-  private projectiles: Map<ProjectileEntity, ProjectileEntity> = new Map();
-  private projectilesNotActivated: Map<ProjectileEntity, ProjectileEntity> = new Map();
+  private damageableObjects: Map<string, DamageableEntity>;
+  private projectiles: Set<ProjectileEntity> = new Set();
+  private projectilesNotActivated: Set<ProjectileEntity> = new Set();
   private projectileHits: HitGroup[] = [];
   private simulate: boolean;
 
   constructor(
     scene: Phaser.Scene, 
-    damageableObjects: Set<DamageableEntity>, 
+    damageableObjects: Map<string, DamageableEntity>, 
     options: ProjectileControllerOptions
   ) {
     this.scene = scene;
@@ -44,9 +46,11 @@ export class ProjectileController {
     this.simulate = options.simulate;
   }
   
-  public addProjectile(projectile: ProjectileEntity): void {
-    this.projectiles.set(projectile, projectile);
-    this.projectilesNotActivated.set(projectile, projectile);
+  public addProjectile({ projectile, originPoint, targetPoint, playerId, weaponName, speed, damage }: WeaponFireEventsPayload): void {
+    const object = createProjectile(this.scene, projectile, originPoint.x, originPoint.y, playerId, weaponName);
+    object.setForceVector(targetPoint.x, targetPoint.y, speed, damage);
+    this.projectiles.add(object);
+    this.projectilesNotActivated.add(object);
   }
 
   private activateProjectile(projectile: ProjectileEntity): void {

@@ -5,6 +5,10 @@ export enum EnemyEntityEvents {
   enemyDeath = 'enemyDeath',
 }
 
+export interface EnemyDeathPayload {
+  id: string;
+}
+
 export interface EnemyEntityOptions {
   health: number;
   depthOffset?: number;
