@@ -5,7 +5,7 @@ import { LocationBounds } from '../BaseLocation';
 import { WeaponEntity } from './WeaponEntity';
 import { MotionController } from '../controllers/MotionController';
 import { ShadowEntity } from './ShadowEntity';
-import { emitEvent, onEvent } from '../Events';
+import { onEvent } from '../Events';
 import { Player } from '../types/playerTypes';
 
 const TEXTURE_PLAYER = 'player';
@@ -27,6 +27,10 @@ export class PlayerEntity {
   private moveX: number = 0;
   private moveY: number = 0;
   private direction: number = 1;
+
+  // Целевая позиция для интерполяции
+  private targetX: number | null = null;
+  private targetY: number | null = null;
 
   // Параметры прыжка
   public isJumping: boolean = false;
@@ -68,13 +72,13 @@ export class PlayerEntity {
   }
 
   private handlePlayerStateRemote(payload: Player.Events.State.Payload): void {
-    console.log('handlePlayerStateRemote', payload.playerId);
     if (payload.playerId !== this.id) {
       return;
     }
 
-    this.gameObject.x = payload.position.x;
-    this.gameObject.y = payload.position.y;
+    // Сохраняем целевую позицию вместо прямого присваивания
+    this.targetX = payload.position.x;
+    this.targetY = payload.position.y;
   }
 
   public getId(): string {
@@ -101,11 +105,35 @@ export class PlayerEntity {
   }
   
   public update(time: number, delta: number): void {
+    // Интерполяция к целевой позиции
+    if (this.targetX && this.targetY) {
+      const lerpFactor = 0.1; // Коэффициент сглаживания (0-1). Меньше значение -> плавнее движение.
+      this.gameObject.x = Phaser.Math.Interpolation.Linear([this.gameObject.x, this.targetX], lerpFactor);
+      this.gameObject.y = Phaser.Math.Interpolation.Linear([this.gameObject.y, this.targetY], lerpFactor);
+      // Если очень близко к цели, "примагничиваемся", чтобы избежать дрожания
+      if (Phaser.Math.Distance.Between(this.gameObject.x, this.gameObject.y, this.targetX, this.targetY) < 1) {
+        this.gameObject.x = this.targetX;
+        this.gameObject.y = this.targetY;
+      }
+    }
+
+
+
+    // if (this.locationBounds) {
+    //   // Применяем ограничения к интерполированной позиции
+    //   this.constrainPosition(this.locationBounds);
+    //   // Также обновляем targetX/Y, если они вышли за границы после constrainPosition
+    //   // Это предотвращает попытку интерполяции к точке за пределами границ
+    //   this.targetX = this.gameObject.x;
+    //   this.targetY = this.gameObject.y;
+    // }
+
     // Ограничиваем позицию игрока внутри границ локации
     if (this.locationBounds) {
       this.constrainPosition(this.locationBounds);
     }
     this.motionController.update(time, delta);
+    
     this.shadow.update(time, delta);
      
     // Обрабатываем стрельбу и обновляем оружие только если оно назначено
@@ -207,10 +235,9 @@ export class PlayerEntity {
    */
   private constrainPosition(bounds: LocationBounds): void {
     if (bounds) {
-      if (this.gameObject.x < bounds.left) this.gameObject.x = bounds.left;
-      if (this.gameObject.x > bounds.right) this.gameObject.x = bounds.right;
-      if (this.gameObject.y < bounds.top) this.gameObject.y = bounds.top;
-      if (this.gameObject.y > bounds.bottom) this.gameObject.y = bounds.bottom;
+      // Используем Math.min/max для ограничения внутри границ
+      this.gameObject.x = Math.max(bounds.left, Math.min(bounds.right, this.gameObject.x));
+      this.gameObject.y = Math.max(bounds.top, Math.min(bounds.bottom, this.gameObject.y));
     }
   }
 

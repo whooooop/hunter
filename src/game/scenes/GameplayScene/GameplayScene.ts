@@ -262,7 +262,7 @@ export class GameplayScene extends Phaser.Scene {
   private updatePlayerState(time: number, delta: number): void {
     const player = this.players.get(this.mainPlayerId)!;
     const state = player.getPlayerState();
-    if (time - this.lastSentState < 500) {
+    if (time - this.lastSentState < 40) {
       return;
     }
     emitEvent(this, Player.Events.State.Local, state);
