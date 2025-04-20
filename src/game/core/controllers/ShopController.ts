@@ -1,5 +1,5 @@
 import { BaseShop } from "../BaseShop";
-import { Player } from "../../entities/Player";
+import { PlayerEntity } from "../entities/PlayerEntity";
 import { WeaponType } from "../../weapons/WeaponTypes";
 import { UpdateScoreEventPayload } from "../types/scoreTypes";
 import { ScoreEvents } from "../types/scoreTypes";
@@ -9,7 +9,7 @@ import { ShopEvents, ShopWeapon, WeaponPurchasedPayload } from "../types/shopTyp
 export class ShopController {
   private scene: Phaser.Scene;
   private shop: BaseShop;
-  private players: Map<string, Player>;
+  private players: Map<string, PlayerEntity>;
   private playerBalance: Map<string, number> = new Map();
   private playerPurchasedWeapon: Map<string, Set<WeaponType>> = new Map();
   private weapons: ShopWeapon[];
@@ -17,7 +17,7 @@ export class ShopController {
   private interactablePlayerId: string | null = null;
   private openShopKey: Phaser.Input.Keyboard.Key;
 
-  constructor(scene: Phaser.Scene, players: Map<string, Player>, shop: BaseShop, weapons: ShopWeapon[]) {
+  constructor(scene: Phaser.Scene, players: Map<string, PlayerEntity>, shop: BaseShop, weapons: ShopWeapon[]) {
     this.scene = scene;
     this.shop = shop;
     this.players = players;

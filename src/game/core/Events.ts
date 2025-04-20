@@ -4,15 +4,20 @@ import { WaveEvents } from './controllers/WaveController';
 import { DecalEventPayload } from './types/decals';
 import { ShellCasingEvents } from './entities/ShellCasingEntity';
 import { BloodEvents } from './controllers/BloodController';
-import { WeaponEvents, WeaponFireEventsPayload } from './types/weaponTypes';
+import { Weapon } from './types/weaponTypes';
 import { EnemyDeathPayload, EnemyEntityEvents } from './types/enemyTypes';
 import { ScoreEvents, UpdateScoreEventPayload, IncreaseScoreEventPayload, DecreaseScoreEventPayload } from './types/scoreTypes';
-import { PlayerEvents, PlayerSetWeaponEventPayload } from './types/playerTypes';
+import { Player } from './types/playerTypes';
 import { ShopEvents, WeaponPurchasedPayload } from './types/shopTypes';
 
 interface EventPayloadMap {
     // Weapons
-    [WeaponEvents.FireEvent]: WeaponFireEventsPayload;
+    [Weapon.Events.CreateProjectile.Local]: Weapon.Events.CreateProjectile.Payload;
+    [Weapon.Events.CreateProjectile.Remote]: Weapon.Events.CreateProjectile.Payload;
+    [Weapon.Events.FireAction.Local]: Weapon.Events.FireAction.Payload;
+    [Weapon.Events.FireAction.Remote]: Weapon.Events.FireAction.Payload;
+    [Weapon.Events.ReloadAction.Local]: Weapon.Events.ReloadAction.Payload;
+    [Weapon.Events.ReloadAction.Remote]: Weapon.Events.ReloadAction.Payload;
 
     // Waves
     [WaveEvents.WaveStartEvent]: WaveStartEventPayload;
@@ -31,7 +36,8 @@ interface EventPayloadMap {
     [ScoreEvents.UpdateScoreEvent]: UpdateScoreEventPayload;
 
     // Player
-    [PlayerEvents.PlayerSetWeaponEvent]: PlayerSetWeaponEventPayload;
+    [Player.Events.SetWeapon.Local]: Player.Events.SetWeapon.Payload;
+    [Player.Events.SetWeapon.Remote]: Player.Events.SetWeapon.Payload;
 
     // Shop
     [ShopEvents.WeaponPurchasedEvent]: WeaponPurchasedPayload;

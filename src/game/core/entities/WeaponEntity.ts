@@ -14,9 +14,9 @@ import { createLogger } from "../../../utils/logger";
 import { GameplayScene } from "../../scenes/GameplayScene/GameplayScene";
 import { ShellCasingEntity } from "./ShellCasingEntity";
 import { RecoilForceType } from "../types/recoilForce";
-import { emitEvent } from "../Events";
+import { emitEvent, onEvent } from "../Events";
 import { createProjectile } from "../../projectiles";
-import { WeaponOptions, WeaponEvents, FireParams, AudioAssets } from "../types/weaponTypes";
+import { Weapon, FireParams, AudioAssets } from "../types/weaponTypes";
 
 const logger = createLogger('WeaponEntity');
 
@@ -32,7 +32,7 @@ export class WeaponEntity {
   protected currentAmmo: number = 0;
   protected canFireAgain: boolean = true; // Флаг для неавтоматического оружия
   protected weaponAngle: number = 0; // Текущий угол наклона оружия
-  protected options: WeaponOptions;
+  protected options: Weapon.Config;
 
   protected x: number = 0;
   protected y: number = 0;
@@ -46,7 +46,7 @@ export class WeaponEntity {
     afterFire: null,
   }
 
-  constructor(scene: Phaser.Scene, id: string, options: WeaponOptions) {
+  constructor(scene: Phaser.Scene, id: string, options: Weapon.Config) {
     this.id = id;
     this.scene = scene;
     this.name = options.name;
@@ -124,9 +124,18 @@ export class WeaponEntity {
 
   public reload(): void {
     if (this.isReloading || this.currentAmmo === this.options.magazineSize) return;
-    
-    this.playReloadSound();
+
+    emitEvent(this.scene, Weapon.Events.ReloadAction.Local, {
+      playerId: this.id,
+      weaponId: this.id,
+    });
+    this.reloadAction();
+  }
+
+  private reloadAction(): void {
     this.isReloading = true;
+
+    this.playReloadSound();
     
     if (this.options.hideWhileReload) {
       this.gameObject.setVisible(false);
@@ -163,53 +172,70 @@ export class WeaponEntity {
       this.canFireAgain = false;
     }
 
-    const [firePointX, firePointY] = this.getFirePoint();
-
+    const [originPointX, originPointY] = this.getFirePoint();
+    const originPoint = { x: originPointX, y: originPointY };
     // Учитываем текущий наклон при создании снаряда
-    const sightX = firePointX + 150;
-    const sightY = firePointY + Math.tan(this.weaponAngle) * (sightX - firePointX);
-
-    this.createProjectileEvent(playerId, firePointX, firePointY, sightX, sightY);
-
-    // Создаем гильзу после выстрела
-    if (this.options.shellCasings && this.scene instanceof GameplayScene) {
-      this.ejectShellCasing(this.x, this.y, this.direction);
-    }
-
+    const sightX = originPointX + 150;
+    const sightY = originPointY + Math.tan(this.weaponAngle) * (sightX - originPointX);
+    const targetPoint = { x: sightX, y: sightY };
     // Применяем отдачу к игроку с учетом направления
     const recoil = this.options.recoilForce ? this.applyRecoil(this.direction) : null;
+    const angleTilt = this.calculateAnleTilt();
 
-    this.playFireSound();
-    
-    // Наклоняем оружие после выстрела
-    this.applyWeaponTilt();
-    
     this.lastFired = this.scene.time.now;
     this.currentAmmo--;
+
+    emitEvent(this.scene, Weapon.Events.FireAction.Local, { 
+      weaponId: this.id,
+      playerId,
+      originPoint,
+      targetPoint,
+      angleTilt
+    });
+
+    this.fireAction(playerId, originPoint, targetPoint, angleTilt);
 
     if (this.options.autoreload && this.currentAmmo <= 0) {
       this.reload();
     }
 
     this.updateSightState();
-    this.afterFire();
+    // this.afterFire();
 
     return recoil;
   }
 
-  protected createProjectileEvent(playerId: string, x: number, y: number, sightX: number, sightY: number): void {
-    if (!this.options.projectile || !(this.scene instanceof GameplayScene)) {
-      return;
+  // Генерируем случайный угол в рамках диапазона разброса
+  protected calculateAnleTilt(): number {
+    const angleRange = Phaser.Math.DegToRad(this.options.spreadAngle || 0);
+    return Phaser.Math.FloatBetween(-angleRange, angleRange);
+  }
+
+  private fireAction(playerId: string, originPoint: { x: number, y: number }, targetPoint: { x: number, y: number }, angleTilt: number) {
+    if (this.options.projectile) {
+      emitEvent(this.scene, Weapon.Events.CreateProjectile.Local, { 
+        playerId,
+        speed: this.options.speed,
+        damage: this.options.damage,
+        weaponName: this.name,
+        projectile: this.options.projectile,
+        originPoint,
+        targetPoint
+      });
     }
-    emitEvent(this.scene, WeaponEvents.FireEvent, { 
-      playerId,
-      speed: this.options.speed,
-      damage: this.options.damage,
-      weaponName: this.name,
-      projectile: this.options.projectile,
-      originPoint: { x, y },
-      targetPoint: { x: sightX, y: sightY }
-    });
+
+    // Создаем гильзу после выстрела
+    if (this.options.shellCasings && this.scene instanceof GameplayScene) {
+      this.ejectShellCasing(this.x, this.y, this.direction);
+    }
+
+    this.playFireSound();
+    
+    this.applyWeaponTilt(angleTilt);
+  }
+
+  protected createProjectileEvent(playerId: string, originPoint: { x: number, y: number }, targetPoint: { x: number, y: number }): void {
+    
   }
 
   /**
@@ -396,12 +422,8 @@ export class WeaponEntity {
   /**
    * Применяет случайный наклон к оружию после выстрела
    */
-  private applyWeaponTilt(): void {
-    // Генерируем случайный угол в рамках диапазона разброса
-    const angleRange = Phaser.Math.DegToRad(this.options.spreadAngle || 0);
-    this.weaponAngle = Phaser.Math.FloatBetween(-angleRange, angleRange);
-    
-    // Применяем наклон к спрайту оружия
-    this.gameObject.setRotation(this.weaponAngle);
+  private applyWeaponTilt(angle: number): void {
+    this.weaponAngle = angle;
+    this.gameObject.setRotation(angle);
   }
 }

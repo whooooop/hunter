@@ -2,8 +2,9 @@ import * as Phaser from 'phaser';
 import { ProjectileEntity, ProjectileType } from '../entities/ProjectileEntity';
 import { rayRectIntersectionRobust } from '../../utils/GeometryUtils';
 import { DamageableEntity } from '../entities/DamageableEntity';
-import { WeaponFireEventsPayload } from '../types/weaponTypes';
+import { Weapon } from '../types/weaponTypes';
 import { createProjectile } from '../../projectiles';
+import { onEvent } from '../Events';
 
 export enum ProjectileEvents {
   ProjectileHit = 'ProjectileHit',
@@ -44,9 +45,11 @@ export class ProjectileController {
     this.scene = scene;
     this.damageableObjects = damageableObjects;
     this.simulate = options.simulate;
+
+    onEvent(scene, Weapon.Events.CreateProjectile.Local, this.handleCreateProjectile.bind(this));
   }
   
-  public addProjectile({ projectile, originPoint, targetPoint, playerId, weaponName, speed, damage }: WeaponFireEventsPayload): void {
+  public handleCreateProjectile({ projectile, originPoint, targetPoint, playerId, weaponName, speed, damage }: Weapon.Events.CreateProjectile.Payload): void {
     const object = createProjectile(this.scene, projectile, originPoint.x, originPoint.y, playerId, weaponName);
     object.setForceVector(targetPoint.x, targetPoint.y, speed, damage);
     this.projectiles.add(object);

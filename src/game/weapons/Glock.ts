@@ -1,12 +1,12 @@
 import { WeaponType } from "./WeaponTypes";
 import { ProjectileName } from '../projectiles/ProjectileName';
-import { WeaponOptions } from '../core/types/weaponTypes';
+import { Weapon } from '../core/types/weaponTypes';
 
 import GlockFireAudioUrl from './assets/glock_fire_0.mp3';
 import GlockEmptyAudioUrl from './assets/glock_empty_0.mp3';
 import { GlockImageTexture_0 } from '../textures/GlockTexture';
 
-export const GlockConfig: WeaponOptions = {
+export const GlockConfig: Weapon.Config = {
   name: WeaponType.GLOCK,
   texture: {
     ...GlockImageTexture_0,

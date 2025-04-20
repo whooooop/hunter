@@ -1,7 +1,6 @@
-import { generateId } from "../../utils/stringGenerator";
 import { WeaponEntity } from "../core/entities/WeaponEntity";
 import { WeaponType } from "./WeaponTypes";
-import { WeaponOptions } from "../core/types/weaponTypes";
+import { Weapon } from "../core/types/weaponTypes";
 
 import { GlockConfig } from "./Glock";
 import { MP5Config } from "./MP5";
@@ -10,7 +9,7 @@ import { SawedConfig } from "./Sawed";
 import { MineConfig } from "./Mine";
 import { AWPConfig } from "./AWP";
 
-export const WeaponConfigs: Record<WeaponType, WeaponOptions> = {
+export const WeaponConfigs: Record<WeaponType, Weapon.Config> = {
   [WeaponType.GLOCK]: GlockConfig,
   [WeaponType.MP5]: MP5Config,
   [WeaponType.GRENADE]: GrenadeConfig,
@@ -37,12 +36,11 @@ export function preloadWeapons(scene: Phaser.Scene): void {
   });
 }
 
-export function getWeaponConfig(weaponType: WeaponType): WeaponOptions {
+export function getWeaponConfig(weaponType: WeaponType): Weapon.Config {
   return WeaponConfigs[weaponType];
 }
 
-export function createWeapon(weaponType: WeaponType, scene: Phaser.Scene): WeaponEntity {
+export function createWeapon(id: string, weaponType: WeaponType, scene: Phaser.Scene): WeaponEntity {
   const WeaponConfig = WeaponConfigs[weaponType];
-  const id = generateId();
   return new WeaponEntity(scene, id, WeaponConfig);
 }

@@ -9,22 +9,20 @@ message Point {
 }
 
 message JoinGame {
-  string gameId = 1;
   string playerId = 2;
 }
 
 message PlayerJoined {
   string playerId = 1;
+  bool isHost = 2;
 }
 
-message FireEvent {
-  string playerId = 1; 
-  repeated int32 speed = 2;
-  int32 damage = 3;
-  string weaponName = 4;
-  string projectile = 5;
+message WeaponFireActionEvent {
+  string playerId = 2; 
+  string weaponId = 3;
   Point originPoint = 6;
   Point targetPoint = 7; 
+  float angleTilt = 8;
 }
 
 message WaveStartEvent {
@@ -46,8 +44,6 @@ message EnemyDeathEvent {
 message PlayerSetWeaponEvent {
   string playerId = 1;
   string weaponType = 2;
-  int32 ammo = 3;
-  int32 maxAmmo = 4;
 }
 
 message WeaponPurchasedEvent {

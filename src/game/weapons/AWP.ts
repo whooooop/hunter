@@ -2,7 +2,7 @@ import { hexToNumber } from '../utils/colors';
 import { WeaponSightType } from '../core/entities/SightEntity';
 import { WeaponType } from './WeaponTypes';
 import { ProjectileName } from '../projectiles/ProjectileName';
-import { WeaponOptions, WeaponTexture } from "../core/types/weaponTypes";
+import { Weapon, WeaponTexture } from "../core/types/weaponTypes";
 import { AWPImageTexture_0 } from '../textures/AWPTexture';
 
 const WeaponAWPTexture_0: WeaponTexture = {
@@ -13,7 +13,7 @@ const WeaponAWPTexture_0: WeaponTexture = {
   }
 }
 
-export const AWPConfig: WeaponOptions = {
+export const AWPConfig: Weapon.Config = {
   name: WeaponType.AWP,
   texture: WeaponAWPTexture_0,
   reloadTime: 400,     // Скорость перезарядки в мс

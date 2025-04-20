@@ -3,7 +3,7 @@ import { hexToNumber } from '../utils/colors';
 import { createLogger } from '../../utils/logger';
 import { COLORS } from '../core/Constants';
 import { WeaponType } from '../weapons/WeaponTypes';
-import { PlayerSetWeaponEventPayload } from '../core/types/playerTypes';
+import { Player } from '../core/types/playerTypes';
 import { getWeaponConfig } from '../weapons';
 import { settings } from '../settings';
 
@@ -249,11 +249,8 @@ export class WeaponStatus {
         }
     }
     
-    public setWeapon(payload: PlayerSetWeaponEventPayload): void {
-        this.currentWeapon = payload.weaponType;
-        this.currentAmmo = payload.ammo;
-        this.maxAmmo = payload.maxAmmo;
-
+    public setWeapon(payload: Player.Events.SetWeapon.Payload): void {
+        this.currentWeapon = payload.weaponType as WeaponType;
         const config = getWeaponConfig(this.currentWeapon);
         if (!config || !this.weaponIcon) {
             this.weaponIcon?.setVisible(false);

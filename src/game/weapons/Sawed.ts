@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import { WeaponType } from "./WeaponTypes";
 import { WeaponEntity } from '../core/entities/WeaponEntity';
 import { ProjectileName } from '../projectiles/ProjectileName';
-import { WeaponAudio, WeaponOptions, WeaponTexture } from '../core/types/weaponTypes';
+import { Weapon, WeaponAudio, WeaponTexture } from '../core/types/weaponTypes';
 
 import SawedFireAudioUrl from './assets/sawed_fire_0.mp3';
 import SawedEmptyAudioUrl from './assets/sawed_empty_0.mp3';
@@ -38,7 +38,7 @@ export const SawedAfterFireAudio: WeaponAudio = {
   url: SawedAfterFireAudioUrl,
 }
 
-export const SawedConfig: WeaponOptions = {
+export const SawedConfig: Weapon.Config = {
   name: WeaponType.SAWED,
   texture: SawedTexture_0,
   reloadTime: 5000,     // Скорость перезарядки в мс

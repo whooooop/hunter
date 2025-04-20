@@ -1,6 +1,6 @@
 import { WeaponType } from './WeaponTypes';
 import { ProjectileName } from "../projectiles/ProjectileName";
-import { WeaponOptions, WeaponTexture } from "../core/types/weaponTypes";
+import { Weapon, WeaponTexture } from "../core/types/weaponTypes";
 import { MineImageTexture_0 } from "../textures/mineTexture";
 
 const WeaponMineTexture_0: WeaponTexture = {
@@ -11,7 +11,7 @@ const WeaponMineTexture_0: WeaponTexture = {
   }
 }
 
-export const MineConfig: WeaponOptions = {
+export const MineConfig: Weapon.Config = {
   name: WeaponType.MINE,
   texture: WeaponMineTexture_0,
   reloadTime: 2000,    // Скорость перезарядки в мс

@@ -16,22 +16,20 @@ export interface Point {
 }
 
 export interface JoinGame {
-  gameId: string;
   playerId: string;
 }
 
 export interface PlayerJoined {
   playerId: string;
+  isHost: boolean;
 }
 
-export interface FireEvent {
+export interface WeaponFireActionEvent {
   playerId: string;
-  speed: number[];
-  damage: number;
-  weaponName: string;
-  projectile: string;
+  weaponId: string;
   originPoint: Point | undefined;
   targetPoint: Point | undefined;
+  angleTilt: number;
 }
 
 export interface WaveStartEvent {
@@ -53,8 +51,6 @@ export interface EnemyDeathEvent {
 export interface PlayerSetWeaponEvent {
   playerId: string;
   weaponType: string;
-  ammo: number;
-  maxAmmo: number;
 }
 
 export interface WeaponPurchasedEvent {
@@ -145,14 +141,11 @@ export const Point: MessageFns<Point> = {
 };
 
 function createBaseJoinGame(): JoinGame {
-  return { gameId: "", playerId: "" };
+  return { playerId: "" };
 }
 
 export const JoinGame: MessageFns<JoinGame> = {
   encode(message: JoinGame, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.gameId !== "") {
-      writer.uint32(10).string(message.gameId);
-    }
     if (message.playerId !== "") {
       writer.uint32(18).string(message.playerId);
     }
@@ -166,14 +159,6 @@ export const JoinGame: MessageFns<JoinGame> = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.gameId = reader.string();
-          continue;
-        }
         case 2: {
           if (tag !== 18) {
             break;
@@ -192,17 +177,11 @@ export const JoinGame: MessageFns<JoinGame> = {
   },
 
   fromJSON(object: any): JoinGame {
-    return {
-      gameId: isSet(object.gameId) ? globalThis.String(object.gameId) : "",
-      playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
-    };
+    return { playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "" };
   },
 
   toJSON(message: JoinGame): unknown {
     const obj: any = {};
-    if (message.gameId !== "") {
-      obj.gameId = message.gameId;
-    }
     if (message.playerId !== "") {
       obj.playerId = message.playerId;
     }
@@ -214,20 +193,22 @@ export const JoinGame: MessageFns<JoinGame> = {
   },
   fromPartial<I extends Exact<DeepPartial<JoinGame>, I>>(object: I): JoinGame {
     const message = createBaseJoinGame();
-    message.gameId = object.gameId ?? "";
     message.playerId = object.playerId ?? "";
     return message;
   },
 };
 
 function createBasePlayerJoined(): PlayerJoined {
-  return { playerId: "" };
+  return { playerId: "", isHost: false };
 }
 
 export const PlayerJoined: MessageFns<PlayerJoined> = {
   encode(message: PlayerJoined, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.playerId !== "") {
       writer.uint32(10).string(message.playerId);
+    }
+    if (message.isHost !== false) {
+      writer.uint32(16).bool(message.isHost);
     }
     return writer;
   },
@@ -247,6 +228,14 @@ export const PlayerJoined: MessageFns<PlayerJoined> = {
           message.playerId = reader.string();
           continue;
         }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.isHost = reader.bool();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -257,13 +246,19 @@ export const PlayerJoined: MessageFns<PlayerJoined> = {
   },
 
   fromJSON(object: any): PlayerJoined {
-    return { playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "" };
+    return {
+      playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
+      isHost: isSet(object.isHost) ? globalThis.Boolean(object.isHost) : false,
+    };
   },
 
   toJSON(message: PlayerJoined): unknown {
     const obj: any = {};
     if (message.playerId !== "") {
       obj.playerId = message.playerId;
+    }
+    if (message.isHost !== false) {
+      obj.isHost = message.isHost;
     }
     return obj;
   },
@@ -274,40 +269,22 @@ export const PlayerJoined: MessageFns<PlayerJoined> = {
   fromPartial<I extends Exact<DeepPartial<PlayerJoined>, I>>(object: I): PlayerJoined {
     const message = createBasePlayerJoined();
     message.playerId = object.playerId ?? "";
+    message.isHost = object.isHost ?? false;
     return message;
   },
 };
 
-function createBaseFireEvent(): FireEvent {
-  return {
-    playerId: "",
-    speed: [],
-    damage: 0,
-    weaponName: "",
-    projectile: "",
-    originPoint: undefined,
-    targetPoint: undefined,
-  };
+function createBaseWeaponFireActionEvent(): WeaponFireActionEvent {
+  return { playerId: "", weaponId: "", originPoint: undefined, targetPoint: undefined, angleTilt: 0 };
 }
 
-export const FireEvent: MessageFns<FireEvent> = {
-  encode(message: FireEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const WeaponFireActionEvent: MessageFns<WeaponFireActionEvent> = {
+  encode(message: WeaponFireActionEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.playerId !== "") {
-      writer.uint32(10).string(message.playerId);
+      writer.uint32(18).string(message.playerId);
     }
-    writer.uint32(18).fork();
-    for (const v of message.speed) {
-      writer.int32(v);
-    }
-    writer.join();
-    if (message.damage !== 0) {
-      writer.uint32(24).int32(message.damage);
-    }
-    if (message.weaponName !== "") {
-      writer.uint32(34).string(message.weaponName);
-    }
-    if (message.projectile !== "") {
-      writer.uint32(42).string(message.projectile);
+    if (message.weaponId !== "") {
+      writer.uint32(26).string(message.weaponId);
     }
     if (message.originPoint !== undefined) {
       Point.encode(message.originPoint, writer.uint32(50).fork()).join();
@@ -315,64 +292,33 @@ export const FireEvent: MessageFns<FireEvent> = {
     if (message.targetPoint !== undefined) {
       Point.encode(message.targetPoint, writer.uint32(58).fork()).join();
     }
+    if (message.angleTilt !== 0) {
+      writer.uint32(69).float(message.angleTilt);
+    }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): FireEvent {
+  decode(input: BinaryReader | Uint8Array, length?: number): WeaponFireActionEvent {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFireEvent();
+    const message = createBaseWeaponFireActionEvent();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
+        case 2: {
+          if (tag !== 18) {
             break;
           }
 
           message.playerId = reader.string();
           continue;
         }
-        case 2: {
-          if (tag === 16) {
-            message.speed.push(reader.int32());
-
-            continue;
-          }
-
-          if (tag === 18) {
-            const end2 = reader.uint32() + reader.pos;
-            while (reader.pos < end2) {
-              message.speed.push(reader.int32());
-            }
-
-            continue;
-          }
-
-          break;
-        }
         case 3: {
-          if (tag !== 24) {
+          if (tag !== 26) {
             break;
           }
 
-          message.damage = reader.int32();
-          continue;
-        }
-        case 4: {
-          if (tag !== 34) {
-            break;
-          }
-
-          message.weaponName = reader.string();
-          continue;
-        }
-        case 5: {
-          if (tag !== 42) {
-            break;
-          }
-
-          message.projectile = reader.string();
+          message.weaponId = reader.string();
           continue;
         }
         case 6: {
@@ -391,6 +337,14 @@ export const FireEvent: MessageFns<FireEvent> = {
           message.targetPoint = Point.decode(reader, reader.uint32());
           continue;
         }
+        case 8: {
+          if (tag !== 69) {
+            break;
+          }
+
+          message.angleTilt = reader.float();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -400,34 +354,23 @@ export const FireEvent: MessageFns<FireEvent> = {
     return message;
   },
 
-  fromJSON(object: any): FireEvent {
+  fromJSON(object: any): WeaponFireActionEvent {
     return {
       playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
-      speed: globalThis.Array.isArray(object?.speed) ? object.speed.map((e: any) => globalThis.Number(e)) : [],
-      damage: isSet(object.damage) ? globalThis.Number(object.damage) : 0,
-      weaponName: isSet(object.weaponName) ? globalThis.String(object.weaponName) : "",
-      projectile: isSet(object.projectile) ? globalThis.String(object.projectile) : "",
+      weaponId: isSet(object.weaponId) ? globalThis.String(object.weaponId) : "",
       originPoint: isSet(object.originPoint) ? Point.fromJSON(object.originPoint) : undefined,
       targetPoint: isSet(object.targetPoint) ? Point.fromJSON(object.targetPoint) : undefined,
+      angleTilt: isSet(object.angleTilt) ? globalThis.Number(object.angleTilt) : 0,
     };
   },
 
-  toJSON(message: FireEvent): unknown {
+  toJSON(message: WeaponFireActionEvent): unknown {
     const obj: any = {};
     if (message.playerId !== "") {
       obj.playerId = message.playerId;
     }
-    if (message.speed?.length) {
-      obj.speed = message.speed.map((e) => Math.round(e));
-    }
-    if (message.damage !== 0) {
-      obj.damage = Math.round(message.damage);
-    }
-    if (message.weaponName !== "") {
-      obj.weaponName = message.weaponName;
-    }
-    if (message.projectile !== "") {
-      obj.projectile = message.projectile;
+    if (message.weaponId !== "") {
+      obj.weaponId = message.weaponId;
     }
     if (message.originPoint !== undefined) {
       obj.originPoint = Point.toJSON(message.originPoint);
@@ -435,25 +378,26 @@ export const FireEvent: MessageFns<FireEvent> = {
     if (message.targetPoint !== undefined) {
       obj.targetPoint = Point.toJSON(message.targetPoint);
     }
+    if (message.angleTilt !== 0) {
+      obj.angleTilt = message.angleTilt;
+    }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<FireEvent>, I>>(base?: I): FireEvent {
-    return FireEvent.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<WeaponFireActionEvent>, I>>(base?: I): WeaponFireActionEvent {
+    return WeaponFireActionEvent.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<FireEvent>, I>>(object: I): FireEvent {
-    const message = createBaseFireEvent();
+  fromPartial<I extends Exact<DeepPartial<WeaponFireActionEvent>, I>>(object: I): WeaponFireActionEvent {
+    const message = createBaseWeaponFireActionEvent();
     message.playerId = object.playerId ?? "";
-    message.speed = object.speed?.map((e) => e) || [];
-    message.damage = object.damage ?? 0;
-    message.weaponName = object.weaponName ?? "";
-    message.projectile = object.projectile ?? "";
+    message.weaponId = object.weaponId ?? "";
     message.originPoint = (object.originPoint !== undefined && object.originPoint !== null)
       ? Point.fromPartial(object.originPoint)
       : undefined;
     message.targetPoint = (object.targetPoint !== undefined && object.targetPoint !== null)
       ? Point.fromPartial(object.targetPoint)
       : undefined;
+    message.angleTilt = object.angleTilt ?? 0;
     return message;
   },
 };
@@ -687,7 +631,7 @@ export const EnemyDeathEvent: MessageFns<EnemyDeathEvent> = {
 };
 
 function createBasePlayerSetWeaponEvent(): PlayerSetWeaponEvent {
-  return { playerId: "", weaponType: "", ammo: 0, maxAmmo: 0 };
+  return { playerId: "", weaponType: "" };
 }
 
 export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
@@ -697,12 +641,6 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
     }
     if (message.weaponType !== "") {
       writer.uint32(18).string(message.weaponType);
-    }
-    if (message.ammo !== 0) {
-      writer.uint32(24).int32(message.ammo);
-    }
-    if (message.maxAmmo !== 0) {
-      writer.uint32(32).int32(message.maxAmmo);
     }
     return writer;
   },
@@ -730,22 +668,6 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
           message.weaponType = reader.string();
           continue;
         }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.ammo = reader.int32();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.maxAmmo = reader.int32();
-          continue;
-        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -759,8 +681,6 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
     return {
       playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
       weaponType: isSet(object.weaponType) ? globalThis.String(object.weaponType) : "",
-      ammo: isSet(object.ammo) ? globalThis.Number(object.ammo) : 0,
-      maxAmmo: isSet(object.maxAmmo) ? globalThis.Number(object.maxAmmo) : 0,
     };
   },
 
@@ -772,12 +692,6 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
     if (message.weaponType !== "") {
       obj.weaponType = message.weaponType;
     }
-    if (message.ammo !== 0) {
-      obj.ammo = Math.round(message.ammo);
-    }
-    if (message.maxAmmo !== 0) {
-      obj.maxAmmo = Math.round(message.maxAmmo);
-    }
     return obj;
   },
 
@@ -788,8 +702,6 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
     const message = createBasePlayerSetWeaponEvent();
     message.playerId = object.playerId ?? "";
     message.weaponType = object.weaponType ?? "";
-    message.ammo = object.ammo ?? 0;
-    message.maxAmmo = object.maxAmmo ?? 0;
     return message;
   },
 };

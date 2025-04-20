@@ -1,9 +1,9 @@
 import { EventEmitter } from 'events';
 import { io, Socket } from 'socket.io-client';
-import { createLogger } from '../../../utils/logger';
+import { createLogger, LogLevel } from '../../../utils/logger';
 import {
     JoinGame,
-    FireEvent,
+    WeaponFireActionEvent,
     PlayerSetWeaponEvent,
     WeaponPurchasedEvent,
     PlayerJoined,
@@ -13,24 +13,27 @@ import {
     PlayerScoreUpdateEvent
 } from '../proto/generated/game';
 
-const logger = createLogger('SocketClient');
+const logger = createLogger('SocketClient', {
+  minLevel: LogLevel.DEBUG,
+  enabled: true
+});
 
 // --- Sending Types --- 
 export enum SocketSentEvents {
     JoinGame = 'JoinGame',
 
     FireEvent = 'FireEvent',
-    WaveStart = 'WaveStart',
-    SpawnEnemy = 'SpawnEnemy',
-    EnemyDeath = 'EnemyDeath',
-    PlayerScoreUpdate = 'PlayerScoreUpdate',
-    PlayerSetWeapon = 'PlayerSetWeapon',
-    WeaponPurchased = 'WeaponPurchased',
+    WaveStart = 'WaveStartEvent',
+    SpawnEnemy = 'SpawnEnemyEvent',
+    EnemyDeath = 'EnemyDeathEvent',
+    PlayerScoreUpdate = 'PlayerScoreUpdateEvent',
+    PlayerSetWeapon = 'PlayerSetWeaponEvent',
+    WeaponPurchased = 'WeaponPurchasedEvent',
 }
 
 interface SocketSentPayloadsMap {
     [SocketSentEvents.JoinGame]: JoinGame;
-    [SocketSentEvents.FireEvent]: FireEvent;
+    [SocketSentEvents.FireEvent]: WeaponFireActionEvent;
     [SocketSentEvents.PlayerSetWeapon]: PlayerSetWeaponEvent;
     [SocketSentEvents.WeaponPurchased]: WeaponPurchasedEvent;
     [SocketSentEvents.WaveStart]: WaveStartEvent;
@@ -45,7 +48,7 @@ type EncodersMap = {
 
 const encoders: EncodersMap = {
     [SocketSentEvents.JoinGame]: (message: JoinGame) => JoinGame.encode(message).finish(),
-    [SocketSentEvents.FireEvent]: (message: FireEvent) => FireEvent.encode(message).finish(),
+    [SocketSentEvents.FireEvent]: (message: WeaponFireActionEvent) => WeaponFireActionEvent.encode(message).finish(),
     [SocketSentEvents.PlayerSetWeapon]: (message: PlayerSetWeaponEvent) => PlayerSetWeaponEvent.encode(message).finish(),
     [SocketSentEvents.WeaponPurchased]: (message: WeaponPurchasedEvent) => WeaponPurchasedEvent.encode(message).finish(),
     [SocketSentEvents.WaveStart]: (message: WaveStartEvent) => WaveStartEvent.encode(message).finish(),
@@ -56,20 +59,20 @@ const encoders: EncodersMap = {
 
 // --- Receiving Types ---
 export enum SocketReceivedEvents {
-    PlayerJoined = 'PlayerJoined',
+    PlayerJoined = 'PlayerJoinedEvent',
 
     FireEvent = 'FireEvent',
-    WaveStart = 'WaveStart',
-    SpawnEnemy = 'SpawnEnemy',
-    EnemyDeath = 'EnemyDeath',
-    PlayerScoreUpdate = 'PlayerScoreUpdate',
-    PlayerSetWeapon = 'PlayerSetWeapon',
-    WeaponPurchased = 'WeaponPurchased',
+    WaveStart = 'WaveStartEvent',
+    SpawnEnemy = 'SpawnEnemyEvent',
+    EnemyDeath = 'EnemyDeathEvent',
+    PlayerScoreUpdate = 'PlayerScoreUpdateEvent',
+    PlayerSetWeapon = 'PlayerSetWeaponEvent',
+    WeaponPurchased = 'WeaponPurchasedEvent',
 }
 
 interface SocketReceivedPayloadsMap {
     [SocketReceivedEvents.PlayerJoined]: PlayerJoined;
-    [SocketReceivedEvents.FireEvent]: FireEvent;
+    [SocketReceivedEvents.FireEvent]: WeaponFireActionEvent;
     [SocketReceivedEvents.WaveStart]: WaveStartEvent;
     [SocketReceivedEvents.SpawnEnemy]: SpawnEnemyEvent;
     [SocketReceivedEvents.EnemyDeath]: EnemyDeathEvent;
@@ -84,7 +87,7 @@ type DecodersMap = {
 
 const decoders: DecodersMap = {
     [SocketReceivedEvents.PlayerJoined]: (data) => PlayerJoined.decode(data),
-    [SocketReceivedEvents.FireEvent]: (data) => FireEvent.decode(data),
+    [SocketReceivedEvents.FireEvent]: (data) => WeaponFireActionEvent.decode(data),
     [SocketReceivedEvents.WaveStart]: (data) => WaveStartEvent.decode(data),
     [SocketReceivedEvents.SpawnEnemy]: (data) => SpawnEnemyEvent.decode(data),
     [SocketReceivedEvents.EnemyDeath]: (data) => EnemyDeathEvent.decode(data),
@@ -117,7 +120,7 @@ export class SocketClient extends EventEmitter {
         logger.info('SocketClient instance created.');
     }
 
-    public connect(baseUrl: string, gameId: string): Promise<void> {
+    public connect(baseUrl: string, gameId: string, playerId: string): Promise<void> {
         if (this._isConnected && this.socket) {
              logger.warn(`Already connected.`);
              return Promise.resolve();
@@ -134,6 +137,9 @@ export class SocketClient extends EventEmitter {
 
           this.socket = io(url, {
               transports: ['websocket'],
+              query: {
+                playerId
+              }
           });
 
           this.socket.on('connect', () => {
@@ -207,7 +213,6 @@ export class SocketClient extends EventEmitter {
         if (!this.socket) return;
         this.socket.offAny(this.handleAnyMessage);
         this.socket.onAny(this.handleAnyMessage);
-        logger.debug('Socket.io onAny listener configured.');
     }
 
     private handleAnyMessage = (eventName: string, ...args: any[]): void => {
@@ -219,7 +224,7 @@ export class SocketClient extends EventEmitter {
          if (['connect', 'connect_error', 'disconnect'].includes(eventName)) {
              return;
          }
-        logger.debug(`Received event '${eventName}' with data:`, rawData);
+        // logger.debug(`Received event '${eventName}' with data:`, rawData);
 
         const decoder = decoders[eventName as SocketReceivedEvents];
         let decodedPayload: any = rawData;
@@ -240,7 +245,7 @@ export class SocketClient extends EventEmitter {
                  return;
             }
         } else {
-             logger.warn(`No Protobuf decoder found for event '${eventName}'. Handling raw data.`);
+             logger.error(`No Protobuf decoder found for event '${eventName}'. Handling raw data.`);
         }
         this._emit(eventName, decodedPayload);
     }
@@ -274,7 +279,7 @@ export class SocketClient extends EventEmitter {
         }
          if (!this.eventHandlers[eventName].includes(handler)) {
             this.eventHandlers[eventName].push(handler);
-            logger.debug(`Registered handler for event '${eventName}'`);
+            // logger.debug(`Registered handler for event '${eventName}'`);
         } else {
             logger.warn(`Handler already registered for event '${eventName}'`);
         }

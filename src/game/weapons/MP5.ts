@@ -1,10 +1,7 @@
-import * as Phaser from 'phaser';
 import { WeaponType } from "./WeaponTypes";
-import { WeaponEntity } from "../core/entities/WeaponEntity";
-
 import MP5FireAudioUrl from './assets/mp5_fire_0.mp3';
 import { ProjectileName } from "../projectiles/ProjectileName";
-import { WeaponOptions, WeaponTexture } from "../core/types/weaponTypes";
+import { Weapon, WeaponTexture } from "../core/types/weaponTypes";
 import { WeaponAudio } from "../core/types/weaponTypes";
 import { MP5ImageTexture_0 } from '../textures/MP5Texture';
 
@@ -21,7 +18,7 @@ export const MP5FireAudio: WeaponAudio = {
   url: MP5FireAudioUrl,
 }
 
-export const MP5Config: WeaponOptions = {
+export const MP5Config: Weapon.Config = {
   name: WeaponType.MP5,
   texture: MP5Texture_0,
 

@@ -1,17 +1,16 @@
 import * as Phaser from 'phaser';
-import { createLogger } from '../../utils/logger';
-import { LocationBounds } from '../core/BaseLocation';
-import { WeaponEntity } from '../core/entities/WeaponEntity';
-import { MotionController } from '../core/controllers/MotionController';
-
-import playerImage from '../../assets/images/player.png';
-import { ShadowEntity } from '../core/entities/ShadowEntity';
+import { createLogger } from '../../../utils/logger';
+import playerImage from '../../../assets/images/player.png';
+import { LocationBounds } from '../BaseLocation';
+import { WeaponEntity } from './WeaponEntity';
+import { MotionController } from '../controllers/MotionController';
+import { ShadowEntity } from './ShadowEntity';
 
 const TEXTURE_PLAYER = 'player';
 
 const logger = createLogger('Player');
 
-export class Player {
+export class PlayerEntity {
   name = 'Player';
 
   private id: string;
@@ -19,14 +18,9 @@ export class Player {
   private gameObject: Phaser.Physics.Arcade.Sprite;
 
   private motionController: MotionController;
-
-  canChangeDirection: boolean = false;
+  private canChangeDirection: boolean = false;
 
   private currentWeapon!: WeaponEntity | null;
-  private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-  private fireKey: Phaser.Input.Keyboard.Key;
-  private reloadKey: Phaser.Input.Keyboard.Key;
-  private jumpKey: Phaser.Input.Keyboard.Key;
   
   private moveX: number = 0;
   private moveY: number = 0;
@@ -66,12 +60,6 @@ export class Player {
       direction: 1,
     });
 
-    // Настраиваем курсоры для управления
-    this.cursors = scene.input.keyboard!.createCursorKeys();
-    this.fireKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F);
-    this.reloadKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-    this.jumpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-
     scene.add.existing(this.gameObject);
   }
 
@@ -99,18 +87,6 @@ export class Player {
   }
   
   public update(time: number, delta: number): void {
-    // Обрабатываем управление
-    this.handleMovement();
-    
-    // Обрабатываем прыжок
-    // this.handleJump(time, delta);
-
-    
-    // Применяем смещение от прыжка к визуальной позиции
-    // if (this.isJumping) {
-    //   this.gameObject.setPosition(this.gameObject.x, this.gameObject.y - this.jumpOffsetY);
-    // }
-    
     // Ограничиваем позицию игрока внутри границ локации
     if (this.locationBounds) {
       this.constrainPosition(this.locationBounds);
@@ -120,41 +96,19 @@ export class Player {
      
     // Обрабатываем стрельбу и обновляем оружие только если оно назначено
     if (this.currentWeapon) {
-      this.handleFiring(time);
-      this.handleReloading();
       this.currentWeapon.setPosition(this.gameObject.x, this.gameObject.y, this.direction);
       this.currentWeapon.setDepth(this.gameObject.depth + 1);
       this.currentWeapon.update(time, delta);
     }
   }
   
-  private handleMovement(): void {
-    if (this.cursors.left.isDown) {
-      this.moveX = -1;
-      this.handleDirectionChange(-1);
-    } else if (this.cursors.right.isDown) {
-      this.moveX = 1;
-      this.handleDirectionChange(1);
-    } else {
-      this.moveX = 0;
-    }
-    
-    if (this.cursors.up.isDown) {
-      this.moveY = -1;
-    } else if (this.cursors.down.isDown) {
-      this.moveY = 1;
-    } else {
-      this.moveY = 0;
-    }
-    
+  public setMove(moveX: number, moveY: number): void {
+    this.moveX = moveX;
+    this.moveY = moveY;
+    // this.handleDirectionChange(-1);
     this.motionController.setMove(this.moveX, this.moveY);
-
-    // Проверяем нажатие клавиши прыжка
-    if (this.jumpKey.isDown && !this.isJumping) {
-      this.startJump();
-    }
   }
-  
+
   /**
    * Запускает прыжок игрока
    */
@@ -167,51 +121,64 @@ export class Player {
   /**
    * Обрабатывает логику прыжка
    */
-  private handleJump(time: number, delta: number): void {
-    if (!this.isJumping) return;
+  // private handleJump(time: number, delta: number): void {
+  //   if (!this.isJumping) return;
     
-    // Увеличиваем таймер прыжка
-    this.jumpTimer += delta;
+  //   // Увеличиваем таймер прыжка
+  //   this.jumpTimer += delta;
     
-    // Рассчитываем прогресс прыжка (0-1)
-    this.jumpProgress = Math.min(this.jumpTimer / this.jumpDuration, 1);
+  //   // Рассчитываем прогресс прыжка (0-1)
+  //   this.jumpProgress = Math.min(this.jumpTimer / this.jumpDuration, 1);
     
-    // Если прыжок завершился
-    if (this.jumpProgress >= 1) {
-      this.isJumping = false;
-      this.jumpOffsetY = 0;
+  //   // Если прыжок завершился
+  //   if (this.jumpProgress >= 1) {
+  //     this.isJumping = false;
+  //     this.jumpOffsetY = 0;
+  //     return;
+  //   }
+    
+  //   // Рассчитываем смещение по синусоиде для плавного прыжка
+  //   // sin(π * progress) даст нам плавную дугу, которая поднимается и опускается
+  //   this.jumpOffsetY = this.jumpHeight * Math.sin(Math.PI * this.jumpProgress);
+  // }
+  
+  // private handleDirectionChange(direction: number): void {
+  //   if (this.canChangeDirection) {
+  //     this.direction = direction;
+  //     this.gameObject.setFlipX(direction === -1);
+  //   }
+  // }
+
+  public fireOn(): void {
+    if (!this.currentWeapon) {
       return;
     }
-    
-    // Рассчитываем смещение по синусоиде для плавного прыжка
-    // sin(π * progress) даст нам плавную дугу, которая поднимается и опускается
-    this.jumpOffsetY = this.jumpHeight * Math.sin(Math.PI * this.jumpProgress);
-  }
-  
-  private handleDirectionChange(direction: number): void {
-    if (this.canChangeDirection) {
-      this.direction = direction;
-      this.gameObject.setFlipX(direction === -1);
+
+    const recoilForce = this.currentWeapon.fire({ playerId: this.id });
+
+    if (recoilForce) {
+      this.motionController.applyForce(
+        recoilForce.recoilVectorX,
+        recoilForce.recoilVectorY,
+        recoilForce.boostedForce,
+        recoilForce.strength,
+        recoilForce.decayRate
+      );
     }
   }
 
-  private handleFiring(time: number): void {
-    if (this.fireKey.isDown) {
-      if (this.currentWeapon) {
-        const recoilForce = this.currentWeapon.fire({ playerId: this.id });
-        if (recoilForce) {
-          this.motionController.applyForce(
-            recoilForce.recoilVectorX,
-            recoilForce.recoilVectorY,
-            recoilForce.boostedForce,
-            recoilForce.strength,
-            recoilForce.decayRate
-          );
-        }
-      }
-    } else {
-      this.currentWeapon?.resetTrigger();
+  public fireOff(): void {
+    if (!this.currentWeapon) {
+      return;
     }
+    this.currentWeapon.resetTrigger();
+  }
+
+  public reload(): void {
+    if (!this.currentWeapon) {
+      return;
+    }
+    this.currentWeapon?.reload();
   }
 
   /**
@@ -226,12 +193,6 @@ export class Player {
     }
   }
 
-  private handleReloading(): void {
-    if (this.reloadKey.isDown) {
-      this.currentWeapon?.reload();
-    }
-  }
-  
   // Геттер для получения текущего направления игрока
   public getDirection(): number {
     return this.direction;

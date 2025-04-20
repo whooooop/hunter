@@ -1,6 +1,6 @@
 import { WeaponType } from "./WeaponTypes";
 import { ProjectileName } from "../projectiles/ProjectileName";
-import { WeaponOptions, WeaponTexture } from "../core/types/weaponTypes";
+import { Weapon, WeaponTexture } from "../core/types/weaponTypes";
 import { GrenadeImageTexture_0 } from '../textures/GrenadeTexture';
 
 const GrenadeTexture_0: WeaponTexture = {
@@ -11,7 +11,7 @@ const GrenadeTexture_0: WeaponTexture = {
   }
 }
 
-export const GrenadeConfig: WeaponOptions = {
+export const GrenadeConfig: Weapon.Config = {
   name: WeaponType.GRENADE,
   texture: GrenadeTexture_0,
   reloadTime: 2000,     // Скорость перезарядки в мс

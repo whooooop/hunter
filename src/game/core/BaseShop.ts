@@ -10,7 +10,7 @@ const logger = createLogger('Shop');
 
 import weaponSlotImage from '../../assets/images/weapon_slot.png';
 import { ShopWeapon, ShopSlotElement, ShopEvents } from "./types/shopTypes";
-import { WeaponOptions } from "./types/weaponTypes";
+import { Weapon } from "./types/weaponTypes";
 import { ScoreEvents } from "./types/scoreTypes";
 
 const weaponSlotTexture = 'weapon_slot_0';
@@ -313,7 +313,7 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
             // });
             
             if (weaponData) {
-                const config: WeaponOptions | undefined = getWeaponConfig(weaponData.type);
+                const config: Weapon.Config | undefined = getWeaponConfig(weaponData.type);
                 if (config && config.texture) {
                     // Рисуем иконку оружия
                     const weaponIcon = this.scene.add.sprite(x, y, config.texture.key);

@@ -1,12 +1,14 @@
 import { WeaponType } from "../../weapons/WeaponTypes";
 
-export enum PlayerEvents {
-  PlayerSetWeaponEvent = 'PlayerSetWeaponEvent',
-}
-
-export interface PlayerSetWeaponEventPayload {
-  playerId: string;
-  weaponType: WeaponType;
-  ammo: number;
-  maxAmmo: number;
+export namespace Player {
+  export namespace Events { 
+    export namespace SetWeapon {
+      export const Local = 'PlayerSetWeaponEvent';
+      export const Remote = 'PlayerSetWeaponRemoteEvent';
+      export interface Payload {
+        playerId: string;
+        weaponType: WeaponType;
+      }
+    }
+  }
 }
