@@ -10,7 +10,8 @@ import {
     WaveStartEvent,
     SpawnEnemyEvent,
     EnemyDeathEvent,
-    PlayerScoreUpdateEvent
+    PlayerScoreUpdateEvent,
+    PlayerStateEvent
 } from '../proto/generated/game';
 
 const logger = createLogger('SocketClient', {
@@ -18,43 +19,61 @@ const logger = createLogger('SocketClient', {
   enabled: true
 });
 
+export enum SocketEvents {
+  JoinGame = 'JoinGame',
+  PlayerJoined = 'PlayerJoinedEvent',
+  FireEvent = 'FireEvent',
+  WaveStart = 'WaveStartEvent',
+  SpawnEnemy = 'SpawnEnemyEvent',
+  EnemyDeath = 'EnemyDeathEvent',
+  PlayerScoreUpdate = 'PlayerScoreUpdateEvent',
+  PlayerSetWeapon = 'PlayerSetWeaponEvent',
+  WeaponPurchased = 'WeaponPurchasedEvent',
+  PlayerStateEvent = 'PlayerStateEvent',
+}
+
 // --- Sending Types --- 
-export enum SocketSentEvents {
-    JoinGame = 'JoinGame',
 
-    FireEvent = 'FireEvent',
-    WaveStart = 'WaveStartEvent',
-    SpawnEnemy = 'SpawnEnemyEvent',
-    EnemyDeath = 'EnemyDeathEvent',
-    PlayerScoreUpdate = 'PlayerScoreUpdateEvent',
-    PlayerSetWeapon = 'PlayerSetWeaponEvent',
-    WeaponPurchased = 'WeaponPurchasedEvent',
+interface SocketPayloadsMap {
+    [SocketEvents.JoinGame]: JoinGame;
+    [SocketEvents.PlayerJoined]: PlayerJoined;
+    [SocketEvents.FireEvent]: WeaponFireActionEvent;
+    [SocketEvents.PlayerSetWeapon]: PlayerSetWeaponEvent;
+    [SocketEvents.WeaponPurchased]: WeaponPurchasedEvent;
+    [SocketEvents.WaveStart]: WaveStartEvent;
+    [SocketEvents.SpawnEnemy]: SpawnEnemyEvent;
+    [SocketEvents.EnemyDeath]: EnemyDeathEvent;
+    [SocketEvents.PlayerScoreUpdate]: PlayerScoreUpdateEvent;
+    [SocketEvents.PlayerStateEvent]: PlayerStateEvent;
 }
 
-interface SocketSentPayloadsMap {
-    [SocketSentEvents.JoinGame]: JoinGame;
-    [SocketSentEvents.FireEvent]: WeaponFireActionEvent;
-    [SocketSentEvents.PlayerSetWeapon]: PlayerSetWeaponEvent;
-    [SocketSentEvents.WeaponPurchased]: WeaponPurchasedEvent;
-    [SocketSentEvents.WaveStart]: WaveStartEvent;
-    [SocketSentEvents.SpawnEnemy]: SpawnEnemyEvent;
-    [SocketSentEvents.EnemyDeath]: EnemyDeathEvent;
-    [SocketSentEvents.PlayerScoreUpdate]: PlayerScoreUpdateEvent;
-}
-
-type EncodersMap = {
-    [K in SocketSentEvents]: (message: SocketSentPayloadsMap[K]) => Uint8Array;
+const encoders: {
+  [K in SocketEvents]: (message: SocketPayloadsMap[K]) => Uint8Array;
+} = {
+    [SocketEvents.JoinGame]: (message: JoinGame) => JoinGame.encode(message).finish(),
+    [SocketEvents.PlayerJoined]: (message: PlayerJoined) => PlayerJoined.encode(message).finish(),
+    [SocketEvents.FireEvent]: (message: WeaponFireActionEvent) => WeaponFireActionEvent.encode(message).finish(),
+    [SocketEvents.PlayerSetWeapon]: (message: PlayerSetWeaponEvent) => PlayerSetWeaponEvent.encode(message).finish(),
+    [SocketEvents.WeaponPurchased]: (message: WeaponPurchasedEvent) => WeaponPurchasedEvent.encode(message).finish(),
+    [SocketEvents.WaveStart]: (message: WaveStartEvent) => WaveStartEvent.encode(message).finish(),
+    [SocketEvents.SpawnEnemy]: (message: SpawnEnemyEvent) => SpawnEnemyEvent.encode(message).finish(),
+    [SocketEvents.EnemyDeath]: (message: EnemyDeathEvent) => EnemyDeathEvent.encode(message).finish(),
+    [SocketEvents.PlayerScoreUpdate]: (message: PlayerScoreUpdateEvent) => PlayerScoreUpdateEvent.encode(message).finish(),
+    [SocketEvents.PlayerStateEvent]: (message: PlayerStateEvent) => PlayerStateEvent.encode(message).finish(),
 };
 
-const encoders: EncodersMap = {
-    [SocketSentEvents.JoinGame]: (message: JoinGame) => JoinGame.encode(message).finish(),
-    [SocketSentEvents.FireEvent]: (message: WeaponFireActionEvent) => WeaponFireActionEvent.encode(message).finish(),
-    [SocketSentEvents.PlayerSetWeapon]: (message: PlayerSetWeaponEvent) => PlayerSetWeaponEvent.encode(message).finish(),
-    [SocketSentEvents.WeaponPurchased]: (message: WeaponPurchasedEvent) => WeaponPurchasedEvent.encode(message).finish(),
-    [SocketSentEvents.WaveStart]: (message: WaveStartEvent) => WaveStartEvent.encode(message).finish(),
-    [SocketSentEvents.SpawnEnemy]: (message: SpawnEnemyEvent) => SpawnEnemyEvent.encode(message).finish(),
-    [SocketSentEvents.EnemyDeath]: (message: EnemyDeathEvent) => EnemyDeathEvent.encode(message).finish(),
-    [SocketSentEvents.PlayerScoreUpdate]: (message: PlayerScoreUpdateEvent) => PlayerScoreUpdateEvent.encode(message).finish(),
+const decoders: {
+  [K in SocketEvents]?: (data: Uint8Array) => SocketPayloadsMap[K];
+} = {
+  [SocketEvents.PlayerJoined]: (data) => PlayerJoined.decode(data),
+  [SocketEvents.FireEvent]: (data) => WeaponFireActionEvent.decode(data),
+  [SocketEvents.WaveStart]: (data) => WaveStartEvent.decode(data),
+  [SocketEvents.SpawnEnemy]: (data) => SpawnEnemyEvent.decode(data),
+  [SocketEvents.EnemyDeath]: (data) => EnemyDeathEvent.decode(data),
+  [SocketEvents.PlayerScoreUpdate]: (data) => PlayerScoreUpdateEvent.decode(data),
+  [SocketEvents.PlayerSetWeapon]: (data) => PlayerSetWeaponEvent.decode(data),
+  [SocketEvents.PlayerStateEvent]: (data) => PlayerStateEvent.decode(data),
+  [SocketEvents.WeaponPurchased]: (data) => WeaponPurchasedEvent.decode(data),
 };
 
 // --- Receiving Types ---
@@ -68,6 +87,7 @@ export enum SocketReceivedEvents {
     PlayerScoreUpdate = 'PlayerScoreUpdateEvent',
     PlayerSetWeapon = 'PlayerSetWeaponEvent',
     WeaponPurchased = 'WeaponPurchasedEvent',
+    PlayerStateEvent = 'PlayerStateEvent',
 }
 
 interface SocketReceivedPayloadsMap {
@@ -78,32 +98,21 @@ interface SocketReceivedPayloadsMap {
     [SocketReceivedEvents.EnemyDeath]: EnemyDeathEvent;
     [SocketReceivedEvents.PlayerScoreUpdate]: PlayerScoreUpdateEvent;
     [SocketReceivedEvents.PlayerSetWeapon]: PlayerSetWeaponEvent;
+    [SocketReceivedEvents.PlayerStateEvent]: PlayerStateEvent;
     [SocketReceivedEvents.WeaponPurchased]: WeaponPurchasedEvent;
 }
 
-type DecodersMap = {
-    [K in SocketReceivedEvents]?: (data: Uint8Array) => SocketReceivedPayloadsMap[K];
-};
 
-const decoders: DecodersMap = {
-    [SocketReceivedEvents.PlayerJoined]: (data) => PlayerJoined.decode(data),
-    [SocketReceivedEvents.FireEvent]: (data) => WeaponFireActionEvent.decode(data),
-    [SocketReceivedEvents.WaveStart]: (data) => WaveStartEvent.decode(data),
-    [SocketReceivedEvents.SpawnEnemy]: (data) => SpawnEnemyEvent.decode(data),
-    [SocketReceivedEvents.EnemyDeath]: (data) => EnemyDeathEvent.decode(data),
-    [SocketReceivedEvents.PlayerScoreUpdate]: (data) => PlayerScoreUpdateEvent.decode(data),
-    [SocketReceivedEvents.PlayerSetWeapon]: (data) => PlayerSetWeaponEvent.decode(data),
-    [SocketReceivedEvents.WeaponPurchased]: (data) => WeaponPurchasedEvent.decode(data),
-};
+
 
 // Type for specific event handlers stored internally
-type TypedEventHandler<E extends SocketReceivedEvents> = (data: SocketReceivedPayloadsMap[E]) => void;
+type TypedEventHandler<E extends SocketEvents> = (data: SocketPayloadsMap[E]) => void;
 // Type for generic (string-based) event handlers
 type GenericEventHandler = (data?: any) => void;
 
 // More precise type for the eventHandlers map
 type EventHandlersMap = {
-    [K in SocketReceivedEvents]?: TypedEventHandler<K>[];
+    [K in SocketEvents]?: TypedEventHandler<K>[];
 } & {
     [key: string]: GenericEventHandler[]; // Allow other string keys for non-protobuf events
 };
@@ -188,7 +197,7 @@ export class SocketClient extends EventEmitter {
      * @param event The event name (must be one of SocketSentEvents)
      * @param data The payload object matching the event type in SocketSentPayloadsMap
      */
-    public send<E extends SocketSentEvents>(event: E, data: SocketSentPayloadsMap[E]): void {
+    public send<E extends SocketEvents>(event: E, data: SocketPayloadsMap[E]): void {
         if (!this.isConnected || !this.socket) {
             logger.error(`Cannot send event '${event}', socket not connected.`);
             return;
@@ -269,7 +278,7 @@ export class SocketClient extends EventEmitter {
      * @param eventName The event name (must be one of SocketReceivedEvents)
      * @param handler The callback function, typed according to the event
      */
-    public on<E extends SocketReceivedEvents>(eventName: E, handler: TypedEventHandler<E>): this;
+    public on<E extends SocketEvents>(eventName: E, handler: TypedEventHandler<E>): this;
     // Overload for generic string events (connect, disconnect, error, etc.)
     public on(eventName: string, handler: GenericEventHandler): this;
     // Implementation
@@ -291,7 +300,7 @@ export class SocketClient extends EventEmitter {
      * @param eventName The event name (must be one of SocketReceivedEvents)
      * @param handler The reference to the handler function to remove
      */
-    public off<E extends SocketReceivedEvents>(eventName: E, handler: TypedEventHandler<E>): this;
+    public off<E extends SocketEvents>(eventName: E, handler: TypedEventHandler<E>): this;
     // Overload for generic string events
     public off(eventName: string, handler: GenericEventHandler): this;
     // Implementation

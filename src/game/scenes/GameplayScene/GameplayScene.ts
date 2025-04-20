@@ -19,7 +19,7 @@ import { SpawnEnemyPayload, WaveController } from '../../core/controllers/WaveCo
 import { createWavesConfig } from '../../levels/test/wavesConfig'
 import { WaveStartEventPayload, WaveEvents } from '../../core/controllers/WaveController';
 import { generateId } from '../../../utils/stringGenerator';
-import { onEvent } from '../../core/Events';
+import { emitEvent, onEvent } from '../../core/Events';
 import { preloadWeapons } from '../../weapons';
 import { WeaponType } from '../../weapons/WeaponTypes';
 import { preloadProjectiles } from '../../projectiles';
@@ -33,6 +33,7 @@ import { WeaponPurchasedPayload } from '../../core/types/shopTypes';
 import { MultiplayerController } from '../../core/controllers/MultiplayerController';
 import { createEnemy } from '../../enemies';
 import { KeyBoardController } from '../../core/controllers/KeyBoardController';
+import { Player } from '../../core/types/playerTypes';
 
 const logger = createLogger('GameplayScene');
 
@@ -64,6 +65,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private mainPlayerId!: string;
   private players: Map<string, PlayerEntity> = new Map();
+  private lastSentState: number = 0;
 
   constructor() {
     super({
@@ -253,6 +255,18 @@ export class GameplayScene extends Phaser.Scene {
     // Обрабатываем попадания пуль
     this.projectileController.update(time, delta);
     this.waveInfo.update(time, delta);
+
+    this.updatePlayerState(time, delta);
+  }
+
+  private updatePlayerState(time: number, delta: number): void {
+    const player = this.players.get(this.mainPlayerId)!;
+    const state = player.getPlayerState();
+    if (time - this.lastSentState < 500) {
+      return;
+    }
+    emitEvent(this, Player.Events.State.Local, state);
+    this.lastSentState = time;
   }
 
   // Метод для доступа к группе гильз

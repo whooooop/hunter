@@ -38,6 +38,8 @@ interface EventPayloadMap {
     // Player
     [Player.Events.SetWeapon.Local]: Player.Events.SetWeapon.Payload;
     [Player.Events.SetWeapon.Remote]: Player.Events.SetWeapon.Payload;
+    [Player.Events.State.Local]: Player.Events.State.Payload;
+    [Player.Events.State.Remote]: Player.Events.State.Payload;
 
     // Shop
     [ShopEvents.WeaponPurchasedEvent]: WeaponPurchasedPayload;

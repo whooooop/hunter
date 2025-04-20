@@ -37,6 +37,11 @@ export interface WaveStartEvent {
   duration: number;
 }
 
+export interface PlayerStateEvent {
+  playerId: string;
+  position: Point | undefined;
+}
+
 export interface SpawnEnemyEvent {
   id: string;
   enemyType: string;
@@ -475,6 +480,84 @@ export const WaveStartEvent: MessageFns<WaveStartEvent> = {
     const message = createBaseWaveStartEvent();
     message.number = object.number ?? 0;
     message.duration = object.duration ?? 0;
+    return message;
+  },
+};
+
+function createBasePlayerStateEvent(): PlayerStateEvent {
+  return { playerId: "", position: undefined };
+}
+
+export const PlayerStateEvent: MessageFns<PlayerStateEvent> = {
+  encode(message: PlayerStateEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.playerId !== "") {
+      writer.uint32(10).string(message.playerId);
+    }
+    if (message.position !== undefined) {
+      Point.encode(message.position, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PlayerStateEvent {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePlayerStateEvent();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.playerId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.position = Point.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PlayerStateEvent {
+    return {
+      playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
+      position: isSet(object.position) ? Point.fromJSON(object.position) : undefined,
+    };
+  },
+
+  toJSON(message: PlayerStateEvent): unknown {
+    const obj: any = {};
+    if (message.playerId !== "") {
+      obj.playerId = message.playerId;
+    }
+    if (message.position !== undefined) {
+      obj.position = Point.toJSON(message.position);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PlayerStateEvent>, I>>(base?: I): PlayerStateEvent {
+    return PlayerStateEvent.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<PlayerStateEvent>, I>>(object: I): PlayerStateEvent {
+    const message = createBasePlayerStateEvent();
+    message.playerId = object.playerId ?? "";
+    message.position = (object.position !== undefined && object.position !== null)
+      ? Point.fromPartial(object.position)
+      : undefined;
     return message;
   },
 };

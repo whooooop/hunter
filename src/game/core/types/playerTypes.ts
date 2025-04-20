@@ -11,5 +11,14 @@ export namespace Player {
         weaponType: WeaponType;
       }
     }
+
+    export namespace State {
+      export const Local = 'PlayerStateEvent';
+      export const Remote = 'PlayerStateRemoteEvent';
+      export interface Payload {
+        playerId: string;
+        position: { x: number, y: number };
+      }
+    }
   }
 }

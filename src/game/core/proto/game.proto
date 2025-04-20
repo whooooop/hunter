@@ -30,6 +30,11 @@ message WaveStartEvent {
   int32 duration = 2;
 }
 
+message PlayerStateEvent {
+  string playerId = 1;
+  Point position = 2;
+}
+
 message SpawnEnemyEvent {
   string id = 1;
   string enemyType = 2;

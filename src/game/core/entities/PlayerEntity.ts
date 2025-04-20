@@ -5,6 +5,8 @@ import { LocationBounds } from '../BaseLocation';
 import { WeaponEntity } from './WeaponEntity';
 import { MotionController } from '../controllers/MotionController';
 import { ShadowEntity } from './ShadowEntity';
+import { emitEvent, onEvent } from '../Events';
+import { Player } from '../types/playerTypes';
 
 const TEXTURE_PLAYER = 'player';
 
@@ -61,6 +63,18 @@ export class PlayerEntity {
     });
 
     scene.add.existing(this.gameObject);
+
+    onEvent(scene, Player.Events.State.Remote, this.handlePlayerStateRemote.bind(this));
+  }
+
+  private handlePlayerStateRemote(payload: Player.Events.State.Payload): void {
+    console.log('handlePlayerStateRemote', payload.playerId);
+    if (payload.playerId !== this.id) {
+      return;
+    }
+
+    this.gameObject.x = payload.position.x;
+    this.gameObject.y = payload.position.y;
   }
 
   public getId(): string {
@@ -100,6 +114,13 @@ export class PlayerEntity {
       this.currentWeapon.setDepth(this.gameObject.depth + 1);
       this.currentWeapon.update(time, delta);
     }
+  }
+
+  public getPlayerState(): Player.Events.State.Payload {
+    return { 
+      playerId: this.id, 
+      position: { x: this.gameObject.x, y: this.gameObject.y } 
+    };
   }
   
   public setMove(moveX: number, moveY: number): void {

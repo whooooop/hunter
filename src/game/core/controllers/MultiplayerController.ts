@@ -1,4 +1,4 @@
-import { SocketClient, SocketSentEvents, SocketReceivedEvents } from '../network/SocketClient';
+import { SocketClient, SocketEvents, SocketReceivedEvents } from '../network/SocketClient';
 import { emitEvent, onEvent } from "../Events";
 import {
     PlayerSetWeaponEvent,
@@ -9,6 +9,7 @@ import {
     PlayerScoreUpdateEvent,
     PlayerJoined,
     WeaponFireActionEvent,
+    PlayerStateEvent,
 } from '../proto/generated/game';
 
 import { WeaponPurchasedPayload, ShopEvents } from "../types/shopTypes";
@@ -67,6 +68,7 @@ export class MultiplayerController {
   private setupLocalEventHandlers(): void {
     onEvent(this.scene, Weapon.Events.FireAction.Local, this.clientHandleFire.bind(this));
     onEvent(this.scene, Player.Events.SetWeapon.Local, this.clientHandleSetWeapon.bind(this));
+    onEvent(this.scene, Player.Events.State.Local, this.clientHandlePlayerState.bind(this));
 
     onEvent(this.scene, WaveEvents.WaveStartEvent, this.clientHandleWaveStart.bind(this));
     onEvent(this.scene, WaveEvents.SpawnEnemyEvent, this.clientHandleSpawnEnemy.bind(this));
@@ -78,6 +80,7 @@ export class MultiplayerController {
   private setupServerEventHandlers(): void {
     this.socketClient.on(SocketReceivedEvents.PlayerJoined, this.serverHandlePlayerJoined.bind(this));
     this.socketClient.on(SocketReceivedEvents.FireEvent, this.serverHandleFireEvent.bind(this));
+    this.socketClient.on(SocketReceivedEvents.PlayerStateEvent, this.serverHandlePlayerState.bind(this));
 
     // this.socketClient.on(SocketReceivedEvents.WaveStart, this.serverHandleWaveStart.bind(this));
     // this.socketClient.on(SocketReceivedEvents.SpawnEnemy, this.serverHandleSpawnEnemy.bind(this));
@@ -90,32 +93,36 @@ export class MultiplayerController {
   // Обработчики локальных событий
 
   private clientHandleFire(payload: Weapon.Events.FireAction.Payload): void {
-    this.socketClient.send(SocketSentEvents.FireEvent, payload);
+    this.socketClient.send(SocketEvents.FireEvent, payload);
+  }
+
+  private clientHandlePlayerState(payload: Player.Events.State.Payload): void {
+    this.socketClient.send(SocketEvents.PlayerStateEvent, payload);
   }
 
   private clientHandleWaveStart(payload: WaveStartEventPayload): void {
-    this.socketClient.send(SocketSentEvents.WaveStart, payload);
+    this.socketClient.send(SocketEvents.WaveStart, payload);
   }
 
   private clientHandleSpawnEnemy(payload: SpawnEnemyPayload): void {
-    this.socketClient.send(SocketSentEvents.SpawnEnemy, payload);
+    this.socketClient.send(SocketEvents.SpawnEnemy, payload);
   }
 
   private clientHandleEnemyDeath(payload: EnemyDeathPayload): void {
-    this.socketClient.send(SocketSentEvents.EnemyDeath, payload);
+    this.socketClient.send(SocketEvents.EnemyDeath, payload);
   }
 
   private clientHandleSetWeapon(payload: Player.Events.SetWeapon.Payload): void {
     logger.info(`Sending PlayerSetWeapon event to server:`, payload);
-    this.socketClient.send(SocketSentEvents.PlayerSetWeapon, payload);
+    this.socketClient.send(SocketEvents.PlayerSetWeapon, payload);
   }
 
   private clientHandleWeaponPurchased(payload: WeaponPurchasedPayload): void {
-    this.socketClient.send(SocketSentEvents.WeaponPurchased, payload);
+    this.socketClient.send(SocketEvents.WeaponPurchased, payload);
   }
 
   private clientHandleUpdateScore(payload: UpdateScoreEventPayload): void {
-    this.socketClient.send(SocketSentEvents.PlayerScoreUpdate, payload);
+    this.socketClient.send(SocketEvents.PlayerScoreUpdate, payload);
   }
 
   // Обработчики серверных событий
@@ -131,6 +138,12 @@ export class MultiplayerController {
     emitEvent(this.scene, Player.Events.SetWeapon.Remote, data);
   }
 
+  private serverHandlePlayerState(payload: PlayerStateEvent): void {
+    // logger.info(`Player ${payload.playerId} state updated:`, payload);
+    const data = payload as Player.Events.State.Payload;
+    emitEvent(this.scene, Player.Events.State.Remote, data);
+  }
+  
   private serverHandleFireEvent(payload: WeaponFireActionEvent): void {
     logger.info('Received fire event from player:', payload);
     const data = payload as Weapon.Events.FireAction.Payload;
