@@ -1,11 +1,12 @@
 {
   "name": "hunter",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.ts",
   "scripts": {
-    "build": "webpack",
-    "start": "webpack serve --open",
-    "dev": "webpack serve --open"
+    "start": "webpack serve --mode=development",
+    "build": "webpack --mode=production",
+    "compile:proto": "mkdir -p src/game/core/proto/generated && protoc --plugin=\"./node_modules/.bin/protoc-gen-ts_proto\" --ts_proto_out=\"./src/game/core/proto/generated\" --ts_proto_opt=\"esModuleInterop=true,forceLong=string,outputServices=false\" --proto_path=\"./src/game/core/proto\" ./src/game/core/proto/game.proto",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
   "dependencies": {
     "@esotericsoftware/spine-phaser": "~4.1.0",
     "phaser": "^3.60.0",
+    "socket.io-client": "^4.8.1",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.3",
     "webpack": "^5.91.0",
@@ -29,6 +31,7 @@
     "webpack-dev-server": "^5.0.4"
   },
   "devDependencies": {
-    "raw-loader": "^4.0.2"
+    "raw-loader": "^4.0.2",
+    "ts-proto": "^2.7.0"
   }
 }

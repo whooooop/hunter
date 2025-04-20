@@ -147,7 +147,9 @@ export class GameplayScene extends Phaser.Scene {
     //   undefined,
     //   this
     // );
-    this.multiplayerController.init();
+    setTimeout(() => {
+      this.multiplayerController.connect('123', this.mainPlayerId);
+    }, 2000);
   }
 
   private handleFireProjectile(payload: WeaponFireEventsPayload): void {

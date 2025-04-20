@@ -1,5 +1,4 @@
 import { ProjectileName } from "../../projectiles/ProjectileName";
-import { ProjectileEntity } from "../entities/ProjectileEntity";
 import { SightEntityOptions } from "../entities/SightEntity";
 import { ImageTexture } from "./texture";
 

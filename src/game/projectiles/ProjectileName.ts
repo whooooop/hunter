@@ -1,5 +1,5 @@
 export enum ProjectileName {
-  BULLET = 'Bullet',
-  GRENADE = 'Grenade',
-  MINE = 'Mine', 
+  BULLET = 'PBULLET',
+  GRENADE = 'PGRENADE',
+  MINE = 'PMINE', 
 }

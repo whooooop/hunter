@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package game;
+
+// Базовые типы
+message Point {
+  float x = 1;
+  float y = 2;
+}
+
+message JoinGame {
+  string gameId = 1;
+  string playerId = 2;
+}
+
+message PlayerJoined {
+  string playerId = 1;
+}
+
+message FireEvent {
+  string playerId = 1; 
+  repeated int32 speed = 2;
+  int32 damage = 3;
+  string weaponName = 4;
+  string projectile = 5;
+  Point originPoint = 6;
+  Point targetPoint = 7; 
+}
+
+message WaveStartEvent {
+  int32 number = 1;
+  int32 duration = 2;
+}
+
+message SpawnEnemyEvent {
+  string id = 1;
+  string enemyType = 2;
+  Point position = 3;
+  // TODO: Добавить options
+}
+
+message EnemyDeathEvent {
+  string id = 1;
+}
+
+message PlayerSetWeaponEvent {
+  string playerId = 1;
+  string weaponType = 2;
+  int32 ammo = 3;
+  int32 maxAmmo = 4;
+}
+
+message WeaponPurchasedEvent {
+  string playerId = 1;
+  string weaponType = 2;
+  int32 price = 3;
+}
+
+message PlayerScoreUpdateEvent {
+  string playerId = 1;
+  int32 score = 2;
+}
