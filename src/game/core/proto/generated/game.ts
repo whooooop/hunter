@@ -50,6 +50,7 @@ export interface EnemyDeathEvent {
 
 export interface PlayerSetWeaponEvent {
   playerId: string;
+  weaponId: string;
   weaponType: string;
 }
 
@@ -631,7 +632,7 @@ export const EnemyDeathEvent: MessageFns<EnemyDeathEvent> = {
 };
 
 function createBasePlayerSetWeaponEvent(): PlayerSetWeaponEvent {
-  return { playerId: "", weaponType: "" };
+  return { playerId: "", weaponId: "", weaponType: "" };
 }
 
 export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
@@ -639,8 +640,11 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
     if (message.playerId !== "") {
       writer.uint32(10).string(message.playerId);
     }
+    if (message.weaponId !== "") {
+      writer.uint32(18).string(message.weaponId);
+    }
     if (message.weaponType !== "") {
-      writer.uint32(18).string(message.weaponType);
+      writer.uint32(26).string(message.weaponType);
     }
     return writer;
   },
@@ -665,6 +669,14 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
             break;
           }
 
+          message.weaponId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
           message.weaponType = reader.string();
           continue;
         }
@@ -680,6 +692,7 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
   fromJSON(object: any): PlayerSetWeaponEvent {
     return {
       playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
+      weaponId: isSet(object.weaponId) ? globalThis.String(object.weaponId) : "",
       weaponType: isSet(object.weaponType) ? globalThis.String(object.weaponType) : "",
     };
   },
@@ -688,6 +701,9 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
     const obj: any = {};
     if (message.playerId !== "") {
       obj.playerId = message.playerId;
+    }
+    if (message.weaponId !== "") {
+      obj.weaponId = message.weaponId;
     }
     if (message.weaponType !== "") {
       obj.weaponType = message.weaponType;
@@ -701,6 +717,7 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
   fromPartial<I extends Exact<DeepPartial<PlayerSetWeaponEvent>, I>>(object: I): PlayerSetWeaponEvent {
     const message = createBasePlayerSetWeaponEvent();
     message.playerId = object.playerId ?? "";
+    message.weaponId = object.weaponId ?? "";
     message.weaponType = object.weaponType ?? "";
     return message;
   },

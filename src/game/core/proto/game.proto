@@ -43,7 +43,8 @@ message EnemyDeathEvent {
 
 message PlayerSetWeaponEvent {
   string playerId = 1;
-  string weaponType = 2;
+  string weaponId = 2;
+  string weaponType = 3;
 }
 
 message WeaponPurchasedEvent {

@@ -61,7 +61,15 @@ export class WeaponEntity {
     this.gameObject.setScale(this.options.texture.scale);
     this.scene.add.existing(this.gameObject);
     
-    this.createAudioAssets()
+    this.createAudioAssets();
+
+    onEvent(this.scene, Weapon.Events.FireAction.Remote, this.handleFireAction.bind(this));
+  }
+
+  private handleFireAction({ playerId, weaponId, originPoint, targetPoint, angleTilt }: Weapon.Events.FireAction.Payload): void {
+    if (weaponId == this.id) {
+      this.fireAction(playerId, originPoint, targetPoint, angleTilt);
+    }
   }
 
   protected createSight(options: SightEntityOptions | boolean): void {
@@ -182,7 +190,6 @@ export class WeaponEntity {
     const recoil = this.options.recoilForce ? this.applyRecoil(this.direction) : null;
     const angleTilt = this.calculateAnleTilt();
 
-    this.lastFired = this.scene.time.now;
     this.currentAmmo--;
 
     emitEvent(this.scene, Weapon.Events.FireAction.Local, { 
@@ -212,6 +219,8 @@ export class WeaponEntity {
   }
 
   private fireAction(playerId: string, originPoint: { x: number, y: number }, targetPoint: { x: number, y: number }, angleTilt: number) {
+    this.lastFired = this.scene.time.now;
+
     if (this.options.projectile) {
       emitEvent(this.scene, Weapon.Events.CreateProjectile.Local, { 
         playerId,

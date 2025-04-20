@@ -6,6 +6,7 @@ export namespace Player {
       export const Local = 'PlayerSetWeaponEvent';
       export const Remote = 'PlayerSetWeaponRemoteEvent';
       export interface Payload {
+        weaponId: string;
         playerId: string;
         weaponType: WeaponType;
       }
