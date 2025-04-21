@@ -22,6 +22,7 @@ const logger = createLogger('SocketClient', {
 export enum SocketEvents {
   JoinGame = 'JoinGame',
   PlayerJoined = 'PlayerJoinedEvent',
+  // PlayerLeft = 'PlayerLeftEvent',
   FireEvent = 'FireEvent',
   WaveStart = 'WaveStartEvent',
   SpawnEnemy = 'SpawnEnemyEvent',
@@ -31,8 +32,6 @@ export enum SocketEvents {
   WeaponPurchased = 'WeaponPurchasedEvent',
   PlayerStateEvent = 'PlayerStateEvent',
 }
-
-// --- Sending Types --- 
 
 interface SocketPayloadsMap {
     [SocketEvents.JoinGame]: JoinGame;
@@ -75,35 +74,6 @@ const decoders: {
   [SocketEvents.PlayerStateEvent]: (data) => PlayerStateEvent.decode(data),
   [SocketEvents.WeaponPurchased]: (data) => WeaponPurchasedEvent.decode(data),
 };
-
-// --- Receiving Types ---
-export enum SocketReceivedEvents {
-    PlayerJoined = 'PlayerJoinedEvent',
-
-    FireEvent = 'FireEvent',
-    WaveStart = 'WaveStartEvent',
-    SpawnEnemy = 'SpawnEnemyEvent',
-    EnemyDeath = 'EnemyDeathEvent',
-    PlayerScoreUpdate = 'PlayerScoreUpdateEvent',
-    PlayerSetWeapon = 'PlayerSetWeaponEvent',
-    WeaponPurchased = 'WeaponPurchasedEvent',
-    PlayerStateEvent = 'PlayerStateEvent',
-}
-
-interface SocketReceivedPayloadsMap {
-    [SocketReceivedEvents.PlayerJoined]: PlayerJoined;
-    [SocketReceivedEvents.FireEvent]: WeaponFireActionEvent;
-    [SocketReceivedEvents.WaveStart]: WaveStartEvent;
-    [SocketReceivedEvents.SpawnEnemy]: SpawnEnemyEvent;
-    [SocketReceivedEvents.EnemyDeath]: EnemyDeathEvent;
-    [SocketReceivedEvents.PlayerScoreUpdate]: PlayerScoreUpdateEvent;
-    [SocketReceivedEvents.PlayerSetWeapon]: PlayerSetWeaponEvent;
-    [SocketReceivedEvents.PlayerStateEvent]: PlayerStateEvent;
-    [SocketReceivedEvents.WeaponPurchased]: WeaponPurchasedEvent;
-}
-
-
-
 
 // Type for specific event handlers stored internally
 type TypedEventHandler<E extends SocketEvents> = (data: SocketPayloadsMap[E]) => void;
@@ -235,7 +205,7 @@ export class SocketClient extends EventEmitter {
          }
         // logger.debug(`Received event '${eventName}' with data:`, rawData);
 
-        const decoder = decoders[eventName as SocketReceivedEvents];
+        const decoder = decoders[eventName as SocketEvents];
         let decodedPayload: any = rawData;
 
         if (decoder) {
@@ -319,5 +289,3 @@ export class SocketClient extends EventEmitter {
         return this;
     }
 }
-
-export default SocketClient; 

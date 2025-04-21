@@ -66,6 +66,7 @@ export class GameplayScene extends Phaser.Scene {
   private mainPlayerId!: string;
   private players: Map<string, PlayerEntity> = new Map();
   private lastSentState: number = 0;
+  private lastStateHash: string = '';
 
   constructor() {
     super({
@@ -254,7 +255,7 @@ export class GameplayScene extends Phaser.Scene {
 
     // Обрабатываем попадания пуль
     this.projectileController.update(time, delta);
-    this.waveInfo.update(time, delta);
+    this.waveInfo.update(time, delta);  
 
     this.updatePlayerState(time, delta);
   }
@@ -262,11 +263,13 @@ export class GameplayScene extends Phaser.Scene {
   private updatePlayerState(time: number, delta: number): void {
     const player = this.players.get(this.mainPlayerId)!;
     const state = player.getPlayerState();
-    if (time - this.lastSentState < 40) {
+    const stateHash = (state.position.x + state.position.y).toString();
+    if (time - this.lastSentState < 40 || stateHash === this.lastStateHash) {
       return;
     }
     emitEvent(this, Player.Events.State.Local, state);
     this.lastSentState = time;
+    this.lastStateHash = stateHash;
   }
 
   // Метод для доступа к группе гильз

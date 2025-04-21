@@ -1,4 +1,4 @@
-import { SocketClient, SocketEvents, SocketReceivedEvents } from '../network/SocketClient';
+import { SocketClient, SocketEvents } from '../network/SocketClient';
 import { emitEvent, onEvent } from "../Events";
 import {
     PlayerSetWeaponEvent,
@@ -78,16 +78,16 @@ export class MultiplayerController {
   }
 
   private setupServerEventHandlers(): void {
-    this.socketClient.on(SocketReceivedEvents.PlayerJoined, this.serverHandlePlayerJoined.bind(this));
-    this.socketClient.on(SocketReceivedEvents.FireEvent, this.serverHandleFireEvent.bind(this));
-    this.socketClient.on(SocketReceivedEvents.PlayerStateEvent, this.serverHandlePlayerState.bind(this));
+    this.socketClient.on(SocketEvents.PlayerJoined, this.serverHandlePlayerJoined.bind(this));
+    this.socketClient.on(SocketEvents.FireEvent, this.serverHandleFireEvent.bind(this));
+    this.socketClient.on(SocketEvents.PlayerStateEvent, this.serverHandlePlayerState.bind(this));
 
-    // this.socketClient.on(SocketReceivedEvents.WaveStart, this.serverHandleWaveStart.bind(this));
-    // this.socketClient.on(SocketReceivedEvents.SpawnEnemy, this.serverHandleSpawnEnemy.bind(this));
-    // this.socketClient.on(SocketReceivedEvents.EnemyDeath, this.serverHandleEnemyDeath.bind(this));
-    // this.socketClient.on(SocketReceivedEvents.PlayerScoreUpdate, this.serverHandlePlayerScoreUpdate.bind(this));
-    this.socketClient.on(SocketReceivedEvents.PlayerSetWeapon, this.serverHandlePlayerSetWeapon.bind(this));
-    // this.socketClient.on(SocketReceivedEvents.WeaponPurchased, this.serverHandleWeaponPurchased.bind(this));
+    // this.socketClient.on(SocketEvents.WaveStart, this.serverHandleWaveStart.bind(this));
+    // this.socketClient.on(SocketEvents.SpawnEnemy, this.serverHandleSpawnEnemy.bind(this));
+    // this.socketClient.on(SocketEvents.EnemyDeath, this.serverHandleEnemyDeath.bind(this));
+    // this.socketClient.on(SocketEvents.PlayerScoreUpdate, this.serverHandlePlayerScoreUpdate.bind(this));
+    this.socketClient.on(SocketEvents.PlayerSetWeapon, this.serverHandlePlayerSetWeapon.bind(this));
+    // this.socketClient.on(SocketEvents.WeaponPurchased, this.serverHandleWeaponPurchased.bind(this));
   }
 
   // Обработчики локальных событий

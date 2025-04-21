@@ -107,26 +107,15 @@ export class PlayerEntity {
   public update(time: number, delta: number): void {
     // Интерполяция к целевой позиции
     if (this.targetX && this.targetY) {
-      const lerpFactor = 0.1; // Коэффициент сглаживания (0-1). Меньше значение -> плавнее движение.
+      const lerpFactor = 0.15; // Коэффициент сглаживания (0-1). Меньше значение -> плавнее движение.
       this.gameObject.x = Phaser.Math.Interpolation.Linear([this.gameObject.x, this.targetX], lerpFactor);
       this.gameObject.y = Phaser.Math.Interpolation.Linear([this.gameObject.y, this.targetY], lerpFactor);
       // Если очень близко к цели, "примагничиваемся", чтобы избежать дрожания
-      if (Phaser.Math.Distance.Between(this.gameObject.x, this.gameObject.y, this.targetX, this.targetY) < 1) {
-        this.gameObject.x = this.targetX;
-        this.gameObject.y = this.targetY;
-      }
+      // if (Phaser.Math.Distance.Between(this.gameObject.x, this.gameObject.y, this.targetX, this.targetY) < 1) {
+      //   this.gameObject.x = this.targetX;
+      //   this.gameObject.y = this.targetY;
+      // }
     }
-
-
-
-    // if (this.locationBounds) {
-    //   // Применяем ограничения к интерполированной позиции
-    //   this.constrainPosition(this.locationBounds);
-    //   // Также обновляем targetX/Y, если они вышли за границы после constrainPosition
-    //   // Это предотвращает попытку интерполяции к точке за пределами границ
-    //   this.targetX = this.gameObject.x;
-    //   this.targetY = this.gameObject.y;
-    // }
 
     // Ограничиваем позицию игрока внутри границ локации
     if (this.locationBounds) {
@@ -235,7 +224,6 @@ export class PlayerEntity {
    */
   private constrainPosition(bounds: LocationBounds): void {
     if (bounds) {
-      // Используем Math.min/max для ограничения внутри границ
       this.gameObject.x = Math.max(bounds.left, Math.min(bounds.right, this.gameObject.x));
       this.gameObject.y = Math.max(bounds.top, Math.min(bounds.bottom, this.gameObject.y));
     }
