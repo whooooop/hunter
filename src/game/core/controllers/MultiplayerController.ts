@@ -1,17 +1,6 @@
-import { SocketClient, SocketEvents } from '../network/SocketClient';
+import { SocketClient } from '../network/SocketClient';
 import { emitEvent, onEvent } from "../Events";
-import {
-    PlayerSetWeaponEvent,
-    WeaponPurchasedEvent,
-    WaveStartEvent,
-    SpawnEnemyEvent,
-    EnemyDeathEvent,
-    PlayerScoreUpdateEvent,
-    PlayerJoined,
-    WeaponFireActionEvent,
-    PlayerStateEvent,
-} from '../proto/generated/game';
-
+import { EventPlayerJoined, EventPlayerSetWeapon, EventPlayerState, EventWeaponFireAction, EventWaveStart, EventSpawnEnemy, EventEnemyDeath, EventPlayerScoreUpdate, ProtoEventType, EventWeaponPurchased } from '../proto/generated/game';
 import { WeaponPurchasedPayload, ShopEvents } from "../types/shopTypes";
 import { Player } from "../types/playerTypes";
 import { WaveStartEventPayload, WaveEvents, SpawnEnemyPayload } from "./WaveController";
@@ -78,95 +67,95 @@ export class MultiplayerController {
   }
 
   private setupServerEventHandlers(): void {
-    this.socketClient.on(SocketEvents.PlayerJoined, this.serverHandlePlayerJoined.bind(this));
-    this.socketClient.on(SocketEvents.FireEvent, this.serverHandleFireEvent.bind(this));
-    this.socketClient.on(SocketEvents.PlayerStateEvent, this.serverHandlePlayerState.bind(this));
+    this.socketClient.on('PlayerJoined', this.serverHandlePlayerJoined.bind(this));
+    this.socketClient.on('WeaponFireAction', this.serverHandleFireEvent.bind(this));
+    this.socketClient.on('PlayerStateEvent', this.serverHandlePlayerState.bind(this));
 
     // this.socketClient.on(SocketEvents.WaveStart, this.serverHandleWaveStart.bind(this));
     // this.socketClient.on(SocketEvents.SpawnEnemy, this.serverHandleSpawnEnemy.bind(this));
     // this.socketClient.on(SocketEvents.EnemyDeath, this.serverHandleEnemyDeath.bind(this));
     // this.socketClient.on(SocketEvents.PlayerScoreUpdate, this.serverHandlePlayerScoreUpdate.bind(this));
-    this.socketClient.on(SocketEvents.PlayerSetWeapon, this.serverHandlePlayerSetWeapon.bind(this));
-    // this.socketClient.on(SocketEvents.WeaponPurchased, this.serverHandleWeaponPurchased.bind(this));
+    this.socketClient.on('PlayerSetWeapon', this.serverHandlePlayerSetWeapon.bind(this));
+    // this.socketClient.on('WeaponPurchased', this.serverHandleWeaponPurchased.bind(this));
   }
 
   // Обработчики локальных событий
 
   private clientHandleFire(payload: Weapon.Events.FireAction.Payload): void {
-    this.socketClient.send(SocketEvents.FireEvent, payload);
+    this.socketClient.send(ProtoEventType.WeaponFireAction, payload);
   }
 
   private clientHandlePlayerState(payload: Player.Events.State.Payload): void {
-    this.socketClient.send(SocketEvents.PlayerStateEvent, payload);
+    this.socketClient.send(ProtoEventType.PlayerStateEvent, payload);
   }
 
   private clientHandleWaveStart(payload: WaveStartEventPayload): void {
-    this.socketClient.send(SocketEvents.WaveStart, payload);
+    this.socketClient.send(ProtoEventType.WaveStart, payload);
   }
 
   private clientHandleSpawnEnemy(payload: SpawnEnemyPayload): void {
-    this.socketClient.send(SocketEvents.SpawnEnemy, payload);
+    this.socketClient.send(ProtoEventType.SpawnEnemy, payload);
   }
 
   private clientHandleEnemyDeath(payload: EnemyDeathPayload): void {
-    this.socketClient.send(SocketEvents.EnemyDeath, payload);
+    this.socketClient.send(ProtoEventType.EnemyDeath, payload);
   }
 
   private clientHandleSetWeapon(payload: Player.Events.SetWeapon.Payload): void {
     logger.info(`Sending PlayerSetWeapon event to server:`, payload);
-    this.socketClient.send(SocketEvents.PlayerSetWeapon, payload);
+    this.socketClient.send(ProtoEventType.PlayerSetWeapon, payload);
   }
 
   private clientHandleWeaponPurchased(payload: WeaponPurchasedPayload): void {
-    this.socketClient.send(SocketEvents.WeaponPurchased, payload);
+    this.socketClient.send(ProtoEventType.WeaponPurchased, payload);
   }
 
   private clientHandleUpdateScore(payload: UpdateScoreEventPayload): void {
-    this.socketClient.send(SocketEvents.PlayerScoreUpdate, payload);
+    this.socketClient.send(ProtoEventType.PlayerScoreUpdate, payload);
   }
 
   // Обработчики серверных событий
 
-  private serverHandlePlayerJoined(payload: PlayerJoined): void {
+  private serverHandlePlayerJoined(payload: EventPlayerJoined): void {
     logger.info(`Player ${payload.playerId} joined.`);
     this.scene.spawnPlayer(payload.playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y + 200);
   }
 
-  private serverHandlePlayerSetWeapon(payload: PlayerSetWeaponEvent): void {
+  private serverHandlePlayerSetWeapon(payload: EventPlayerSetWeapon): void {
     logger.info(`Player ${payload.playerId} set weapon to ${payload.weaponType}`);
     const data = payload as Player.Events.SetWeapon.Payload;
     emitEvent(this.scene, Player.Events.SetWeapon.Remote, data);
   }
 
-  private serverHandlePlayerState(payload: PlayerStateEvent): void {
+  private serverHandlePlayerState(payload: EventPlayerState): void {
     // logger.info(`Player ${payload.playerId} state updated:`, payload);
     const data = payload as Player.Events.State.Payload;
     emitEvent(this.scene, Player.Events.State.Remote, data);
   }
   
-  private serverHandleFireEvent(payload: WeaponFireActionEvent): void {
+  private serverHandleFireEvent(payload: EventWeaponFireAction): void {
     logger.info('Received fire event from player:', payload);
     const data = payload as Weapon.Events.FireAction.Payload;
     emitEvent(this.scene, Weapon.Events.FireAction.Remote, data);
   }   
 
-  private serverHandleWaveStart(payload: WaveStartEvent): void {
+  private serverHandleWaveStart(payload: EventWaveStart): void {
     logger.info(`Wave ${payload.number} started.`);
   }
 
-  private serverHandleSpawnEnemy(payload: SpawnEnemyEvent): void {
+  private serverHandleSpawnEnemy(payload: EventSpawnEnemy): void {
     logger.info(`Spawning enemy`, payload);
   } 
 
-  private serverHandleEnemyDeath(payload: EnemyDeathEvent): void {
+  private serverHandleEnemyDeath(payload: EventEnemyDeath): void {
     logger.info(`Enemy ${payload.id} died.`);
   }
 
-  private serverHandlePlayerScoreUpdate(payload: PlayerScoreUpdateEvent): void {
+  private serverHandlePlayerScoreUpdate(payload: EventPlayerScoreUpdate): void {
     logger.info(`Player ${payload.playerId} score updated: ${payload.score}`);
   }
 
-  private serverHandleWeaponPurchased(payload: WeaponPurchasedEvent): void {
+  private serverHandleWeaponPurchased(payload: EventWeaponPurchased): void {
     logger.info(`Player ${payload.playerId} purchased ${payload.weaponType}`);
   }
 

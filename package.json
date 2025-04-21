@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "webpack serve --mode=development",
     "build": "webpack --mode=production",
-    "compile:proto": "mkdir -p src/game/core/proto/generated && protoc --plugin=\"./node_modules/.bin/protoc-gen-ts_proto\" --ts_proto_out=\"./src/game/core/proto/generated\" --ts_proto_opt=\"esModuleInterop=true,forceLong=string,outputServices=false\" --proto_path=\"./src/game/core/proto\" ./src/game/core/proto/game.proto",
+    "proto:generate": "mkdir -p src/game/core/proto/generated && protoc --plugin=\"./node_modules/.bin/protoc-gen-ts_proto\" --ts_proto_out=\"./src/game/core/proto/generated\" --ts_proto_opt=\"esModuleInterop=true,forceLong=string,outputServices=false\" --proto_path=\"./src/game/core/proto\" ./src/game/core/proto/game.proto",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

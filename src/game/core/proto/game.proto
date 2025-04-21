@@ -2,22 +2,42 @@ syntax = "proto3";
 
 package game;
 
+enum ProtoEventType {
+  JoinGame = 0;
+  PlayerJoined = 1;
+  WeaponFireAction = 2;
+  WaveStart = 3;
+  SpawnEnemy = 4;
+  EnemyDeath = 5;
+  PlayerScoreUpdate = 6;
+  PlayerSetWeapon = 7;
+  WeaponPurchased = 8;
+  PlayerStateEvent = 9;
+}
+
 // Базовые типы
 message Point {
   float x = 1;
   float y = 2;
 }
 
-message JoinGame {
+message Event {
+  ProtoEventType eventType = 1;
+}
+
+message EventJoinGame {
+  ProtoEventType eventType = 1;
   string playerId = 2;
 }
 
-message PlayerJoined {
-  string playerId = 1;
-  bool isHost = 2;
+message EventPlayerJoined {
+  ProtoEventType eventType = 1;
+  string playerId = 2;
+  bool isHost = 3;
 }
 
-message WeaponFireActionEvent {
+message EventWeaponFireAction {
+  ProtoEventType eventType = 1;
   string playerId = 2; 
   string weaponId = 3;
   Point originPoint = 6;
@@ -25,40 +45,46 @@ message WeaponFireActionEvent {
   float angleTilt = 8;
 }
 
-message WaveStartEvent {
-  int32 number = 1;
-  int32 duration = 2;
+message EventWaveStart {
+  ProtoEventType eventType = 1;
+  int32 number = 2;
+  int32 duration = 3;
 }
 
-message PlayerStateEvent {
-  string playerId = 1;
-  Point position = 2;
-}
-
-message SpawnEnemyEvent {
-  string id = 1;
-  string enemyType = 2;
+message EventPlayerState {
+  ProtoEventType eventType = 1;
+  string playerId = 2;
   Point position = 3;
-  // TODO: Добавить options
 }
 
-message EnemyDeathEvent {
-  string id = 1;
+message EventSpawnEnemy {
+  ProtoEventType eventType = 1;
+  string id = 2;
+  string enemyType = 3;
+  Point position = 4;
 }
 
-message PlayerSetWeaponEvent {
-  string playerId = 1;
-  string weaponId = 2;
+message EventEnemyDeath {
+  ProtoEventType eventType = 1;
+  string id = 2;
+}
+
+message EventPlayerSetWeapon {
+  ProtoEventType eventType = 1;
+  string playerId = 2;
+  string weaponId = 3;
+  string weaponType = 4;
+}
+
+message EventWeaponPurchased {
+  ProtoEventType eventType = 1;
+  string playerId = 2;
   string weaponType = 3;
+  int32 price = 4;
 }
 
-message WeaponPurchasedEvent {
-  string playerId = 1;
-  string weaponType = 2;
-  int32 price = 3;
-}
-
-message PlayerScoreUpdateEvent {
-  string playerId = 1;
-  int32 score = 2;
+message EventPlayerScoreUpdate {
+  ProtoEventType eventType = 1;
+  string playerId = 2;
+  int32 score = 3;
 }

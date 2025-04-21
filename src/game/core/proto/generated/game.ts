@@ -9,22 +9,110 @@ import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 
 export const protobufPackage = "game";
 
+export enum ProtoEventType {
+  JoinGame = 0,
+  PlayerJoined = 1,
+  WeaponFireAction = 2,
+  WaveStart = 3,
+  SpawnEnemy = 4,
+  EnemyDeath = 5,
+  PlayerScoreUpdate = 6,
+  PlayerSetWeapon = 7,
+  WeaponPurchased = 8,
+  PlayerStateEvent = 9,
+  UNRECOGNIZED = -1,
+}
+
+export function protoEventTypeFromJSON(object: any): ProtoEventType {
+  switch (object) {
+    case 0:
+    case "JoinGame":
+      return ProtoEventType.JoinGame;
+    case 1:
+    case "PlayerJoined":
+      return ProtoEventType.PlayerJoined;
+    case 2:
+    case "WeaponFireAction":
+      return ProtoEventType.WeaponFireAction;
+    case 3:
+    case "WaveStart":
+      return ProtoEventType.WaveStart;
+    case 4:
+    case "SpawnEnemy":
+      return ProtoEventType.SpawnEnemy;
+    case 5:
+    case "EnemyDeath":
+      return ProtoEventType.EnemyDeath;
+    case 6:
+    case "PlayerScoreUpdate":
+      return ProtoEventType.PlayerScoreUpdate;
+    case 7:
+    case "PlayerSetWeapon":
+      return ProtoEventType.PlayerSetWeapon;
+    case 8:
+    case "WeaponPurchased":
+      return ProtoEventType.WeaponPurchased;
+    case 9:
+    case "PlayerStateEvent":
+      return ProtoEventType.PlayerStateEvent;
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return ProtoEventType.UNRECOGNIZED;
+  }
+}
+
+export function protoEventTypeToJSON(object: ProtoEventType): string {
+  switch (object) {
+    case ProtoEventType.JoinGame:
+      return "JoinGame";
+    case ProtoEventType.PlayerJoined:
+      return "PlayerJoined";
+    case ProtoEventType.WeaponFireAction:
+      return "WeaponFireAction";
+    case ProtoEventType.WaveStart:
+      return "WaveStart";
+    case ProtoEventType.SpawnEnemy:
+      return "SpawnEnemy";
+    case ProtoEventType.EnemyDeath:
+      return "EnemyDeath";
+    case ProtoEventType.PlayerScoreUpdate:
+      return "PlayerScoreUpdate";
+    case ProtoEventType.PlayerSetWeapon:
+      return "PlayerSetWeapon";
+    case ProtoEventType.WeaponPurchased:
+      return "WeaponPurchased";
+    case ProtoEventType.PlayerStateEvent:
+      return "PlayerStateEvent";
+    case ProtoEventType.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+
 /** Базовые типы */
 export interface Point {
   x: number;
   y: number;
 }
 
-export interface JoinGame {
+export interface Event {
+  eventType: ProtoEventType;
+}
+
+export interface EventJoinGame {
+  eventType: ProtoEventType;
   playerId: string;
 }
 
-export interface PlayerJoined {
+export interface EventPlayerJoined {
+  eventType: ProtoEventType;
   playerId: string;
   isHost: boolean;
 }
 
-export interface WeaponFireActionEvent {
+export interface EventWeaponFireAction {
+  eventType: ProtoEventType;
   playerId: string;
   weaponId: string;
   originPoint: Point | undefined;
@@ -32,40 +120,46 @@ export interface WeaponFireActionEvent {
   angleTilt: number;
 }
 
-export interface WaveStartEvent {
+export interface EventWaveStart {
+  eventType: ProtoEventType;
   number: number;
   duration: number;
 }
 
-export interface PlayerStateEvent {
+export interface EventPlayerState {
+  eventType: ProtoEventType;
   playerId: string;
   position: Point | undefined;
 }
 
-export interface SpawnEnemyEvent {
+export interface EventSpawnEnemy {
+  eventType: ProtoEventType;
   id: string;
   enemyType: string;
-  /** TODO: Добавить options */
   position: Point | undefined;
 }
 
-export interface EnemyDeathEvent {
+export interface EventEnemyDeath {
+  eventType: ProtoEventType;
   id: string;
 }
 
-export interface PlayerSetWeaponEvent {
+export interface EventPlayerSetWeapon {
+  eventType: ProtoEventType;
   playerId: string;
   weaponId: string;
   weaponType: string;
 }
 
-export interface WeaponPurchasedEvent {
+export interface EventWeaponPurchased {
+  eventType: ProtoEventType;
   playerId: string;
   weaponType: string;
   price: number;
 }
 
-export interface PlayerScoreUpdateEvent {
+export interface EventPlayerScoreUpdate {
+  eventType: ProtoEventType;
   playerId: string;
   score: number;
 }
@@ -146,25 +240,94 @@ export const Point: MessageFns<Point> = {
   },
 };
 
-function createBaseJoinGame(): JoinGame {
-  return { playerId: "" };
+function createBaseEvent(): Event {
+  return { eventType: 0 };
 }
 
-export const JoinGame: MessageFns<JoinGame> = {
-  encode(message: JoinGame, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const Event: MessageFns<Event> = {
+  encode(message: Event, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.eventType !== 0) {
+      writer.uint32(8).int32(message.eventType);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): Event {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEvent();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.eventType = reader.int32() as any;
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Event {
+    return { eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0 };
+  },
+
+  toJSON(message: Event): unknown {
+    const obj: any = {};
+    if (message.eventType !== 0) {
+      obj.eventType = protoEventTypeToJSON(message.eventType);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<Event>, I>>(base?: I): Event {
+    return Event.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<Event>, I>>(object: I): Event {
+    const message = createBaseEvent();
+    message.eventType = object.eventType ?? 0;
+    return message;
+  },
+};
+
+function createBaseEventJoinGame(): EventJoinGame {
+  return { eventType: 0, playerId: "" };
+}
+
+export const EventJoinGame: MessageFns<EventJoinGame> = {
+  encode(message: EventJoinGame, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.eventType !== 0) {
+      writer.uint32(8).int32(message.eventType);
+    }
     if (message.playerId !== "") {
       writer.uint32(18).string(message.playerId);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): JoinGame {
+  decode(input: BinaryReader | Uint8Array, length?: number): EventJoinGame {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseJoinGame();
+    const message = createBaseEventJoinGame();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.eventType = reader.int32() as any;
+          continue;
+        }
         case 2: {
           if (tag !== 18) {
             break;
@@ -182,60 +345,78 @@ export const JoinGame: MessageFns<JoinGame> = {
     return message;
   },
 
-  fromJSON(object: any): JoinGame {
-    return { playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "" };
+  fromJSON(object: any): EventJoinGame {
+    return {
+      eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
+      playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
+    };
   },
 
-  toJSON(message: JoinGame): unknown {
+  toJSON(message: EventJoinGame): unknown {
     const obj: any = {};
+    if (message.eventType !== 0) {
+      obj.eventType = protoEventTypeToJSON(message.eventType);
+    }
     if (message.playerId !== "") {
       obj.playerId = message.playerId;
     }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<JoinGame>, I>>(base?: I): JoinGame {
-    return JoinGame.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<EventJoinGame>, I>>(base?: I): EventJoinGame {
+    return EventJoinGame.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<JoinGame>, I>>(object: I): JoinGame {
-    const message = createBaseJoinGame();
+  fromPartial<I extends Exact<DeepPartial<EventJoinGame>, I>>(object: I): EventJoinGame {
+    const message = createBaseEventJoinGame();
+    message.eventType = object.eventType ?? 0;
     message.playerId = object.playerId ?? "";
     return message;
   },
 };
 
-function createBasePlayerJoined(): PlayerJoined {
-  return { playerId: "", isHost: false };
+function createBaseEventPlayerJoined(): EventPlayerJoined {
+  return { eventType: 0, playerId: "", isHost: false };
 }
 
-export const PlayerJoined: MessageFns<PlayerJoined> = {
-  encode(message: PlayerJoined, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const EventPlayerJoined: MessageFns<EventPlayerJoined> = {
+  encode(message: EventPlayerJoined, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.eventType !== 0) {
+      writer.uint32(8).int32(message.eventType);
+    }
     if (message.playerId !== "") {
-      writer.uint32(10).string(message.playerId);
+      writer.uint32(18).string(message.playerId);
     }
     if (message.isHost !== false) {
-      writer.uint32(16).bool(message.isHost);
+      writer.uint32(24).bool(message.isHost);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): PlayerJoined {
+  decode(input: BinaryReader | Uint8Array, length?: number): EventPlayerJoined {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePlayerJoined();
+    const message = createBaseEventPlayerJoined();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1: {
-          if (tag !== 10) {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.eventType = reader.int32() as any;
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
             break;
           }
 
           message.playerId = reader.string();
           continue;
         }
-        case 2: {
-          if (tag !== 16) {
+        case 3: {
+          if (tag !== 24) {
             break;
           }
 
@@ -251,15 +432,19 @@ export const PlayerJoined: MessageFns<PlayerJoined> = {
     return message;
   },
 
-  fromJSON(object: any): PlayerJoined {
+  fromJSON(object: any): EventPlayerJoined {
     return {
+      eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
       playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
       isHost: isSet(object.isHost) ? globalThis.Boolean(object.isHost) : false,
     };
   },
 
-  toJSON(message: PlayerJoined): unknown {
+  toJSON(message: EventPlayerJoined): unknown {
     const obj: any = {};
+    if (message.eventType !== 0) {
+      obj.eventType = protoEventTypeToJSON(message.eventType);
+    }
     if (message.playerId !== "") {
       obj.playerId = message.playerId;
     }
@@ -269,23 +454,27 @@ export const PlayerJoined: MessageFns<PlayerJoined> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<PlayerJoined>, I>>(base?: I): PlayerJoined {
-    return PlayerJoined.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<EventPlayerJoined>, I>>(base?: I): EventPlayerJoined {
+    return EventPlayerJoined.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<PlayerJoined>, I>>(object: I): PlayerJoined {
-    const message = createBasePlayerJoined();
+  fromPartial<I extends Exact<DeepPartial<EventPlayerJoined>, I>>(object: I): EventPlayerJoined {
+    const message = createBaseEventPlayerJoined();
+    message.eventType = object.eventType ?? 0;
     message.playerId = object.playerId ?? "";
     message.isHost = object.isHost ?? false;
     return message;
   },
 };
 
-function createBaseWeaponFireActionEvent(): WeaponFireActionEvent {
-  return { playerId: "", weaponId: "", originPoint: undefined, targetPoint: undefined, angleTilt: 0 };
+function createBaseEventWeaponFireAction(): EventWeaponFireAction {
+  return { eventType: 0, playerId: "", weaponId: "", originPoint: undefined, targetPoint: undefined, angleTilt: 0 };
 }
 
-export const WeaponFireActionEvent: MessageFns<WeaponFireActionEvent> = {
-  encode(message: WeaponFireActionEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const EventWeaponFireAction: MessageFns<EventWeaponFireAction> = {
+  encode(message: EventWeaponFireAction, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.eventType !== 0) {
+      writer.uint32(8).int32(message.eventType);
+    }
     if (message.playerId !== "") {
       writer.uint32(18).string(message.playerId);
     }
@@ -304,13 +493,21 @@ export const WeaponFireActionEvent: MessageFns<WeaponFireActionEvent> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): WeaponFireActionEvent {
+  decode(input: BinaryReader | Uint8Array, length?: number): EventWeaponFireAction {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseWeaponFireActionEvent();
+    const message = createBaseEventWeaponFireAction();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.eventType = reader.int32() as any;
+          continue;
+        }
         case 2: {
           if (tag !== 18) {
             break;
@@ -360,8 +557,9 @@ export const WeaponFireActionEvent: MessageFns<WeaponFireActionEvent> = {
     return message;
   },
 
-  fromJSON(object: any): WeaponFireActionEvent {
+  fromJSON(object: any): EventWeaponFireAction {
     return {
+      eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
       playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
       weaponId: isSet(object.weaponId) ? globalThis.String(object.weaponId) : "",
       originPoint: isSet(object.originPoint) ? Point.fromJSON(object.originPoint) : undefined,
@@ -370,8 +568,11 @@ export const WeaponFireActionEvent: MessageFns<WeaponFireActionEvent> = {
     };
   },
 
-  toJSON(message: WeaponFireActionEvent): unknown {
+  toJSON(message: EventWeaponFireAction): unknown {
     const obj: any = {};
+    if (message.eventType !== 0) {
+      obj.eventType = protoEventTypeToJSON(message.eventType);
+    }
     if (message.playerId !== "") {
       obj.playerId = message.playerId;
     }
@@ -390,11 +591,12 @@ export const WeaponFireActionEvent: MessageFns<WeaponFireActionEvent> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<WeaponFireActionEvent>, I>>(base?: I): WeaponFireActionEvent {
-    return WeaponFireActionEvent.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<EventWeaponFireAction>, I>>(base?: I): EventWeaponFireAction {
+    return EventWeaponFireAction.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<WeaponFireActionEvent>, I>>(object: I): WeaponFireActionEvent {
-    const message = createBaseWeaponFireActionEvent();
+  fromPartial<I extends Exact<DeepPartial<EventWeaponFireAction>, I>>(object: I): EventWeaponFireAction {
+    const message = createBaseEventWeaponFireAction();
+    message.eventType = object.eventType ?? 0;
     message.playerId = object.playerId ?? "";
     message.weaponId = object.weaponId ?? "";
     message.originPoint = (object.originPoint !== undefined && object.originPoint !== null)
@@ -408,25 +610,28 @@ export const WeaponFireActionEvent: MessageFns<WeaponFireActionEvent> = {
   },
 };
 
-function createBaseWaveStartEvent(): WaveStartEvent {
-  return { number: 0, duration: 0 };
+function createBaseEventWaveStart(): EventWaveStart {
+  return { eventType: 0, number: 0, duration: 0 };
 }
 
-export const WaveStartEvent: MessageFns<WaveStartEvent> = {
-  encode(message: WaveStartEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const EventWaveStart: MessageFns<EventWaveStart> = {
+  encode(message: EventWaveStart, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.eventType !== 0) {
+      writer.uint32(8).int32(message.eventType);
+    }
     if (message.number !== 0) {
-      writer.uint32(8).int32(message.number);
+      writer.uint32(16).int32(message.number);
     }
     if (message.duration !== 0) {
-      writer.uint32(16).int32(message.duration);
+      writer.uint32(24).int32(message.duration);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): WaveStartEvent {
+  decode(input: BinaryReader | Uint8Array, length?: number): EventWaveStart {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseWaveStartEvent();
+    const message = createBaseEventWaveStart();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -435,11 +640,19 @@ export const WaveStartEvent: MessageFns<WaveStartEvent> = {
             break;
           }
 
-          message.number = reader.int32();
+          message.eventType = reader.int32() as any;
           continue;
         }
         case 2: {
           if (tag !== 16) {
+            break;
+          }
+
+          message.number = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
             break;
           }
 
@@ -455,15 +668,19 @@ export const WaveStartEvent: MessageFns<WaveStartEvent> = {
     return message;
   },
 
-  fromJSON(object: any): WaveStartEvent {
+  fromJSON(object: any): EventWaveStart {
     return {
+      eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
       number: isSet(object.number) ? globalThis.Number(object.number) : 0,
       duration: isSet(object.duration) ? globalThis.Number(object.duration) : 0,
     };
   },
 
-  toJSON(message: WaveStartEvent): unknown {
+  toJSON(message: EventWaveStart): unknown {
     const obj: any = {};
+    if (message.eventType !== 0) {
+      obj.eventType = protoEventTypeToJSON(message.eventType);
+    }
     if (message.number !== 0) {
       obj.number = Math.round(message.number);
     }
@@ -473,106 +690,29 @@ export const WaveStartEvent: MessageFns<WaveStartEvent> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<WaveStartEvent>, I>>(base?: I): WaveStartEvent {
-    return WaveStartEvent.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<EventWaveStart>, I>>(base?: I): EventWaveStart {
+    return EventWaveStart.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<WaveStartEvent>, I>>(object: I): WaveStartEvent {
-    const message = createBaseWaveStartEvent();
+  fromPartial<I extends Exact<DeepPartial<EventWaveStart>, I>>(object: I): EventWaveStart {
+    const message = createBaseEventWaveStart();
+    message.eventType = object.eventType ?? 0;
     message.number = object.number ?? 0;
     message.duration = object.duration ?? 0;
     return message;
   },
 };
 
-function createBasePlayerStateEvent(): PlayerStateEvent {
-  return { playerId: "", position: undefined };
+function createBaseEventPlayerState(): EventPlayerState {
+  return { eventType: 0, playerId: "", position: undefined };
 }
 
-export const PlayerStateEvent: MessageFns<PlayerStateEvent> = {
-  encode(message: PlayerStateEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const EventPlayerState: MessageFns<EventPlayerState> = {
+  encode(message: EventPlayerState, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.eventType !== 0) {
+      writer.uint32(8).int32(message.eventType);
+    }
     if (message.playerId !== "") {
-      writer.uint32(10).string(message.playerId);
-    }
-    if (message.position !== undefined) {
-      Point.encode(message.position, writer.uint32(18).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): PlayerStateEvent {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePlayerStateEvent();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.playerId = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.position = Point.decode(reader, reader.uint32());
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): PlayerStateEvent {
-    return {
-      playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
-      position: isSet(object.position) ? Point.fromJSON(object.position) : undefined,
-    };
-  },
-
-  toJSON(message: PlayerStateEvent): unknown {
-    const obj: any = {};
-    if (message.playerId !== "") {
-      obj.playerId = message.playerId;
-    }
-    if (message.position !== undefined) {
-      obj.position = Point.toJSON(message.position);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<PlayerStateEvent>, I>>(base?: I): PlayerStateEvent {
-    return PlayerStateEvent.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<PlayerStateEvent>, I>>(object: I): PlayerStateEvent {
-    const message = createBasePlayerStateEvent();
-    message.playerId = object.playerId ?? "";
-    message.position = (object.position !== undefined && object.position !== null)
-      ? Point.fromPartial(object.position)
-      : undefined;
-    return message;
-  },
-};
-
-function createBaseSpawnEnemyEvent(): SpawnEnemyEvent {
-  return { id: "", enemyType: "", position: undefined };
-}
-
-export const SpawnEnemyEvent: MessageFns<SpawnEnemyEvent> = {
-  encode(message: SpawnEnemyEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
-      writer.uint32(10).string(message.id);
-    }
-    if (message.enemyType !== "") {
-      writer.uint32(18).string(message.enemyType);
+      writer.uint32(18).string(message.playerId);
     }
     if (message.position !== undefined) {
       Point.encode(message.position, writer.uint32(26).fork()).join();
@@ -580,19 +720,19 @@ export const SpawnEnemyEvent: MessageFns<SpawnEnemyEvent> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): SpawnEnemyEvent {
+  decode(input: BinaryReader | Uint8Array, length?: number): EventPlayerState {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSpawnEnemyEvent();
+    const message = createBaseEventPlayerState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1: {
-          if (tag !== 10) {
+          if (tag !== 8) {
             break;
           }
 
-          message.id = reader.string();
+          message.eventType = reader.int32() as any;
           continue;
         }
         case 2: {
@@ -600,7 +740,7 @@ export const SpawnEnemyEvent: MessageFns<SpawnEnemyEvent> = {
             break;
           }
 
-          message.enemyType = reader.string();
+          message.playerId = reader.string();
           continue;
         }
         case 3: {
@@ -620,16 +760,125 @@ export const SpawnEnemyEvent: MessageFns<SpawnEnemyEvent> = {
     return message;
   },
 
-  fromJSON(object: any): SpawnEnemyEvent {
+  fromJSON(object: any): EventPlayerState {
     return {
+      eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
+      playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
+      position: isSet(object.position) ? Point.fromJSON(object.position) : undefined,
+    };
+  },
+
+  toJSON(message: EventPlayerState): unknown {
+    const obj: any = {};
+    if (message.eventType !== 0) {
+      obj.eventType = protoEventTypeToJSON(message.eventType);
+    }
+    if (message.playerId !== "") {
+      obj.playerId = message.playerId;
+    }
+    if (message.position !== undefined) {
+      obj.position = Point.toJSON(message.position);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<EventPlayerState>, I>>(base?: I): EventPlayerState {
+    return EventPlayerState.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<EventPlayerState>, I>>(object: I): EventPlayerState {
+    const message = createBaseEventPlayerState();
+    message.eventType = object.eventType ?? 0;
+    message.playerId = object.playerId ?? "";
+    message.position = (object.position !== undefined && object.position !== null)
+      ? Point.fromPartial(object.position)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseEventSpawnEnemy(): EventSpawnEnemy {
+  return { eventType: 0, id: "", enemyType: "", position: undefined };
+}
+
+export const EventSpawnEnemy: MessageFns<EventSpawnEnemy> = {
+  encode(message: EventSpawnEnemy, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.eventType !== 0) {
+      writer.uint32(8).int32(message.eventType);
+    }
+    if (message.id !== "") {
+      writer.uint32(18).string(message.id);
+    }
+    if (message.enemyType !== "") {
+      writer.uint32(26).string(message.enemyType);
+    }
+    if (message.position !== undefined) {
+      Point.encode(message.position, writer.uint32(34).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EventSpawnEnemy {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEventSpawnEnemy();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.eventType = reader.int32() as any;
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.enemyType = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.position = Point.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EventSpawnEnemy {
+    return {
+      eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
       id: isSet(object.id) ? globalThis.String(object.id) : "",
       enemyType: isSet(object.enemyType) ? globalThis.String(object.enemyType) : "",
       position: isSet(object.position) ? Point.fromJSON(object.position) : undefined,
     };
   },
 
-  toJSON(message: SpawnEnemyEvent): unknown {
+  toJSON(message: EventSpawnEnemy): unknown {
     const obj: any = {};
+    if (message.eventType !== 0) {
+      obj.eventType = protoEventTypeToJSON(message.eventType);
+    }
     if (message.id !== "") {
       obj.id = message.id;
     }
@@ -642,11 +891,12 @@ export const SpawnEnemyEvent: MessageFns<SpawnEnemyEvent> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<SpawnEnemyEvent>, I>>(base?: I): SpawnEnemyEvent {
-    return SpawnEnemyEvent.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<EventSpawnEnemy>, I>>(base?: I): EventSpawnEnemy {
+    return EventSpawnEnemy.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<SpawnEnemyEvent>, I>>(object: I): SpawnEnemyEvent {
-    const message = createBaseSpawnEnemyEvent();
+  fromPartial<I extends Exact<DeepPartial<EventSpawnEnemy>, I>>(object: I): EventSpawnEnemy {
+    const message = createBaseEventSpawnEnemy();
+    message.eventType = object.eventType ?? 0;
     message.id = object.id ?? "";
     message.enemyType = object.enemyType ?? "";
     message.position = (object.position !== undefined && object.position !== null)
@@ -656,27 +906,38 @@ export const SpawnEnemyEvent: MessageFns<SpawnEnemyEvent> = {
   },
 };
 
-function createBaseEnemyDeathEvent(): EnemyDeathEvent {
-  return { id: "" };
+function createBaseEventEnemyDeath(): EventEnemyDeath {
+  return { eventType: 0, id: "" };
 }
 
-export const EnemyDeathEvent: MessageFns<EnemyDeathEvent> = {
-  encode(message: EnemyDeathEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const EventEnemyDeath: MessageFns<EventEnemyDeath> = {
+  encode(message: EventEnemyDeath, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.eventType !== 0) {
+      writer.uint32(8).int32(message.eventType);
+    }
     if (message.id !== "") {
-      writer.uint32(10).string(message.id);
+      writer.uint32(18).string(message.id);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): EnemyDeathEvent {
+  decode(input: BinaryReader | Uint8Array, length?: number): EventEnemyDeath {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseEnemyDeathEvent();
+    const message = createBaseEventEnemyDeath();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1: {
-          if (tag !== 10) {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.eventType = reader.int32() as any;
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
             break;
           }
 
@@ -692,59 +953,69 @@ export const EnemyDeathEvent: MessageFns<EnemyDeathEvent> = {
     return message;
   },
 
-  fromJSON(object: any): EnemyDeathEvent {
-    return { id: isSet(object.id) ? globalThis.String(object.id) : "" };
+  fromJSON(object: any): EventEnemyDeath {
+    return {
+      eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
+      id: isSet(object.id) ? globalThis.String(object.id) : "",
+    };
   },
 
-  toJSON(message: EnemyDeathEvent): unknown {
+  toJSON(message: EventEnemyDeath): unknown {
     const obj: any = {};
+    if (message.eventType !== 0) {
+      obj.eventType = protoEventTypeToJSON(message.eventType);
+    }
     if (message.id !== "") {
       obj.id = message.id;
     }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<EnemyDeathEvent>, I>>(base?: I): EnemyDeathEvent {
-    return EnemyDeathEvent.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<EventEnemyDeath>, I>>(base?: I): EventEnemyDeath {
+    return EventEnemyDeath.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<EnemyDeathEvent>, I>>(object: I): EnemyDeathEvent {
-    const message = createBaseEnemyDeathEvent();
+  fromPartial<I extends Exact<DeepPartial<EventEnemyDeath>, I>>(object: I): EventEnemyDeath {
+    const message = createBaseEventEnemyDeath();
+    message.eventType = object.eventType ?? 0;
     message.id = object.id ?? "";
     return message;
   },
 };
 
-function createBasePlayerSetWeaponEvent(): PlayerSetWeaponEvent {
-  return { playerId: "", weaponId: "", weaponType: "" };
+function createBaseEventPlayerSetWeapon(): EventPlayerSetWeapon {
+  return { eventType: 0, playerId: "", weaponId: "", weaponType: "" };
 }
 
-export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
-  encode(message: PlayerSetWeaponEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const EventPlayerSetWeapon: MessageFns<EventPlayerSetWeapon> = {
+  encode(message: EventPlayerSetWeapon, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.eventType !== 0) {
+      writer.uint32(8).int32(message.eventType);
+    }
     if (message.playerId !== "") {
-      writer.uint32(10).string(message.playerId);
+      writer.uint32(18).string(message.playerId);
     }
     if (message.weaponId !== "") {
-      writer.uint32(18).string(message.weaponId);
+      writer.uint32(26).string(message.weaponId);
     }
     if (message.weaponType !== "") {
-      writer.uint32(26).string(message.weaponType);
+      writer.uint32(34).string(message.weaponType);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): PlayerSetWeaponEvent {
+  decode(input: BinaryReader | Uint8Array, length?: number): EventPlayerSetWeapon {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePlayerSetWeaponEvent();
+    const message = createBaseEventPlayerSetWeapon();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1: {
-          if (tag !== 10) {
+          if (tag !== 8) {
             break;
           }
 
-          message.playerId = reader.string();
+          message.eventType = reader.int32() as any;
           continue;
         }
         case 2: {
@@ -752,11 +1023,19 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
             break;
           }
 
-          message.weaponId = reader.string();
+          message.playerId = reader.string();
           continue;
         }
         case 3: {
           if (tag !== 26) {
+            break;
+          }
+
+          message.weaponId = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
             break;
           }
 
@@ -772,16 +1051,20 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
     return message;
   },
 
-  fromJSON(object: any): PlayerSetWeaponEvent {
+  fromJSON(object: any): EventPlayerSetWeapon {
     return {
+      eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
       playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
       weaponId: isSet(object.weaponId) ? globalThis.String(object.weaponId) : "",
       weaponType: isSet(object.weaponType) ? globalThis.String(object.weaponType) : "",
     };
   },
 
-  toJSON(message: PlayerSetWeaponEvent): unknown {
+  toJSON(message: EventPlayerSetWeapon): unknown {
     const obj: any = {};
+    if (message.eventType !== 0) {
+      obj.eventType = protoEventTypeToJSON(message.eventType);
+    }
     if (message.playerId !== "") {
       obj.playerId = message.playerId;
     }
@@ -794,11 +1077,12 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<PlayerSetWeaponEvent>, I>>(base?: I): PlayerSetWeaponEvent {
-    return PlayerSetWeaponEvent.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<EventPlayerSetWeapon>, I>>(base?: I): EventPlayerSetWeapon {
+    return EventPlayerSetWeapon.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<PlayerSetWeaponEvent>, I>>(object: I): PlayerSetWeaponEvent {
-    const message = createBasePlayerSetWeaponEvent();
+  fromPartial<I extends Exact<DeepPartial<EventPlayerSetWeapon>, I>>(object: I): EventPlayerSetWeapon {
+    const message = createBaseEventPlayerSetWeapon();
+    message.eventType = object.eventType ?? 0;
     message.playerId = object.playerId ?? "";
     message.weaponId = object.weaponId ?? "";
     message.weaponType = object.weaponType ?? "";
@@ -806,37 +1090,40 @@ export const PlayerSetWeaponEvent: MessageFns<PlayerSetWeaponEvent> = {
   },
 };
 
-function createBaseWeaponPurchasedEvent(): WeaponPurchasedEvent {
-  return { playerId: "", weaponType: "", price: 0 };
+function createBaseEventWeaponPurchased(): EventWeaponPurchased {
+  return { eventType: 0, playerId: "", weaponType: "", price: 0 };
 }
 
-export const WeaponPurchasedEvent: MessageFns<WeaponPurchasedEvent> = {
-  encode(message: WeaponPurchasedEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const EventWeaponPurchased: MessageFns<EventWeaponPurchased> = {
+  encode(message: EventWeaponPurchased, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.eventType !== 0) {
+      writer.uint32(8).int32(message.eventType);
+    }
     if (message.playerId !== "") {
-      writer.uint32(10).string(message.playerId);
+      writer.uint32(18).string(message.playerId);
     }
     if (message.weaponType !== "") {
-      writer.uint32(18).string(message.weaponType);
+      writer.uint32(26).string(message.weaponType);
     }
     if (message.price !== 0) {
-      writer.uint32(24).int32(message.price);
+      writer.uint32(32).int32(message.price);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): WeaponPurchasedEvent {
+  decode(input: BinaryReader | Uint8Array, length?: number): EventWeaponPurchased {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseWeaponPurchasedEvent();
+    const message = createBaseEventWeaponPurchased();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1: {
-          if (tag !== 10) {
+          if (tag !== 8) {
             break;
           }
 
-          message.playerId = reader.string();
+          message.eventType = reader.int32() as any;
           continue;
         }
         case 2: {
@@ -844,11 +1131,19 @@ export const WeaponPurchasedEvent: MessageFns<WeaponPurchasedEvent> = {
             break;
           }
 
-          message.weaponType = reader.string();
+          message.playerId = reader.string();
           continue;
         }
         case 3: {
-          if (tag !== 24) {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.weaponType = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
             break;
           }
 
@@ -864,16 +1159,20 @@ export const WeaponPurchasedEvent: MessageFns<WeaponPurchasedEvent> = {
     return message;
   },
 
-  fromJSON(object: any): WeaponPurchasedEvent {
+  fromJSON(object: any): EventWeaponPurchased {
     return {
+      eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
       playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
       weaponType: isSet(object.weaponType) ? globalThis.String(object.weaponType) : "",
       price: isSet(object.price) ? globalThis.Number(object.price) : 0,
     };
   },
 
-  toJSON(message: WeaponPurchasedEvent): unknown {
+  toJSON(message: EventWeaponPurchased): unknown {
     const obj: any = {};
+    if (message.eventType !== 0) {
+      obj.eventType = protoEventTypeToJSON(message.eventType);
+    }
     if (message.playerId !== "") {
       obj.playerId = message.playerId;
     }
@@ -886,11 +1185,12 @@ export const WeaponPurchasedEvent: MessageFns<WeaponPurchasedEvent> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<WeaponPurchasedEvent>, I>>(base?: I): WeaponPurchasedEvent {
-    return WeaponPurchasedEvent.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<EventWeaponPurchased>, I>>(base?: I): EventWeaponPurchased {
+    return EventWeaponPurchased.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<WeaponPurchasedEvent>, I>>(object: I): WeaponPurchasedEvent {
-    const message = createBaseWeaponPurchasedEvent();
+  fromPartial<I extends Exact<DeepPartial<EventWeaponPurchased>, I>>(object: I): EventWeaponPurchased {
+    const message = createBaseEventWeaponPurchased();
+    message.eventType = object.eventType ?? 0;
     message.playerId = object.playerId ?? "";
     message.weaponType = object.weaponType ?? "";
     message.price = object.price ?? 0;
@@ -898,38 +1198,49 @@ export const WeaponPurchasedEvent: MessageFns<WeaponPurchasedEvent> = {
   },
 };
 
-function createBasePlayerScoreUpdateEvent(): PlayerScoreUpdateEvent {
-  return { playerId: "", score: 0 };
+function createBaseEventPlayerScoreUpdate(): EventPlayerScoreUpdate {
+  return { eventType: 0, playerId: "", score: 0 };
 }
 
-export const PlayerScoreUpdateEvent: MessageFns<PlayerScoreUpdateEvent> = {
-  encode(message: PlayerScoreUpdateEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const EventPlayerScoreUpdate: MessageFns<EventPlayerScoreUpdate> = {
+  encode(message: EventPlayerScoreUpdate, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.eventType !== 0) {
+      writer.uint32(8).int32(message.eventType);
+    }
     if (message.playerId !== "") {
-      writer.uint32(10).string(message.playerId);
+      writer.uint32(18).string(message.playerId);
     }
     if (message.score !== 0) {
-      writer.uint32(16).int32(message.score);
+      writer.uint32(24).int32(message.score);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): PlayerScoreUpdateEvent {
+  decode(input: BinaryReader | Uint8Array, length?: number): EventPlayerScoreUpdate {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePlayerScoreUpdateEvent();
+    const message = createBaseEventPlayerScoreUpdate();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1: {
-          if (tag !== 10) {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.eventType = reader.int32() as any;
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
             break;
           }
 
           message.playerId = reader.string();
           continue;
         }
-        case 2: {
-          if (tag !== 16) {
+        case 3: {
+          if (tag !== 24) {
             break;
           }
 
@@ -945,15 +1256,19 @@ export const PlayerScoreUpdateEvent: MessageFns<PlayerScoreUpdateEvent> = {
     return message;
   },
 
-  fromJSON(object: any): PlayerScoreUpdateEvent {
+  fromJSON(object: any): EventPlayerScoreUpdate {
     return {
+      eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
       playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
       score: isSet(object.score) ? globalThis.Number(object.score) : 0,
     };
   },
 
-  toJSON(message: PlayerScoreUpdateEvent): unknown {
+  toJSON(message: EventPlayerScoreUpdate): unknown {
     const obj: any = {};
+    if (message.eventType !== 0) {
+      obj.eventType = protoEventTypeToJSON(message.eventType);
+    }
     if (message.playerId !== "") {
       obj.playerId = message.playerId;
     }
@@ -963,11 +1278,12 @@ export const PlayerScoreUpdateEvent: MessageFns<PlayerScoreUpdateEvent> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<PlayerScoreUpdateEvent>, I>>(base?: I): PlayerScoreUpdateEvent {
-    return PlayerScoreUpdateEvent.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<EventPlayerScoreUpdate>, I>>(base?: I): EventPlayerScoreUpdate {
+    return EventPlayerScoreUpdate.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<PlayerScoreUpdateEvent>, I>>(object: I): PlayerScoreUpdateEvent {
-    const message = createBasePlayerScoreUpdateEvent();
+  fromPartial<I extends Exact<DeepPartial<EventPlayerScoreUpdate>, I>>(object: I): EventPlayerScoreUpdate {
+    const message = createBaseEventPlayerScoreUpdate();
+    message.eventType = object.eventType ?? 0;
     message.playerId = object.playerId ?? "";
     message.score = object.score ?? 0;
     return message;
