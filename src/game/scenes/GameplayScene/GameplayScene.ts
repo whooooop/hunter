@@ -34,6 +34,7 @@ import { MultiplayerController } from '../../core/controllers/MultiplayerControl
 import { createEnemy } from '../../enemies';
 import { KeyBoardController } from '../../core/controllers/KeyBoardController';
 import { Player } from '../../core/types/playerTypes';
+import { Game } from '../../core/types/gameTypes';
 
 const logger = createLogger('GameplayScene');
 
@@ -95,33 +96,7 @@ export class GameplayScene extends Phaser.Scene {
   
   async create(): Promise<void> {
     const playerId = window.location.search.split('player=')[1] || generateId();
-    
-    this.location.create();
-
-    this.scoreController = new ScoreController(this);
-    this.keyboardController = new KeyBoardController(this);
-    this.weaponController = new WeaponController(this, this.players);
-    this.shopController = new ShopController(this, this.players, this.shop, testLevel.weapons);
-    this.decalController = new DecalController(this, 0, 0, settings.display.width, settings.display.height);
-    this.decalController.setDepth(5);
-
-    this.multiplayerController = new MultiplayerController(this);
-
-    // Устанавливаем границы мира
-    this.physics.world.setBounds(0, 0, settings.display.width, settings.display.height);
-    
-    this.waveInfo = new WaveInfo(this);
-    this.weaponStatus = new WeaponStatus(this);
-
-    // Инициализируем группу для гильз
-    this.shellCasings = this.physics.add.group();
-    
-    // Инициализируем менеджер попаданий
-    this.projectileController = new ProjectileController(this, this.damageableObjects, {
-      simulate: false,
-    });
-
-    this.waveController = new WaveController(this, createWavesConfig());
+    this.mainPlayerId = playerId;
 
     if (settings.gameplay.blood.decals) {
       onEvent(this, BloodEvents.bloodParticleDecal, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
@@ -136,18 +111,24 @@ export class GameplayScene extends Phaser.Scene {
     onEvent(this, EnemyEntityEvents.enemyDeath, (payload: EnemyDeathPayload) => this.handleEnemyDeath(payload));
     onEvent(this, ScoreEvents.UpdateScoreEvent, (payload: UpdateScoreEventPayload) => this.handleUpdateScore(payload));
 
-    onEvent(this, Player.Events.Join.Remote, (payload: Player.Events.Join.Payload) => this.handlePlayerJoin(payload));
-    onEvent(this, Player.Events.Left.Remote, (payload: Player.Events.Left.Payload) => this.handlePlayerLeft(payload));
+    this.location.create();
 
-    this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
+    this.scoreController = new ScoreController(this);
+    this.keyboardController = new KeyBoardController(this, this.players, playerId);
+    this.weaponController = new WeaponController(this, this.players);
+    this.shopController = new ShopController(this, this.players, playerId, this.shop, testLevel.weapons);
+    this.decalController = new DecalController(this, 0, 0, settings.display.width, settings.display.height);
+    this.projectileController = new ProjectileController(this, this.damageableObjects);
+    this.waveController = new WaveController(this, createWavesConfig());
 
-    this.mainPlayerId = playerId;
+    this.waveInfo = new WaveInfo(this);
+    this.weaponStatus = new WeaponStatus(this);
+
+    this.physics.world.setBounds(0, 0, settings.display.width, settings.display.height);
+    this.shellCasings = this.physics.add.group();
+    this.decalController.setDepth(5);
     this.shopController.setInteractablePlayerId(playerId);
-    const player = this.players.get(playerId)!;
-    this.keyboardController.setPlayer(player);
 
-    // this.createPlayer(PLAYER_POSITION_X + 50, PLAYER_POSITION_Y + 200);
-    
     // Настраиваем коллизии между игроком и врагами
     // this.physics.add.overlap(
     //   this.player.getSprite(),
@@ -157,14 +138,47 @@ export class GameplayScene extends Phaser.Scene {
     //   this
     // );
 
+    this.multiplayerInit(playerId);
+  }
+
+  private singlePlayerInit(playerId: string): void {
+    this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
+    this.setWeapon(playerId, WeaponType.GLOCK);
+    this.waveController.start();
+    this.projectileController.setSimulate(false);
+  }
+
+  private multiplayerInit(playerId: string): void {
+    onEvent(this, Game.Events.State.Remote, (payload: Game.Events.State.Payload) => this.handleGameState(payload));
+    onEvent(this, Player.Events.Join.Remote, (payload: Player.Events.Join.Payload) => this.handlePlayerJoin(payload));
+    onEvent(this, Player.Events.Left.Remote, (payload: Player.Events.Left.Payload) => this.handlePlayerLeft(payload));
+    
+    this.projectileController.setSimulate(false);
+
+    this.multiplayerController = new MultiplayerController(this);
     this.multiplayerController.connect('GAME1', playerId).then(() => {
       // this.waveController.start();
-      setTimeout(() => {
-        this.setWeapon(playerId, WeaponType.GLOCK);
-      }, 1000);
+    });
+  }
+
+  private handleGameState(payload: Game.Events.State.Payload): void {
+    payload.connected.forEach(playerId => {
+      const player = payload.playersState.find(p => p.id === playerId);
+      if (player) {
+        this.spawnPlayer(
+          player.id, 
+          player.position?.x || PLAYER_POSITION_X, 
+          player.position?.y || PLAYER_POSITION_Y
+        );
+        this.weaponController.setWeaponById({ playerId, weaponId: player.weaponId });
+      }
     });
 
-    // this.waveController.start();
+    // const mainPlayer = payload.playersState.find(p => p.id === this.mainPlayerId);
+    // if (mainPlayer) {
+    //   const weapon = mainPlayer.weapon as WeaponType || WeaponType.GLOCK;
+    //   this.setWeapon(this.mainPlayerId, weapon);
+    // }
   }
 
   private handlePlayerJoin(payload: Player.Events.Join.Payload): void {
@@ -217,6 +231,7 @@ export class GameplayScene extends Phaser.Scene {
       return;
     }
 
+    console.log(`Spawning player ${playerId} at ${x}, ${y}`);
     const player = new PlayerEntity(this, playerId, x, y);
     this.players.set(playerId, player);
 
@@ -241,6 +256,8 @@ export class GameplayScene extends Phaser.Scene {
   }
   
   update(time: number, delta: number): void {
+    const mainPlayer = this.players.get(this.mainPlayerId);
+
     this.location.update(time, delta);
     this.shopController.update(time, delta);
     this.keyboardController.update(time, delta);
@@ -250,9 +267,9 @@ export class GameplayScene extends Phaser.Scene {
     });
 
     // Обновляем игрока
-    if (this.mainPlayerId) {
+    if (mainPlayer) {
       // Обновляем состояние оружия в интерфейсе
-      const weapon = this.players.get(this.mainPlayerId)!.getWeapon();
+      const weapon = mainPlayer.getWeapon();
       if (weapon) {
         this.weaponStatus.setAmmo(weapon.getCurrentAmmo(), weapon.getMaxAmmo());
       }
@@ -276,6 +293,9 @@ export class GameplayScene extends Phaser.Scene {
 
   private updatePlayerState(time: number, delta: number): void {
     const player = this.players.get(this.mainPlayerId)!;
+    if (!player) {
+      return;
+    }
     const state = player.getPlayerState();
     const stateHash = (state.position.x + state.position.y).toString();
     if (time - this.lastSentState < 40 || stateHash === this.lastStateHash) {

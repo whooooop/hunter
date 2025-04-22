@@ -2,6 +2,7 @@ import { onEvent } from "../Events";
 import { IncreaseScoreEventPayload, DecreaseScoreEventPayload  } from "../types/scoreTypes";
 import { ScoreEvents } from "../types/scoreTypes";
 import { emitEvent } from "../Events";
+import { Game } from '../types/gameTypes';
 
 export class ScoreController {
   private scene: Phaser.Scene;
@@ -9,9 +10,16 @@ export class ScoreController {
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
-
+    
+    onEvent(scene, Game.Events.State.Remote, (payload: Game.Events.State.Payload) => this.handleGameState(payload));
     onEvent(scene, ScoreEvents.IncreaseScoreEvent, (payload: IncreaseScoreEventPayload) => this.handleIncreaseScore(payload));
     onEvent(scene, ScoreEvents.DecreaseScoreEvent, (payload: DecreaseScoreEventPayload) => this.handleDecreaseScore(payload));
+  }
+
+  private handleGameState(payload: Game.Events.State.Payload): void {
+    payload.playersState.forEach((player) => {
+      this.scere.set(player.id, player.score);
+    });
   }
 
   private handleIncreaseScore(payload: IncreaseScoreEventPayload): void {

@@ -24,10 +24,6 @@ interface HitGroup {
   time: number;
 }
 
-interface ProjectileControllerOptions {
-  simulate: boolean;
-}
-
 export class ProjectileController {
   private debug: boolean = false;
   private scene: Phaser.Scene;
@@ -40,11 +36,10 @@ export class ProjectileController {
   constructor(
     scene: Phaser.Scene, 
     damageableObjects: Map<string, DamageableEntity>, 
-    options: ProjectileControllerOptions
   ) {
     this.scene = scene;
     this.damageableObjects = damageableObjects;
-    this.simulate = options.simulate;
+    this.simulate = true;
 
     onEvent(scene, Weapon.Events.CreateProjectile.Local, this.handleCreateProjectile.bind(this));
   }
@@ -63,6 +58,10 @@ export class ProjectileController {
     } else if (type === ProjectileType.GRENADE || type === ProjectileType.MINE) {
       this.predictRadiusHits(projectile);
     }
+  }
+
+  public setSimulate(simulate: boolean): void {
+    this.simulate = simulate;
   }
 
   private predictRayHits(projectile: ProjectileEntity): void {

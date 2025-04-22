@@ -8,6 +8,7 @@ import { Player } from "../types/playerTypes";
 import { emitEvent, onEvent } from "../Events";
 import { ShopEvents } from "../types/shopTypes";
 import { WeaponPurchasedPayload } from "../types/shopTypes";
+import { Game } from "../types/gameTypes";
 
 const logger = createLogger('WeaponController');
 
@@ -16,11 +17,13 @@ export class WeaponController {
   private players: Map<string, PlayerEntity>;
   private playerWeapons: Map<string, Map<WeaponType, WeaponEntity>> = new Map();
   private currentWeapon: Map<string, WeaponEntity> = new Map();
+  private weapons: Map<string, { weapon: WeaponEntity, playerId: string, name: WeaponType }> = new Map();
   
   constructor(scene: Phaser.Scene, players: Map<string, PlayerEntity>) {
     this.scene = scene;
     this.players = players;
 
+    onEvent(scene, Game.Events.State.Remote, (payload: Game.Events.State.Payload) => this.handleGameState(payload));
     onEvent(this.scene, Player.Events.SetWeapon.Remote, this.handleSetWeaponActionRemote.bind(this));
     onEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased.bind(this));
   }
@@ -29,12 +32,19 @@ export class WeaponController {
     this.setWeapon(playerId, weaponType);
   }
 
+  private handleGameState(payload: Game.Events.State.Payload): void {
+    payload.weapons.forEach((weapon) => {
+      console.log('init weapon', weapon);
+      this.createPlayerWeapon(weapon.weaponId, weapon.playerId, weapon.name as WeaponType);
+    });
+  }
+
   private handleSetWeaponActionRemote({ playerId, weaponId, weaponType }: Player.Events.SetWeapon.Payload): void {
     const weapon = this.getPlayerWeapon(playerId, weaponType);
     if (!weapon) {
       this.createPlayerWeapon(weaponId, playerId, weaponType);
     } 
-    this.setWeaponAction({ playerId, weaponId, weaponType });
+    // this.setWeaponAction({ playerId, weaponId, weaponType });
   }
 
   private getPlayerWeapon(playerId: string, weaponType: WeaponType): WeaponEntity | undefined {
@@ -67,6 +77,8 @@ export class WeaponController {
 
     const weapon = createWeapon(weaponId, weaponType, this.scene);
     this.playerWeapons.get(playerId)!.set(weaponType, weapon);
+    this.weapons.set(weaponId, { weapon, playerId, name: weaponType });
+    console.log('create weapon', this.playerWeapons);
     return weapon;
   }
 
@@ -79,8 +91,16 @@ export class WeaponController {
     emitEvent(this.scene, Player.Events.SetWeapon.Local, { playerId, weaponId, weaponType });
     this.setWeaponAction({ playerId, weaponId, weaponType });
   }
+  
+  public setWeaponById({ playerId, weaponId }: Omit<Player.Events.SetWeapon.Payload, 'weaponType'>): void {
+    const weapon = this.weapons.get(weaponId);
 
-  private setWeaponAction({ playerId, weaponType }: Player.Events.SetWeapon.Payload): void {
+    if (weapon) {
+      this.setWeaponAction({ playerId, weaponId, weaponType: weapon.name });
+    }
+  }
+
+  public setWeaponAction({ playerId, weaponType }: Player.Events.SetWeapon.Payload): void {
     const currentWeapon = this.getCurrentWeapon(playerId);
 
     if (currentWeapon) {

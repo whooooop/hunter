@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events';
 import { createLogger, LogLevel } from '../../../utils/logger';
 import {
-  EventJoinGame,
   EventWeaponFireAction,
   EventPlayerSetWeapon,
   EventWeaponPurchased,
@@ -10,10 +9,11 @@ import {
   EventSpawnEnemy,
   EventEnemyDeath,
   EventPlayerScoreUpdate,
-  EventPlayerState,
   ProtoEventType,
   Event,
-  EventPlayerLeft
+  EventPlayerLeft,
+  EventGameState,
+  EventPlayerPosition
 } from '../proto/generated/game';
 
 const logger = createLogger('WebSocketClient', {
@@ -22,7 +22,7 @@ const logger = createLogger('WebSocketClient', {
 });
 
 interface SocketPayloadsMap {
-    [ProtoEventType.JoinGame]: EventJoinGame;
+    [ProtoEventType.GameState]: EventGameState;
     [ProtoEventType.PlayerJoined]: EventPlayerJoined;
     [ProtoEventType.PlayerLeft]: EventPlayerLeft;
     [ProtoEventType.WeaponFireAction]: EventWeaponFireAction;
@@ -32,8 +32,23 @@ interface SocketPayloadsMap {
     [ProtoEventType.SpawnEnemy]: EventSpawnEnemy;
     [ProtoEventType.EnemyDeath]: EventEnemyDeath;
     [ProtoEventType.PlayerScoreUpdate]: EventPlayerScoreUpdate;
-    [ProtoEventType.PlayerStateEvent]: EventPlayerState;
+    [ProtoEventType.PlayerPosition]: EventPlayerPosition;
 }
+
+// Определяем payload для каждого СТРОКОВОГО имени события явно
+type EventPayloadsByName = {
+  GameState: EventGameState;
+  PlayerJoined: EventPlayerJoined;
+  PlayerLeft: EventPlayerLeft;
+  WeaponFireAction: EventWeaponFireAction;
+  PlayerSetWeapon: EventPlayerSetWeapon;
+  WeaponPurchased: EventWeaponPurchased;
+  WaveStart: EventWaveStart;
+  SpawnEnemy: EventSpawnEnemy;
+  EnemyDeath: EventEnemyDeath;
+  PlayerScoreUpdate: EventPlayerScoreUpdate;
+  PlayerPosition: EventPlayerPosition;
+};
 
 type EventConfig<E extends keyof SocketPayloadsMap> = {
     encoder: (message: SocketPayloadsMap[E]) => Uint8Array;
@@ -45,8 +60,9 @@ type EventConfigMap = {
 };
 
 const eventConfigs: EventConfigMap = {
-    [ProtoEventType.JoinGame]: {
-        encoder: (message) => EventJoinGame.encode(message).finish(),
+    [ProtoEventType.GameState]: {
+        encoder: (message) => EventGameState.encode(message).finish(),
+        decoder: (data) => EventGameState.decode(data),
     },
     [ProtoEventType.PlayerJoined]: {
         encoder: (message) => EventPlayerJoined.encode(message).finish(),
@@ -84,32 +100,16 @@ const eventConfigs: EventConfigMap = {
         encoder: (message) => EventPlayerScoreUpdate.encode(message).finish(),
         decoder: (data) => EventPlayerScoreUpdate.decode(data),
     },
-    [ProtoEventType.PlayerStateEvent]: {
-        encoder: (message) => EventPlayerState.encode(message).finish(),
-        decoder: (data) => EventPlayerState.decode(data),
+    [ProtoEventType.PlayerPosition]: {
+        encoder: (message) => EventPlayerPosition.encode(message).finish(),
+        decoder: (data) => EventPlayerPosition.decode(data),
     },
 };
 
 type ProtoEventName = keyof typeof ProtoEventType;
 type StandardEventName = 'connect' | 'disconnect' | 'error';
 type ClientEventName = ProtoEventName | StandardEventName;
-
 type GenericEventHandler = (data?: any) => void;
-
-// Определяем payload для каждого СТРОКОВОГО имени события явно
-type EventPayloadsByName = {
-    JoinGame: EventJoinGame;
-    PlayerJoined: EventPlayerJoined;
-    PlayerLeft: EventPlayerLeft;
-    WeaponFireAction: EventWeaponFireAction;
-    PlayerSetWeapon: EventPlayerSetWeapon;
-    WeaponPurchased: EventWeaponPurchased;
-    WaveStart: EventWaveStart;
-    SpawnEnemy: EventSpawnEnemy;
-    EnemyDeath: EventEnemyDeath;
-    PlayerScoreUpdate: EventPlayerScoreUpdate;
-    PlayerStateEvent: EventPlayerState;
-};
 
 // Значения - массивы типизированных обработчиков
 type TypedEventHandlersMap = {

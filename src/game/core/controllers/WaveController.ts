@@ -1,6 +1,7 @@
 import { generateId } from "../../../utils/stringGenerator";
 import { EnemyType, preloadEnemies } from "../../enemies";
-import { emitEvent } from "../Events";
+import { emitEvent, onEvent } from "../Events";
+import { Game } from "../types/gameTypes";
 
 export enum WaveEvents {
   WaveStartEvent = 'WaveStartEvent',
@@ -40,6 +41,12 @@ export class WaveController {
     this.scene = scene;
     this.waves = waves;
     this.currentWave = 0;
+
+    onEvent(scene, Game.Events.State.Remote, (payload: Game.Events.State.Payload) => this.handleGameState(payload));
+  }
+
+  private handleGameState(payload: Game.Events.State.Payload): void {
+    // this.currentWave = payload.currentWave;
   }
 
   public start(): void {

@@ -17,7 +17,7 @@ export class ShopController {
   private interactablePlayerId: string | null = null;
   private openShopKey: Phaser.Input.Keyboard.Key;
 
-  constructor(scene: Phaser.Scene, players: Map<string, PlayerEntity>, shop: BaseShop, weapons: ShopWeapon[]) {
+  constructor(scene: Phaser.Scene, players: Map<string, PlayerEntity>, playerId: string, shop: BaseShop, weapons: ShopWeapon[]) {
     this.scene = scene;
     this.shop = shop;
     this.players = players;
@@ -45,7 +45,9 @@ export class ShopController {
   private updateInteractablePlayerId(): void {
     if (!this.interactablePlayerId) return;
 
-    const player = this.players.get(this.interactablePlayerId)!;
+    const player = this.players.get(this.interactablePlayerId);
+    if (!player) return;
+
     const playerPosition = player.getPosition();
     const distanceToPlayer = Phaser.Math.Distance.Between(
       this.shop.x, this.shop.y,

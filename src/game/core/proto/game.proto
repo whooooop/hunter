@@ -3,17 +3,17 @@ syntax = "proto3";
 package game;
 
 enum ProtoEventType {
-  JoinGame = 0;
-  PlayerJoined = 1;
-  PlayerLeft = 2;
-  WeaponFireAction = 3;
-  WaveStart = 4;
-  SpawnEnemy = 5;
-  EnemyDeath = 6;
-  PlayerScoreUpdate = 7;
-  PlayerSetWeapon = 8;
-  WeaponPurchased = 9;
-  PlayerStateEvent = 10;
+  PlayerJoined = 0;
+  PlayerLeft = 1;
+  WeaponFireAction = 2;
+  WaveStart = 3;
+  SpawnEnemy = 4;
+  EnemyDeath = 5;
+  PlayerScoreUpdate = 6;
+  PlayerSetWeapon = 7;
+  WeaponPurchased = 8;
+  PlayerPosition = 9;
+  GameState = 10;
 }
 
 // Базовые типы
@@ -26,15 +26,31 @@ message Event {
   ProtoEventType eventType = 1;
 }
 
-message EventJoinGame {
+message PlayerState {
+  string id = 1;
+  Point position = 2;
+  string weaponId = 3;
+  int32 score = 4;
+}
+
+message PlayerWeapon {
+  string playerId = 1;
+  string weaponId = 2;
+  string name = 3;
+}
+
+message EventGameState {
   ProtoEventType eventType = 1;
-  string playerId = 2; 
+  repeated string connected = 3;
+  string host = 4;
+  repeated PlayerState playersState = 5;
+  repeated PlayerWeapon weapons = 6;
 }
 
 message EventPlayerJoined {
   ProtoEventType eventType = 1;
   string playerId = 2;
-  bool isHost = 3;
+  PlayerState playerState = 3;
 }
 
 message EventPlayerLeft {
@@ -57,7 +73,7 @@ message EventWaveStart {
   int32 duration = 3;
 }
 
-message EventPlayerState {
+message EventPlayerPosition {
   ProtoEventType eventType = 1;
   string playerId = 2;
   Point position = 3;

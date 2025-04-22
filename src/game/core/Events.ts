@@ -9,42 +9,46 @@ import { EnemyDeathPayload, EnemyEntityEvents } from './types/enemyTypes';
 import { ScoreEvents, UpdateScoreEventPayload, IncreaseScoreEventPayload, DecreaseScoreEventPayload } from './types/scoreTypes';
 import { Player } from './types/playerTypes';
 import { ShopEvents, WeaponPurchasedPayload } from './types/shopTypes';
+import { Game } from './types/gameTypes';
 
 interface EventPayloadMap {
-    // Weapons
-    [Weapon.Events.CreateProjectile.Local]: Weapon.Events.CreateProjectile.Payload;
-    [Weapon.Events.CreateProjectile.Remote]: Weapon.Events.CreateProjectile.Payload;
-    [Weapon.Events.FireAction.Local]: Weapon.Events.FireAction.Payload;
-    [Weapon.Events.FireAction.Remote]: Weapon.Events.FireAction.Payload;
-    [Weapon.Events.ReloadAction.Local]: Weapon.Events.ReloadAction.Payload;
-    [Weapon.Events.ReloadAction.Remote]: Weapon.Events.ReloadAction.Payload;
+  // Game
+  [Game.Events.State.Remote]: Game.Events.State.Payload;
 
-    // Waves
-    [WaveEvents.WaveStartEvent]: WaveStartEventPayload;
-    [WaveEvents.SpawnEnemyEvent]: SpawnEnemyPayload;
+  // Weapons
+  [Weapon.Events.CreateProjectile.Local]: Weapon.Events.CreateProjectile.Payload;
+  [Weapon.Events.CreateProjectile.Remote]: Weapon.Events.CreateProjectile.Payload;
+  [Weapon.Events.FireAction.Local]: Weapon.Events.FireAction.Payload;
+  [Weapon.Events.FireAction.Remote]: Weapon.Events.FireAction.Payload;
+  [Weapon.Events.ReloadAction.Local]: Weapon.Events.ReloadAction.Payload;
+  [Weapon.Events.ReloadAction.Remote]: Weapon.Events.ReloadAction.Payload;
 
-    // Enemies
-    [EnemyEntityEvents.enemyDeath]: EnemyDeathPayload;
+  // Waves
+  [WaveEvents.WaveStartEvent]: WaveStartEventPayload;
+  [WaveEvents.SpawnEnemyEvent]: SpawnEnemyPayload;
 
-    // Decals
-    [ShellCasingEvents.shellCasingParticleDecal]: DecalEventPayload;
-    [BloodEvents.bloodParticleDecal]: DecalEventPayload;
+  // Enemies
+  [EnemyEntityEvents.enemyDeath]: EnemyDeathPayload;
 
-    // Score
-    [ScoreEvents.IncreaseScoreEvent]: IncreaseScoreEventPayload;
-    [ScoreEvents.DecreaseScoreEvent]: DecreaseScoreEventPayload;
-    [ScoreEvents.UpdateScoreEvent]: UpdateScoreEventPayload;
+  // Decals
+  [ShellCasingEvents.shellCasingParticleDecal]: DecalEventPayload;
+  [BloodEvents.bloodParticleDecal]: DecalEventPayload;
 
-    // Player
-    [Player.Events.SetWeapon.Local]: Player.Events.SetWeapon.Payload;
-    [Player.Events.State.Local]: Player.Events.State.Payload;
-    [Player.Events.SetWeapon.Remote]: Player.Events.SetWeapon.Payload;
-    [Player.Events.State.Remote]: Player.Events.State.Payload;
-    [Player.Events.Join.Remote]: Player.Events.Join.Payload;
-    [Player.Events.Left.Remote]: Player.Events.Left.Payload;
+  // Score
+  [ScoreEvents.IncreaseScoreEvent]: IncreaseScoreEventPayload;
+  [ScoreEvents.DecreaseScoreEvent]: DecreaseScoreEventPayload;
+  [ScoreEvents.UpdateScoreEvent]: UpdateScoreEventPayload;
 
-    // Shop
-    [ShopEvents.WeaponPurchasedEvent]: WeaponPurchasedPayload;
+  // Player
+  [Player.Events.SetWeapon.Local]: Player.Events.SetWeapon.Payload;
+  [Player.Events.State.Local]: Player.Events.State.Payload;
+  [Player.Events.SetWeapon.Remote]: Player.Events.SetWeapon.Payload;
+  [Player.Events.State.Remote]: Player.Events.State.Payload;
+  [Player.Events.Join.Remote]: Player.Events.Join.Payload;
+  [Player.Events.Left.Remote]: Player.Events.Left.Payload;
+
+  // Shop
+  [ShopEvents.WeaponPurchasedEvent]: WeaponPurchasedPayload;
 }
 
 // Перегрузка для emitEvent

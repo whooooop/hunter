@@ -17,6 +17,7 @@ import { RecoilForceType } from "../types/recoilForce";
 import { emitEvent, onEvent } from "../Events";
 import { createProjectile } from "../../projectiles";
 import { Weapon, FireParams, AudioAssets } from "../types/weaponTypes";
+import { WeaponType } from '../../weapons/WeaponTypes';
 
 const logger = createLogger('WeaponEntity');
 

@@ -9,8 +9,13 @@ export class KeyBoardController {
   private reloadKey: Phaser.Input.Keyboard.Key;
   private jumpKey: Phaser.Input.Keyboard.Key;
 
-  constructor(scene: Phaser.Scene) {
+  private players: Map<string, PlayerEntity>;
+  private playerId: string;
+
+  constructor(scene: Phaser.Scene, players: Map<string, PlayerEntity>, playerId: string) {
     this.scene = scene;
+    this.players = players;
+    this.playerId = playerId;
 
     // Настраиваем курсоры для управления
     this.cursors = scene.input.keyboard!.createCursorKeys();
@@ -19,12 +24,8 @@ export class KeyBoardController {
     this.jumpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   }
 
-  public setPlayer(player: PlayerEntity): void {
-    this.player = player;
-  }
-
   public update(time: number, delta: number): void {
-    if (!this.player) {
+    if (!this.getPlayer()) {
       return;
     }
     this.handleMovement(time, delta);
@@ -48,7 +49,7 @@ export class KeyBoardController {
       move.y = 1;
     }
     
-    this.player?.setMove(move.x, move.y);
+    this.getPlayer()?.setMove(move.x, move.y);
   }
 
   private handleJump(time: number, delta: number): void {
@@ -59,15 +60,19 @@ export class KeyBoardController {
 
   private handleFire(time: number, delta: number): void {
     if (this.fireKey.isDown) {
-      this.player?.fireOn();
+      this.getPlayer()?.fireOn();
     } else {
-      this.player?.fireOff();
+      this.getPlayer()?.fireOff();
     }
   }
 
   private handleReload(time: number, delta: number): void {
     if (this.reloadKey.isDown) {
-      this.player?.reload();
+      this.getPlayer()?.reload();
     }
+  }
+
+  private getPlayer(): PlayerEntity | null {
+    return this.players.get(this.playerId) || null;
   }
 }
