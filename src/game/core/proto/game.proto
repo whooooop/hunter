@@ -5,14 +5,15 @@ package game;
 enum ProtoEventType {
   JoinGame = 0;
   PlayerJoined = 1;
-  WeaponFireAction = 2;
-  WaveStart = 3;
-  SpawnEnemy = 4;
-  EnemyDeath = 5;
-  PlayerScoreUpdate = 6;
-  PlayerSetWeapon = 7;
-  WeaponPurchased = 8;
-  PlayerStateEvent = 9;
+  PlayerLeft = 2;
+  WeaponFireAction = 3;
+  WaveStart = 4;
+  SpawnEnemy = 5;
+  EnemyDeath = 6;
+  PlayerScoreUpdate = 7;
+  PlayerSetWeapon = 8;
+  WeaponPurchased = 9;
+  PlayerStateEvent = 10;
 }
 
 // Базовые типы
@@ -27,7 +28,7 @@ message Event {
 
 message EventJoinGame {
   ProtoEventType eventType = 1;
-  string playerId = 2;
+  string playerId = 2; 
 }
 
 message EventPlayerJoined {
@@ -36,8 +37,13 @@ message EventPlayerJoined {
   bool isHost = 3;
 }
 
-message EventWeaponFireAction {
+message EventPlayerLeft {
   ProtoEventType eventType = 1;
+  string playerId = 2;
+}
+
+message EventWeaponFireAction {
+  ProtoEventType eventType = 1; 
   string playerId = 2; 
   string weaponId = 3;
   Point originPoint = 6;

@@ -233,4 +233,11 @@ export class PlayerEntity {
   public getDirection(): number {
     return this.direction;
   }
+
+  public destroy(): void {
+    this.gameObject.destroy();
+    this.shadow.destroy();
+    this.motionController.destroy();
+    this.currentWeapon = null;
+  }
 } 

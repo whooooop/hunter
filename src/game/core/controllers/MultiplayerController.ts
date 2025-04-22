@@ -1,6 +1,6 @@
 import { SocketClient } from '../network/SocketClient';
 import { emitEvent, onEvent } from "../Events";
-import { EventPlayerJoined, EventPlayerSetWeapon, EventPlayerState, EventWeaponFireAction, EventWaveStart, EventSpawnEnemy, EventEnemyDeath, EventPlayerScoreUpdate, ProtoEventType, EventWeaponPurchased } from '../proto/generated/game';
+import { EventPlayerJoined, EventPlayerSetWeapon, EventPlayerState, EventWeaponFireAction, EventWaveStart, EventSpawnEnemy, EventEnemyDeath, EventPlayerScoreUpdate, ProtoEventType, EventWeaponPurchased, EventPlayerLeft } from '../proto/generated/game';
 import { WeaponPurchasedPayload, ShopEvents } from "../types/shopTypes";
 import { Player } from "../types/playerTypes";
 import { WaveStartEventPayload, WaveEvents, SpawnEnemyPayload } from "./WaveController";
@@ -68,14 +68,15 @@ export class MultiplayerController {
 
   private setupServerEventHandlers(): void {
     this.socketClient.on('PlayerJoined', this.serverHandlePlayerJoined.bind(this));
-    this.socketClient.on('WeaponFireAction', this.serverHandleFireEvent.bind(this));
+    this.socketClient.on('PlayerLeft', this.serverHandlePlayerLeft.bind(this));
+    this.socketClient.on('PlayerSetWeapon', this.serverHandlePlayerSetWeapon.bind(this));
     this.socketClient.on('PlayerStateEvent', this.serverHandlePlayerState.bind(this));
 
+    this.socketClient.on('WeaponFireAction', this.serverHandleFireEvent.bind(this));
     // this.socketClient.on(SocketEvents.WaveStart, this.serverHandleWaveStart.bind(this));
     // this.socketClient.on(SocketEvents.SpawnEnemy, this.serverHandleSpawnEnemy.bind(this));
     // this.socketClient.on(SocketEvents.EnemyDeath, this.serverHandleEnemyDeath.bind(this));
     // this.socketClient.on(SocketEvents.PlayerScoreUpdate, this.serverHandlePlayerScoreUpdate.bind(this));
-    this.socketClient.on('PlayerSetWeapon', this.serverHandlePlayerSetWeapon.bind(this));
     // this.socketClient.on('WeaponPurchased', this.serverHandleWeaponPurchased.bind(this));
   }
 
@@ -118,7 +119,12 @@ export class MultiplayerController {
 
   private serverHandlePlayerJoined(payload: EventPlayerJoined): void {
     logger.info(`Player ${payload.playerId} joined.`);
-    this.scene.spawnPlayer(payload.playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y + 200);
+    emitEvent(this.scene, Player.Events.Join.Remote, payload);
+  }
+
+  private serverHandlePlayerLeft(payload: EventPlayerLeft): void {  
+    logger.info(`Player ${payload.playerId} left.`);
+    emitEvent(this.scene, Player.Events.Left.Remote, payload);
   }
 
   private serverHandlePlayerSetWeapon(payload: EventPlayerSetWeapon): void {

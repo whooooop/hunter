@@ -12,7 +12,8 @@ import {
   EventPlayerScoreUpdate,
   EventPlayerState,
   ProtoEventType,
-  Event
+  Event,
+  EventPlayerLeft
 } from '../proto/generated/game';
 
 const logger = createLogger('WebSocketClient', {
@@ -23,6 +24,7 @@ const logger = createLogger('WebSocketClient', {
 interface SocketPayloadsMap {
     [ProtoEventType.JoinGame]: EventJoinGame;
     [ProtoEventType.PlayerJoined]: EventPlayerJoined;
+    [ProtoEventType.PlayerLeft]: EventPlayerLeft;
     [ProtoEventType.WeaponFireAction]: EventWeaponFireAction;
     [ProtoEventType.PlayerSetWeapon]: EventPlayerSetWeapon;
     [ProtoEventType.WeaponPurchased]: EventWeaponPurchased;
@@ -49,6 +51,10 @@ const eventConfigs: EventConfigMap = {
     [ProtoEventType.PlayerJoined]: {
         encoder: (message) => EventPlayerJoined.encode(message).finish(),
         decoder: (data) => EventPlayerJoined.decode(data),
+    },
+    [ProtoEventType.PlayerLeft]: {
+        encoder: (message) => EventPlayerLeft.encode(message).finish(),
+        decoder: (data) => EventPlayerLeft.decode(data),
     },
     [ProtoEventType.WeaponFireAction]: {
         encoder: (message) => EventWeaponFireAction.encode(message).finish(),
@@ -94,6 +100,7 @@ type GenericEventHandler = (data?: any) => void;
 type EventPayloadsByName = {
     JoinGame: EventJoinGame;
     PlayerJoined: EventPlayerJoined;
+    PlayerLeft: EventPlayerLeft;
     WeaponFireAction: EventWeaponFireAction;
     PlayerSetWeapon: EventPlayerSetWeapon;
     WeaponPurchased: EventWeaponPurchased;

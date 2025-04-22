@@ -12,14 +12,15 @@ export const protobufPackage = "game";
 export enum ProtoEventType {
   JoinGame = 0,
   PlayerJoined = 1,
-  WeaponFireAction = 2,
-  WaveStart = 3,
-  SpawnEnemy = 4,
-  EnemyDeath = 5,
-  PlayerScoreUpdate = 6,
-  PlayerSetWeapon = 7,
-  WeaponPurchased = 8,
-  PlayerStateEvent = 9,
+  PlayerLeft = 2,
+  WeaponFireAction = 3,
+  WaveStart = 4,
+  SpawnEnemy = 5,
+  EnemyDeath = 6,
+  PlayerScoreUpdate = 7,
+  PlayerSetWeapon = 8,
+  WeaponPurchased = 9,
+  PlayerStateEvent = 10,
   UNRECOGNIZED = -1,
 }
 
@@ -32,27 +33,30 @@ export function protoEventTypeFromJSON(object: any): ProtoEventType {
     case "PlayerJoined":
       return ProtoEventType.PlayerJoined;
     case 2:
+    case "PlayerLeft":
+      return ProtoEventType.PlayerLeft;
+    case 3:
     case "WeaponFireAction":
       return ProtoEventType.WeaponFireAction;
-    case 3:
+    case 4:
     case "WaveStart":
       return ProtoEventType.WaveStart;
-    case 4:
+    case 5:
     case "SpawnEnemy":
       return ProtoEventType.SpawnEnemy;
-    case 5:
+    case 6:
     case "EnemyDeath":
       return ProtoEventType.EnemyDeath;
-    case 6:
+    case 7:
     case "PlayerScoreUpdate":
       return ProtoEventType.PlayerScoreUpdate;
-    case 7:
+    case 8:
     case "PlayerSetWeapon":
       return ProtoEventType.PlayerSetWeapon;
-    case 8:
+    case 9:
     case "WeaponPurchased":
       return ProtoEventType.WeaponPurchased;
-    case 9:
+    case 10:
     case "PlayerStateEvent":
       return ProtoEventType.PlayerStateEvent;
     case -1:
@@ -68,6 +72,8 @@ export function protoEventTypeToJSON(object: ProtoEventType): string {
       return "JoinGame";
     case ProtoEventType.PlayerJoined:
       return "PlayerJoined";
+    case ProtoEventType.PlayerLeft:
+      return "PlayerLeft";
     case ProtoEventType.WeaponFireAction:
       return "WeaponFireAction";
     case ProtoEventType.WaveStart:
@@ -109,6 +115,11 @@ export interface EventPlayerJoined {
   eventType: ProtoEventType;
   playerId: string;
   isHost: boolean;
+}
+
+export interface EventPlayerLeft {
+  eventType: ProtoEventType;
+  playerId: string;
 }
 
 export interface EventWeaponFireAction {
@@ -462,6 +473,82 @@ export const EventPlayerJoined: MessageFns<EventPlayerJoined> = {
     message.eventType = object.eventType ?? 0;
     message.playerId = object.playerId ?? "";
     message.isHost = object.isHost ?? false;
+    return message;
+  },
+};
+
+function createBaseEventPlayerLeft(): EventPlayerLeft {
+  return { eventType: 0, playerId: "" };
+}
+
+export const EventPlayerLeft: MessageFns<EventPlayerLeft> = {
+  encode(message: EventPlayerLeft, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.eventType !== 0) {
+      writer.uint32(8).int32(message.eventType);
+    }
+    if (message.playerId !== "") {
+      writer.uint32(18).string(message.playerId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EventPlayerLeft {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEventPlayerLeft();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.eventType = reader.int32() as any;
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.playerId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EventPlayerLeft {
+    return {
+      eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
+      playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
+    };
+  },
+
+  toJSON(message: EventPlayerLeft): unknown {
+    const obj: any = {};
+    if (message.eventType !== 0) {
+      obj.eventType = protoEventTypeToJSON(message.eventType);
+    }
+    if (message.playerId !== "") {
+      obj.playerId = message.playerId;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<EventPlayerLeft>, I>>(base?: I): EventPlayerLeft {
+    return EventPlayerLeft.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<EventPlayerLeft>, I>>(object: I): EventPlayerLeft {
+    const message = createBaseEventPlayerLeft();
+    message.eventType = object.eventType ?? 0;
+    message.playerId = object.playerId ?? "";
     return message;
   },
 };

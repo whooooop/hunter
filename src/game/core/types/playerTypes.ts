@@ -2,6 +2,21 @@ import { WeaponType } from "../../weapons/WeaponTypes";
 
 export namespace Player {
   export namespace Events { 
+
+    export namespace Join {
+      export const Remote = 'PlayerJoinRemoteEvent';
+      export interface Payload {
+        playerId: string;
+      }
+    }
+
+    export namespace Left {
+      export const Remote = 'PlayerLeftRemoteEvent';
+      export interface Payload {
+        playerId: string;
+      }
+    }
+
     export namespace SetWeapon {
       export const Local = 'PlayerSetWeaponEvent';
       export const Remote = 'PlayerSetWeaponRemoteEvent';

@@ -136,6 +136,8 @@ export class GameplayScene extends Phaser.Scene {
     onEvent(this, EnemyEntityEvents.enemyDeath, (payload: EnemyDeathPayload) => this.handleEnemyDeath(payload));
     onEvent(this, ScoreEvents.UpdateScoreEvent, (payload: UpdateScoreEventPayload) => this.handleUpdateScore(payload));
 
+    onEvent(this, Player.Events.Join.Remote, (payload: Player.Events.Join.Payload) => this.handlePlayerJoin(payload));
+    onEvent(this, Player.Events.Left.Remote, (payload: Player.Events.Left.Payload) => this.handlePlayerLeft(payload));
 
     this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
 
@@ -163,6 +165,18 @@ export class GameplayScene extends Phaser.Scene {
     });
 
     // this.waveController.start();
+  }
+
+  private handlePlayerJoin(payload: Player.Events.Join.Payload): void {
+    this.spawnPlayer(payload.playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
+  }
+
+  private handlePlayerLeft(payload: Player.Events.Left.Payload): void {
+    const player = this.players.get(payload.playerId);
+    if (player) {
+      player.destroy();
+      this.players.delete(payload.playerId);
+    }
   }
 
   private handleDrowDecal(payload: DecalEventPayload): void {
