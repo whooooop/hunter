@@ -1,13 +1,12 @@
 import { WeaponType } from "../../weapons/WeaponTypes";
+import { EventPlayerJoined } from "../proto/generated/game";
 
 export namespace Player {
   export namespace Events { 
 
     export namespace Join {
       export const Remote = 'PlayerJoinRemoteEvent';
-      export interface Payload {
-        playerId: string;
-      }
+      export type Payload = EventPlayerJoined;
     }
 
     export namespace Left {

@@ -181,8 +181,9 @@ export class GameplayScene extends Phaser.Scene {
     // }
   }
 
-  private handlePlayerJoin(payload: Player.Events.Join.Payload): void {
-    this.spawnPlayer(payload.playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
+  private handlePlayerJoin({ playerId, playerState }: Player.Events.Join.Payload): void {
+    this.spawnPlayer(playerId, playerState?.position?.x!, playerState?.position?.y!);
+    this.weaponController.setWeaponById({ playerId, weaponId: playerState?.weaponId! });
   }
 
   private handlePlayerLeft(payload: Player.Events.Left.Payload): void {
