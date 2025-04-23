@@ -17,8 +17,6 @@ export class LoadingScene extends Phaser.Scene {
   }
   
   create(): void {
-    logger.info('Загрузка завершена. Запускаем игру в лесной локации');
-    
     // Запускаем игровую сцену с лесной локацией
     this.scene.start(SceneKeys.GAMEPLAY, { locationId: 'forest' });
   }

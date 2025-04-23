@@ -190,6 +190,5 @@ export class ForestLocation extends BaseLocation {
       gameScene.addShop(shop);
       this.scene.add.existing(shop);
     }
-    logger.info('Создан магазин в лесной локации');
   }
 } 

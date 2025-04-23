@@ -232,7 +232,6 @@ export class GameplayScene extends Phaser.Scene {
       return;
     }
 
-    console.log(`Spawning player ${playerId} at ${x}, ${y}`);
     const player = new PlayerEntity(this, playerId, x, y);
     this.players.set(playerId, player);
 

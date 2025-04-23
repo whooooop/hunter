@@ -28,7 +28,6 @@ export class MultiplayerController {
       this.socketClient = new SocketClient();
       this.socketClient.connect(SERVER_URL, gameId, playerId)
         .then(() => {
-            logger.info(`SocketClient connected to namespace /game/${gameId}.`);
             this.setupServerEventHandlers();
             this.setupLocalEventHandlers();
             resolve();

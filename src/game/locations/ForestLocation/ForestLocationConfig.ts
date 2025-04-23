@@ -28,8 +28,11 @@ export const CLOUDS: CloudOptions[] = [
 ];
 
 export const INTERACTIVE_OBJECTS = [
-  { id: 'object_spruce_1', type: 'spruce', position: [1200, 190], scale: 0.6, health: 500 },
-  { id: 'object_spruce_2', type: 'spruce', position: [1100, 380], scale: 0.7, health: 4000 },
-  { id: 'object_spruce_3', type: 'spruce', position: [1050, 600], scale: 0.9, health: 1000 },
-  { id: 'object_spruce_4', type: 'spruce', position: [1100, 630], scale: 0.9, health: 1000 },
+  { id: 'object_spruce_1', type: 'spruce', position: [1100, 190], scale: 1, health: 1000 },
+  { id: 'object_spruce_2', type: 'spruce', position: [1250, 260], scale: 1, health: 1000 },
+  { id: 'object_spruce_3', type: 'spruce', position: [1000, 260], scale: 0.6, health: 1000 },
+  { id: 'object_spruce_4', type: 'spruce', position: [1050, 330], scale: 0.7, health: 1000 },
+  { id: 'object_spruce_5', type: 'spruce', position: [1080, 400], scale: 0.9, health: 1000 },
+  { id: 'object_spruce_6', type: 'spruce', position: [1140, 430], scale: 1, health: 1000 },
+  { id: 'object_spruce_7', type: 'spruce', position: [1180, 670], scale: 1, health: 1000 },
 ];

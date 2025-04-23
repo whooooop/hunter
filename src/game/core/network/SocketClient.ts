@@ -132,7 +132,6 @@ export class SocketClient extends EventEmitter {
     constructor() {
         super();
         this._isConnected = false;
-        logger.info('WebSocketClient instance created.');
     }
 
     public connect(baseUrl: string, gameId: string, playerId: string): Promise<void> {
@@ -162,14 +161,12 @@ export class SocketClient extends EventEmitter {
           const protocol = baseUrl.startsWith('https:') || baseUrl.startsWith('wss:') ? 'wss:' : 'ws:';
           const cleanBaseUrl = baseUrl.replace(/^(https?|wss?):\/\//, '');
           const url = `${protocol}//${cleanBaseUrl}/game/${gameId}?playerId=${playerId}`;
-          logger.info(`Attempting WebSocket connection to ${url}...`);
 
           try {
               this.websocket = new WebSocket(url);
               this.websocket.binaryType = "arraybuffer";
 
               this.websocket.onopen = () => {
-                  logger.info(`WebSocket connected successfully to ${url}.`);
                   this._isConnected = true;
                   this.emit('connect');
                   if (this.connectionResolver) this.connectionResolver();

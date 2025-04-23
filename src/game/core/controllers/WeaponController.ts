@@ -34,7 +34,6 @@ export class WeaponController {
 
   private handleGameState(payload: Game.Events.State.Payload): void {
     payload.weapons.forEach((weapon) => {
-      console.log('init weapon', weapon);
       this.createPlayerWeapon(weapon.weaponId, weapon.playerId, weapon.name as WeaponType);
     });
   }
@@ -78,7 +77,6 @@ export class WeaponController {
     const weapon = createWeapon(weaponId, weaponType, this.scene);
     this.playerWeapons.get(playerId)!.set(weaponType, weapon);
     this.weapons.set(weaponId, { weapon, playerId, name: weaponType });
-    console.log('create weapon', this.playerWeapons);
     return weapon;
   }
 

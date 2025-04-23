@@ -10,7 +10,17 @@ import { SettingsScene } from './game/scenes/SettingsScene/SettingsScene';
 import { MultiplayerScene } from './game/scenes/MultiplayerScene/MultiplayerScene';
 import { SceneKeys } from './game/scenes';
 
-// Конфигурация игры
+const originalLog = console.log;
+console.log = function(msg: any) {
+    if (
+        typeof msg === 'string' &&
+        msg.includes('Phaser v3.88')
+    ) {
+        return;
+    }
+    originalLog.call(console, ...arguments);
+};
+
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.WEBGL,
   parent: 'game-container',
@@ -45,13 +55,11 @@ function initGame() {
   try {
     logger.info('Инициализация игры Охотник');
     
-    // Создаем экземпляр игры
     const game = new Phaser.Game(config);
     // game.scene.start(SceneKeys.MAIN_MENU);
     game.scene.start(SceneKeys.LOADING);
-    logger.info('Игра инициализирована успешно');
   } catch (error) {
-    logger.error('Ошибка при инициализации игры:', error);
+    logger.error('Error', error);
   }
 }
 
