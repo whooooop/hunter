@@ -157,7 +157,7 @@ export class GameplayScene extends Phaser.Scene {
 
     this.multiplayerController = new MultiplayerController(this);
     this.multiplayerController.connect('GAME1', playerId).then(() => {
-      // this.waveController.start();
+      this.waveController.start();
     });
   }
 
