@@ -1,4 +1,5 @@
 import explosionTextureUrl from '../../../assets/images/explosion.png';
+import { settings } from '../../settings';
 
 const texture = {
   key: 'explosion_texture_0',
@@ -30,7 +31,7 @@ export class ExplosionEntity {
    * Создает взрыв в указанной позиции
    */
   static create(scene: Phaser.Scene, x: number, y: number, scale: number = texture.scale): ExplosionEntity {
-    return new ExplosionEntity(scene, x, y, scale);
+    return new ExplosionEntity(scene, x, y + 20, scale);
   }
 
   constructor(scene: Phaser.Scene, x: number, y: number, scale: number = texture.scale) {
@@ -40,8 +41,8 @@ export class ExplosionEntity {
     // Создаем спрайт
     this.gameObject = scene.add.sprite(x, y, texture.key);
     this.gameObject.setScale(scale);
-    this.gameObject.setDepth(1000);
     this.gameObject.setOrigin(0.5, 1);
+    this.gameObject.setDepth(y + settings.gameplay.depthOffset);
     
     // Создаем анимацию взрыва, если она еще не создана
     this.createExplosionAnimation();
@@ -111,11 +112,4 @@ export class ExplosionEntity {
     this.isDestroyed = true;
   }
   
-  /**
-   * Устанавливает глубину отображения (z-index) спрайта взрыва
-   */
-  public setDepth(depth: number): this {
-    this.gameObject.setDepth(depth);
-    return this;
-  }
 }

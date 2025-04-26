@@ -159,7 +159,7 @@ export class WeaponEntity {
     if (this.options.hideWhileReload) {
       this.gameObject.setVisible(false);
     }
-
+    this.updateSightState();
     // Устанавливаем таймер на перезарядку
     this.scene.time.delayedCall(this.options.reloadTime, async () => {
       if (this.options.reloadByOne) {
@@ -272,7 +272,10 @@ export class WeaponEntity {
     }
 
     this.playBoltSound();
-    this.scene.time.delayedCall(this.options.boltTime, () => (this.isBolt = false));
+    this.scene.time.delayedCall(this.options.boltTime, () => {
+      this.isBolt = false;
+      this.updateSightState();
+    });
   }
 
   // Генерируем случайный угол в рамках диапазона разброса
@@ -445,7 +448,11 @@ export class WeaponEntity {
 
   public updateSightState(): void {
     if (this.sight) {
-      this.sight.setActive(this.currentAmmo > 0);
+      if (this.options.hideSightWhenCantFire) {
+        this.sight.setActive(this.canFire(this.scene.time.now));
+      } else {
+        this.sight.setActive(this.currentAmmo > 0);
+      }
     }
   }
 

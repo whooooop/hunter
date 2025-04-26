@@ -85,6 +85,7 @@ export namespace Weapon {
   
     shellCasings?: boolean;
     sight?: SightEntityOptions | boolean;
+    hideSightWhenCantFire?: boolean;
 
     projectile?: ProjectileName;
   }
