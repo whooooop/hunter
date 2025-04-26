@@ -1,10 +1,11 @@
 import * as Phaser from 'phaser';
-import { ProjectileEntity, ProjectileType } from '../entities/ProjectileEntity';
+import { ProjectileEntity } from '../entities/ProjectileEntity';
 import { rayRectIntersectionRobust } from '../../utils/GeometryUtils';
 import { DamageableEntity } from '../entities/DamageableEntity';
 import { Weapon } from '../types/weaponTypes';
 import { createProjectile } from '../../projectiles';
 import { onEvent } from '../Events';
+import { Projectile } from '../types/projectrileTypes';
 
 export enum ProjectileEvents {
   ProjectileHit = 'ProjectileHit',
@@ -45,17 +46,18 @@ export class ProjectileController {
   }
   
   public handleCreateProjectile({ projectile, originPoint, targetPoint, playerId, weaponName, speed, damage }: Weapon.Events.CreateProjectile.Payload): void {
-    const object = createProjectile(this.scene, projectile, originPoint.x, originPoint.y, playerId, weaponName);
-    object.setForceVector(targetPoint.x, targetPoint.y, speed, damage);
-    this.projectiles.add(object);
-    this.projectilesNotActivated.add(object);
+    const objects = createProjectile(this.scene, projectile, originPoint, targetPoint, playerId, weaponName, speed, damage);
+    objects.forEach(object => {
+      this.projectiles.add(object);
+      this.projectilesNotActivated.add(object);
+    });
   }
 
   private activateProjectile(projectile: ProjectileEntity): void {
     const type = projectile.getType();
-    if (type === ProjectileType.BULLET) {
+    if (type === Projectile.Type.BULLET) {
       this.predictRayHits(projectile);
-    } else if (type === ProjectileType.GRENADE || type === ProjectileType.MINE) {
+    } else if (type === Projectile.Type.GRENADE || type === Projectile.Type.MINE) {
       this.predictRadiusHits(projectile);
     }
   }
@@ -301,10 +303,13 @@ export class ProjectileController {
     const currentHits = this.sliceCurrentHits(currentTime);
 
     currentHits.forEach(group => {
+      let damageForBullet = group.hits[0].projectile.getDamage(group.hits[0].distance);
+
       for (const [index, hit] of group.hits.entries()) {
         if (hit.targetEntity.getDead()) return;
 
-        const damage = hit.projectile.getDamage(hit.distance);     
+        const isBullet = hit.projectile.getType() === Projectile.Type.BULLET;
+        const damage = isBullet ? damageForBullet : hit.projectile.getDamage(hit.distance);     
         const damageResult = hit.targetEntity.takeDamage({
           simulate: this.simulate,
           forceVector: hit.forceVector,
@@ -317,8 +322,13 @@ export class ProjectileController {
         
         this.scene.events.emit(ProjectileEvents.ProjectileHit, hit);
 
-        if (hit.projectile.getType() === ProjectileType.BULLET && damageResult && !damageResult.isPenetrated) {
-          break;
+        if (isBullet) {
+          if (damageResult && !damageResult.isPenetrated) {
+            break;
+          } else {
+            // Уменьшаем урон пули на 50%
+            damageForBullet = Math.ceil(damageForBullet * 0.5);
+          }
         }
       }
     });

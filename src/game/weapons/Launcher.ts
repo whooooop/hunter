@@ -2,18 +2,15 @@ import { WeaponType } from "./WeaponTypes";
 import { ProjectileName } from '../projectiles/ProjectileName';
 import { Weapon } from '../core/types/weaponTypes';
 
-import SawedTextureUrl from './assets/textures/sawed_texture_0.png';
+import { BaseBoltAudio, BaseEmptyAudio } from "./assets/baseAudio";
+import LauncherTextureUrl from './assets/textures/launcher_texture_0.png';
+import LauncherShootAudioUrl from './assets/audio/launcher_shoot_audio_0.mp3';
 
-import SawedShootAudioUrl from './assets/audio/sawed_shoot_audio_0.mp3';
-import SawedReloadStartAudioUrl from './assets/audio/sawed_reload_start_0.mp3';
-import SawedReloadItemAudioUrl from './assets/audio/sawed_reload_item_0.mp3';
-import { BaseBoltAudio2, BaseEmptyAudio } from "./assets/baseAudio";
-
-export const SawedConfig: Weapon.Config = {
-  name: WeaponType.SAWED,
+export const LauncherConfig: Weapon.Config = {
+  name: WeaponType.LAUNCHER,
   texture: {
-    key: 'sawed_texture_0',
-    url: SawedTextureUrl, 
+    key: 'launcher_texture_0',
+    url: LauncherTextureUrl, 
     scale: 0.5,
     offset: {
       x: 15,
@@ -23,8 +20,8 @@ export const SawedConfig: Weapon.Config = {
 
   firePointOffset: [0, -8],
 
-  damage: 30,           // Урон от одного выстрела
-  speed: [4000, 4000],     // Скорость пули
+  damage: 250,           // Урон от одного выстрела
+  speed: [1200, 100],     // Скорость пули
   magazineSize: 6,      // Размер магазина
   
   // Перезарядка
@@ -40,27 +37,19 @@ export const SawedConfig: Weapon.Config = {
   automatic: false,
 
   // Параметры отдачи
-  recoilForce: 30,      // Сила отдачи
+  recoilForce: 3,      // Сила отдачи
   recoilRecovery: 5,    // Скорость восстановления от отдачи
 
   fireAudio: {
-    key: WeaponType.SAWED + '_shoot_0',
-    url: SawedShootAudioUrl,
+    key: WeaponType.LAUNCHER + '_shoot_0',
+    url: LauncherShootAudioUrl,
   },
   emptyAudio: BaseEmptyAudio,
-  reloadAudio: {
-    key: WeaponType.SAWED + '_reload_start_0',
-    url: SawedReloadStartAudioUrl,
-  },
-  reloadItemAudio: {
-    key: WeaponType.SAWED + '_reload_item_0',
-    url: SawedReloadItemAudioUrl,
-  },
-  boltAudio: BaseBoltAudio2,
+  boltAudio: BaseBoltAudio,
 
   sight: true,
   shellCasings: true,
   triggerRelease: true, // Освобождение триггера после каждого выстрела
   
-  projectile: ProjectileName.PELLETS
+  projectile: ProjectileName.PROJECTILE
 }

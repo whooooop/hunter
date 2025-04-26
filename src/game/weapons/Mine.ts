@@ -21,7 +21,6 @@ export const MineConfig: Weapon.Config = {
   fireRate: 500,       // Задержка между выстрелами в мс
   spreadAngle: 0,      // Угол разброса при выстреле в градусах
   aimingTime: 0,       // Время прицеливания в мс
-  canAim: false,
   recoilForce: 0,      // Сила отдачи
   recoilRecovery: 0,   // Скорость восстановления от отдачи
   automatic: false,

@@ -1,29 +1,6 @@
 import { settings } from "../../settings";
-import { hexToNumber } from "../../utils/colors";
 import { ExplosionEntity } from "./ExplosionEntity";
-import { ImageTexture } from "../../core/types/texture";
-
-export enum ProjectileType {
-  BULLET = 'bullet',
-  GRENADE = 'grenade',
-  MINE = 'mine',
-}
-
-export interface ProjectileEntityOptions {
-  type: ProjectileType;
-
-  texture: ImageTexture;
-
-  radius?: number;
-  useRadiusDamage?: boolean;
-  activateDelay?: number;
-  activateRadius?: number;
-
-  force?: number;
-  bounce?: number;
-  drag?: number;
-  gravity?: number;
-}
+import { Projectile } from "../../core/types/projectrileTypes";
 
 const defaultOptions = {
   bounce: 0.2,
@@ -40,7 +17,7 @@ export class ProjectileEntity {
   protected destroyed: boolean = false;
   protected activated: boolean = false;
   
-  protected options: ProjectileEntityOptions;
+  protected options: Projectile.Config;
   protected damage: number = 1;
   protected speed: number[] = [100, 0];
   
@@ -53,7 +30,7 @@ export class ProjectileEntity {
 
   protected floorY: number = 0; // Минимальная Y-координата (пол)
 
-  constructor(scene: Phaser.Scene, id: string, x: number, y: number, options: ProjectileEntityOptions) {
+  constructor(scene: Phaser.Scene, id: string, x: number, y: number, options: Projectile.Config) {
     this.id = id;
     this.scene = scene;
     this.options = options;
@@ -94,12 +71,12 @@ export class ProjectileEntity {
     this.speed = speed;
     this.forcePoint = [forceX, forceY];
     
-    if (this.options.type === ProjectileType.BULLET) {
+    if (this.options.type === Projectile.Type.BULLET) {
       this.setRayForce(forceX, forceY);
       this.activate();
-    } else if (this.options.type === ProjectileType.GRENADE) {
+    } else if (this.options.type === Projectile.Type.GRENADE) {
       this.setThrowForce(forceX, forceY);
-    } else if (this.options.type === ProjectileType.MINE) {
+    } else if (this.options.type === Projectile.Type.MINE) {
       this.setThrowForce(forceX, forceY);
     }
 
@@ -185,9 +162,11 @@ export class ProjectileEntity {
   }
   
   public activate(): void {
+    if (this.activated) return;
+    
     this.activated = true;
     // console.log('activate', this.options.type);
-    if (this.options.type === ProjectileType.GRENADE || this.options.type === ProjectileType.MINE) {
+    if (this.options.type === Projectile.Type.GRENADE || this.options.type === Projectile.Type.MINE) {
       this.activateExplosion();
       this.gameObject.setAlpha(0);
       this.scene.time.delayedCall(1000, () => { 
@@ -213,7 +192,7 @@ export class ProjectileEntity {
     return [this.gameObject.x, this.gameObject.y];
   }
 
-  public getType(): ProjectileType {
+  public getType(): Projectile.Type {
     return this.options.type;
   }
 
@@ -259,7 +238,7 @@ export class ProjectileEntity {
     this.gameObject.setDepth(this.gameObject.y + settings.gameplay.depthOffset);
 
     // Для гранат выполняем дополнительные проверки
-    if (this.options.type === ProjectileType.GRENADE || this.options.type === ProjectileType.MINE) {
+    if (this.options.type === Projectile.Type.GRENADE || this.options.type === Projectile.Type.MINE) {
       this.updateThrow(time, delta);
     }
 
@@ -300,7 +279,7 @@ export class ProjectileEntity {
     const velocityMagnitude = Math.sqrt(body.velocity.x * body.velocity.x + body.velocity.y * body.velocity.y);
     
     // Поворачиваем спрайт в направлении движения
-    if (velocityMagnitude > 10 && this.options.type === ProjectileType.GRENADE) {
+    if (velocityMagnitude > 10 && this.options.type === Projectile.Type.GRENADE) {
       const angle = Math.atan2(body.velocity.y, body.velocity.x);
       this.gameObject.setRotation(angle);
     }

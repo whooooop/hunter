@@ -1,34 +1,34 @@
 import { WeaponType } from "./WeaponTypes";
 import { ProjectileName } from "../projectiles/ProjectileName";
 import { Weapon } from "../core/types/weaponTypes";
-import { BaseEmptyAudio } from "./assets/baseAudio";
-import MP5ShootAudioUrl from './assets/audio/mp5_shoot_0.mp3';
-import MP5TextureUrl from './assets/textures/mp5_texture_0.png';
+import { BaseEmptyAudio, BaseShootAudio } from "./assets/baseAudio";
+// import MachineShootAudioUrl from './assets/audio/machine_shoot_0.mp3';
+import MachineTextureUrl from './assets/textures/machine_texture_0.png';
 
-export const MP5Config: Weapon.Config = {
-  name: WeaponType.MP5,
+export const MachineConfig: Weapon.Config = {
+  name: WeaponType.MACHINE,
   texture: {
-    key: 'mp5_texture_0',
-    url: MP5TextureUrl, 
+    key: 'machine_texture_0',
+    url: MachineTextureUrl, 
     scale: 0.5,
     offset: {
-      x: 20,
-      y: 25,
+      x: 30,
+      y: 20,
     }
   },
 
   damage: 40,          // Урон от одного выстрела
   speed: [4000, 4000], // Скорость пули
-  magazineSize: 30,    // Размер магазина
+  magazineSize: 200,    // Размер магазина
 
-  firePointOffset: [0, -8],
+  firePointOffset: [0, -4],
 
    // Перезарядка
   reloadTime: 1200,    // Скорость перезарядки в мс
   boltTime: 600,          // Время взвода затвора
 
   // Параметры стрельбы
-  fireRate: 150,       // Задержка между выстрелами в мс
+  fireRate: 30,       // Задержка между выстрелами в мс
   aimingTime: 2500,    // Время прицеливания в мс
   spreadAngle: 5,      // Угол разброса при выстреле в градусах
   automatic: true,
@@ -40,10 +40,7 @@ export const MP5Config: Weapon.Config = {
   sight: true,
   shellCasings: true,
 
-  fireAudio: {
-    key: WeaponType.MP5 + '_shoot_0',
-    url: MP5ShootAudioUrl,
-  },
+  fireAudio: BaseShootAudio,
   emptyAudio: BaseEmptyAudio,
 
   projectile: ProjectileName.BULLET

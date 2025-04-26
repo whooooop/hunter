@@ -15,9 +15,8 @@ import { GameplayScene } from "../../scenes/GameplayScene/GameplayScene";
 import { ShellCasingEntity } from "./ShellCasingEntity";
 import { RecoilForceType } from "../types/recoilForce";
 import { emitEvent, onEvent } from "../Events";
-import { createProjectile } from "../../projectiles";
 import { Weapon, FireParams, AudioAssets } from "../types/weaponTypes";
-import { WeaponType } from '../../weapons/WeaponTypes';
+import { sleep } from '../../../utils/sleep';
 
 const logger = createLogger('WeaponEntity');
 
@@ -29,7 +28,11 @@ export class WeaponEntity {
   private gameObject: Phaser.GameObjects.Sprite;
 
   protected lastFired: number = 0;
+  protected lastEmptySoundTime: number = 0;
+
   protected isReloading: boolean = false;
+  protected isBolt: boolean = false;
+
   protected currentAmmo: number = 0;
   protected canFireAgain: boolean = true; // Флаг для неавтоматического оружия
   protected weaponAngle: number = 0; // Текущий угол наклона оружия
@@ -44,7 +47,8 @@ export class WeaponEntity {
     fire: null,
     empty: null,
     reload: null,
-    afterFire: null,
+    reloadItem: null,
+    bolt: null,
   }
 
   constructor(scene: Phaser.Scene, id: string, options: Weapon.Config) {
@@ -92,8 +96,11 @@ export class WeaponEntity {
     if (this.options.reloadAudio) {
       this.audioAssets.reload = this.scene.sound.add(this.options.reloadAudio.key, { volume: settings.audio.weaponsVolume });
     }
-    if (this.options.afterFireAudio) {
-      this.audioAssets.afterFire = this.scene.sound.add(this.options.afterFireAudio.key, { volume: settings.audio.weaponsVolume });
+    if (this.options.boltAudio) {
+      this.audioAssets.bolt = this.scene.sound.add(this.options.boltAudio.key, { volume: settings.audio.weaponsVolume });
+    }
+    if (this.options.reloadItemAudio) {
+      this.audioAssets.reloadItem = this.scene.sound.add(this.options.reloadItemAudio.key, { volume: settings.audio.weaponsVolume });
     }
   }
 
@@ -117,22 +124,25 @@ export class WeaponEntity {
     // Если перезаряжаемся, стрелять нельзя
     if (this.isReloading) return false;
     
+    // Если взвод затвора, стрелять нельзя
+    if (this.isBolt) return false;
+
     // Если нет патронов, стрелять нельзя
-    if (this.currentAmmo <= 0) return false;
+    if (this.isEmpty()) return false;
     
     // Для неавтоматического оружия проверяем, был ли отпущен курок
-    if (!this.options.automatic && !this.canFireAgain) return false;
+    if (!this.canFireAgain) return false;
     
     // Проверяем задержку между выстрелами
     return time - this.lastFired >= this.options.fireRate;
   }
 
   public isEmpty(): boolean {
-    return this.currentAmmo <= 0 && !this.isReloading;
+    return this.currentAmmo <= 0;
   }
 
   public reload(): void {
-    if (this.isReloading || this.currentAmmo === this.options.magazineSize) return;
+    if (this.isReloading || this.isBolt || this.currentAmmo === this.options.magazineSize) return;
 
     emitEvent(this.scene, Weapon.Events.ReloadAction.Local, {
       playerId: this.id,
@@ -141,7 +151,7 @@ export class WeaponEntity {
     this.reloadAction();
   }
 
-  private reloadAction(): void {
+  private async reloadAction(): Promise<void> {
     this.isReloading = true;
 
     this.playReloadSound();
@@ -151,11 +161,20 @@ export class WeaponEntity {
     }
 
     // Устанавливаем таймер на перезарядку
-    this.scene.time.delayedCall(this.options.reloadTime, () => {
+    this.scene.time.delayedCall(this.options.reloadTime, async () => {
+      if (this.options.reloadByOne) {
+        const count = this.options.magazineSize - this.currentAmmo;
+        for (let i = 0; i < count; i++) {
+          this.playReloadItemSound();
+          this.currentAmmo++;
+          await sleep(this.options.reloadItemTime || 200);
+        }
+      }
       this.currentAmmo = this.options.magazineSize;
       this.isReloading = false;
       this.gameObject.setVisible(true);
       this.updateSightState();
+      this.belt();
     });
   }
 
@@ -169,24 +188,30 @@ export class WeaponEntity {
 
   public fire({ playerId }: FireParams): RecoilForceType | null {
     if (!this.canFire(this.scene.time.now)) {
-      if (this.isEmpty()) {
+      if (this.isEmpty() && !this.isBolt && this.canFireAgain && !this.isReloading && this.lastEmptySoundTime + 200 < this.scene.time.now) {
         this.playEmptySound();
-        logger.debug('Попытка выстрела из пустого оружия');
+        this.lastEmptySoundTime = this.scene.time.now;
+        if (this.options.triggerRelease) {
+          this.canFireAgain = false;
+        }
       }
       return null;
     }
-    
-    // Для неавтоматического оружия блокируем следующий выстрел
-    if (!this.options.automatic) {
+
+    if (this.options.triggerRelease) {
       this.canFireAgain = false;
     }
 
+    this.lastEmptySoundTime = this.scene.time.now;
+
     const [originPointX, originPointY] = this.getFirePoint();
     const originPoint = { x: originPointX, y: originPointY };
+
     // Учитываем текущий наклон при создании снаряда
     const sightX = originPointX + 150;
     const sightY = originPointY + Math.tan(this.weaponAngle) * (sightX - originPointX);
     const targetPoint = { x: sightX, y: sightY };
+
     // Применяем отдачу к игроку с учетом направления
     const recoil = this.options.recoilForce ? this.applyRecoil(this.direction) : null;
     const angleTilt = this.calculateAnleTilt();
@@ -203,20 +228,15 @@ export class WeaponEntity {
 
     this.fireAction(playerId, originPoint, targetPoint, angleTilt);
 
-    if (this.options.autoreload && this.currentAmmo <= 0) {
+    if (this.options.autoreload && this.isEmpty()) {
       this.reload();
+    } else if (!this.options.automatic) {
+      this.belt();
     }
 
     this.updateSightState();
-    // this.afterFire();
 
     return recoil;
-  }
-
-  // Генерируем случайный угол в рамках диапазона разброса
-  protected calculateAnleTilt(): number {
-    const angleRange = Phaser.Math.DegToRad(this.options.spreadAngle || 0);
-    return Phaser.Math.FloatBetween(-angleRange, angleRange);
   }
 
   private fireAction(playerId: string, originPoint: { x: number, y: number }, targetPoint: { x: number, y: number }, angleTilt: number) {
@@ -242,6 +262,24 @@ export class WeaponEntity {
     this.playFireSound();
     
     this.applyWeaponTilt(angleTilt);
+  }
+
+  private belt(): void {
+    this.isBolt = true;
+
+    if (!this.options.boltTime) {
+      this.isBolt = false;
+      return;
+    }
+
+    this.playBoltSound();
+    this.scene.time.delayedCall(this.options.boltTime, () => (this.isBolt = false));
+  }
+
+  // Генерируем случайный угол в рамках диапазона разброса
+  protected calculateAnleTilt(): number {
+    const angleRange = Phaser.Math.DegToRad(this.options.spreadAngle || 0);
+    return Phaser.Math.FloatBetween(-angleRange, angleRange);
   }
 
   protected createProjectileEvent(playerId: string, originPoint: { x: number, y: number }, targetPoint: { x: number, y: number }): void {
@@ -301,10 +339,10 @@ export class WeaponEntity {
     return recoilForce;
   }
 
-  protected afterFire(): void {
+  protected bolt(): void {
     if (this.currentAmmo > 0) {
       this.scene.time.delayedCall(500, () => {
-        this.playAfterFireSound();
+        this.playBoltSound();
       });
     }
   }
@@ -323,6 +361,12 @@ export class WeaponEntity {
     }
   }
 
+  protected playReloadItemSound(): void {
+    if (this.audioAssets.reloadItem) {
+      this.audioAssets.reloadItem.play();
+    }
+  }
+
   // Звук выстрела
   protected playFireSound(): void {
     if (this.audioAssets.fire) {
@@ -330,10 +374,10 @@ export class WeaponEntity {
     }
   }
 
-  // Звук после выстрела
-  protected playAfterFireSound(): void {
-    if (this.audioAssets.afterFire) {
-      this.audioAssets.afterFire.play();
+  // Звук затвора (взводной механизм)
+  protected playBoltSound(): void {
+    if (this.audioAssets.bolt) {
+      this.audioAssets.bolt.play();
     }
   }
 

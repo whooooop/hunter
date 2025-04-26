@@ -3,7 +3,9 @@ import { hexToNumber } from "../utils/colors";
 
 export const BulletImageTexture_0: ImageTexture = {
   key: 'bullet_texture_0',
-  url: '', 
+  generate: (scene: Phaser.Scene, key: string) => {
+    createBulletTexture(scene, key);
+  },
   scale: 0.5,
 }
 

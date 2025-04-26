@@ -49,42 +49,53 @@ export namespace Weapon {
     texture: WeaponTexture;
   
     // Патроны
-    damage: number;       // Урон от одного выстрела
-    speed: number[];      // Скорость снаряда
-  
-    firePointOffset?: [number, number];
+    damage: number;             // Урон от одного выстрела
+    speed: number[];            // Скорость снаряда
+    magazineSize: number;       // Размер магазина
+
+    firePointOffset?: 
+        [number, number];
   
     // Перезарядка
-    reloadTime: number; // Скорость перезарядки в мс
-    magazineSize: number; // Размер магазина
+    reloadTime: number;         // Скорость перезарядки в мс
+    reloadItemTime?: number;    // Скорость перезарядки одной еденицы в мс
+    boltTime?: number;          // Время взвода затвора
+    // preventReload?: boolean;    // Прерывание перезарядки
+    reloadByOne?: boolean;      // Перезарядка по одной пуле
   
     // Параметры стрельбы
-    fireRate: number; // Задержка между выстрелами в мс
-    spreadAngle?: number; // Угол разброса при выстреле в градусах
-    aimingTime?: number; // Время прицеливания в секундах
-    canAim: boolean; // Можно ли прицеливаться
-    automatic?: boolean; // Является ли оружие автоматическим
-    autoreload?: boolean; // Автоматическая перезарядка
-    hideWhileReload?: boolean; // Скрывать оружие при перезарядке
+    fireRate: number;           // Задержка между выстрелами в мс
+    aimingTime?: number;        // Время прицеливания в секундах, время выравнивания прицела
+    spreadAngle?: number;       // Угол разброса при выстреле в градусах
+    automatic?: boolean;        // Является ли оружие автоматическим, для неавтоматических оружий требуется взвод затвора после каждого выстрела
+    autoreload?: boolean;       // Автоматическая перезарядка
+
+    hideWhileReload?: boolean;  // Скрывать оружие при перезарядке
+    triggerRelease?: boolean;   // Освобождение триггера после каждого выстрела
   
     // Параметры отдачи
-    recoilForce: number; // Сила отдачи
-    recoilRecovery: number; // Скорость восстановления от отдачи
+    recoilForce: number;        // Сила отдачи
+    recoilRecovery: number;     // Скорость восстановления от отдачи
   
-    emptyAudio?: WeaponAudio;
-    reloadAudio?: WeaponAudio;
-    afterFireAudio?: WeaponAudio;
-    fireAudio?: WeaponAudio;
+    emptyAudio?: Weapon.Audio.Asset;
+    reloadAudio?: Weapon.Audio.Asset;
+    reloadItemAudio?: Weapon.Audio.Asset;
+    boltAudio?: Weapon.Audio.Asset;
+    fireAudio?: Weapon.Audio.Asset;
   
     shellCasings?: boolean;
     sight?: SightEntityOptions | boolean;
-    projectile?: ProjectileName
-  }
-}
 
-export interface WeaponAudio {
-  key: string;
-  url: string;
+    projectile?: ProjectileName;
+  }
+
+  export namespace Audio {
+    export interface Asset {
+      key: string;
+      url: string;
+    }
+    export type Sound = Phaser.Sound.BaseSound | null;
+  }
 }
 
 export interface FireParams {
@@ -95,5 +106,6 @@ export type AudioAssets = {
   fire: Phaser.Sound.BaseSound | null;
   empty: Phaser.Sound.BaseSound | null;
   reload: Phaser.Sound.BaseSound | null;
-  afterFire: Phaser.Sound.BaseSound | null;
+  reloadItem: Phaser.Sound.BaseSound | null;
+  bolt: Phaser.Sound.BaseSound | null;
 }

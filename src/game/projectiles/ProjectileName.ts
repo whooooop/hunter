@@ -1,5 +1,7 @@
 export enum ProjectileName {
   BULLET = 'PBULLET',
+  PELLETS = 'PPELLETS',
   GRENADE = 'PGRENADE',
   MINE = 'PMINE', 
+  PROJECTILE = 'PPROJECTILE',
 }

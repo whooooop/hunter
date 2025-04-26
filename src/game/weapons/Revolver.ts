@@ -2,32 +2,27 @@ import { WeaponType } from "./WeaponTypes";
 import { ProjectileName } from '../projectiles/ProjectileName';
 import { Weapon } from '../core/types/weaponTypes';
 
-import { BaseBoltAudio, BaseEmptyAudio } from "./assets/baseAudio";
+import { BaseEmptyAudio } from "./assets/baseAudio";
 
-import GlockShootAudioUrl from './assets/audio/glock_shoot_audio_0.mp3';
-import GlockTextureUrl from './assets/textures/glock_texture_0.png';
+import RevolverShootAudioUrl from './assets/audio/revolver_shoot_audio_0.mp3';
+import RevolverBoltAudioUrl from './assets/audio/revolver_bolt_audio_0.mp3';
+import RevolverTextureUrl from './assets/textures/revolver_texture_0.png';
 
-const GlockShootAudio: Weapon.Audio.Asset = {
-  key: WeaponType.GLOCK + '_shoot_0',
-  url: GlockShootAudioUrl,
-}
-
-export const GlockConfig: Weapon.Config = {
-  name: WeaponType.GLOCK,
+export const RevolverConfig: Weapon.Config = {
+  name: WeaponType.REVOLVER,
   texture: {
-    key: 'weapon_glock_texture_0',
-    url: GlockTextureUrl,
+    key: WeaponType.REVOLVER + '_texture_0',
+    url: RevolverTextureUrl,
     scale: 0.5,
     offset: {
-      x: 15,
-      y: 20,
+      x: 25,
+      y: 17,
     }
   },
 
-  // Патроны
-  damage: 18,             // Урон от одного выстрела
+  damage: 60,             // Урон от одного выстрела
   speed: [4000, 4000],    // Скорость пули
-  magazineSize: 12,       // Размер магазина
+  magazineSize: 6,        // Размер магазина
 
   firePointOffset: [0, -5],
 
@@ -51,9 +46,15 @@ export const GlockConfig: Weapon.Config = {
   sight: true,
   shellCasings: true,
 
-  fireAudio: GlockShootAudio,
+  fireAudio: {
+    key: WeaponType.REVOLVER + '_shoot_0',
+    url: RevolverShootAudioUrl,
+  },
   emptyAudio: BaseEmptyAudio,
-  boltAudio: BaseBoltAudio,
+  boltAudio: {
+    key: WeaponType.REVOLVER + '_bolt_0',
+    url: RevolverBoltAudioUrl,
+  },
 
   projectile: ProjectileName.BULLET
 }

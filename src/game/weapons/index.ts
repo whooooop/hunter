@@ -4,23 +4,33 @@ import { Weapon } from "../core/types/weaponTypes";
 
 import { GlockConfig } from "./Glock";
 import { MP5Config } from "./MP5";
+import { MachineConfig } from "./Machine";
 import { GrenadeConfig } from "./Grenade";
 import { SawedConfig } from "./Sawed";
 import { MineConfig } from "./Mine";
 import { AWPConfig } from "./AWP";
+import { RevolverConfig } from "./Revolver";
+import { M4Config } from "./M4";
+import { LauncherConfig } from "./Launcher";
 
 export const WeaponConfigs: Record<WeaponType, Weapon.Config> = {
   [WeaponType.GLOCK]: GlockConfig,
+  [WeaponType.REVOLVER]: RevolverConfig,
   [WeaponType.MP5]: MP5Config,
+  [WeaponType.MACHINE]: MachineConfig,
+  [WeaponType.M4]: M4Config,
   [WeaponType.GRENADE]: GrenadeConfig,
   [WeaponType.SAWED]: SawedConfig,
   [WeaponType.MINE]: MineConfig,
   [WeaponType.AWP]: AWPConfig,
+  [WeaponType.LAUNCHER]: LauncherConfig,
 }
 
 export function preloadWeapons(scene: Phaser.Scene): void {
   Object.values(WeaponConfigs).forEach(WeaponConfig => {
-    scene.load.image(WeaponConfig.texture.key, WeaponConfig.texture.url);
+    if (WeaponConfig.texture.url) {
+      scene.load.image(WeaponConfig.texture.key, WeaponConfig.texture.url);
+    }
     if (WeaponConfig.fireAudio) {
       scene.load.audio(WeaponConfig.fireAudio.key, WeaponConfig.fireAudio.url);
     }
@@ -30,8 +40,11 @@ export function preloadWeapons(scene: Phaser.Scene): void {
     if (WeaponConfig.reloadAudio) {
       scene.load.audio(WeaponConfig.reloadAudio.key, WeaponConfig.reloadAudio.url);
     }
-    if (WeaponConfig.afterFireAudio) {
-      scene.load.audio(WeaponConfig.afterFireAudio.key, WeaponConfig.afterFireAudio.url);
+    if (WeaponConfig.boltAudio) {
+      scene.load.audio(WeaponConfig.boltAudio.key, WeaponConfig.boltAudio.url);
+    }
+    if (WeaponConfig.reloadItemAudio) {
+      scene.load.audio(WeaponConfig.reloadItemAudio.key, WeaponConfig.reloadItemAudio.url);
     }
   });
 }
