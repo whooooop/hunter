@@ -24,7 +24,6 @@ export const GrenadeConfig: Weapon.Config = {
   aimingTime: 0,        // Время прицеливания в мс
   recoilForce: 0,       // Сила отдачи
   recoilRecovery: 0,    // Скорость восстановления от отдачи
-  fireDelay: 800,     
   automatic: false,
   sight: true,
   shellCasings: false,

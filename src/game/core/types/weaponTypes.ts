@@ -64,7 +64,6 @@ export namespace Weapon {
     reloadByOne?: boolean;      // Перезарядка по одной пуле
   
     // Параметры стрельбы
-    fireDelay?: number;         // Задержка перед выстрелом в мс
     fireRate: number;           // Задержка между выстрелами в мс
     aimingTime?: number;        // Время прицеливания в секундах, время выравнивания прицела
     spreadAngle?: number;       // Угол разброса при выстреле в градусах

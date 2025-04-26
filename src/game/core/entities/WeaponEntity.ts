@@ -242,16 +242,14 @@ export class WeaponEntity {
     this.lastFired = this.scene.time.now;
 
     if (this.options.projectile) {
-      this.scene.time.delayedCall(this.options.fireDelay || 0, () => {
-        emitEvent(this.scene, Weapon.Events.CreateProjectile.Local, { 
-          playerId,
-          speed: this.options.speed,
-          damage: this.options.damage,
-          weaponName: this.name,
-          projectile: this.options.projectile!,
-          originPoint,
-          targetPoint
-        });
+      emitEvent(this.scene, Weapon.Events.CreateProjectile.Local, { 
+        playerId,
+        speed: this.options.speed,
+        damage: this.options.damage,
+        weaponName: this.name,
+        projectile: this.options.projectile!,
+        originPoint,
+        targetPoint
       });
     }
 
