@@ -1,6 +1,7 @@
 import { settings } from "../../settings";
 import { ExplosionEntity } from "./ExplosionEntity";
 import { Projectile } from "../../core/types/projectrileTypes";
+import { AudioAssets } from "../types/weaponTypes";
 
 const defaultOptions = {
   bounce: 0.2,
@@ -30,6 +31,10 @@ export class ProjectileEntity {
 
   protected floorY: number = 0; // Минимальная Y-координата (пол)
 
+  protected audioAssets: { activate: Phaser.Sound.BaseSound | null } = {
+    activate: null,
+  }
+
   constructor(scene: Phaser.Scene, id: string, x: number, y: number, options: Projectile.Config) {
     this.id = id;
     this.scene = scene;
@@ -44,6 +49,14 @@ export class ProjectileEntity {
       }
       
       this.scene.add.existing(this.gameObject);
+    }
+
+    this.createAudioAssets();
+  }
+
+  protected createAudioAssets(): void {
+    if (this.options.activateAudio) {
+      this.audioAssets.activate = this.scene.sound.add(this.options.activateAudio.key, { volume: settings.audio.weaponsVolume });
     }
   }
 
@@ -166,6 +179,7 @@ export class ProjectileEntity {
     
     this.activated = true;
     // console.log('activate', this.options.type);
+    this.playActivateAudio();
     if (this.options.type === Projectile.Type.GRENADE || this.options.type === Projectile.Type.MINE) {
       this.activateExplosion();
       this.gameObject.setAlpha(0);
@@ -178,6 +192,12 @@ export class ProjectileEntity {
   protected activateExplosion(): void {
     // эффект взрыва
     ExplosionEntity.create(this.scene, this.gameObject.x, this.gameObject.y);
+  }
+
+  protected playActivateAudio(): void {
+    if (this.audioAssets.activate) {
+      this.audioAssets.activate.play();
+    }
   }
 
   public onHit(): void {

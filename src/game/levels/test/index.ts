@@ -10,7 +10,23 @@ export const testLevel = {
       price: 0,
     },
     {
+      type: WeaponType.REVOLVER,
+      price: 100,
+    },
+    {
       type: WeaponType.MP5,
+      price: 100,
+    },
+    {
+      type: WeaponType.M4,
+      price: 100,
+    },
+    {
+      type: WeaponType.SAWED,
+      price: 100,
+    },
+    {
+      type: WeaponType.LAUNCHER,
       price: 100,
     },
     {
@@ -23,6 +39,10 @@ export const testLevel = {
     },
     {
       type: WeaponType.MINE,
+      price: 300,
+    },
+    {
+      type: WeaponType.MACHINE,
       price: 300,
     },
   ]

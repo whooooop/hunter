@@ -1,6 +1,6 @@
-import { ProjectileEntity } from "../core/entities/ProjectileEntity";
 import { Projectile } from "../core/types/projectrileTypes";
 import { MineImageTexture_0 } from "../textures/mineTexture";
+import ProjectileActivateAudioUrl from '../weapons/assets/audio/explosion_audio_0.mp3';
 
 export const ProjectileMineConfig: Projectile.Config = {
   type: Projectile.Type.MINE,
@@ -9,4 +9,8 @@ export const ProjectileMineConfig: Projectile.Config = {
   activateRadius: 20,
   drag: 800,
   gravity: 600,
+  activateAudio: {
+    key: 'explosion_activate_audio_0',
+    url: ProjectileActivateAudioUrl,
+  },
 }

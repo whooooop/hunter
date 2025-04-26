@@ -25,6 +25,9 @@ export function preloadProjectiles(scene: Phaser.Scene): void {
     } else if (ProjectileConfig.texture.url) {
       scene.load.image(ProjectileConfig.texture.key, ProjectileConfig.texture.url);
     }
+    if (ProjectileConfig.activateAudio) {
+      scene.load.audio(ProjectileConfig.activateAudio.key, ProjectileConfig.activateAudio.url);
+    }
   });
 }
 
