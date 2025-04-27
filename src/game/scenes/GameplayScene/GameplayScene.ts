@@ -10,20 +10,17 @@ import { BaseLocation } from '../../core/BaseLocation';
 import { WeaponStatus } from '../../ui/WeaponStatus';
 import { BaseShop } from '../../core/BaseShop';
 import { ProjectileController } from '../../core/controllers/ProjectileController';
-import { BloodController, BloodEvents } from '../../core/controllers/BloodController';
+import { BloodController } from '../../core/controllers/BloodController';
 import { DecalController } from '../../core/controllers/DecalController';
-import { DamageableEntity } from '../../core/entities/DamageableEntity';
-import { createShellCasingTexture, ShellCasingEvents } from '../../core/entities/ShellCasingEntity';
-import { DecalEventPayload } from '../../core/types/decals';
 import { SpawnEnemyPayload, WaveController } from '../../core/controllers/WaveController';
 import { createWavesConfig } from '../../levels/test/wavesConfig'
 import { WaveStartEventPayload, WaveEvents } from '../../core/controllers/WaveController';
 import { generateId } from '../../../utils/stringGenerator';
-import { emitEvent, onEvent } from '../../core/Events';
+import { emitEvent, offEvent, onEvent } from '../../core/Events';
 import { preloadWeapons } from '../../weapons';
 import { WeaponType } from '../../weapons/WeaponTypes';
 import { preloadProjectiles } from '../../projectiles';
-import { EnemyEntityEvents, EnemyDeathPayload } from '../../core/types/enemyTypes';
+import { Enemy } from '../../core/types/enemyTypes';
 import { ScoreController } from '../../core/controllers/ScoreController';
 import { ScoreEvents, UpdateScoreEventPayload } from '../../core/types/scoreTypes';
 import { WeaponController } from '../../core/controllers/WeaponController';
@@ -35,6 +32,7 @@ import { createEnemy } from '../../enemies';
 import { KeyBoardController } from '../../core/controllers/KeyBoardController';
 import { Player } from '../../core/types/playerTypes';
 import { Game } from '../../core/types/gameTypes';
+import { Damageable } from '../../core/types/damageableTypes';
 
 const logger = createLogger('GameplayScene');
 
@@ -48,9 +46,8 @@ export class GameplayScene extends Phaser.Scene {
   private location!: BaseLocation;
   
   private shop!: BaseShop;
-  private enemies: Map<string, DamageableEntity> = new Map();
-  private shellCasings!: Phaser.Physics.Arcade.Group; // Группа для гильз
-  private damageableObjects: Map<string, DamageableEntity> = new Map();
+  private enemies: Map<string, Damageable.Entity> = new Map();
+  private damageableObjects: Map<string, Damageable.Entity> = new Map();
 
   private waveInfo!: WaveInfo;
   private weaponStatus!: WeaponStatus;
@@ -84,31 +81,20 @@ export class GameplayScene extends Phaser.Scene {
     this.location.preload();
 
     PlayerEntity.preload(this);
-
+    BloodController.preload(this);
     WaveController.preloadEnemies(this, testLevel.waves);
+
     preloadWeapons(this);
     preloadProjectiles(this);
-
-    // Создаем текстуру гильзы программно
-    createShellCasingTexture(this);
-    BloodController.preload(this);
   }
   
   async create(): Promise<void> {
     const playerId = window.location.search.split('player=')[1] || generateId();
     this.mainPlayerId = playerId;
 
-    if (settings.gameplay.blood.decals) {
-      onEvent(this, BloodEvents.bloodParticleDecal, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
-    }
-
-    if (settings.gameplay.shellCasings.decals) {
-      onEvent(this, ShellCasingEvents.shellCasingParticleDecal, (payload: DecalEventPayload) => this.handleDrowDecal(payload));
-    }
-
     onEvent(this, WaveEvents.WaveStartEvent, (payload: WaveStartEventPayload) => this.handleWaveStart(payload));
     onEvent(this, WaveEvents.SpawnEnemyEvent, (payload: SpawnEnemyPayload) => this.handleSpawnEnemy(payload));
-    onEvent(this, EnemyEntityEvents.enemyDeath, (payload: EnemyDeathPayload) => this.handleEnemyDeath(payload));
+    onEvent(this, Enemy.Events.Death.Local, (payload: Enemy.Events.Death.Payload) => this.handleEnemyDeath(payload));
     onEvent(this, ScoreEvents.UpdateScoreEvent, (payload: UpdateScoreEventPayload) => this.handleUpdateScore(payload));
 
     this.location.create();
@@ -117,7 +103,7 @@ export class GameplayScene extends Phaser.Scene {
     this.keyboardController = new KeyBoardController(this, this.players, playerId);
     this.weaponController = new WeaponController(this, this.players);
     this.shopController = new ShopController(this, this.players, playerId, this.shop, testLevel.weapons);
-    this.decalController = new DecalController(this, 0, 0, settings.display.width, settings.display.height);
+    this.decalController = new DecalController(this, 0, 0, settings.display.width, settings.display.height, 5);
     this.projectileController = new ProjectileController(this, this.damageableObjects);
     this.waveController = new WaveController(this, createWavesConfig());
 
@@ -125,8 +111,7 @@ export class GameplayScene extends Phaser.Scene {
     this.weaponStatus = new WeaponStatus(this);
 
     this.physics.world.setBounds(0, 0, settings.display.width, settings.display.height);
-    this.shellCasings = this.physics.add.group();
-    this.decalController.setDepth(5);
+
     this.shopController.setInteractablePlayerId(playerId);
 
     // Настраиваем коллизии между игроком и врагами
@@ -144,15 +129,15 @@ export class GameplayScene extends Phaser.Scene {
 
   private singlePlayerInit(playerId: string): void {
     this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
-    this.setWeapon(playerId, WeaponType.AWP);
+    this.setWeapon(playerId, WeaponType.GLOCK);
     this.waveController.start();
     this.projectileController.setSimulate(false);
   }
 
   private multiplayerInit(playerId: string): void {
-    onEvent(this, Game.Events.State.Remote, (payload: Game.Events.State.Payload) => this.handleGameState(payload));
-    onEvent(this, Player.Events.Join.Remote, (payload: Player.Events.Join.Payload) => this.handlePlayerJoin(payload));
-    onEvent(this, Player.Events.Left.Remote, (payload: Player.Events.Left.Payload) => this.handlePlayerLeft(payload));
+    onEvent(this, Game.Events.State.Remote, this.handleGameState, this);
+    onEvent(this, Player.Events.Join.Remote, this.handlePlayerJoin, this);
+    onEvent(this, Player.Events.Left.Remote, this.handlePlayerLeft, this);
     
     this.projectileController.setSimulate(false);
 
@@ -174,12 +159,6 @@ export class GameplayScene extends Phaser.Scene {
         this.weaponController.setWeaponById({ playerId, weaponId: player.weaponId });
       }
     });
-
-    // const mainPlayer = payload.playersState.find(p => p.id === this.mainPlayerId);
-    // if (mainPlayer) {
-    //   const weapon = mainPlayer.weapon as WeaponType || WeaponType.GLOCK;
-    //   this.setWeapon(this.mainPlayerId, weapon);
-    // }
   }
 
   private handlePlayerJoin({ playerId, playerState }: Player.Events.Join.Payload): void {
@@ -195,16 +174,10 @@ export class GameplayScene extends Phaser.Scene {
     }
   }
 
-  private handleDrowDecal(payload: DecalEventPayload): void {
-    this.decalController.drawParticle(payload.particle, payload.x, payload.y);
-  }
-
-  private handleEnemyDeath({ id }: EnemyDeathPayload): void {
-    const enemy = this.enemies.get(id)!;
-    const gameObject = enemy.getGameObject();
+  private handleEnemyDeath({ id }: Enemy.Events.Death.Payload): void {
     this.enemies.delete(id);
     this.damageableObjects.delete(id);
-    this.decalController.drawParticle(gameObject, gameObject.x, gameObject.y);
+    // this.decalController.drawParticle(gameObject, gameObject.x, gameObject.y);
   }
 
   private handleSpawnEnemy({ id, enemyType, position, options }: SpawnEnemyPayload): void {
@@ -248,7 +221,7 @@ export class GameplayScene extends Phaser.Scene {
    * Добавляет интерактивный объект в группу объектов, взаимодействующих с пулями
    * @param object Спрайт объекта для добавления в группу
    */
-  public addDamageableObject(id: string, object: DamageableEntity): void {
+  public addDamageableObject(id: string, object: Damageable.Entity): void {
     this.damageableObjects.set(id, object);
   }
 
@@ -278,11 +251,7 @@ export class GameplayScene extends Phaser.Scene {
   
     // Обновляем всех врагов
     this.enemies.forEach(enemy => {
-      // if (enemy.getDestroyed()) {
-      //   this.enemies.delete(enemy);
-      // } else {
-        enemy.update(time, delta);
-      // }
+      enemy.update(time, delta);
     });
 
     // Обрабатываем попадания пуль
@@ -307,11 +276,6 @@ export class GameplayScene extends Phaser.Scene {
     this.lastStateHash = stateHash;
   }
 
-  // Метод для доступа к группе гильз
-  public getShellCasingsGroup(): Phaser.Physics.Arcade.Group {
-    return this.shellCasings;
-  }
-  
   // private handlePlayerEnemyCollision(
   //   playerObj: Phaser.Types.Physics.Arcade.GameObjectWithBody, 
   //   enemyObj: Phaser.Types.Physics.Arcade.GameObjectWithBody
@@ -339,4 +303,31 @@ export class GameplayScene extends Phaser.Scene {
   //     player.applyForce(direction, 0, 10, 0.5, 0.1);  
   //   }
   // }
+
+  destroy(): void {
+    this.location.destroy();
+    this.shop.destroy();
+    this.waveController.destroy();
+    this.scoreController.destroy();
+    this.weaponController.destroy();
+    this.shopController.destroy();
+    this.decalController.destroy();
+    this.projectileController.destroy();
+    this.waveInfo.destroy();
+    this.weaponStatus.destroy();
+    this.players.forEach(player => player.destroy());
+    this.players.clear();
+    this.enemies.clear();
+    this.damageableObjects.clear();
+    this.multiplayerController.destroy();
+    this.keyboardController.destroy();
+
+    offEvent(this, WaveEvents.WaveStartEvent, this.handleWaveStart, this);
+    offEvent(this, WaveEvents.SpawnEnemyEvent, this.handleSpawnEnemy, this);
+    offEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
+    offEvent(this, ScoreEvents.UpdateScoreEvent, this.handleUpdateScore, this);
+    offEvent(this, Player.Events.Join.Remote, this.handlePlayerJoin, this);
+    offEvent(this, Player.Events.Left.Remote, this.handlePlayerLeft, this);
+    offEvent(this, Game.Events.State.Remote, this.handleGameState, this);
+  }
 } 

@@ -3,7 +3,7 @@ import { PlayerEntity } from "../entities/PlayerEntity";
 import { WeaponType } from "../../weapons/WeaponTypes";
 import { UpdateScoreEventPayload } from "../types/scoreTypes";
 import { ScoreEvents } from "../types/scoreTypes";
-import { onEvent } from "../Events";
+import { offEvent, onEvent } from "../Events";
 import { ShopEvents, ShopWeapon, WeaponPurchasedPayload } from "../types/shopTypes";
 
 export class ShopController {
@@ -75,5 +75,10 @@ export class ShopController {
     const playerBalance = this.playerBalance.get(playerId)!;
     const playerPurchasedWeapons = this.playerPurchasedWeapon.get(playerId) || new Set();
     this.shop.openShop(playerId, playerBalance, playerPurchasedWeapons, this.weapons);
+  }
+
+  public destroy(): void {
+    offEvent(this.scene, ScoreEvents.UpdateScoreEvent, this.handleBalanceUpdate, this);
+    offEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
   }
 }

@@ -75,4 +75,10 @@ export class KeyBoardController {
   private getPlayer(): PlayerEntity | null {
     return this.players.get(this.playerId) || null;
   }
+
+  public destroy(): void {
+    this.fireKey.destroy();
+    this.reloadKey.destroy();
+    this.jumpKey.destroy();
+  }
 }

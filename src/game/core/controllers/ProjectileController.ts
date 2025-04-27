@@ -1,19 +1,15 @@
 import * as Phaser from 'phaser';
 import { ProjectileEntity } from '../entities/ProjectileEntity';
 import { rayRectIntersectionRobust } from '../../utils/GeometryUtils';
-import { DamageableEntity } from '../entities/DamageableEntity';
 import { Weapon } from '../types/weaponTypes';
 import { createProjectile } from '../../projectiles';
-import { onEvent } from '../Events';
+import { offEvent, onEvent } from '../Events';
 import { Projectile } from '../types/projectrileTypes';
-
-export enum ProjectileEvents {
-  ProjectileHit = 'ProjectileHit',
-}
+import { Damageable } from '../types/damageableTypes';
 
 interface Hit {
   projectile: ProjectileEntity;
-  targetEntity: DamageableEntity;
+  targetEntity: Damageable.Entity;
   hitPoint: number[];
   forceVector: number[][];
   distance?: number;
@@ -28,7 +24,7 @@ interface HitGroup {
 export class ProjectileController {
   private debug: boolean = false;
   private scene: Phaser.Scene;
-  private damageableObjects: Map<string, DamageableEntity>;
+  private damageableObjects: Map<string, Damageable.Entity>;
   private projectiles: Set<ProjectileEntity> = new Set();
   private projectilesNotActivated: Set<ProjectileEntity> = new Set();
   private projectileHits: HitGroup[] = [];
@@ -36,13 +32,13 @@ export class ProjectileController {
 
   constructor(
     scene: Phaser.Scene, 
-    damageableObjects: Map<string, DamageableEntity>, 
+    damageableObjects: Map<string, Damageable.Entity>, 
   ) {
     this.scene = scene;
     this.damageableObjects = damageableObjects;
     this.simulate = true;
 
-    onEvent(scene, Weapon.Events.CreateProjectile.Local, this.handleCreateProjectile.bind(this));
+    onEvent(scene, Weapon.Events.CreateProjectile.Local, this.handleCreateProjectile, this);
   }
   
   public handleCreateProjectile({ projectile, originPoint, targetPoint, playerId, weaponName, speed, damage }: Weapon.Events.CreateProjectile.Payload): void {
@@ -95,8 +91,7 @@ export class ProjectileController {
     this.damageableObjects.forEach((enemy) => {
       if (enemy.getDead()) return;
       
-      // Получаем границы тела врага
-      const enemyBounds = enemy.getBounds();
+      const enemyBounds = enemy.getBodyBounds();
       
       // Используем метод определения пересечений
       const intersection = rayRectIntersectionRobust(
@@ -150,7 +145,7 @@ export class ProjectileController {
       if (enemy.getDead()) return;
       
       // Получаем границы врага
-      const enemyBounds = enemy.getBounds();
+      const enemyBounds = enemy.getBodyBounds();
       if (!enemyBounds) return;
       
       // Получаем центр врага
@@ -201,24 +196,12 @@ export class ProjectileController {
    */
   private drawExplosionRadius(x: number, y: number, radius: number): void {
     if (!this.scene) return;
-    
-    // Создаем графический объект
     const graphics = this.scene.add.graphics();
-    
-    // Настраиваем стиль для контура
     graphics.lineStyle(2, 0xff0000, 0.7);
-    
-    // Рисуем круг радиуса взрыва
     graphics.strokeCircle(x, y, radius);
-    
-    // Рисуем центр взрыва
     graphics.fillStyle(0xff0000, 0.7);
     graphics.fillCircle(x, y, 5);
-    
-    // Устанавливаем высокий z-index для отображения поверх других объектов
     graphics.setDepth(1000);
-    
-    // Удаляем графику через 2 секунды
     this.scene.time.delayedCall(2000, () => {
         graphics.destroy();
     });
@@ -280,8 +263,7 @@ export class ProjectileController {
         if (enemy.getDead()) return;
         
         // Получаем границы врага
-        const enemyBounds = enemy.getBounds();
-        if (!enemyBounds) return;
+        const enemyBounds = enemy.getBodyBounds();
         
         // Получаем центр врага
         const enemyCenter = {
@@ -320,8 +302,6 @@ export class ProjectileController {
         });       
         hit.projectile.onHit();
         
-        this.scene.events.emit(ProjectileEvents.ProjectileHit, hit);
-
         if (isBullet) {
           if (damageResult && !damageResult.isPenetrated) {
             break;
@@ -332,5 +312,9 @@ export class ProjectileController {
         }
       }
     });
+  }
+
+  public destroy(): void {
+    offEvent(this.scene, Weapon.Events.CreateProjectile.Local, this.handleCreateProjectile, this);
   }
 } 

@@ -1,11 +1,11 @@
 import { SocketClient } from '../network/SocketClient';
-import { emitEvent, onEvent } from "../Events";
+import { emitEvent, offEvent, onEvent } from "../Events";
 import { EventPlayerJoined, EventPlayerSetWeapon, EventWeaponFireAction, EventWaveStart, EventSpawnEnemy, EventEnemyDeath, EventPlayerScoreUpdate, ProtoEventType, EventWeaponPurchased, EventPlayerLeft, EventGameState, EventPlayerPosition } from '../proto/generated/game';
 import { WeaponPurchasedPayload, ShopEvents } from "../types/shopTypes";
 import { Player } from "../types/playerTypes";
 import { WaveStartEventPayload, WaveEvents, SpawnEnemyPayload } from "./WaveController";
 import { Weapon } from "../types/weaponTypes";
-import { EnemyDeathPayload, EnemyEntityEvents } from "../types/enemyTypes";
+import { Enemy } from "../types/enemyTypes";
 import { ScoreEvents, UpdateScoreEventPayload } from "../types/scoreTypes";
 import { createLogger } from '../../../utils/logger';
 import { GameplayScene } from '../../scenes/GameplayScene/GameplayScene';
@@ -53,15 +53,15 @@ export class MultiplayerController {
 
   // Обработчики локальных событий Phaser (отправка на сервер)
   private setupLocalEventHandlers(): void {
-    onEvent(this.scene, Weapon.Events.FireAction.Local, this.clientHandleFire.bind(this));
-    onEvent(this.scene, Player.Events.SetWeapon.Local, this.clientHandleSetWeapon.bind(this));
-    onEvent(this.scene, Player.Events.State.Local, this.clientHandlePlayerState.bind(this));
+    onEvent(this.scene, Weapon.Events.FireAction.Local, this.clientHandleFire, this);
+    onEvent(this.scene, Player.Events.SetWeapon.Local, this.clientHandleSetWeapon, this);
+    onEvent(this.scene, Player.Events.State.Local, this.clientHandlePlayerState, this);
 
-    onEvent(this.scene, WaveEvents.WaveStartEvent, this.clientHandleWaveStart.bind(this));
-    onEvent(this.scene, WaveEvents.SpawnEnemyEvent, this.clientHandleSpawnEnemy.bind(this));
-    onEvent(this.scene, EnemyEntityEvents.enemyDeath, this.clientHandleEnemyDeath.bind(this));
-    onEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.clientHandleWeaponPurchased.bind(this));
-    onEvent(this.scene, ScoreEvents.UpdateScoreEvent, this.clientHandleUpdateScore.bind(this));
+    onEvent(this.scene, WaveEvents.WaveStartEvent, this.clientHandleWaveStart, this);
+    onEvent(this.scene, WaveEvents.SpawnEnemyEvent, this.clientHandleSpawnEnemy, this);
+    onEvent(this.scene, Enemy.Events.Death.Local, this.clientHandleEnemyDeath, this);
+    onEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.clientHandleWeaponPurchased, this);
+    onEvent(this.scene, ScoreEvents.UpdateScoreEvent, this.clientHandleUpdateScore, this);
   }
 
   private setupServerEventHandlers(): void {
@@ -97,7 +97,7 @@ export class MultiplayerController {
     this.socketClient.send(ProtoEventType.SpawnEnemy, payload);
   }
 
-  private clientHandleEnemyDeath(payload: EnemyDeathPayload): void {
+  private clientHandleEnemyDeath(payload: Enemy.Events.Death.Payload): void {
     this.socketClient.send(ProtoEventType.EnemyDeath, payload);
   }
 
@@ -175,10 +175,10 @@ export class MultiplayerController {
     this.scene.events.off(Weapon.Events.FireAction.Local, this.clientHandleFire, this);
     this.scene.events.off(Player.Events.SetWeapon.Local, this.clientHandleSetWeapon, this);
 
-    this.scene.events.off(EnemyEntityEvents.enemyDeath, this.clientHandleEnemyDeath, this);
-    this.scene.events.off(WaveEvents.WaveStartEvent, this.clientHandleWaveStart, this);
-    this.scene.events.off(WaveEvents.SpawnEnemyEvent, this.clientHandleSpawnEnemy, this);
-    this.scene.events.off(ShopEvents.WeaponPurchasedEvent, this.clientHandleWeaponPurchased, this);
-    this.scene.events.off(ScoreEvents.UpdateScoreEvent, this.clientHandleUpdateScore, this);
+    offEvent(this.scene, Enemy.Events.Death.Local, this.clientHandleEnemyDeath, this);
+    offEvent(this.scene, WaveEvents.WaveStartEvent, this.clientHandleWaveStart, this);
+    offEvent(this.scene, WaveEvents.SpawnEnemyEvent, this.clientHandleSpawnEnemy, this);
+    offEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.clientHandleWeaponPurchased, this);
+    offEvent(this.scene, ScoreEvents.UpdateScoreEvent, this.clientHandleUpdateScore, this);
   }
 }

@@ -12,6 +12,7 @@ import { AWPConfig } from "./AWP";
 import { RevolverConfig } from "./Revolver";
 import { M4Config } from "./M4";
 import { LauncherConfig } from "./Launcher";
+import { createShellCasingTexture } from "../core/entities/ShellCasingEntity";
 
 export const WeaponConfigs: Record<WeaponType, Weapon.Config> = {
   [WeaponType.GLOCK]: GlockConfig,
@@ -27,6 +28,8 @@ export const WeaponConfigs: Record<WeaponType, Weapon.Config> = {
 }
 
 export function preloadWeapons(scene: Phaser.Scene): void {
+  createShellCasingTexture(scene);
+  
   Object.values(WeaponConfigs).forEach(WeaponConfig => {
     if (WeaponConfig.texture.url) {
       scene.load.image(WeaponConfig.texture.key, WeaponConfig.texture.url);

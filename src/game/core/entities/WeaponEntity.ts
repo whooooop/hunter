@@ -14,7 +14,7 @@ import { createLogger } from "../../../utils/logger";
 import { GameplayScene } from "../../scenes/GameplayScene/GameplayScene";
 import { ShellCasingEntity } from "./ShellCasingEntity";
 import { RecoilForceType } from "../types/recoilForce";
-import { emitEvent, onEvent } from "../Events";
+import { emitEvent, offEvent, onEvent } from "../Events";
 import { Weapon, FireParams, AudioAssets } from "../types/weaponTypes";
 import { sleep } from '../../../utils/sleep';
 
@@ -40,6 +40,8 @@ export class WeaponEntity {
 
   private container: Phaser.GameObjects.Container;
   private debugFirePoint!: Phaser.GameObjects.Ellipse;
+
+  private debug: boolean = false;
 
   protected x: number = 0;
   protected y: number = 0;
@@ -67,8 +69,10 @@ export class WeaponEntity {
     this.container.add(this.gameObject);
     this.scene.add.existing(this.container);
 
-    // this.debugFirePoint = this.scene.add.ellipse(0, 0, 10, 10, 0x0000ff);
-    // this.container.add(this.debugFirePoint);
+    if (this.debug) {
+      this.debugFirePoint = this.scene.add.ellipse(0, 0, 10, 10, 0x0000ff);
+      this.container.add(this.debugFirePoint);
+    }
 
     if (this.options.sight) {
       this.createSight(this.options.sight)
@@ -76,7 +80,7 @@ export class WeaponEntity {
 
     this.createAudioAssets();
 
-    onEvent(this.scene, Weapon.Events.FireAction.Remote, this.handleFireAction.bind(this));
+    onEvent(this.scene, Weapon.Events.FireAction.Remote, this.handleFireAction, this);
   }
 
   public getGameObject(): Phaser.GameObjects.Sprite | Phaser.GameObjects.Container {
@@ -206,8 +210,8 @@ export class WeaponEntity {
     return {
       innerX: x + offsetX,
       innerY: y + offsetY,
-      worldX: worldMatrix.tx,
-      worldY: worldMatrix.ty,
+      worldX: worldMatrix.tx + x + offsetX,
+      worldY: worldMatrix.ty + y + offsetY,
     };
   }
 
@@ -233,9 +237,9 @@ export class WeaponEntity {
     const originPoint = { x: worldX, y: worldY };
 
     // Учитываем текущий наклон при создании снаряда
-    const sightX = worldX + 150;
-    const sightY = worldY + Math.tan(this.weaponAngle) * (sightX - worldX);
-    const targetPoint = { x: sightX, y: sightY };
+    const worldSightX = originPoint.x + 150;
+    const worldSightY = originPoint.y + Math.tan(this.weaponAngle) * (worldSightX - originPoint.x);
+    const targetPoint = { x: worldSightX, y: worldSightY };
 
     // Применяем отдачу к игроку с учетом направления
     const recoil = this.options.recoilForce ? this.applyRecoil(this.direction) : null;
@@ -280,7 +284,7 @@ export class WeaponEntity {
 
     // Создаем гильзу после выстрела
     if (this.options.shellCasings && this.scene instanceof GameplayScene) {
-      this.ejectShellCasing(this.x, this.y, this.direction);
+      this.ejectShellCasing(originPoint.x, originPoint.y, this.direction);
     }
 
     this.playFireSound();
@@ -493,7 +497,6 @@ export class WeaponEntity {
       return;
     }
     
-    // Создаем новую гильзу
     new ShellCasingEntity(this.scene, x, y, direction);
   }
 
@@ -502,6 +505,8 @@ export class WeaponEntity {
       this.sight.destroy();
       this.sight = null;
     }
+
+    offEvent(this.scene, Weapon.Events.FireAction.Remote, this.handleFireAction, this);
   }
 
   /**

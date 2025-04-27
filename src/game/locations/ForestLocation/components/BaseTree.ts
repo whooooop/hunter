@@ -3,9 +3,8 @@ import { generateStringWithLength } from '../../../../utils/stringGenerator';
 
 import leafImage from '../assets/images/leaf.png';
 import woodChipImage from '../assets/images/wood_chip.png';
-import { Damage } from '../../../core/types/damage';
 import { DecorEntity } from '../../../core/entities/DecorEntity';
-import { DamageResult } from '../../../core/entities/DamageableEntity';
+import { Damageable } from '../../../core/types/damageableTypes';
 
 const logger = createLogger('Tree');
 
@@ -36,7 +35,8 @@ export class BaseTree extends DecorEntity {
 
   constructor(scene: Phaser.Scene, id: string, x: number, y: number, options: TreeOptions) {
     const gameObject = scene.physics.add.sprite(x, y, options.texture, 0).setScale(options.scale);
-    super(gameObject, id, { health: options.health });
+    
+    super(gameObject, id, { health: options.health, depthOffset: options.depthOffset });
     
     this.scene = scene;
     this.scene.add.existing(this.gameObject);
@@ -50,7 +50,7 @@ export class BaseTree extends DecorEntity {
   /**
    * Обработка получения урона
    */
-  public takeDamage(damage: Damage): DamageResult | null {
+  public takeDamage(damage: Damageable.Damage): Damageable.DamageResult | null {
     const result = super.takeDamage(damage);
 
     if (!result) return null;
@@ -74,7 +74,7 @@ export class BaseTree extends DecorEntity {
    * Обновляет визуальное состояние дерева в зависимости от текущего здоровья
    */
   private updateVisualState(): void {
-      const healthPercent = this.getHealthPercent();
+      const healthPercent = this.damageableController.getHealthPercent();
       this.frameIndex = this.calculateFrameIndex(healthPercent);
       this.gameObject.setFrame(this.frameIndex);
   }
@@ -101,7 +101,7 @@ export class BaseTree extends DecorEntity {
    * Используем прямой подход со спрайтами вместо системы частиц
    */
   private createHitParticles(): void {
-    const healthPercent = this.getHealthPercent();
+    const healthPercent = this.damageableController.getHealthPercent();
 
     // Небольшое количество частиц
     const woodChipCount = healthPercent > 0.4 ? 0 : healthPercent > 0.1 ? 4 : 1;

@@ -15,7 +15,8 @@ export class SpruceTree extends BaseTree {
         super(scene, id, x, y, {
             texture: TEXTURE,
             scale: options.scale,
-            health: options.health
+            health: options.health,
+            depthOffset: -7
         });
     }
 

@@ -1,4 +1,4 @@
-import { onEvent } from "../Events";
+import { offEvent, onEvent } from "../Events";
 import { IncreaseScoreEventPayload, DecreaseScoreEventPayload  } from "../types/scoreTypes";
 import { ScoreEvents } from "../types/scoreTypes";
 import { emitEvent } from "../Events";
@@ -11,9 +11,9 @@ export class ScoreController {
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     
-    onEvent(scene, Game.Events.State.Remote, (payload: Game.Events.State.Payload) => this.handleGameState(payload));
-    onEvent(scene, ScoreEvents.IncreaseScoreEvent, (payload: IncreaseScoreEventPayload) => this.handleIncreaseScore(payload));
-    onEvent(scene, ScoreEvents.DecreaseScoreEvent, (payload: DecreaseScoreEventPayload) => this.handleDecreaseScore(payload));
+    onEvent(scene, Game.Events.State.Remote, this.handleGameState, this);
+    onEvent(scene, ScoreEvents.IncreaseScoreEvent, this.handleIncreaseScore, this);
+    onEvent(scene, ScoreEvents.DecreaseScoreEvent, this.handleDecreaseScore, this);
   }
 
   private handleGameState(payload: Game.Events.State.Payload): void {
@@ -46,4 +46,9 @@ export class ScoreController {
     emitEvent(this.scene, ScoreEvents.UpdateScoreEvent, { playerId: payload.playerId, score });
   }
 
+  public destroy(): void {
+    offEvent(this.scene, Game.Events.State.Remote, this.handleGameState, this);
+    offEvent(this.scene, ScoreEvents.IncreaseScoreEvent, this.handleIncreaseScore, this);
+    offEvent(this.scene, ScoreEvents.DecreaseScoreEvent, this.handleDecreaseScore, this);
+  }
 } 

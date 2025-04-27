@@ -5,7 +5,7 @@ import { LocationBounds } from '../BaseLocation';
 import { WeaponEntity } from './WeaponEntity';
 import { MotionController } from '../controllers/MotionController';
 import { ShadowEntity } from './ShadowEntity';
-import { onEvent } from '../Events';
+import { offEvent, onEvent } from '../Events';
 import { Player } from '../types/playerTypes';
 import { MotionController2 } from '../controllers/MotionController2';
 
@@ -56,17 +56,17 @@ export class PlayerEntity {
     this.container.add(this.shadow);
 
     this.motionController = new MotionController2(scene, this.body, {
-      acceleration: 400,
-      deceleration: 340,
+      acceleration: 700,
+      deceleration: 500,
       friction: 800,
-      maxVelocityX: 300,
-      maxVelocityY: 300,
+      maxVelocityX: 200,
+      maxVelocityY: 200,
       direction: 1,
     });
 
     scene.add.existing(this.container);
 
-    onEvent(scene, Player.Events.State.Remote, this.handlePlayerStateRemote.bind(this));
+    onEvent(scene, Player.Events.State.Remote, this.handlePlayerStateRemote, this);
   }
 
   private handlePlayerStateRemote(payload: Player.Events.State.Payload): void {
@@ -202,5 +202,6 @@ export class PlayerEntity {
     this.container.destroy();
     this.body.destroy();
     this.motionController.destroy();
+    offEvent(this.scene, Player.Events.State.Remote, this.handlePlayerStateRemote, this);
   }
 } 

@@ -1,11 +1,9 @@
 import * as Phaser from 'phaser';
 import { SpawnEnemyPayload, WaveStartEventPayload } from './controllers/WaveController';
 import { WaveEvents } from './controllers/WaveController';
-import { DecalEventPayload } from './types/decals';
-import { ShellCasingEvents } from './entities/ShellCasingEntity';
-import { BloodEvents } from './controllers/BloodController';
+import { Decals } from './types/decals';
 import { Weapon } from './types/weaponTypes';
-import { EnemyDeathPayload, EnemyEntityEvents } from './types/enemyTypes';
+import { Enemy } from './types/enemyTypes';
 import { ScoreEvents, UpdateScoreEventPayload, IncreaseScoreEventPayload, DecreaseScoreEventPayload } from './types/scoreTypes';
 import { Player } from './types/playerTypes';
 import { ShopEvents, WeaponPurchasedPayload } from './types/shopTypes';
@@ -28,11 +26,7 @@ interface EventPayloadMap {
   [WaveEvents.SpawnEnemyEvent]: SpawnEnemyPayload;
 
   // Enemies
-  [EnemyEntityEvents.enemyDeath]: EnemyDeathPayload;
-
-  // Decals
-  [ShellCasingEvents.shellCasingParticleDecal]: DecalEventPayload;
-  [BloodEvents.bloodParticleDecal]: DecalEventPayload;
+  [Enemy.Events.Death.Local]: Enemy.Events.Death.Payload;
 
   // Score
   [ScoreEvents.IncreaseScoreEvent]: IncreaseScoreEventPayload;
@@ -49,16 +43,16 @@ interface EventPayloadMap {
 
   // Shop
   [ShopEvents.WeaponPurchasedEvent]: WeaponPurchasedPayload;
+
+  // Decals
+  [Decals.Events.Local]: Decals.Events.Payload;
 }
 
-// Перегрузка для emitEvent
-// 1. Для событий с payload
 export function emitEvent<E extends keyof EventPayloadMap>(scene: Phaser.Scene, name: E, payload: EventPayloadMap[E]): void;
-// 2. Для событий без payload (void)
 export function emitEvent<E extends keyof EventPayloadMap>(
     scene: Phaser.Scene, 
     name: E, 
-    ...args: EventPayloadMap[E] extends void ? [] : [EventPayloadMap[E]] // Разрешаем payload только если он не void
+    ...args: EventPayloadMap[E] extends void ? [] : [EventPayloadMap[E]]
 ): void {
     scene.events.emit(name, ...args);
 }
@@ -71,7 +65,6 @@ export function onEvent<E extends keyof EventPayloadMap>(
     callback: (payload: EventPayloadMap[E]) => void, 
     context?: any
 ): void;
-// 2. Для событий без payload (void)
 export function onEvent<E extends keyof EventPayloadMap>(
     scene: Phaser.Scene, 
     name: E, 
@@ -79,4 +72,19 @@ export function onEvent<E extends keyof EventPayloadMap>(
     context?: any
 ): void {
     scene.events.on(name, callback, context);
+}
+
+export function offEvent<E extends keyof EventPayloadMap>(
+  scene: Phaser.Scene, 
+  name: E, 
+  callback: (payload: EventPayloadMap[E]) => void, 
+  context?: any
+): void;
+export function offEvent<E extends keyof EventPayloadMap>(
+  scene: Phaser.Scene, 
+  name: E, 
+  callback: EventPayloadMap[E] extends void ? () => void : (payload: EventPayloadMap[E]) => void, 
+  context?: any
+): void {
+  scene.events.off(name, callback, context);
 }

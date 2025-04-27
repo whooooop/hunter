@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { createLogger } from '../../../utils/logger';
 import { settings } from '../../settings';
-import { DecalEventPayload } from '../types/decals';
+import { Decals } from '../types/decals';
 import { emitEvent } from '../Events';
 
 const logger = createLogger('BaseBlood');
@@ -94,10 +94,6 @@ const defaultBloodOptions: BloodSplashOptions = {
     depth: 10,
     texture: BLOOD_TEXTURES.basic,
 };
-
-export enum BloodEvents {
-  bloodParticleDecal = 'bloodParticleDecal',
-}
 
 export class BloodController {
   private scene: Phaser.Scene;
@@ -309,7 +305,7 @@ export class BloodController {
   }
   
   drawDecal(particle: Phaser.GameObjects.Sprite): void {
-    emitEvent(this.scene, BloodEvents.bloodParticleDecal, { particle, x: particle.x, y: particle.y });
+    emitEvent(this.scene, Decals.Events.Local, { object: particle, x: particle.x, y: particle.y, type: 'blood' });
   }
 }
 

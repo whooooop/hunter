@@ -102,7 +102,7 @@ export class ForestLocation extends BaseLocation {
     this.bounds.right = this.width;
     
     // Верхняя граница - верхний край земли (небо недоступно)
-    this.bounds.top = this.skyHeight + 10; // Отступ от неба
+    this.bounds.top = this.skyHeight - 40; // Отступ от неба
     
     // Нижняя граница - низ экрана
     this.bounds.bottom = this.height;

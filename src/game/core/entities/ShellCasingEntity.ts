@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { hexToNumber } from '../../utils/colors';
-import { DecalEventPayload } from '../types/decals';
+import { Decals } from '../types/decals';
 import { emitEvent } from '../Events';
 
 const defaultOptions = {
@@ -10,10 +10,6 @@ const defaultOptions = {
   bounce: 1,           // Коэффициент отскока
   scale: 0.35,         // Масштаб гильз
   dragX: 100,          // Трение по X для остановки гильз
-}
-
-export enum ShellCasingEvents {
-  shellCasingParticleDecal = 'shellCasingParticleDecal',
 }
 
 /**
@@ -31,20 +27,18 @@ export class ShellCasingEntity extends Phaser.Physics.Arcade.Sprite {
    * @param direction Направление выстрела (1 вправо, -1 влево)
    */
   constructor(scene: Phaser.Scene, x: number, y: number, direction: number) {
-    // Слегка смещаем позицию гильзы относительно точки выстрела
     const offsetX = direction > 0 ? -15 : 15;
-    const offsetY = -10; // Немного выше точки выстрела
-    
-    // Получаем координаты для создания гильзы
+    const offsetY = -10;
     const shellX = x + offsetX;
     const shellY = y + offsetY;
     
     super(scene, shellX, shellY, 'shell_casing');
+
     scene.add.existing(this);
     scene.physics.add.existing(this);
     
     this.setScale(defaultOptions.scale);
-    this.setDepth(100); // Устанавливаем высокую глубину отображения
+    this.setDepth(100);
     
     // Устанавливаем пол для гильзы немного ниже места появления
     // Y + 20 должно быть близко к ногам персонажа, не давая гильзе упасть слишком низко
@@ -52,6 +46,8 @@ export class ShellCasingEntity extends Phaser.Physics.Arcade.Sprite {
   
     // Применяем физические свойства
     this.applyPhysics(direction);
+
+    this.scene.events.on('update', this.update, this);
   }
   
   /**
@@ -91,9 +87,7 @@ export class ShellCasingEntity extends Phaser.Physics.Arcade.Sprite {
   /**
    * Обновляет состояние гильзы (вызывается каждый кадр)
    */
-  preUpdate(time: number, delta: number): void {
-    super.preUpdate(time, delta);
-    
+  update(time: number, delta: number): void {
     if (!this.body) return;
     
     // Проверяем, достигла ли гильза своего уровня пола
@@ -144,11 +138,16 @@ export class ShellCasingEntity extends Phaser.Physics.Arcade.Sprite {
       if (this.active && this.body) {
         // Если скорость гильзы близка к нулю, она лежит спокойно
         if (Math.abs(this.body.velocity.x) < 5) {
-          emitEvent(this.scene, ShellCasingEvents.shellCasingParticleDecal, { particle: this, x: this.x, y: this.y });
+          emitEvent(this.scene, Decals.Events.Local, { object: this, x: this.x, y: this.y, type: 'shellCasing' });
           this.destroy();
         }
       }
     });
+  }
+
+  public destroy(): void {
+    this.scene.events.off('update', this.update, this);
+    super.destroy();
   }
 } 
 

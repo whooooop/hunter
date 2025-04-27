@@ -10,7 +10,7 @@ export const settings = {
         musicVolume: 0.5,
     },
     gameplay: {
-        depthOffset: 100,
+        depthOffset: 1,
         shellCasings: {
             enabled: true,
             decals: true,

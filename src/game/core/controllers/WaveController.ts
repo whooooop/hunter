@@ -1,7 +1,8 @@
 import { generateId } from "../../../utils/stringGenerator";
-import { EnemyType, preloadEnemies } from "../../enemies";
-import { emitEvent, onEvent } from "../Events";
+import { Enemy } from "../types/enemyTypes";
+import { emitEvent, offEvent, onEvent } from "../Events";
 import { Game } from "../types/gameTypes";
+import { preloadEnemies } from "../../enemies";
 
 export enum WaveEvents {
   WaveStartEvent = 'WaveStartEvent',
@@ -10,7 +11,7 @@ export enum WaveEvents {
 
 export interface SpawnEnemyPayload {
   id: string;
-  enemyType: EnemyType;
+  enemyType: Enemy.Type;
   position: { x: number, y: number };
   options: any;
 }
@@ -28,7 +29,7 @@ export interface Wave {
 export interface Spawn {
   delay: number;
   position: [number, number];
-  enemyType: EnemyType;
+  enemyType: Enemy.Type;
   options: any;
 }
 
@@ -42,7 +43,7 @@ export class WaveController {
     this.waves = waves;
     this.currentWave = 0;
 
-    onEvent(scene, Game.Events.State.Remote, (payload: Game.Events.State.Payload) => this.handleGameState(payload));
+    onEvent(scene, Game.Events.State.Remote, this.handleGameState, this);
   }
 
   private handleGameState(payload: Game.Events.State.Payload): void {
@@ -54,7 +55,7 @@ export class WaveController {
   }
 
   static preloadEnemies(scene: Phaser.Scene, waves: Wave[]) {
-    const enemys = new Set<EnemyType>();
+    const enemys = new Set<Enemy.Type>();
     waves.forEach(wave => {
       wave.spawns.forEach(spawn => {
         enemys.add(spawn.enemyType);
@@ -120,4 +121,8 @@ export class WaveController {
       this.waves[this.currentWave].delay -= delta;
     }
   } 
+
+  public destroy(): void {
+    offEvent(this.scene, Game.Events.State.Remote, this.handleGameState, this);
+  }
 }

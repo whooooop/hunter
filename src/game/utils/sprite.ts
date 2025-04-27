@@ -3,7 +3,6 @@ export type SpriteSheetConfig = {
   url: string;
   frameWidth: number;
   frameHeight: number;
-  scale?: number;
   frameRate?: number;
   startFrame?: number;
   endFrame?: number;

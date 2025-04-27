@@ -5,7 +5,7 @@ import { PlayerEntity } from "../entities/PlayerEntity";
 import { createLogger } from "../../../utils/logger";
 import { generateId } from "../../../utils/stringGenerator";
 import { Player } from "../types/playerTypes";
-import { emitEvent, onEvent } from "../Events";
+import { emitEvent, offEvent, onEvent } from "../Events";
 import { ShopEvents } from "../types/shopTypes";
 import { WeaponPurchasedPayload } from "../types/shopTypes";
 import { Game } from "../types/gameTypes";
@@ -23,9 +23,9 @@ export class WeaponController {
     this.scene = scene;
     this.players = players;
 
-    onEvent(scene, Game.Events.State.Remote, (payload: Game.Events.State.Payload) => this.handleGameState(payload));
-    onEvent(this.scene, Player.Events.SetWeapon.Remote, this.handleSetWeaponActionRemote.bind(this));
-    onEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased.bind(this));
+    onEvent(scene, Game.Events.State.Remote, this.handleGameState, this);
+    onEvent(scene, Player.Events.SetWeapon.Remote, this.handleSetWeaponActionRemote, this);
+    onEvent(scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
   }
 
   private handleWeaponPurchased({ playerId, weaponType }: WeaponPurchasedPayload): void {
@@ -113,5 +113,11 @@ export class WeaponController {
     } else {
       logger.warn('Player not found', playerId);
     }
+  }
+
+  public destroy(): void {
+    offEvent(this.scene, Game.Events.State.Remote, this.handleGameState, this);
+    offEvent(this.scene, Player.Events.SetWeapon.Remote, this.handleSetWeaponActionRemote, this);
+    offEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
   }
 }

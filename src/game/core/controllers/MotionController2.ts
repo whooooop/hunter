@@ -2,6 +2,7 @@ import { settings } from "../../settings";
 import { createLogger } from "../../../utils/logger";
 import { forceToTargetOffset, easeOutQuart, easeOutQuint } from "../../utils/ForceUtils";
 import { LocationBounds } from "../BaseLocation";
+import { hexToNumber } from "../../utils/colors";
 
 const logger = createLogger('MotionController');
 
@@ -60,6 +61,8 @@ export class MotionController2 {
   protected defaultForceStrength: number = 0.15; // Сила воздействия (чем больше, тем быстрее)
   protected forceThreshold: number = 0.01; // Порог для удаления силы
 
+  private debug: boolean = true;
+  private debugGraphics: Phaser.GameObjects.Graphics | null = null;
   // private debugRect: Phaser.GameObjects.Rectangle;
 
   constructor(scene: Phaser.Scene, body: Phaser.Physics.Arcade.Body, options: MotionControllerOptions) {
@@ -73,6 +76,10 @@ export class MotionController2 {
         this.body.setMaxVelocity(this.options.maxVelocityX, this.options.maxVelocityY);
     }
     // this.debugRect = scene.add.rectangle(this.body.x, this.body.y, this.body.width, this.body.height, 0x0000ff, 0.5);
+
+    if (this.debug) {
+      this.debugGraphics = scene.add.graphics();
+    }
   }
 
   public getDepth(): number {
@@ -111,9 +118,6 @@ export class MotionController2 {
     // Обновляем движение от внешних воздействий (отдача, ветер и т.д.) - все еще меняет позицию напрямую
     this.updateExternalForces(delta);
     
-    // Обновление позиции X и Y теперь выполняется физическим движком Phaser
-    // gameObject.x/y обновляются автоматически на основе body.velocity
-
     // Если прыгаем, устанавливаем Y на основе jumpStartY и jumpOffsetY, переписывая физику
     if (this.isJumping) {
       this.body.y = this.jumpStartY + this.jumpOffsetY;
@@ -126,7 +130,16 @@ export class MotionController2 {
         this.body.y = Math.max(this.locationBounds.top + halfHeight, Math.min(this.locationBounds.bottom - halfHeight, this.body.y));
       }
     }
-    // this.debugRect.setPosition(this.body.x, this.body.y).setDepth(this.getDepth());
+
+    if (this.debugGraphics) {
+      this.debugGraphics.clear();
+      this.debugGraphics.setDepth(1000);
+      this.debugGraphics.fillStyle(hexToNumber('#d23a3a'));
+      this.debugGraphics.fillRect(this.body.x - this.body.width / 2, this.getDepth(), this.body.width, 1);
+
+      // this.debugGraphics.lineStyle(2, hexToNumber('#fbb52f'), 1);
+      // this.debugGraphics.strokeRect(this.body.x - this.body.width / 2, this.body.y - this.body.height / 2, this.body.width, this.body.height);
+    }
   }
 
   public getPosition(): { x: number, y: number, jumpHeight: number, depth: number } {
@@ -269,5 +282,7 @@ export class MotionController2 {
     return this.direction;
   }
 
-  public destroy(): void {}
+  public destroy(): void {
+    this.debugGraphics?.destroy();
+  }
 }

@@ -1,26 +1,29 @@
-import { RabbitEnemy } from "./rabbit/RabbitEntity";
 import { EnemyEntity } from "../core/entities/EnemyEntity";
-import { EnemyEntityOptions } from "../core/types/enemyTypes";
-import { SquirrelEnemy } from "./squireel/SquirrelEnemy";
+import { Enemy } from "../core/types/enemyTypes";
+import { loadSpriteSheet } from "../utils/sprite";
+import { RabbitConfig } from "./rabbit/configs";
 
-export enum EnemyType {
-  RABBIT = 'rabbit',
-  SQUIRREL = 'squirrel',
+export const EnemyConfigs: Record<Enemy.Type, Enemy.Config> = {
+  [Enemy.Type.RABBIT]: RabbitConfig,
 }
 
-export const EnemyCollection = {
-  [EnemyType.RABBIT]: RabbitEnemy,
-  [EnemyType.SQUIRREL]: SquirrelEnemy,
-}
-
-export function preloadEnemies(scene: Phaser.Scene, enemies: EnemyType[]): void {
+export function preloadEnemies(scene: Phaser.Scene, enemies: Enemy.Type[]): void {
   enemies.forEach(enemy => {
-    const EnemyClass = EnemyCollection[enemy];
-    EnemyClass.preload(scene);
+    const EnemyConfig = EnemyConfigs[enemy];
+    if (EnemyConfig.animations.walk) {
+      loadSpriteSheet(scene, EnemyConfig.animations.walk);
+    }
+    if (EnemyConfig.animations.death) {
+      loadSpriteSheet(scene, EnemyConfig.animations.death);
+    }
   });
 }
 
-export function createEnemy(id: string, enemyType: EnemyType, scene: Phaser.Scene, x: number, y: number, options?: any | EnemyEntityOptions): EnemyEntity {
-  const EnemyClass = EnemyCollection[enemyType];
-  return new EnemyClass(scene, id, x, y, options);
+export function getEnemyConfig(enemyType: Enemy.Type): Enemy.Config {
+  return EnemyConfigs[enemyType];
+}
+
+export function createEnemy(id: string, enemyType: Enemy.Type, scene: Phaser.Scene, x: number, y: number, options?: any | Enemy.Config): EnemyEntity {
+  const EnemyConfig = getEnemyConfig(enemyType);
+  return new EnemyEntity(scene, id, x, y, EnemyConfig);
 }
