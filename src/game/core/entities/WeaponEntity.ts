@@ -496,8 +496,8 @@ export class WeaponEntity {
     if (!settings.gameplay.shellCasings.enabled) {
       return;
     }
-    
-    new ShellCasingEntity(this.scene, x, y, direction);
+    const matrix = this.gameObject.getWorldTransformMatrix();
+    new ShellCasingEntity(this.scene, matrix.tx, y, direction);
   }
 
   public destroy(): void {

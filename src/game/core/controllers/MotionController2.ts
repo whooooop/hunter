@@ -61,7 +61,7 @@ export class MotionController2 {
   protected defaultForceStrength: number = 0.15; // Сила воздействия (чем больше, тем быстрее)
   protected forceThreshold: number = 0.01; // Порог для удаления силы
 
-  private debug: boolean = true;
+  private debug: boolean = false;
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
   // private debugRect: Phaser.GameObjects.Rectangle;
 
