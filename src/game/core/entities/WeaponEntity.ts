@@ -38,6 +38,9 @@ export class WeaponEntity {
   protected weaponAngle: number = 0; // Текущий угол наклона оружия
   protected options: Weapon.Config;
 
+  private container: Phaser.GameObjects.Container;
+  private debugFirePoint!: Phaser.GameObjects.Ellipse;
+
   protected x: number = 0;
   protected y: number = 0;
   protected direction: number = 1;
@@ -58,17 +61,26 @@ export class WeaponEntity {
     this.options = options;
     this.currentAmmo = this.options.magazineSize;
 
+    this.gameObject = this.scene.add.sprite(0, 0, this.options.texture.key);
+    this.gameObject.setScale(this.options.texture.scale);
+    this.container = scene.add.container(0, 0);
+    this.container.add(this.gameObject);
+    this.scene.add.existing(this.container);
+
+    // this.debugFirePoint = this.scene.add.ellipse(0, 0, 10, 10, 0x0000ff);
+    // this.container.add(this.debugFirePoint);
+
     if (this.options.sight) {
       this.createSight(this.options.sight)
     }
 
-    this.gameObject = this.scene.add.sprite(0, 0, this.options.texture.key);
-    this.gameObject.setScale(this.options.texture.scale);
-    this.scene.add.existing(this.gameObject);
-    
     this.createAudioAssets();
 
     onEvent(this.scene, Weapon.Events.FireAction.Remote, this.handleFireAction.bind(this));
+  }
+
+  public getGameObject(): Phaser.GameObjects.Sprite | Phaser.GameObjects.Container {
+    return this.container;
   }
 
   private handleFireAction({ playerId, weaponId, originPoint, targetPoint, angleTilt }: Weapon.Events.FireAction.Payload): void {
@@ -83,6 +95,11 @@ export class WeaponEntity {
     } else {
       this.sight = new SightEntity(this.scene, options);
     }
+    const { innerX, innerY } = this.getFirePoint();
+
+    this.sight.setPosition(innerX, innerY, this.direction);
+
+    this.container.add(this.sight.getGameObject());
     this.updateSightState();
   }
 
@@ -178,12 +195,20 @@ export class WeaponEntity {
     });
   }
 
-  public getFirePoint(): [number, number] {
+  public getFirePoint(): { innerX: number, innerY: number, worldX: number, worldY: number } {
     const offsetX = this.options?.firePointOffset?.[0] || 0;
     const offsetY = this.options?.firePointOffset?.[1] || 0;
-    const x = this.gameObject.x + this.gameObject.width * this.gameObject.scale / 2;
-    const y = this.gameObject.y;
-    return [x + offsetX, y + offsetY];
+    const x = this.gameObject.width * this.gameObject.scale / 2;
+    const y = 0;
+
+    const worldMatrix = this.container.getWorldTransformMatrix();
+
+    return {
+      innerX: x + offsetX,
+      innerY: y + offsetY,
+      worldX: worldMatrix.tx,
+      worldY: worldMatrix.ty,
+    };
   }
 
   public fire({ playerId }: FireParams): RecoilForceType | null {
@@ -204,12 +229,12 @@ export class WeaponEntity {
 
     this.lastEmptySoundTime = this.scene.time.now;
 
-    const [originPointX, originPointY] = this.getFirePoint();
-    const originPoint = { x: originPointX, y: originPointY };
+    const { worldX, worldY } = this.getFirePoint();
+    const originPoint = { x: worldX, y: worldY };
 
     // Учитываем текущий наклон при создании снаряда
-    const sightX = originPointX + 150;
-    const sightY = originPointY + Math.tan(this.weaponAngle) * (sightX - originPointX);
+    const sightX = worldX + 150;
+    const sightY = worldY + Math.tan(this.weaponAngle) * (sightX - worldX);
     const targetPoint = { x: sightX, y: sightY };
 
     // Применяем отдачу к игроку с учетом направления
@@ -387,10 +412,9 @@ export class WeaponEntity {
     // Постепенно возвращаем оружие в нормальное положение
     this.updateWeaponTilt(time, delta);
 
-    if (this.sight) {
-      const [firePointX, firePointY] = this.getFirePoint();
-      const [sightX, sightY] = this.sight.getSightPoint();
-      this.sight.setPosition(sightX, firePointY, this.direction);
+    if (this.debugFirePoint) {
+      const { innerX, innerY } = this.getFirePoint();
+      this.debugFirePoint.setDepth(1000).setPosition(innerX, innerY);
     }
   }
 
@@ -432,10 +456,11 @@ export class WeaponEntity {
 
     this.x = x + offsetX;
     this.y = y + offsetY;
-    this.gameObject.setPosition(this.x, this.y);
+    this.container.setPosition(this.x, this.y);
 
     if (this.sight) {
-      this.sight.setPosition(x, y, direction);
+      const { innerX, innerY } = this.getFirePoint();
+      this.sight.setPosition(innerX, innerY, direction);
     } 
 
     return this;

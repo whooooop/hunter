@@ -53,9 +53,9 @@ export class KeyBoardController {
   }
 
   private handleJump(time: number, delta: number): void {
-    // if (this.jumpKey.isDown && !this.isJumping) {
-    //   this.startJump();
-    // }
+    if (this.jumpKey.isDown) {
+      this.getPlayer()?.jump();
+    }
   }
 
   private handleFire(time: number, delta: number): void {

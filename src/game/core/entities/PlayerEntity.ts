@@ -7,6 +7,7 @@ import { MotionController } from '../controllers/MotionController';
 import { ShadowEntity } from './ShadowEntity';
 import { onEvent } from '../Events';
 import { Player } from '../types/playerTypes';
+import { MotionController2 } from '../controllers/MotionController2';
 
 const TEXTURE_PLAYER = 'player';
 
@@ -18,8 +19,10 @@ export class PlayerEntity {
   private id: string;
   private scene: Phaser.Scene;
   private gameObject: Phaser.Physics.Arcade.Sprite;
+  private container: Phaser.GameObjects.Container;
+  private body: Phaser.Physics.Arcade.Body;
 
-  private motionController: MotionController;
+  private motionController: MotionController2;
   private canChangeDirection: boolean = false;
 
   private currentWeapon!: WeaponEntity | null;
@@ -32,17 +35,6 @@ export class PlayerEntity {
   private targetX: number | null = null;
   private targetY: number | null = null;
 
-  // Параметры прыжка
-  public isJumping: boolean = false;
-  private jumpHeight: number = 40; // Максимальная высота прыжка
-  private jumpProgress: number = 0; // Прогресс прыжка (0-1)
-  private jumpDuration: number = 500; // Длительность прыжка в мс
-  private jumpTimer: number = 0; // Таймер прыжка
-  private jumpOffsetY: number = 0; // Текущее смещение по Y из-за прыжка
-  
-  // Границы локации
-  private locationBounds: LocationBounds | null = null;
-
   private shadow: ShadowEntity;
 
   static preload(scene: Phaser.Scene): void {
@@ -52,21 +44,27 @@ export class PlayerEntity {
   constructor(scene: Phaser.Scene, id: string, x: number, y: number) {
     this.id = id;
     this.scene = scene;
-    this.gameObject = scene.physics.add.sprite(x, y, TEXTURE_PLAYER);
+    this.gameObject = scene.physics.add.sprite(0, 0, TEXTURE_PLAYER);
     this.gameObject.setScale(0.5);
 
     this.shadow = new ShadowEntity(scene, this.gameObject);
 
-    this.motionController = new MotionController(scene, this.gameObject, {
-      acceleration: 20,
-      deceleration: 14,
-      friction: 10,
+    this.body = scene.physics.add.body(x, y, this.gameObject.width * this.gameObject.scale, this.gameObject.height * this.gameObject.scale);
+
+    this.container = scene.add.container(x, y);
+    this.container.add(this.gameObject);
+    this.container.add(this.shadow);
+
+    this.motionController = new MotionController2(scene, this.body, {
+      acceleration: 400,
+      deceleration: 340,
+      friction: 800,
       maxVelocityX: 300,
       maxVelocityY: 300,
       direction: 1,
     });
 
-    scene.add.existing(this.gameObject);
+    scene.add.existing(this.container);
 
     onEvent(scene, Player.Events.State.Remote, this.handlePlayerStateRemote.bind(this));
   }
@@ -86,15 +84,20 @@ export class PlayerEntity {
   }
 
   public getPosition(): [number, number] {
-    return [this.gameObject.x, this.gameObject.y];
+    return [this.body.x, this.body.y];
   }
 
   public setWeapon(weapon: WeaponEntity): void {
+    if (this.currentWeapon) {
+      this.container.remove(this.currentWeapon.getGameObject());
+    }
     this.currentWeapon = weapon
+    this.currentWeapon.setPosition(0, 0, this.direction);
+    this.container.add(weapon.getGameObject());
   }
 
   public setLocationBounds(bounds: LocationBounds): void {
-    this.locationBounds = bounds;
+    this.motionController.setLocationBounds(bounds);
   }
   
   /**
@@ -105,6 +108,9 @@ export class PlayerEntity {
   }
   
   public update(time: number, delta: number): void {
+    this.motionController.update(time, delta);
+    const position = this.motionController.getPosition();
+
     // Интерполяция к целевой позиции
     if (this.targetX && this.targetY) {
       const lerpFactor = 0.15; // Коэффициент сглаживания (0-1). Меньше значение -> плавнее движение.
@@ -117,18 +123,11 @@ export class PlayerEntity {
       // }
     }
 
-    // Ограничиваем позицию игрока внутри границ локации
-    if (this.locationBounds) {
-      this.constrainPosition(this.locationBounds);
-    }
-    this.motionController.update(time, delta);
-    
-    this.shadow.update(time, delta);
-     
-    // Обрабатываем стрельбу и обновляем оружие только если оно назначено
+    this.container.setDepth(position.depth);
+    this.container.setPosition(position.x, position.y);
+    this.shadow.update(time, delta, position.jumpHeight);
+
     if (this.currentWeapon) {
-      this.currentWeapon.setPosition(this.gameObject.x, this.gameObject.y, this.direction);
-      this.currentWeapon.setDepth(this.gameObject.depth + 1);
       this.currentWeapon.update(time, delta);
     }
   }
@@ -136,7 +135,7 @@ export class PlayerEntity {
   public getPlayerState(): Player.Events.State.Payload {
     return { 
       playerId: this.id, 
-      position: { x: this.gameObject.x, y: this.gameObject.y } 
+      position: { x: this.container.x, y: this.container.y } 
     };
   }
   
@@ -150,35 +149,10 @@ export class PlayerEntity {
   /**
    * Запускает прыжок игрока
    */
-  private startJump(): void {
-    this.isJumping = true;
-    this.jumpProgress = 0;
-    this.jumpTimer = 0;
+  public jump(): void {
+    this.motionController.jump();
   }
-  
-  /**
-   * Обрабатывает логику прыжка
-   */
-  // private handleJump(time: number, delta: number): void {
-  //   if (!this.isJumping) return;
-    
-  //   // Увеличиваем таймер прыжка
-  //   this.jumpTimer += delta;
-    
-  //   // Рассчитываем прогресс прыжка (0-1)
-  //   this.jumpProgress = Math.min(this.jumpTimer / this.jumpDuration, 1);
-    
-  //   // Если прыжок завершился
-  //   if (this.jumpProgress >= 1) {
-  //     this.isJumping = false;
-  //     this.jumpOffsetY = 0;
-  //     return;
-  //   }
-    
-  //   // Рассчитываем смещение по синусоиде для плавного прыжка
-  //   // sin(π * progress) даст нам плавную дугу, которая поднимается и опускается
-  //   this.jumpOffsetY = this.jumpHeight * Math.sin(Math.PI * this.jumpProgress);
-  // }
+
   
   // private handleDirectionChange(direction: number): void {
   //   if (this.canChangeDirection) {
@@ -219,25 +193,14 @@ export class PlayerEntity {
     this.currentWeapon?.reload();
   }
 
-  /**
-   * Ограничивает позицию игрока внутри заданных границ
-   */
-  private constrainPosition(bounds: LocationBounds): void {
-    if (bounds) {
-      this.gameObject.x = Math.max(bounds.left, Math.min(bounds.right, this.gameObject.x));
-      this.gameObject.y = Math.max(bounds.top, Math.min(bounds.bottom, this.gameObject.y));
-    }
-  }
-
   // Геттер для получения текущего направления игрока
   public getDirection(): number {
     return this.direction;
   }
 
   public destroy(): void {
-    this.gameObject.destroy();
-    this.shadow.destroy();
+    this.container.destroy();
+    this.body.destroy();
     this.motionController.destroy();
-    this.currentWeapon = null;
   }
 } 

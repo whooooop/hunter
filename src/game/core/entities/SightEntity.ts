@@ -49,13 +49,11 @@ export class SightEntity {
     this.options = {...defaultOptions, ...options};
     this.color = this.options.color;
     this.range = this.options.range;
-    // Создаем графический объект для прицела
     this.graphics = this.scene.add.graphics();
-    this.graphics.setDepth(1000); // Устанавливаем высокую глубину отображения
   }
 
-  public getSightPoint(): [number, number] {
-    return [this.x, this.y];
+  public getGameObject(): Phaser.GameObjects.Graphics {
+    return this.graphics;
   }
 
   public setPosition(x: number, y: number, direction: number): void {
@@ -93,7 +91,7 @@ export class SightEntity {
 
   private drawRay(): void {
     this.graphics.lineStyle(this.options.lineThickness, this.color, this.options.alpha);
-    this.graphics.lineBetween(this.x + this.range, this.y, this.x + settings.display.width * this.direction, this.y);
+    this.graphics.lineBetween(this.x, this.y, this.x + settings.display.width * this.direction, this.y);
   } 
 
   private drawCrosshair(): void {

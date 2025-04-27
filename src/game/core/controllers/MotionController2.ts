@@ -36,8 +36,7 @@ interface ExternalForce {
   friction: number;        // Коэффициент трения для этой силы
 }
 
-export class MotionController {
-  private gameObject: Phaser.Physics.Arcade.Sprite;
+export class MotionController2 {
   private scene: Phaser.Scene;
   private body: Phaser.Physics.Arcade.Body;
   private options: MotionControllerOptions;
@@ -61,26 +60,24 @@ export class MotionController {
   protected defaultForceStrength: number = 0.15; // Сила воздействия (чем больше, тем быстрее)
   protected forceThreshold: number = 0.01; // Порог для удаления силы
 
-  constructor(scene: Phaser.Scene, gameObject: Phaser.Physics.Arcade.Sprite, options: MotionControllerOptions) {
+  // private debugRect: Phaser.GameObjects.Rectangle;
+
+  constructor(scene: Phaser.Scene, body: Phaser.Physics.Arcade.Body, options: MotionControllerOptions) {
     this.scene = scene;
-    this.gameObject = gameObject;
+    this.body = body;
     this.options = options;
-    this.body = gameObject.body as Phaser.Physics.Arcade.Body;
 
     // Настраиваем физические свойства тела
     if (this.body) {
         this.body.setDrag(this.options.friction); // Используем friction как drag
         this.body.setMaxVelocity(this.options.maxVelocityX, this.options.maxVelocityY);
-        // Убедимся, что гравитация для этого тела включена, если она нужна глобально
-        // this.body.setAllowGravity(true); 
-    } else {
-        logger.warn('Physics body not found for MotionController');
     }
+    // this.debugRect = scene.add.rectangle(this.body.x, this.body.y, this.body.width, this.body.height, 0x0000ff, 0.5);
   }
 
   public getDepth(): number {
     const depthOffset = this.options.depthOffset || 0;
-    return this.gameObject.y + (this.gameObject.height / 2) * this.gameObject.scale + depthOffset + settings.gameplay.depthOffset;
+    return this.body.y + (this.body.height / 2) + depthOffset + settings.gameplay.depthOffset - this.jumpOffsetY;
   }
 
   public setMove(moveX: number, moveY: number): void {
@@ -109,10 +106,8 @@ export class MotionController {
 
   public update(time: number, delta: number): void {
     // Ускорение и максимальная скорость теперь обрабатываются физикой через setMove
-    this.handleJump(time, delta); // Обработка прыжка (вычисляет jumpOffsetY, меняет gameObject.y)
+    this.handleJump(time, delta);
 
-    // Трение/замедление обрабатывается через body.drag
-    
     // Обновляем движение от внешних воздействий (отдача, ветер и т.д.) - все еще меняет позицию напрямую
     this.updateExternalForces(delta);
     
@@ -121,20 +116,26 @@ export class MotionController {
 
     // Если прыгаем, устанавливаем Y на основе jumpStartY и jumpOffsetY, переписывая физику
     if (this.isJumping) {
-      this.gameObject.y = this.jumpStartY + this.jumpOffsetY;
+      this.body.y = this.jumpStartY + this.jumpOffsetY;
     }
     if (this.locationBounds) {
-      this.gameObject.x = Math.max(this.locationBounds.left, Math.min(this.locationBounds.right, this.gameObject.x));
+      const halfWidth = this.body.width / 2;
+      const halfHeight = this.body.height / 2;
+      this.body.x = Math.max(this.locationBounds.left + halfWidth, Math.min(this.locationBounds.right - halfWidth, this.body.x));
       if (!this.isJumping) {
-        this.gameObject.y = Math.max(this.locationBounds.top, Math.min(this.locationBounds.bottom, this.gameObject.y));
+        this.body.y = Math.max(this.locationBounds.top + halfHeight, Math.min(this.locationBounds.bottom - halfHeight, this.body.y));
       }
     }
-    // Обновляем глубину отображения
-    this.gameObject.setDepth(this.getDepth());
+    // this.debugRect.setPosition(this.body.x, this.body.y).setDepth(this.getDepth());
   }
 
-  public getPosition(): [number, number] {
-    return [this.gameObject.body?.x || 0, this.gameObject.body?.y || 0];
+  public getPosition(): { x: number, y: number, jumpHeight: number, depth: number } {
+    return {
+      x: this.body.x,
+      y: this.body.y,
+      jumpHeight: this.jumpOffsetY,
+      depth: this.getDepth(),
+    };
   }
 
   public setLocationBounds(bounds: LocationBounds): void {
@@ -147,7 +148,7 @@ export class MotionController {
     this.jumpHeight = height;
     this.jumpDuration = duration;
     this.jumpOffsetY = 0;
-    this.jumpStartY = this.gameObject.y;
+    this.jumpStartY = this.body.y;
     this.isJumping = true;
   }
 
@@ -163,7 +164,7 @@ export class MotionController {
     if (jumpProgress >= 1) {
       this.isJumping = false;
       this.jumpOffsetY = 0;
-      this.gameObject.y = this.jumpStartY;
+      this.body.y = this.jumpStartY;
       return;
     }
   }
@@ -260,7 +261,8 @@ export class MotionController {
     
     // Применяем итоговое смещение к спрайту с учетом дельты времени
     // Делим на 16, чтобы нормализовать смещение относительно дельты (~16ms за фрейм при 60 FPS)
-    this.gameObject.x += totalOffsetX * (delta);
+    this.body.x += totalOffsetX * (delta / 16);
+    // this.body.y += totalOffsetY * (delta / 16);
   }
 
   public getDirection(): number {
