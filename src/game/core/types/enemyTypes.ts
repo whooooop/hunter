@@ -1,5 +1,4 @@
-import { ScoreKill } from "../../../types/score";
-import { SpriteSheetConfig } from "../../utils/sprite";
+import { WeaponType } from "../../weapons/WeaponTypes";
 import { ShadowEntityOptions } from "../entities/ShadowEntity";
 
 export namespace Enemy {
@@ -17,9 +16,10 @@ export namespace Enemy {
     }
   }
 
+  export type Body = 'head' | 'body' | 'eye';
+
   export interface Config {
     health: number;
-    score: ScoreKill;
     debug?: boolean;
     shadow?: ShadowEntityOptions
     scale: number;
@@ -39,20 +39,43 @@ export namespace Enemy {
       direction: number;
     }
 
-    body: {
-      main: Body;
-      head?: Body;
-    }
+    baunds: Bounds;
+
+    damageMultiplier?: Partial<Record<Body, number>>;
+
+    score: ScoreRule[];
+
+    killCombo?: killCombo[];
 
     animations: Animation[];
   }
 
-  export interface Body {
+  interface ScoreRule {
+    target: Body;
+    weapon?: WeaponType;
+    kill: boolean;
+    value: number;
+  }
+
+  type Bounds = {
+    body: Bound;
+  } & Partial<Record<Exclude<Body, 'body'>, Bound>>;
+
+  interface Bound {
     x: number;
     y: number;
     width: number;
     height: number;
-    damageMultiplier?: number;
+  }
+
+  interface killCombo {
+    rules: KillComboRule[];
+    value: number;
+  }
+
+  interface KillComboRule {
+    target: Body;
+    weapon: WeaponType;
   }
 
   export interface Animation {
@@ -67,5 +90,5 @@ export namespace Enemy {
     repeat: number;
   }
 
-  export type AnimationName = string;
+  export type AnimationName = 'walk' | 'death';
 }

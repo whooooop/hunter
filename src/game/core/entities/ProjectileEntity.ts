@@ -246,7 +246,6 @@ export class ProjectileEntity {
       const multiplier = Math.max(0, 1 - (distance / radius));
       return this.damage * multiplier;
     }
-
     return this.damage;
   }
 

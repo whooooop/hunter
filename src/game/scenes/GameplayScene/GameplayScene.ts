@@ -131,7 +131,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private singlePlayerInit(playerId: string): void {
     this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
-    this.setWeapon(playerId, WeaponType.M4);
+    this.setWeapon(playerId, WeaponType.GLOCK);
     this.waveController.start();
     this.projectileController.setSimulate(false);
   }

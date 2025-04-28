@@ -25,6 +25,7 @@ export class EnemyEntity implements Damageable.Entity {
   private graphics!: Phaser.GameObjects.Graphics;
   private shadow: ShadowEntity;
   private config: Enemy.Config;
+  private scoreMap: Map<string, number>;
 
   private animations: Map<Enemy.AnimationName, Enemy.Animation> = new Map();
 
@@ -37,7 +38,7 @@ export class EnemyEntity implements Damageable.Entity {
 
     this.container = scene.add.container(x, y);
     this.gameObject = scene.physics.add.sprite(config.offset.x, config.offset.y, this.animations.get('walk')!.key).setScale(config.scale).setDepth(1000);
-    this.body = scene.physics.add.body(x, y, config.body.main.width, config.body.main.height);;
+    this.body = scene.physics.add.body(x, y, config.baunds.body.width, config.baunds.body.height);;
 
     this.bloodController = new BloodController(scene);
     this.damageableController = new DamageableController({ health: config.health, permeability: 0 });
@@ -55,24 +56,40 @@ export class EnemyEntity implements Damageable.Entity {
       this.graphics = scene.add.graphics();
     }
 
+    this.scoreMap = new Map<string, number>();
+    this.config.score.forEach(rule => {
+      this.scoreMap.set(`${rule.target}${rule.kill}${rule.weapon}`, rule.value);
+    });
+
     this.container.add(this.gameObject);
     this.container.add(this.shadow);
     scene.add.existing(this.container);
   }
 
+  private getTargetDamage(damage: Damageable.Damage): Enemy.Body {
+    const isHeadHit = this.isHeadHit(damage);
+    return isHeadHit ? 'head' : 'body';
+  }
+
   public takeDamage(damage: Damageable.Damage): Damageable.DamageResult | null {
     if (this.damageableController.getDead()) return null;
 
-    const isHeadHit = this.isHeadHit(damage);
-    if (isHeadHit && this.config.body.head?.damageMultiplier) {
-      damage.value *= this.config.body.head.damageMultiplier;
+    const target = this.getTargetDamage(damage);
+    const damageMultiplier = this.config.damageMultiplier?.[target];
+
+    if (damageMultiplier) {
+      damage.value *= damageMultiplier;
     }
-    const result = this.damageableController.takeDamage(damage);
 
-    this.createBloodSplash(damage, isHeadHit);
+    const result = this.damageableController.takeDamage(damage, target);
 
-    if (result?.isDead) {
-      this.onDeath();
+    if (result) {
+      const score = this.calculateScore(damage, result);
+      this.addScore(score, damage.playerId);
+      this.createBloodSplash(damage, target);
+      if (result?.isDead) {
+        this.onDeath();
+      }
     }
 
     return result;
@@ -89,11 +106,20 @@ export class EnemyEntity implements Damageable.Entity {
     emitEvent(this.scene, ScoreEvents.IncreaseScoreEvent, { score, playerId });
   }
 
+  private calculateScore(damage: Damageable.Damage, result: Damageable.DamageResult): number {
+    const key = [
+      `${result.target}${result.isDead}${damage.weaponName}`,
+      `${result.target}${result.isDead}`
+    ].find(key => this.scoreMap.has(key));
+    return key ? this.scoreMap.get(key)! : 0;
+  }
+
   protected onDeath(): void {
     const lastDamage = this.damageableController.getLastDamage()!;
 
     this.motionController.setMove(0, 0);
-    this.addScore(this.config.score.value, lastDamage.damage.playerId);
+
+    // this.addScore(this.config.score.value, lastDamage.damage.playerId);
 
     if (this.animations.has('death')) {
       this.gameObject.play(this.animations.get('death')!.key).on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
@@ -124,8 +150,8 @@ export class EnemyEntity implements Damageable.Entity {
     }
   }
 
-  protected createBloodSplash({ forceVector, hitPoint }: Damageable.Damage, isHeadHit: boolean): void {
-    const multiplier = isHeadHit ? 1.2 : 1;
+  protected createBloodSplash({ forceVector, hitPoint }: Damageable.Damage, target: Enemy.Body): void {
+    const multiplier = target === 'head' ? 1.2 : 1;
     const forceOrigin = { x: forceVector[0][0], y: forceVector[0][1] }; // Откуда летела пуля
     const bulletConfig = createSimpleBloodConfig(multiplier);
     this.bloodController.createBloodSplash(hitPoint[0], hitPoint[1], forceOrigin, bulletConfig);
@@ -148,7 +174,7 @@ export class EnemyEntity implements Damageable.Entity {
       this.graphics.setAlpha(1);
       this.graphics.fillRect(this.body.x, this.body.y, 3, 3);
       this.debugDrawMain();
-      if (this.config.body.head) {
+      if (this.config.baunds.head) {
         this.debugDrawHead();
       }
     }
@@ -197,14 +223,14 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   public getHeadBounds(): Damageable.Body | null {
-    if (!this.config.body.head) {
+    if (!this.config.baunds.head) {
       return null
     }
     return {
-      x: this.body.x - this.body.width / 2 + this.config.body.head.x,
-      y: this.body.y - this.body.height / 2 + this.config.body.head.y,
-      width: this.config.body.head.width,
-      height: this.config.body.head.height,
+      x: this.body.x - this.body.width / 2 + this.config.baunds.head.x,
+      y: this.body.y - this.body.height / 2 + this.config.baunds.head.y,
+      width: this.config.baunds.head.width,
+      height: this.config.baunds.head.height,
     };
   }
 

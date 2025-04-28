@@ -291,7 +291,7 @@ export class ProjectileController {
         if (hit.targetEntity.getDead()) return;
 
         const isBullet = hit.projectile.getType() === Projectile.Type.BULLET;
-        const damage = isBullet ? damageForBullet : hit.projectile.getDamage(hit.distance);     
+        const damage = isBullet ? damageForBullet : hit.projectile.getDamage(hit.distance);   
         const damageResult = hit.targetEntity.takeDamage({
           simulate: this.simulate,
           forceVector: hit.forceVector,

@@ -37,7 +37,7 @@ export class DecorEntity implements Damageable.Entity {
   }
 
   public takeDamage(damage: Damageable.Damage): Damageable.DamageResult | null {
-    return this.damageableController.takeDamage(damage);
+    return this.damageableController.takeDamage(damage, 'body');
   }
 
   public getDead(): boolean {

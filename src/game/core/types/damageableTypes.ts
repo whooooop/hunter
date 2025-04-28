@@ -1,3 +1,5 @@
+import { Enemy } from "./enemyTypes";
+
 export namespace Damageable {
   export interface Config {
     health: number;
@@ -18,6 +20,7 @@ export namespace Damageable {
     isDead: boolean;
     isPenetrated: boolean;
     permeability: number;
+    target: Enemy.Body;
   }
 
   export interface Body {

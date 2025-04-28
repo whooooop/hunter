@@ -1,4 +1,5 @@
 import { Damageable } from "../types/damageableTypes";
+import { Enemy } from "../types/enemyTypes";
 
 export class DamageableController {
   protected isDead: boolean = false;
@@ -25,7 +26,7 @@ export class DamageableController {
     return this.damages[this.damages.length - 1] || null;
   }
 
-  public takeDamage(damage: Damageable.Damage): Damageable.DamageResult | null {
+  public takeDamage(damage: Damageable.Damage, target: Enemy.Body): Damageable.DamageResult | null {
     if (this.isDead) return null;
 
     const health = Math.max(0, this.health - damage.value);
@@ -34,7 +35,8 @@ export class DamageableController {
       health,
       isDead,
       permeability: this.permeability,
-      isPenetrated: !!this.permeability || isDead
+      isPenetrated: !!this.permeability || isDead,
+      target,
     }
 
     if (!damage.simulate) {
