@@ -17,6 +17,7 @@ import { RecoilForceType } from "../types/recoilForce";
 import { emitEvent, offEvent, onEvent } from "../Events";
 import { Weapon, FireParams, AudioAssets } from "../types/weaponTypes";
 import { sleep } from '../../../utils/sleep';
+import { MuzzleFlash } from '../../fx/muzzleFlash/muzzleFlash';
 
 const logger = createLogger('WeaponEntity');
 
@@ -40,6 +41,7 @@ export class WeaponEntity {
 
   private container: Phaser.GameObjects.Container;
   private debugFirePoint!: Phaser.GameObjects.Ellipse;
+  private muzzleFlash: MuzzleFlash | null = null;
 
   private debug: boolean = false;
 
@@ -78,6 +80,10 @@ export class WeaponEntity {
       this.createSight(this.options.sight)
     }
 
+    if (this.options.muzzleFlash) {
+      this.createMuzzleFlash(this.options.muzzleFlash);
+    }
+
     this.createAudioAssets();
 
     onEvent(this.scene, Weapon.Events.FireAction.Remote, this.handleFireAction, this);
@@ -91,6 +97,12 @@ export class WeaponEntity {
     if (weaponId == this.id) {
       this.fireAction(playerId, originPoint, targetPoint, angleTilt);
     }
+  }
+
+  private createMuzzleFlash({ scale }: { scale: number }): void {
+    const { innerX, innerY } = this.getFirePoint();
+    this.muzzleFlash = new MuzzleFlash(this.scene, innerX, innerY, { scale });
+    this.container.add(this.muzzleFlash.getContainer());
   }
 
   protected createSight(options: SightEntityOptions | boolean): void {
@@ -286,9 +298,9 @@ export class WeaponEntity {
     if (this.options.shellCasings && this.scene instanceof GameplayScene) {
       this.ejectShellCasing(originPoint.x, originPoint.y, this.direction);
     }
-
-    this.playFireSound();
     
+    this.muzzleFlash?.play();
+    this.playFireSound();
     this.applyWeaponTilt(angleTilt);
   }
 
@@ -440,11 +452,11 @@ export class WeaponEntity {
       this.weaponAngle = Phaser.Math.Linear(this.weaponAngle, 0, progress);
       
       // Применяем текущий угол наклона
-      this.gameObject.setRotation(this.weaponAngle);
+      this.container.setRotation(this.weaponAngle);
     } else {
       // Полностью выравниваем оружие
       this.weaponAngle = 0;
-      this.gameObject.setRotation(0);
+      this.container.setRotation(0);
     }
   }
 
@@ -514,6 +526,6 @@ export class WeaponEntity {
    */
   private applyWeaponTilt(angle: number): void {
     this.weaponAngle = angle;
-    this.gameObject.setRotation(angle);
+    this.container.setRotation(angle);
   }
 }

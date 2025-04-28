@@ -10,12 +10,9 @@ export const EnemyConfigs: Record<Enemy.Type, Enemy.Config> = {
 export function preloadEnemies(scene: Phaser.Scene, enemies: Enemy.Type[]): void {
   enemies.forEach(enemy => {
     const EnemyConfig = EnemyConfigs[enemy];
-    if (EnemyConfig.animations.walk) {
-      loadSpriteSheet(scene, EnemyConfig.animations.walk);
-    }
-    if (EnemyConfig.animations.death) {
-      loadSpriteSheet(scene, EnemyConfig.animations.death);
-    }
+    EnemyConfig.animations.forEach(animation => {
+      loadSpriteSheet(scene, animation);
+    });
   });
 }
 

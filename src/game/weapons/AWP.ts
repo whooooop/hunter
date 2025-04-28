@@ -25,6 +25,8 @@ export const AWPConfig: Weapon.Config = {
   boltTime: 2000,      // Задержка перед выстрелом в мс
   recoilForce: 1,       // Сила отдачи
   recoilRecovery: 5,    // Скорость восстановления от отдачи
+  spreadAngle: 9,
+  aimingTime: 2000,
   automatic: false,
   triggerRelease: true,
   hideSightWhenCantFire: true,
@@ -38,6 +40,9 @@ export const AWPConfig: Weapon.Config = {
   fireAudio: {
     key: 'awp_fire_audio_0',
     url: awpFireAudio
+  },
+  muzzleFlash: {
+    scale: 1,
   },
   shellCasings: true,
   firePointOffset: [0, -3],

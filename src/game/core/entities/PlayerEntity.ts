@@ -3,7 +3,6 @@ import { createLogger } from '../../../utils/logger';
 import playerImage from '../../../assets/images/player.png';
 import { LocationBounds } from '../BaseLocation';
 import { WeaponEntity } from './WeaponEntity';
-import { MotionController } from '../controllers/MotionController';
 import { ShadowEntity } from './ShadowEntity';
 import { offEvent, onEvent } from '../Events';
 import { Player } from '../types/playerTypes';

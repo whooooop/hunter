@@ -33,6 +33,7 @@ import { KeyBoardController } from '../../core/controllers/KeyBoardController';
 import { Player } from '../../core/types/playerTypes';
 import { Game } from '../../core/types/gameTypes';
 import { Damageable } from '../../core/types/damageableTypes';
+import { preloadFx } from '../../fx';
 
 const logger = createLogger('GameplayScene');
 
@@ -86,6 +87,7 @@ export class GameplayScene extends Phaser.Scene {
 
     preloadWeapons(this);
     preloadProjectiles(this);
+    preloadFx(this);
   }
   
   async create(): Promise<void> {
@@ -129,7 +131,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private singlePlayerInit(playerId: string): void {
     this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
-    this.setWeapon(playerId, WeaponType.GLOCK);
+    this.setWeapon(playerId, WeaponType.M4);
     this.waveController.start();
     this.projectileController.setSimulate(false);
   }

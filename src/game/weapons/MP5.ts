@@ -40,6 +40,10 @@ export const MP5Config: Weapon.Config = {
   sight: true,
   shellCasings: true,
 
+  muzzleFlash: {
+    scale: 0.5,
+  },
+
   fireAudio: {
     key: WeaponType.MP5 + '_shoot_0',
     url: MP5ShootAudioUrl,

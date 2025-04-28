@@ -58,6 +58,10 @@ export const SawedConfig: Weapon.Config = {
   },
   boltAudio: BaseBoltAudio2,
 
+  muzzleFlash: {
+    scale: 0.8,
+  },
+
   sight: true,
   shellCasings: true,
   triggerRelease: true, // Освобождение триггера после каждого выстрела

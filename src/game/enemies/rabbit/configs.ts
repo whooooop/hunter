@@ -40,8 +40,9 @@ export const RabbitConfig: Enemy.Config = {
       damageMultiplier: 2,
     },
   },
-  animations: {
-    walk: {
+  animations: [
+    {
+      name: 'walk',
       key: 'rabbit_walk_0',
       url: rabbitWalkTextureUrl,
       frameWidth: 100,
@@ -51,7 +52,8 @@ export const RabbitConfig: Enemy.Config = {
       endFrame: 29,
       repeat: -1,
     },
-    death: {
+    {
+      name: 'death',
       key: 'rabbit_death_0',
       url: rabbitDeathTextureUrl,
       frameWidth: 100,
@@ -60,7 +62,7 @@ export const RabbitConfig: Enemy.Config = {
       startFrame: 0,
       endFrame: 38,
       repeat: 0,
-    },
-  },
+    }
+  ],
   debug: false,
 }

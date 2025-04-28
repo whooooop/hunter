@@ -77,6 +77,10 @@ export namespace Weapon {
     recoilForce: number;        // Сила отдачи
     recoilRecovery: number;     // Скорость восстановления от отдачи
   
+    muzzleFlash?: {
+      scale: number;
+    };
+
     emptyAudio?: Weapon.Audio.Asset;
     reloadAudio?: Weapon.Audio.Asset;
     reloadItemAudio?: Weapon.Audio.Asset;

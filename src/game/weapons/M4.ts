@@ -35,6 +35,10 @@ export const M4Config: Weapon.Config = {
   spreadAngle: 2,      // Угол разброса при выстреле в градусах
   automatic: true,
 
+  muzzleFlash: {
+    scale: 0.8,
+  },
+
   // Параметры отдачи
   recoilForce: 1,      // Сила отдачи
   recoilRecovery: 5,   // Скорость восстановления от отдачи

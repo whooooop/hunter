@@ -24,7 +24,7 @@ export const RevolverConfig: Weapon.Config = {
   speed: [4000, 4000],    // Скорость пули
   magazineSize: 6,        // Размер магазина
 
-  firePointOffset: [0, -5],
+  firePointOffset: [0, -9],
 
   // Перезарядка
   reloadTime: 400,        // Скорость перезарядки в мс
@@ -45,6 +45,10 @@ export const RevolverConfig: Weapon.Config = {
   
   sight: true,
   shellCasings: true,
+
+  muzzleFlash: {
+    scale: 0.5,
+  },
 
   fireAudio: {
     key: WeaponType.REVOLVER + '_shoot_0',

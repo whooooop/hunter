@@ -26,23 +26,28 @@ export class EnemyEntity implements Damageable.Entity {
   private shadow: ShadowEntity;
   private config: Enemy.Config;
 
+  private animations: Map<Enemy.AnimationName, Enemy.Animation> = new Map();
+
   constructor(scene: Phaser.Scene, id: string, x: number, y: number, config: Enemy.Config) {
     this.id = id;
     this.config = config;
     this.scene = scene;
 
+    this.createAnimations(scene, config);
+
     this.container = scene.add.container(x, y);
-    this.gameObject = scene.physics.add.sprite(config.offset.x, config.offset.y, config.animations.walk.key).setScale(config.scale).setDepth(1000);
+    this.gameObject = scene.physics.add.sprite(config.offset.x, config.offset.y, this.animations.get('walk')!.key).setScale(config.scale).setDepth(1000);
     this.body = scene.physics.add.body(x, y, config.body.main.width, config.body.main.height);;
 
     this.bloodController = new BloodController(scene);
     this.damageableController = new DamageableController({ health: config.health, permeability: 0 });
     this.motionController = new MotionController2(scene, this.body, config.motion);
 
-    this.createAnimations(scene, config);
 
+    if (this.animations.has('walk')) {
+      this.gameObject.play(this.animations.get('walk')!.key, true);
+    }
     this.motionController.setMove(-1, 1);
-    this.gameObject.play(config.animations.walk.key, true);
 
     this.shadow = new ShadowEntity(scene, this.gameObject, config.shadow);
     
@@ -74,12 +79,10 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   private createAnimations(scene: Phaser.Scene, config: Enemy.Config): void {
-    if (config.animations.walk) {
-      createSpriteAnimation(scene, config.animations.walk);
-    }
-    if (config.animations.death) {
-      createSpriteAnimation(scene, config.animations.death);
-    }
+    config.animations.forEach(animation => {
+      this.animations.set(animation.name, animation);
+      createSpriteAnimation(scene, animation);
+    });
   }
 
   private addScore(score: number, playerId: string): void {
@@ -92,8 +95,8 @@ export class EnemyEntity implements Damageable.Entity {
     this.motionController.setMove(0, 0);
     this.addScore(this.config.score.value, lastDamage.damage.playerId);
 
-    if (this.config.animations.death) {
-      this.gameObject.play(this.config.animations.death.key).on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+    if (this.animations.has('death')) {
+      this.gameObject.play(this.animations.get('death')!.key).on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
         const matrix = this.gameObject.getWorldTransformMatrix();
         emitEvent(this.scene, Enemy.Events.Death.Local, {
           id: this.id,

@@ -29,7 +29,7 @@ export const GlockConfig: Weapon.Config = {
   speed: [4000, 4000],    // Скорость пули
   magazineSize: 12,       // Размер магазина
 
-  firePointOffset: [0, -5],
+  firePointOffset: [0, -7],
 
   // Перезарядка
   reloadTime: 400,        // Скорость перезарядки в мс
@@ -50,6 +50,10 @@ export const GlockConfig: Weapon.Config = {
   
   sight: true,
   shellCasings: true,
+
+  muzzleFlash: {
+    scale: 0.3,
+  },
 
   fireAudio: GlockShootAudio,
   emptyAudio: BaseEmptyAudio,

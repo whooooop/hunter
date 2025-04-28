@@ -44,10 +44,7 @@ export namespace Enemy {
       head?: Body;
     }
 
-    animations: {
-      walk: SpriteSheetConfig;
-      death?: SpriteSheetConfig;
-    }
+    animations: Animation[];
   }
 
   export interface Body {
@@ -57,4 +54,18 @@ export namespace Enemy {
     height: number;
     damageMultiplier?: number;
   }
+
+  export interface Animation {
+    name: AnimationName;
+    key: string;
+    url: string;
+    frameWidth: number;
+    frameHeight: number;
+    frameRate: number;
+    startFrame: number;
+    endFrame: number;
+    repeat: number;
+  }
+
+  export type AnimationName = string;
 }
