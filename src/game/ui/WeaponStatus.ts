@@ -6,6 +6,7 @@ import { WeaponType } from '../weapons/WeaponTypes';
 import { Player } from '../core/types/playerTypes';
 import { getWeaponConfig } from '../weapons';
 import { settings } from '../settings';
+import { onEvent } from '../core/Events';
 
 const logger = createLogger('WeaponStatus');
 
@@ -64,6 +65,8 @@ export class WeaponStatus {
             this.weaponIcon,
             this.coinsText, 
         ]);
+
+        onEvent(this.scene, Player.Events.SetWeapon.Local, this.setWeapon, this);
     }
     
     private createBackground(): void {
@@ -263,7 +266,7 @@ export class WeaponStatus {
             this.weaponIcon.setTexture(config.texture.key);
             this.weaponIcon.setVisible(true);
 
-            const iconScale = (this.radius * 2 * 0.7) / Math.max(this.weaponIcon.width || 1, this.weaponIcon.height || 1);
+            const iconScale = (this.radius * 2 * 0.4) / Math.max(this.weaponIcon.height || 1);
             this.weaponIcon.setScale(iconScale);
         } catch (error) {
             this.weaponIcon.setVisible(false);

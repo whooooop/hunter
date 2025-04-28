@@ -116,22 +116,13 @@ export class GameplayScene extends Phaser.Scene {
 
     this.shopController.setInteractablePlayerId(playerId);
 
-    // Настраиваем коллизии между игроком и врагами
-    // this.physics.add.overlap(
-    //   this.player.getSprite(),
-    //   this.enemies,
-    //   this.handlePlayerEnemyCollision as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
-    //   undefined,
-    //   this
-    // );
-
     // this.multiplayerInit(playerId);
     this.singlePlayerInit(playerId);
   }
 
   private singlePlayerInit(playerId: string): void {
     this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
-    this.setWeapon(playerId, WeaponType.GLOCK);
+    this.setWeapon(playerId, WeaponType.MP5);
     this.waveController.start();
     this.projectileController.setSimulate(false);
   }
@@ -179,7 +170,6 @@ export class GameplayScene extends Phaser.Scene {
   private handleEnemyDeath({ id }: Enemy.Events.Death.Payload): void {
     this.enemies.delete(id);
     this.damageableObjects.delete(id);
-    // this.decalController.drawParticle(gameObject, gameObject.x, gameObject.y);
   }
 
   private handleSpawnEnemy({ id, enemyType, position, options }: SpawnEnemyPayload): void {
@@ -277,34 +267,6 @@ export class GameplayScene extends Phaser.Scene {
     this.lastSentState = time;
     this.lastStateHash = stateHash;
   }
-
-  // private handlePlayerEnemyCollision(
-  //   playerObj: Phaser.Types.Physics.Arcade.GameObjectWithBody, 
-  //   enemyObj: Phaser.Types.Physics.Arcade.GameObjectWithBody
-  // ): void {
-  //   // Проверяем, что enemyObj - это спрайт
-  //   if (!(enemyObj instanceof Phaser.Physics.Arcade.Sprite)) {
-  //     return;
-  //   }
-    
-  //   // Проверяем, что playerObj - это спрайт
-  //   if (!(playerObj instanceof Phaser.Physics.Arcade.Sprite)) {
-  //     return;
-  //   }
-    
-  //   // Получаем объект врага из свойства данных спрайта
-  //   const enemy = enemyObj.getData('enemyRef') as BaseEnemy;
-  //   if (!enemy) {
-  //     console.error('Спрайт врага не содержит ссылку на объект BaseEnemy');
-  //     return;
-  //   }
-  //   const direction = enemy.getDirection();
-  //   const player = playerObj.getData('playerRef') as Player;
-
-  //   if (!player.isJumping) {
-  //     player.applyForce(direction, 0, 10, 0.5, 0.1);  
-  //   }
-  // }
 
   destroy(): void {
     this.location.destroy();

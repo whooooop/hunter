@@ -139,40 +139,36 @@ export class EnemyEntity implements Damageable.Entity {
     })?.value || 0;
   }
 
-  protected onDeath(): void {
-    const lastDamage = this.damageableController.getLastDamage()!;
-
+  protected async onDeath(): Promise<void> {
     this.motionController.setMove(0, 0);
 
-    // this.addScore(this.config.score.value, lastDamage.damage.playerId);
+    await this.onDeathAnimation();
 
-    if (this.animations.has('death')) {
-      this.gameObject.play(this.animations.get('death')!.key).on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
-        const matrix = this.gameObject.getWorldTransformMatrix();
-        emitEvent(this.scene, Enemy.Events.Death.Local, {
-          id: this.id,
+    const matrix = this.gameObject.getWorldTransformMatrix();
+    emitEvent(this.scene, Enemy.Events.Death.Local, {
+      id: this.id,
+    });
+
+    emitEvent(this.scene, Decals.Events.Local, {
+      type: 'body',
+      x: matrix.tx,
+      y: matrix.ty,
+      object: this.gameObject,
+    });
+    
+    this.destroy();
+}
+
+  protected onDeathAnimation(): Promise<void> {
+    return new Promise(resolve => {
+      if (this.animations.has('death')) {
+        this.gameObject.play(this.animations.get('death')!.key).on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+          resolve();
         });
-        emitEvent(this.scene, Decals.Events.Local, {
-          type: 'body',
-          x: matrix.tx,
-          y: matrix.ty,
-          object: this.gameObject,
-        });
-        this.destroy();
-      });
-    } else {
-      const matrix = this.gameObject.getWorldTransformMatrix();
-      emitEvent(this.scene, Enemy.Events.Death.Local, {
-        id: this.id,
-      });
-      emitEvent(this.scene, Decals.Events.Local, {
-        type: 'body',
-        x: matrix.tx,
-        y: matrix.ty,
-        object: this.gameObject,
-      });
-      this.destroy();
-    }
+      } else {
+        resolve();
+      }
+    });
   }
 
   protected createBloodSplash({ forceVector, hitPoint }: Damageable.Damage, target: Enemy.Body): void {
