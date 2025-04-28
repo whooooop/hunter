@@ -58,7 +58,7 @@ export class EnemyEntity implements Damageable.Entity {
 
     this.scoreMap = new Map<string, number>();
     this.config.score.forEach(rule => {
-      this.scoreMap.set(`${rule.target}${rule.kill}${rule.weapon}`, rule.value);
+      this.scoreMap.set(`${rule.target || ''}${typeof rule.death === 'boolean' ? rule.death ? 'D' : 'ND' : ''}${rule.weapon || ''}`, rule.value);
     });
 
     this.container.add(this.gameObject);
@@ -88,6 +88,10 @@ export class EnemyEntity implements Damageable.Entity {
       this.addScore(score, damage.playerId);
       this.createBloodSplash(damage, target);
       if (result?.isDead) {
+        const killCombo = this.calculateKillCombo();
+        if (killCombo) {
+          this.addScore(killCombo, damage.playerId);
+        }
         this.onDeath();
       }
     }
@@ -107,11 +111,32 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   private calculateScore(damage: Damageable.Damage, result: Damageable.DamageResult): number {
-    const key = [
-      `${result.target}${result.isDead}${damage.weaponName}`,
-      `${result.target}${result.isDead}`
-    ].find(key => this.scoreMap.has(key));
-    return key ? this.scoreMap.get(key)! : 0;
+    return this.config.score.find(rule => {
+      return (
+        (!rule.target || rule.target === result.target) &&
+        (rule.death === -1 || rule.death === result.isDead) &&
+        (!rule.weapon || rule.weapon === damage.weaponName)
+      )
+    })?.value || 0;
+  }
+
+  private calculateKillCombo(): number {
+    const damages = this.damageableController.getDamages();
+    return this.config.killCombo?.find(combo => {
+      let lastIndex = -1;
+      return combo.rules.every(rule => {
+        return damages.find(({ damage, result }, index) => {
+          if (
+            (index > lastIndex) &&
+            (!rule.target || rule.target === result.target) &&
+            (!rule.weapon || rule.weapon === damage.weaponName)
+          ) {
+            lastIndex = index;
+            return true;
+          }
+        });
+      });
+    })?.value || 0;
   }
 
   protected onDeath(): void {

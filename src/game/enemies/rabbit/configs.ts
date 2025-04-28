@@ -24,10 +24,10 @@ export const RabbitConfig: Enemy.Config = {
     head: { x: 0, y: 0, width: 42, height: 16 },
   },
   score: [
-    { target: 'head', kill: false, weapon: WeaponType.GLOCK, value: 10 },
-    { target: 'head', kill: true, weapon: WeaponType.GLOCK, value: 60 },
-    { target: 'head', kill: false, weapon: WeaponType.REVOLVER, value: 70 },
-    { target: 'body', kill: true, value: 50 },
+    { target: 'head', death: false, weapon: WeaponType.GLOCK, value: 10 },
+    { target: 'head', death: true, weapon: WeaponType.GLOCK, value: 60 },
+    { target: 'head', death: -1, weapon: WeaponType.REVOLVER, value: 70 },
+    { death: true, value: 50 },
   ],
   damageMultiplier: {
     head: 2,
@@ -36,7 +36,7 @@ export const RabbitConfig: Enemy.Config = {
     { rules: [
       { target: 'head', weapon: WeaponType.GLOCK },
       { target: 'head', weapon: WeaponType.REVOLVER },
-    ], value: 5 }
+    ], value: 5 },
   ],
   animations: [
     {

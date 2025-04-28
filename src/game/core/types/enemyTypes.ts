@@ -51,9 +51,9 @@ export namespace Enemy {
   }
 
   interface ScoreRule {
-    target: Body;
+    target?: Body;
     weapon?: WeaponType;
-    kill: boolean;
+    death: -1 | boolean;
     value: number;
   }
 

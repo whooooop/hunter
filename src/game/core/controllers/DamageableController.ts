@@ -26,6 +26,10 @@ export class DamageableController {
     return this.damages[this.damages.length - 1] || null;
   }
 
+  public getDamages(): { damage: Damageable.Damage, result: Damageable.DamageResult }[] {
+    return this.damages;
+  }
+
   public takeDamage(damage: Damageable.Damage, target: Enemy.Body): Damageable.DamageResult | null {
     if (this.isDead) return null;
 
