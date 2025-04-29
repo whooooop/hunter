@@ -66,7 +66,7 @@ export class PlayerEntity {
     this.rightLeg = scene.add.image(0, 0, PlayerLegRightTexture.key).setScale(PlayerLegRightTexture.scale).setOrigin(0.5, 1).setPosition(6, 44);
     this.weaponContainer = scene.add.container(0, 0);
 
-    this.container.add(this.backHand);
+    this.container.add(this.backHand);1
     this.container.add(this.shadow.getContainer());
     this.container.add(this.leftLeg);
     this.container.add(this.rightLeg);

@@ -23,7 +23,7 @@ export const AWPConfig: Weapon.Config = {
   speed: [8000, 4000],  // Скорость пули
   fireRate: 400,       // Задержка между выстрелами в мс
   boltTime: 2000,      // Задержка перед выстрелом в мс
-  recoilForce: 1,       // Сила отдачи
+  recoilForce: 30,      // Сила отдачи
   recoilRecovery: 5,    // Скорость восстановления от отдачи
   spreadAngle: 9,
   aimingTime: 2000,
