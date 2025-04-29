@@ -30,6 +30,7 @@ export class ProjectileController {
   private projectileHits: HitGroup[] = [];
   private simulate: boolean;
 
+  private debugGraphics: Phaser.GameObjects.Graphics | null = null;
   constructor(
     scene: Phaser.Scene, 
     damageableObjects: Map<string, Damageable.Entity>, 
@@ -37,6 +38,7 @@ export class ProjectileController {
     this.scene = scene;
     this.damageableObjects = damageableObjects;
     this.simulate = true;
+    this.debugGraphics = this.scene.add.graphics();
 
     onEvent(scene, Weapon.Events.CreateProjectile.Local, this.handleCreateProjectile, this);
   }
@@ -196,15 +198,11 @@ export class ProjectileController {
    */
   private drawExplosionRadius(x: number, y: number, radius: number): void {
     if (!this.scene) return;
-    const graphics = this.scene.add.graphics();
-    graphics.lineStyle(2, 0xff0000, 0.7);
-    graphics.strokeCircle(x, y, radius);
-    graphics.fillStyle(0xff0000, 0.7);
-    graphics.fillCircle(x, y, 5);
-    graphics.setDepth(1000);
-    this.scene.time.delayedCall(2000, () => {
-        graphics.destroy();
-    });
+    this.debugGraphics?.lineStyle(2, 0xff0000, 0.7);
+    this.debugGraphics?.strokeCircle(x, y, radius);
+    this.debugGraphics?.fillStyle(0xff0000, 0.7);
+    this.debugGraphics?.fillCircle(x, y, 5);
+    this.debugGraphics?.setDepth(1000);
   }
   
   private sliceCurrentHits(currentTime: number): HitGroup[] {
@@ -221,6 +219,10 @@ export class ProjectileController {
    * Обрабатывает попадания пуль в нужное время
    */
   public update(currentTime: number, delta: number): void {
+    if (this.debug) {
+      this.debugGraphics?.clear();
+    }
+
     // console.log('size', this.projectilesNotActivated.size, this.projectiles.size, this.projectileHits.length, this.enemies.size);
     // Ищем активные снаряды и запускаем проверку взаимодействия с объектами
     this.updateNotActivatedProjectiles(currentTime);
@@ -268,9 +270,16 @@ export class ProjectileController {
         // Получаем центр врага
         const enemyCenter = {
             x: enemyBounds.x + enemyBounds.width / 2,
-            y: enemyBounds.y + enemyBounds.height / 2
+            y: enemyBounds.y + enemyBounds.height * 0.9
         };
+
         const [x, y] = projectile.getPosition();
+
+        if (this.debug) {
+          this.drawExplosionRadius(x, y, activateRadius);
+          this.drawExplosionRadius(enemyCenter.x, enemyCenter.y, 1);
+        }
+
         const radius = activateRadius;
         const distance = Phaser.Math.Distance.Between(x, y, enemyCenter.x, enemyCenter.y);
         if (distance <= radius) {

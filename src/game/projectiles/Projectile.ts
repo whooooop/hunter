@@ -20,5 +20,5 @@ export const ProjectileProjectileConfig: Projectile.Config = {
   bounce: 0,
   gravity: 500,
   radius: 100,
-  activateRadius: 50,
+  activateRadius: 26,
 }

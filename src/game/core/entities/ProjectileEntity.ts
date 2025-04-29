@@ -44,7 +44,7 @@ export class ProjectileEntity {
     if (this.options.texture) {
       this.gameObject = new Phaser.GameObjects.Sprite(this.scene, x, y, this.options.texture.key);
 
-      this.gameObject.setOrigin(0, 0);
+      // this.gameObject.setOrigin(0, 0);
 
       // this.scene.add.existing(
       //   this.scene.add.ellipse(x, y, 4, 4, 0x0000ff).setDepth(1000)

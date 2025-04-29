@@ -6,7 +6,7 @@ export const ProjectileMineConfig: Projectile.Config = {
   type: Projectile.Type.MINE,
   texture: MineImageTexture_0,
   radius: 100,
-  activateRadius: 20,
+  activateRadius: 14,
   drag: 800,
   gravity: 600,
   activateAudio: {
