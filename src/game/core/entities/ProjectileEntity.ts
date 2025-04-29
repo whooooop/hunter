@@ -1,5 +1,5 @@
 import { settings } from "../../settings";
-import { ExplosionEntity } from "./ExplosionEntity";
+import { ExplosionFx } from "../../fx/explosion/ExplosionFx";
 import { Projectile } from "../../core/types/projectrileTypes";
 import { AudioAssets } from "../types/weaponTypes";
 
@@ -197,7 +197,7 @@ export class ProjectileEntity {
 
   protected activateExplosion(): void {
     // эффект взрыва
-    ExplosionEntity.create(this.scene, this.gameObject.x, this.gameObject.y);
+    ExplosionFx.create(this.scene, this.gameObject.x, this.gameObject.y);
   }
 
   protected playActivateAudio(): void {

@@ -4,7 +4,6 @@ import { Projectile } from "../core/types/projectrileTypes"
 import { ProjectileMineConfig } from "./Mine"
 import { ProjectileGrenadeConfig } from "./Grenade"
 import { ProjectileBulletConfig } from "./Bullet"
-import { ExplosionEntity } from "../core/entities/ExplosionEntity"
 import { ProjectileName } from "./ProjectileName"
 import { ProjectilePelletsConfig } from "./Pellets"
 import { ProjectileProjectileConfig } from "./Projectile"
@@ -18,7 +17,6 @@ export const ProjectileConfigs: Record<ProjectileName, Projectile.Config> = {
 }
 
 export function preloadProjectiles(scene: Phaser.Scene): void {
-  ExplosionEntity.preload(scene);
   Object.values(ProjectileConfigs).forEach(ProjectileConfig => {
     if (ProjectileConfig.texture.generate) {
       ProjectileConfig.texture.generate(scene, ProjectileConfig.texture.key);

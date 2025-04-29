@@ -17,7 +17,7 @@ import { RecoilForceType } from "../types/recoilForce";
 import { emitEvent, offEvent, onEvent } from "../Events";
 import { Weapon, FireParams, AudioAssets } from "../types/weaponTypes";
 import { sleep } from '../../../utils/sleep';
-import { MuzzleFlash } from '../../fx/muzzleFlash/muzzleFlash';
+import { MuzzleFlash } from '../../fx/muzzleFlash/muzzleFlashFx';
 
 const logger = createLogger('WeaponEntity');
 

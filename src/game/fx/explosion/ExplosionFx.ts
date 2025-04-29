@@ -1,4 +1,4 @@
-import explosionTextureUrl from '../../../assets/images/explosion.png';
+import explosionTextureUrl from './assets/explosion.png';
 import { settings } from '../../settings';
 
 const texture = {
@@ -7,11 +7,11 @@ const texture = {
   frameWidth: 250,
   frameHeight: 250,
   scale: 0.8,
-  frameRate: 30,
+  frameRate: 60,
   frameCount: 9
 }
 
-export class ExplosionEntity {
+export class ExplosionFx {
   private gameObject: Phaser.GameObjects.Sprite;
   private scene: Phaser.Scene;
   private isDestroyed: boolean = false;
@@ -30,8 +30,8 @@ export class ExplosionEntity {
   /**
    * Создает взрыв в указанной позиции
    */
-  static create(scene: Phaser.Scene, x: number, y: number, scale: number = texture.scale): ExplosionEntity {
-    return new ExplosionEntity(scene, x, y + 20, scale);
+  static create(scene: Phaser.Scene, x: number, y: number, scale: number = texture.scale): ExplosionFx {
+    return new ExplosionFx(scene, x, y + 20, scale);
   }
 
   constructor(scene: Phaser.Scene, x: number, y: number, scale: number = texture.scale) {
