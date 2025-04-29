@@ -14,7 +14,6 @@ export const EnemyCollections: Record<Enemy.Type, {
   },
 }
 
-
 export function preloadEnemies(scene: Phaser.Scene, enemies: Enemy.Type[]): void {
   enemies.forEach(enemy => {
     const EnemyConfig = EnemyCollections[enemy].config;

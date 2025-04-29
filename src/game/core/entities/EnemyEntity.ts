@@ -59,7 +59,6 @@ export class EnemyEntity implements Damageable.Entity {
     });
 
     this.container.add(this.gameObject);
-    // this.container.add(this.shadow.getContainer());
     scene.add.existing(this.container);
   }
 
@@ -182,13 +181,6 @@ export class EnemyEntity implements Damageable.Entity {
 
     this.container.setPosition(position.x + this.config.offset.x, position.y + this.config.offset.y);
     this.container.setDepth(position.depth);
-    
-    // if (this.shadow) {
-    //   this.shadow
-    //     .getContainer()
-    //     .setPosition(this.config.offset.x, this.body.height / 2 + this.config.offset.y - position.jumpHeight);
-    // }
-    // this.shadow.update(time, delta);
 
     if (this.config.debug) {
       this.graphics.clear();
@@ -243,11 +235,6 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   public getBodyBounds(): Damageable.Body {
-    // x + config.body.main.x - config.body.main.width / 2, 
-    // y + config.body.main.y - config.body.main.height / 2, 
-    // config.body.main.width, 
-    // config.body.main.height
-
     return {
       x: this.body.x - this.body.width / 2,
       y: this.body.y - this.body.height / 2,
