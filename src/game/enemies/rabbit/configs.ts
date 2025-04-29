@@ -15,10 +15,7 @@ export const RabbitConfig: Enemy.Config = {
     friction: 0,
   },
   offset: { x: 24, y: -10 },
-  shadow: {
-    scale: [0.5, 0.2],
-    offset: [-20, -10],
-  },
+  shadow: {},
   baunds: {
     body: { x: 20, y: 0, width: 42, height: 40 },
     head: { x: 0, y: 0, width: 42, height: 16 },

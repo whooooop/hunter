@@ -23,7 +23,7 @@ export class EnemyEntity implements Damageable.Entity {
   private motionController: MotionController2;
 
   private graphics!: Phaser.GameObjects.Graphics;
-  private shadow: ShadowEntity;
+  // private shadow: ShadowEntity;
   private config: Enemy.Config;
   private scoreMap: Map<string, number>;
 
@@ -37,7 +37,7 @@ export class EnemyEntity implements Damageable.Entity {
     this.createAnimations(scene, config);
 
     this.container = scene.add.container(x, y);
-    this.gameObject = scene.physics.add.sprite(config.offset.x, config.offset.y, this.animations.get('walk')!.key).setScale(config.scale).setDepth(1000);
+    this.gameObject = scene.physics.add.sprite(0, 0, this.animations.get('walk')!.key).setScale(config.scale).setDepth(1000);
     this.body = scene.physics.add.body(x, y, config.baunds.body.width, config.baunds.body.height);;
 
     this.bloodController = new BloodController(scene);
@@ -50,7 +50,7 @@ export class EnemyEntity implements Damageable.Entity {
     }
     this.motionController.setMove(-1, 1);
 
-    this.shadow = new ShadowEntity(scene, this.gameObject, config.shadow);
+    // this.shadow = new ShadowEntity(scene, this.body, config.shadow);
     
     if (this.config.debug) {
       this.graphics = scene.add.graphics();
@@ -62,7 +62,7 @@ export class EnemyEntity implements Damageable.Entity {
     });
 
     this.container.add(this.gameObject);
-    this.container.add(this.shadow);
+    // this.container.add(this.shadow.getContainer());
     scene.add.existing(this.container);
   }
 
@@ -183,10 +183,15 @@ export class EnemyEntity implements Damageable.Entity {
 
     const position = this.motionController.getPosition();
 
-    this.container.setPosition(position.x, position.y);
+    this.container.setPosition(position.x + this.config.offset.x, position.y + this.config.offset.y);
     this.container.setDepth(position.depth);
     
-    this.shadow.update(time, delta);
+    // if (this.shadow) {
+    //   this.shadow
+    //     .getContainer()
+    //     .setPosition(this.config.offset.x, this.body.height / 2 + this.config.offset.y - position.jumpHeight);
+    // }
+    // this.shadow.update(time, delta);
 
     if (this.config.debug) {
       this.graphics.clear();
@@ -264,7 +269,6 @@ export class EnemyEntity implements Damageable.Entity {
     this.gameObject.destroy();
     this.motionController.destroy();
     this.destroyed = true;
-    this.shadow.destroy();
 
     if (this.config.debug) {
       this.graphics.destroy();

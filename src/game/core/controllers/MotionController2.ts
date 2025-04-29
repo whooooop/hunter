@@ -63,7 +63,7 @@ export class MotionController2 {
 
   private debug: boolean = false;
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
-  // private debugRect: Phaser.GameObjects.Rectangle;
+  private debugRect!: Phaser.GameObjects.Rectangle;
 
   constructor(scene: Phaser.Scene, body: Phaser.Physics.Arcade.Body, options: MotionControllerOptions) {
     this.scene = scene;
@@ -75,10 +75,10 @@ export class MotionController2 {
         this.body.setDrag(this.options.friction); // Используем friction как drag
         this.body.setMaxVelocity(this.options.maxVelocityX, this.options.maxVelocityY);
     }
-    // this.debugRect = scene.add.rectangle(this.body.x, this.body.y, this.body.width, this.body.height, 0x0000ff, 0.5);
 
     if (this.debug) {
       this.debugGraphics = scene.add.graphics();
+      this.debugRect = scene.add.rectangle(this.body.x, this.body.y, this.body.width, this.body.height, 0x0000ff, 0.5);
     }
   }
 
@@ -137,8 +137,8 @@ export class MotionController2 {
       this.debugGraphics.fillStyle(hexToNumber('#d23a3a'));
       this.debugGraphics.fillRect(this.body.x - this.body.width / 2, this.getDepth(), this.body.width, 1);
 
-      // this.debugGraphics.lineStyle(2, hexToNumber('#fbb52f'), 1);
-      // this.debugGraphics.strokeRect(this.body.x - this.body.width / 2, this.body.y - this.body.height / 2, this.body.width, this.body.height);
+      this.debugGraphics.lineStyle(2, hexToNumber('#fbb52f'), 1);
+      this.debugGraphics.strokeRect(this.body.x - this.body.width / 2, this.body.y - this.body.height / 2, this.body.width, this.body.height);
     }
   }
 

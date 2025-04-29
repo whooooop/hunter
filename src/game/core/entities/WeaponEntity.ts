@@ -89,7 +89,7 @@ export class WeaponEntity {
     onEvent(this.scene, Weapon.Events.FireAction.Remote, this.handleFireAction, this);
   }
 
-  public getGameObject(): Phaser.GameObjects.Sprite | Phaser.GameObjects.Container {
+  public getContainer(): Phaser.GameObjects.Container {
     return this.container;
   }
 
@@ -460,12 +460,13 @@ export class WeaponEntity {
     }
   }
 
-  public setDepth(depth: number) {
-    this.gameObject.setDepth(depth);
+  public setDepth(depth: number): this {
+    console.log('setDepth', depth);
+    this.container.setDepth(depth);
     return this;
   }
 
-  public setPosition(x: number, y: number, direction: number) {
+  public setPosition(x: number, y: number, direction: number): this {
     this.direction = direction;
     const offsetX = this.options?.texture.offset.x || 0;
     const offsetY = this.options?.texture.offset.y || 0;

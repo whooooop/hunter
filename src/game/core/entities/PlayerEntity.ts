@@ -1,14 +1,12 @@
 import * as Phaser from 'phaser';
 import { createLogger } from '../../../utils/logger';
-import playerImage from '../../../assets/images/player.png';
 import { LocationBounds } from '../BaseLocation';
 import { WeaponEntity } from './WeaponEntity';
 import { ShadowEntity } from './ShadowEntity';
 import { offEvent, onEvent } from '../Events';
 import { Player } from '../types/playerTypes';
 import { MotionController2 } from '../controllers/MotionController2';
-
-const TEXTURE_PLAYER = 'player';
+import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture } from '../../textures/PlayerTexture';
 
 const logger = createLogger('Player');
 
@@ -17,9 +15,15 @@ export class PlayerEntity {
 
   private id: string;
   private scene: Phaser.Scene;
-  private gameObject: Phaser.Physics.Arcade.Sprite;
   private container: Phaser.GameObjects.Container;
   private body: Phaser.Physics.Arcade.Body;
+
+  private playerBody: Phaser.GameObjects.Image;
+  private frontHand: Phaser.GameObjects.Image;
+  private backHand: Phaser.GameObjects.Image;
+  private leftLeg: Phaser.GameObjects.Image;
+  private rightLeg: Phaser.GameObjects.Image;
+  private weaponContainer: Phaser.GameObjects.Container;
 
   private motionController: MotionController2;
   private canChangeDirection: boolean = false;
@@ -30,29 +34,45 @@ export class PlayerEntity {
   private moveY: number = 0;
   private direction: number = 1;
 
+  private bodyHeight: number = 50;
+  private bodyWidth: number = 50;
+  private containerOffsetY: number = 20;
+
   // Целевая позиция для интерполяции
   private targetX: number | null = null;
   private targetY: number | null = null;
 
-  private shadow: ShadowEntity;
+  private shadow!: ShadowEntity;
 
   static preload(scene: Phaser.Scene): void {
-    scene.load.image(TEXTURE_PLAYER, playerImage);
+    scene.load.image(PlayerBodyTexture.key, PlayerBodyTexture.url);
+    scene.load.image(PlayerHandTexture.key, PlayerHandTexture.url);
+    scene.load.image(PlayerLegLeftTexture.key, PlayerLegLeftTexture.url);
+    scene.load.image(PlayerLegRightTexture.key, PlayerLegRightTexture.url);
   }
 
   constructor(scene: Phaser.Scene, id: string, x: number, y: number) {
     this.id = id;
     this.scene = scene;
-    this.gameObject = scene.physics.add.sprite(0, 0, TEXTURE_PLAYER);
-    this.gameObject.setScale(0.5);
-
-    this.shadow = new ShadowEntity(scene, this.gameObject);
-
-    this.body = scene.physics.add.body(x, y, this.gameObject.width * this.gameObject.scale, this.gameObject.height * this.gameObject.scale);
-
     this.container = scene.add.container(x, y);
-    this.container.add(this.gameObject);
-    this.container.add(this.shadow);
+    
+
+    this.body = scene.physics.add.body(x, y, this.bodyWidth, this.bodyHeight);
+    this.shadow = new ShadowEntity(scene, this.body);
+    this.playerBody = scene.add.image(0, 0, PlayerBodyTexture.key).setScale(PlayerBodyTexture.scale);
+    this.frontHand = scene.add.image(0, 0, PlayerHandTexture.key).setScale(PlayerHandTexture.scale).setPosition(-6, 24);
+    this.backHand = scene.add.image(0, 0, PlayerHandTexture.key).setScale(PlayerHandTexture.scale).setPosition(14, 16);
+    this.leftLeg = scene.add.image(0, 0, PlayerLegLeftTexture.key).setScale(PlayerLegLeftTexture.scale).setOrigin(0.5, 1).setPosition(-10, 47);
+    this.rightLeg = scene.add.image(0, 0, PlayerLegRightTexture.key).setScale(PlayerLegRightTexture.scale).setOrigin(0.5, 1).setPosition(6, 44);
+    this.weaponContainer = scene.add.container(0, 0);
+
+    this.container.add(this.backHand);
+    this.container.add(this.shadow.getContainer());
+    this.container.add(this.leftLeg);
+    this.container.add(this.rightLeg);
+    this.container.add(this.playerBody);
+    this.container.add(this.weaponContainer);
+    this.container.add(this.frontHand);
 
     this.motionController = new MotionController2(scene, this.body, {
       acceleration: 700,
@@ -62,9 +82,7 @@ export class PlayerEntity {
       maxVelocityY: 200,
       direction: 1,
     });
-
-    scene.add.existing(this.container);
-
+    
     onEvent(scene, Player.Events.State.Remote, this.handlePlayerStateRemote, this);
   }
 
@@ -88,11 +106,11 @@ export class PlayerEntity {
 
   public setWeapon(weapon: WeaponEntity): void {
     if (this.currentWeapon) {
-      this.container.remove(this.currentWeapon.getGameObject());
+      this.weaponContainer.remove(this.currentWeapon.getContainer());
     }
-    this.currentWeapon = weapon
+    this.currentWeapon = weapon;
     this.currentWeapon.setPosition(0, 0, this.direction);
-    this.container.add(weapon.getGameObject());
+    this.weaponContainer.add(weapon.getContainer());
   }
 
   public setLocationBounds(bounds: LocationBounds): void {
@@ -113,18 +131,23 @@ export class PlayerEntity {
     // Интерполяция к целевой позиции
     if (this.targetX && this.targetY) {
       const lerpFactor = 0.15; // Коэффициент сглаживания (0-1). Меньше значение -> плавнее движение.
-      this.gameObject.x = Phaser.Math.Interpolation.Linear([this.gameObject.x, this.targetX], lerpFactor);
-      this.gameObject.y = Phaser.Math.Interpolation.Linear([this.gameObject.y, this.targetY], lerpFactor);
+      this.body.x = Phaser.Math.Interpolation.Linear([this.body.x, this.targetX], lerpFactor);
+      this.body.y = Phaser.Math.Interpolation.Linear([this.body.y, this.targetY], lerpFactor);
       // Если очень близко к цели, "примагничиваемся", чтобы избежать дрожания
-      // if (Phaser.Math.Distance.Between(this.gameObject.x, this.gameObject.y, this.targetX, this.targetY) < 1) {
-      //   this.gameObject.x = this.targetX;
-      //   this.gameObject.y = this.targetY;
+      // if (Phaser.Math.Distance.Between(this.body.x, this.body.y, this.targetX, this.targetY) < 1) {
+      //   this.body.x = this.targetX;
+      //   this.body.y = this.targetY;
       // }
     }
 
     this.container.setDepth(position.depth);
-    this.container.setPosition(position.x, position.y);
-    this.shadow.update(time, delta, position.jumpHeight);
+    this.container.setPosition(position.x, position.y - this.containerOffsetY);
+
+    if (this.shadow) {
+      this.shadow
+        .getContainer()
+        .setPosition(0, this.body.height / 2 + this.containerOffsetY - position.jumpHeight);
+    }
 
     if (this.currentWeapon) {
       this.currentWeapon.update(time, delta);
@@ -156,7 +179,7 @@ export class PlayerEntity {
   // private handleDirectionChange(direction: number): void {
   //   if (this.canChangeDirection) {
   //     this.direction = direction;
-  //     this.gameObject.setFlipX(direction === -1);
+  //     this.container.setFlipX(direction === -1);
   //   }
   // }
 

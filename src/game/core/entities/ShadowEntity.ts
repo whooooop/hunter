@@ -7,35 +7,32 @@ export interface ShadowEntityOptions {
 
 const defaultOptions: ShadowEntityOptions = {
   scale: [0.9, 0.3],
-  offset: [0, 4],
+  offset: [0, 0],
   color: 0x000000,
   alpha: 0.1
 }
 
-export class ShadowEntity extends Phaser.GameObjects.Ellipse {
-  private gameObject: Phaser.Physics.Arcade.Sprite;
-  private options: ShadowEntityOptions;
+export class ShadowEntity {
+  private container: Phaser.GameObjects.Container;
+  private ellipse: Phaser.GameObjects.Ellipse;
 
   constructor(
     scene: Phaser.Scene, 
-    gameObject: Phaser.Physics.Arcade.Sprite,
-    options?: ShadowEntityOptions
+    body: Phaser.Physics.Arcade.Body,
+    config?: ShadowEntityOptions
   ) {
-    const _options: ShadowEntityOptions = { ...defaultOptions, ...options };
-    super(scene, 0, 0, 0, 0, _options.color, _options.alpha);
+    config = { ...defaultOptions, ...config };
 
-    this.gameObject = gameObject;
-    this.options = _options;
-    this.setScale(gameObject.scale);
-    scene.add.existing(this);
+    const width = body.width * config.scale![0];
+    const height = body.height * config.scale![1];
+
+    this.container = scene.add.container(0, 0);
+    this.ellipse = scene.add.ellipse(config.offset![0], config.offset![1], width, height, config.color, config.alpha);
+
+    this.container.add(this.ellipse);
   }
 
-  public update(time: number, delta: number, offsetY: number = 0): void {
-    const scale = this.gameObject.scale;
-    this
-      .setPosition(this.gameObject.x + this.options.offset![0], this.gameObject.y + this.gameObject.height * scale / 2 + this.options.offset![1] - offsetY)
-      .setSize(this.gameObject.width * this.options.scale![0], this.gameObject.height * this.options.scale![1])
-      .setScale(this.gameObject.scale)
-      .setDepth(this.gameObject.depth - 1);
+  public getContainer(): Phaser.GameObjects.Container {
+    return this.container;
   }
 }
