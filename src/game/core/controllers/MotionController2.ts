@@ -46,7 +46,7 @@ export class MotionController2 {
   protected moveY: number = 0;
   protected direction: number = 0;
 
-  private isJumping: boolean = false;
+  private jumping: boolean = false;
   private startJumpTime: number = 0;
   private jumpOffsetY: number = 0;
   private jumpHeight: number = 0;
@@ -80,6 +80,15 @@ export class MotionController2 {
       this.debugGraphics = scene.add.graphics();
       this.debugRect = scene.add.rectangle(this.body.x, this.body.y, this.body.width, this.body.height, 0x0000ff, 0.5);
     }
+  }
+
+
+  public isMoving(): boolean {
+    return this.moveX !== 0 || this.moveY !== 0;
+  }
+
+  public isJumping(): boolean {
+    return this.jumping;
   }
 
   public getDepth(): number {
@@ -119,14 +128,14 @@ export class MotionController2 {
     this.updateExternalForces(delta);
     
     // Если прыгаем, устанавливаем Y на основе jumpStartY и jumpOffsetY, переписывая физику
-    if (this.isJumping) {
+    if (this.jumping) {
       this.body.y = this.jumpStartY + this.jumpOffsetY;
     }
     if (this.locationBounds) {
       const halfWidth = this.body.width / 2;
       const halfHeight = this.body.height / 2;
       this.body.x = Math.max(this.locationBounds.left + halfWidth, Math.min(this.locationBounds.right - halfWidth, this.body.x));
-      if (!this.isJumping) {
+      if (!this.jumping) {
         this.body.y = Math.max(this.locationBounds.top + halfHeight, Math.min(this.locationBounds.bottom - halfHeight, this.body.y));
       }
     }
@@ -156,26 +165,26 @@ export class MotionController2 {
   }
 
   public jump(height: number = 100, duration: number = 500): void {
-    if (this.isJumping) return;
+    if (this.jumping) return;
     this.startJumpTime = this.scene.time.now;
     this.jumpHeight = height;
     this.jumpDuration = duration;
     this.jumpOffsetY = 0;
     this.jumpStartY = this.body.y;
-    this.isJumping = true;
+    this.jumping = true;
   }
 
   /**
    * Обрабатывает логику прыжка
    */
   private handleJump(time: number, delta: number): void {
-    if (!this.isJumping) return;
+    if (!this.jumping) return;
     
     const jumpProgress = Math.min((time - this.startJumpTime) / this.jumpDuration, 1);
     this.jumpOffsetY = -1 * this.jumpHeight * Math.sin(Math.PI * jumpProgress);
 
     if (jumpProgress >= 1) {
-      this.isJumping = false;
+      this.jumping = false;
       this.jumpOffsetY = 0;
       this.body.y = this.jumpStartY;
       return;
@@ -284,5 +293,15 @@ export class MotionController2 {
 
   public destroy(): void {
     this.debugGraphics?.destroy();
+  }
+
+  // Добавляем геттер для скорости
+  public getVelocity(): Phaser.Math.Vector2 {
+    return this.body.velocity;
+  }
+
+  // Добавляем геттер для максимальной скорости (используем maxVelocityX)
+  public getMaxSpeed(): number {
+    return this.options.maxVelocityX;
   }
 }

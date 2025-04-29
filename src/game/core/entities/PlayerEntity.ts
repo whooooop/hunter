@@ -10,6 +10,11 @@ import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRi
 
 const logger = createLogger('Player');
 
+const LEG_WALK_MAX_ROTATION = Phaser.Math.DegToRad(30);
+const LEG_JUMP_ROTATION = Phaser.Math.DegToRad(45);
+const WALK_CYCLE_SPEED_FACTOR = 0.05; // Множитель для скорости анимации ходьбы (подбирается экспериментально)
+const BODY_WALK_MAX_ROTATION = Phaser.Math.DegToRad(1); // Максимальный угол наклона тела при ходьбе
+
 export class PlayerEntity {
   name = 'Player';
 
@@ -42,6 +47,10 @@ export class PlayerEntity {
   private targetX: number | null = null;
   private targetY: number | null = null;
 
+  // Анимация ног
+  private walkPhase: number = 0; // Текущая фаза анимации ходьбы
+  private legReturnSpeed: number = Phaser.Math.DegToRad(360); // Скорость возврата ног в покой (градусы в секунду)
+
   private shadow!: ShadowEntity;
 
   static preload(scene: Phaser.Scene): void {
@@ -62,8 +71,8 @@ export class PlayerEntity {
     this.playerBody = scene.add.image(0, 0, PlayerBodyTexture.key).setScale(PlayerBodyTexture.scale);
     this.frontHand = scene.add.image(0, 0, PlayerHandTexture.key).setScale(PlayerHandTexture.scale).setPosition(-6, 24);
     this.backHand = scene.add.image(0, 0, PlayerHandTexture.key).setScale(PlayerHandTexture.scale).setPosition(14, 16);
-    this.leftLeg = scene.add.image(0, 0, PlayerLegLeftTexture.key).setScale(PlayerLegLeftTexture.scale).setOrigin(0.5, 1).setPosition(-10, 47);
-    this.rightLeg = scene.add.image(0, 0, PlayerLegRightTexture.key).setScale(PlayerLegRightTexture.scale).setOrigin(0.5, 1).setPosition(6, 44);
+    this.leftLeg = scene.add.image(0, 0, PlayerLegLeftTexture.key).setScale(PlayerLegLeftTexture.scale).setOrigin(0.5, 0).setPosition(-10, 30);
+    this.rightLeg = scene.add.image(0, 0, PlayerLegRightTexture.key).setScale(PlayerLegRightTexture.scale).setOrigin(0.5, 0).setPosition(6, 28);
     this.weaponContainer = scene.add.container(0, 0);
 
     this.container.add(this.backHand);1
@@ -73,6 +82,9 @@ export class PlayerEntity {
     this.container.add(this.playerBody);
     this.container.add(this.weaponContainer);
     this.container.add(this.frontHand);
+
+    this.leftLeg.setRotation(0);
+    this.rightLeg.setRotation(0);
 
     this.motionController = new MotionController2(scene, this.body, {
       acceleration: 700,
@@ -127,6 +139,8 @@ export class PlayerEntity {
   public update(time: number, delta: number): void {
     this.motionController.update(time, delta);
     const position = this.motionController.getPosition();
+    const isMoving = this.motionController.getVelocity().length() !== 0;
+    const isJumping = this.motionController.isJumping();
 
     // Интерполяция к целевой позиции
     if (this.targetX && this.targetY) {
@@ -142,6 +156,51 @@ export class PlayerEntity {
 
     this.container.setDepth(position.depth);
     this.container.setPosition(position.x, position.y - this.containerOffsetY);
+
+    if (isJumping) {
+      this.leftLeg.setRotation(-LEG_JUMP_ROTATION);
+      this.rightLeg.setRotation(LEG_JUMP_ROTATION);
+      this.playerBody.setRotation(0); // Сбрасываем вращение тела при прыжке
+      this.walkPhase = 0; // Сбрасываем фазу при прыжке
+    } else if (isMoving) {
+      const velocity = this.motionController.getVelocity();
+      const speed = velocity.length();
+      const maxSpeed = this.motionController.getMaxSpeed();
+      // Рассчитываем линейный фактор скорости (от 0 до 1)
+      const linearSpeedFactor = maxSpeed > 0 ? Phaser.Math.Clamp(speed / maxSpeed, 0, 1) : 0;
+
+      // Применяем ease-out функцию для получения нелинейного фактора скорости
+      // Анимация будет быстрее нарастать в начале и медленнее в конце
+      const easedSpeedFactor = Phaser.Math.Easing.Expo.Out(linearSpeedFactor);
+
+      // Рассчитываем динамическую скорость изменения фазы, используя нелинейный фактор
+      // Умножаем на delta, чтобы получить приращение за кадр
+      const phaseIncrement = WALK_CYCLE_SPEED_FACTOR * easedSpeedFactor * delta;
+
+      // Накапливаем фазу
+      this.walkPhase += phaseIncrement;
+
+      // Анимация ходьбы ног
+      const legWalkCycle = Math.sin(this.walkPhase) * LEG_WALK_MAX_ROTATION;
+      this.leftLeg.setRotation(legWalkCycle);
+      this.rightLeg.setRotation(-legWalkCycle);
+
+      // Анимация покачивания тела (в противофазе с ногами)
+      const bodyWalkCycle = -Math.sin(this.walkPhase) * BODY_WALK_MAX_ROTATION;
+      this.playerBody.setRotation(bodyWalkCycle);
+
+    } else {
+      // Плавно возвращаем ноги и тело в 0, если не двигаемся и не прыгаем
+      const step = this.legReturnSpeed * (delta / 1000); // Шаг поворота за кадр
+      this.leftLeg.rotation = Phaser.Math.Angle.RotateTo(this.leftLeg.rotation, 0, step);
+      this.rightLeg.rotation = Phaser.Math.Angle.RotateTo(this.rightLeg.rotation, 0, step);
+      this.playerBody.rotation = Phaser.Math.Angle.RotateTo(this.playerBody.rotation, 0, step);
+
+      // Сбрасываем фазу, когда ноги почти вернулись в 0, чтобы избежать накопления ошибки
+      if (Math.abs(this.leftLeg.rotation) < Phaser.Math.DegToRad(1)) {
+           this.walkPhase = 0;
+      }
+    }
 
     if (this.shadow) {
       this.shadow

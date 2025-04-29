@@ -1,5 +1,4 @@
 import { WeaponType } from "../../weapons/WeaponTypes";
-import { ShadowEntityOptions } from "../entities/ShadowEntity";
 
 export namespace Enemy {
   export enum Type {
@@ -21,7 +20,6 @@ export namespace Enemy {
   export interface Config {
     health: number;
     debug?: boolean;
-    shadow?: ShadowEntityOptions
     scale: number;
 
     offset: {
