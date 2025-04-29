@@ -1,7 +1,6 @@
 import { BloodController, createSimpleBloodConfig } from "../controllers/BloodController";
 import { MotionController2 } from "../controllers/MotionController2";
 import { DamageableController } from "../controllers/DamageableController";
-import { ShadowEntity } from "./ShadowEntity";
 import { Decals } from "../types/decals";
 import { emitEvent } from "../Events";
 import { hexToNumber } from "../../utils/colors";
@@ -22,8 +21,8 @@ export class EnemyEntity implements Damageable.Entity {
   private damageableController: DamageableController;
   private motionController: MotionController2;
 
+  
   private graphics!: Phaser.GameObjects.Graphics;
-  // private shadow: ShadowEntity;
   private config: Enemy.Config;
   private scoreMap: Map<string, number>;
 
@@ -38,7 +37,7 @@ export class EnemyEntity implements Damageable.Entity {
 
     this.container = scene.add.container(x, y);
     this.gameObject = scene.physics.add.sprite(0, 0, this.animations.get('walk')!.key).setScale(config.scale).setDepth(1000);
-    this.body = scene.physics.add.body(x, y, config.baunds.body.width, config.baunds.body.height);;
+    this.body = scene.physics.add.body(x, y, config.baunds.body.width, config.baunds.body.height);
 
     this.bloodController = new BloodController(scene);
     this.damageableController = new DamageableController({ health: config.health, permeability: 0 });
@@ -48,9 +47,7 @@ export class EnemyEntity implements Damageable.Entity {
     if (this.animations.has('walk')) {
       this.gameObject.play(this.animations.get('walk')!.key, true);
     }
-    this.motionController.setMove(-1, 1);
-
-    // this.shadow = new ShadowEntity(scene, this.body, config.shadow);
+    this.motionController.setMove(-1, 0);
     
     if (this.config.debug) {
       this.graphics = scene.add.graphics();
@@ -233,8 +230,19 @@ export class EnemyEntity implements Damageable.Entity {
     return damage.hitPoint[0] >= x && damage.hitPoint[0] <= x + width && damage.hitPoint[1] >= y && damage.hitPoint[1] <= y + height;
   }
 
-  public getBodyBounds(): Damageable.Body {
+  public getPosition(): { x: number, y: number, jumpHeight: number, depth: number } {
+    return this.motionController.getPosition();
+  }
 
+  public jump(height: number = 100, duration: number = 500): void {
+    this.motionController.jump(height, duration);
+  }
+
+  public applyForce(vectorX: number, vectorY: number, force: number, strength?: number, decayRate?: number): void {
+    this.motionController.applyForce(vectorX, vectorY, force, strength, decayRate);
+  }
+
+  public getBodyBounds(): Damageable.Body {
     // x + config.body.main.x - config.body.main.width / 2, 
     // y + config.body.main.y - config.body.main.height / 2, 
     // config.body.main.width, 

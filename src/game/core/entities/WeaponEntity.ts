@@ -428,9 +428,14 @@ export class WeaponEntity {
     // Постепенно возвращаем оружие в нормальное положение
     this.updateWeaponTilt(time, delta);
 
+    const { worldX, worldY } = this.getFirePoint();
+    emitEvent(this.scene, Weapon.Events.AimPoint.Local, {
+      playerId: this.id,
+      targetPoint: { x: worldX, y: worldY }
+    });
+
     if (this.debugFirePoint) {
-      const { innerX, innerY } = this.getFirePoint();
-      this.debugFirePoint.setDepth(1000).setPosition(innerX, innerY);
+      this.debugFirePoint.setDepth(1000).setPosition(worldX, worldY);
     }
   }
 

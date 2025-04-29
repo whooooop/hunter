@@ -42,6 +42,15 @@ export namespace Weapon {
         targetPoint: { x: number, y: number };
       }
     }
+
+    export namespace AimPoint {
+      export const Local = 'WeaponAimPointLocalEvent';
+      export const Remote = 'WeaponAimPointRemoteEvent';
+      export interface Payload {
+        playerId: string;
+        targetPoint: { x: number, y: number };
+      }
+    }
   }
 
   export interface Config {

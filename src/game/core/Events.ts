@@ -20,6 +20,7 @@ interface EventPayloadMap {
   [Weapon.Events.FireAction.Remote]: Weapon.Events.FireAction.Payload;
   [Weapon.Events.ReloadAction.Local]: Weapon.Events.ReloadAction.Payload;
   [Weapon.Events.ReloadAction.Remote]: Weapon.Events.ReloadAction.Payload;
+  [Weapon.Events.AimPoint.Local]: Weapon.Events.AimPoint.Payload;
 
   // Waves
   [WaveEvents.WaveStartEvent]: WaveStartEventPayload;
