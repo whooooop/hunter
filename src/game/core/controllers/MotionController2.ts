@@ -1,7 +1,7 @@
 import { settings } from "../../settings";
 import { createLogger } from "../../../utils/logger";
 import { forceToTargetOffset, easeOutQuart, easeOutQuint } from "../../utils/ForceUtils";
-import { LocationBounds } from "../BaseLocation";
+import { Location } from "../types/Location";
 import { hexToNumber } from "../../utils/colors";
 
 const logger = createLogger('MotionController');
@@ -53,7 +53,7 @@ export class MotionController2 {
   private jumpDuration: number = 0;
   private jumpStartY: number = 0;
 
-  private locationBounds: LocationBounds | null = null;
+  private locationBounds: Location.Bounds | null = null;
 
   // Параметры для внешних сил (отдача, ветер и т.д.)
   protected externalForces: ExternalForce[] = [];
@@ -61,14 +61,15 @@ export class MotionController2 {
   protected defaultForceStrength: number = 0.15; // Сила воздействия (чем больше, тем быстрее)
   protected forceThreshold: number = 0.01; // Порог для удаления силы
 
-  private debug: boolean = false;
+  private debug: boolean;
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
   private debugRect!: Phaser.GameObjects.Rectangle;
 
-  constructor(scene: Phaser.Scene, body: Phaser.Physics.Arcade.Body, options: MotionControllerOptions) {
+  constructor(scene: Phaser.Scene, body: Phaser.Physics.Arcade.Body, options: MotionControllerOptions, debug?: boolean) {
     this.scene = scene;
     this.body = body;
     this.options = options;
+    this.debug = debug || false;
 
     // Настраиваем физические свойства тела
     if (this.body) {
@@ -160,7 +161,7 @@ export class MotionController2 {
     };
   }
 
-  public setLocationBounds(bounds: LocationBounds): void {
+  public setLocationBounds(bounds: Location.Bounds): void {
     this.locationBounds = bounds;
   }
 

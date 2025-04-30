@@ -1,7 +1,7 @@
 import { SceneKeys } from '../index';
 import { playButtonTexture, shopButtonTexture, multiplayerButtonTexture, settingsButtonTexture } from './textures';
 import { settings } from '../../settings';
-import { SceneBackground } from '../../ui/SceneBackground';
+import { BackgroundView } from '../../views/background/BackgroundView';
 
 interface MenuButton {
   text: string;
@@ -15,7 +15,8 @@ interface MenuButton {
 
 export class MainMenuScene extends Phaser.Scene {
   private ready: boolean = false;
-  private sceneBackground!: SceneBackground;
+  private container!: Phaser.GameObjects.Container;
+  private backgroundView!: BackgroundView;
   private playButton!: Phaser.GameObjects.Container;
   private shopButton!: Phaser.GameObjects.Container;
   private settingsButton!: Phaser.GameObjects.Container;
@@ -75,7 +76,7 @@ export class MainMenuScene extends Phaser.Scene {
   }
   
   preload() {
-    SceneBackground.preload(this);
+    BackgroundView.preload(this);
     this.load.image(playButtonTexture.key, playButtonTexture.url);
     this.load.image(shopButtonTexture.key, shopButtonTexture.url);
     this.load.image(settingsButtonTexture.key, settingsButtonTexture.url);
@@ -83,7 +84,8 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   create() {
-    this.sceneBackground = new SceneBackground(this);
+    this.container = this.add.container(0, 0).setDepth(1000);
+    this.backgroundView = new BackgroundView(this, this.container);
     this.createPlayButton();
 
     this.buttons.forEach(button => {
@@ -151,7 +153,7 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number): void {
-    this.sceneBackground.update(time, delta);
+    this.backgroundView.update(time, delta);
   }
 
   play(): void {

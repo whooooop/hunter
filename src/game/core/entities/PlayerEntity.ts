@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { createLogger } from '../../../utils/logger';
-import { LocationBounds } from '../BaseLocation';
+import { Location } from '../types/Location';
 import { WeaponEntity } from './WeaponEntity';
 import { ShadowEntity } from './ShadowEntity';
 import { offEvent, onEvent } from '../Events';
@@ -125,7 +125,7 @@ export class PlayerEntity {
     this.weaponContainer.add(weapon.getContainer());
   }
 
-  public setLocationBounds(bounds: LocationBounds): void {
+  public setLocationBounds(bounds: Location.Bounds): void {
     this.motionController.setLocationBounds(bounds);
   }
   

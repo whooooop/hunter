@@ -1,4 +1,6 @@
 export enum SceneKeys {
+  BOOT = 'BootScene',
+  
   MAIN_MENU = 'MainMenuScene',
   LOADING = 'LoadingScene',
   GAMEPLAY = 'GameplayScene',

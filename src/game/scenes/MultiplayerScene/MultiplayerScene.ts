@@ -1,23 +1,24 @@
 import { SceneKeys } from '../index';
-import { SceneBackground } from '../../ui/SceneBackground';
+import { BackgroundView } from '../../views/background/BackgroundView';
 
 export class MultiplayerScene extends Phaser.Scene {
-  private sceneBackground!: SceneBackground;
-
+  private backgroundView!: BackgroundView;
+  private container!: Phaser.GameObjects.Container;
   constructor() {
     super({ key: SceneKeys.MULTIPLAYER });
   }
   
   preload() {
-    SceneBackground.preload(this);
+    BackgroundView.preload(this);
   }
 
   create() {
-    this.sceneBackground = new SceneBackground(this);
+    this.container = this.add.container(0, 0).setDepth(1000);
+    this.backgroundView = new BackgroundView(this, this.container);
   }
 
   update(time: number, delta: number): void {
-    this.sceneBackground.update(time, delta);
+    this.backgroundView.update(time, delta);
   }
 
   back(): void {

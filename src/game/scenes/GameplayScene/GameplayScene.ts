@@ -5,8 +5,6 @@ import { PlayerEntity } from '../../core/entities/PlayerEntity';
 import { WaveInfo } from '../../ui/WaveInfo';
 import { settings } from '../../settings';
 import { createLogger } from '../../../utils/logger';
-import { LocationManager } from '../../core/LocationManager';
-import { BaseLocation } from '../../core/BaseLocation';
 import { WeaponStatus } from '../../ui/WeaponStatus';
 import { BaseShop } from '../../core/BaseShop';
 import { ProjectileController } from '../../core/controllers/ProjectileController';
@@ -34,17 +32,19 @@ import { Player } from '../../core/types/playerTypes';
 import { Game } from '../../core/types/gameTypes';
 import { Damageable } from '../../core/types/damageableTypes';
 import { preloadFx } from '../../fx';
-
+import { Location } from '../../core/types/Location';
+import { getLocation } from '../../locations';
+import { LoadingView } from '../../views/loading/LoadingView';
 const logger = createLogger('GameplayScene');
 
 interface GameplaySceneData {
-  locationId: string;
+  locationId: Location.Id;
 }
 
 export class GameplayScene extends Phaser.Scene {
-  private locationManager!: LocationManager;
+  private location!: Location.BaseClass;
 
-  private location!: BaseLocation;
+  private loadingView!: LoadingView;
   
   private shop!: BaseShop;
   private enemies: Map<string, Damageable.Entity> = new Map();
@@ -74,11 +74,13 @@ export class GameplayScene extends Phaser.Scene {
   }
   
   init({ locationId } : GameplaySceneData) {
-    this.locationManager = new LocationManager(this);
-    this.location = this.locationManager.loadLocation(locationId);
+    this.loadingView = new LoadingView(this);
+    console.log('GameplayScene init', locationId);
+    this.location = getLocation(this, locationId);
   }
 
   async preload(): Promise<void> {
+    console.log('GameplayScene preload');
     this.location.preload();
 
     PlayerEntity.preload(this);
@@ -91,6 +93,9 @@ export class GameplayScene extends Phaser.Scene {
   }
   
   async create(): Promise<void> {
+    this.loadingView.destroy();
+ 
+    console.log('GameplayScene create');
     const playerId = window.location.search.split('player=')[1] || generateId();
     this.mainPlayerId = playerId;
 
@@ -122,7 +127,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private singlePlayerInit(playerId: string): void {
     this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
-    this.setWeapon(playerId, WeaponType.LAUNCHER);
+    this.setWeapon(playerId, WeaponType.GLOCK);
     this.waveController.start();
     this.projectileController.setSimulate(false);
   }
@@ -201,7 +206,7 @@ export class GameplayScene extends Phaser.Scene {
     const player = new PlayerEntity(this, playerId, x, y);
     this.players.set(playerId, player);
 
-    player.setLocationBounds(this.location.bounds);
+    player.setLocationBounds(this.location.getBounds());
   }
 
   public setWeapon(playerId: string, weaponType: WeaponType): void {
@@ -270,7 +275,6 @@ export class GameplayScene extends Phaser.Scene {
 
   destroy(): void {
     this.location.destroy();
-    this.shop.destroy();
     this.waveController.destroy();
     this.scoreController.destroy();
     this.weaponController.destroy();

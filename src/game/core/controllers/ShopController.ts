@@ -11,7 +11,7 @@ export class ShopController {
   private shop: BaseShop;
   private players: Map<string, PlayerEntity>;
   private playerBalance: Map<string, number> = new Map();
-  private playerPurchasedWeapon: Map<string, Set<WeaponType>> = new Map();
+  private playerPurchasedWeapons: Map<string, Set<WeaponType>> = new Map();
   private weapons: ShopWeapon[];
   private isNearbyPlayer: boolean = false;
   private interactablePlayerId: string | null = null;
@@ -33,9 +33,9 @@ export class ShopController {
   }
 
   private handleWeaponPurchased(payload: WeaponPurchasedPayload) {
-    const playerPurchasedWeapons = this.playerPurchasedWeapon.get(payload.playerId) || new Set();
+    const playerPurchasedWeapons = this.playerPurchasedWeapons.get(payload.playerId) || new Set();
     playerPurchasedWeapons.add(payload.weaponType);
-    this.playerPurchasedWeapon.set(payload.playerId, playerPurchasedWeapons);
+    this.playerPurchasedWeapons.set(payload.playerId, playerPurchasedWeapons);
   }
 
   public update(time: number, delta: number) {
@@ -73,7 +73,7 @@ export class ShopController {
 
   private openShop(playerId: string): void {
     const playerBalance = this.playerBalance.get(playerId)!;
-    const playerPurchasedWeapons = this.playerPurchasedWeapon.get(playerId) || new Set();
+    const playerPurchasedWeapons = this.playerPurchasedWeapons.get(playerId) || new Set();
     this.shop.openShop(playerId, playerBalance, playerPurchasedWeapons, this.weapons);
   }
 

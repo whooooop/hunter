@@ -4,6 +4,7 @@ import rabbitWalkTextureUrl from './assets/images/walking.png';
 import rabbitDeathTextureUrl from './assets/images/death.png';
 
 export const RabbitConfig: Enemy.Config = {
+  debug: true,
   health: 47,
   scale: 1,
   motion: {
@@ -16,7 +17,7 @@ export const RabbitConfig: Enemy.Config = {
   },
   offset: { x: 24, y: -10 },
   baunds: {
-    body: { x: 20, y: 0, width: 42, height: 40 },
+    body: { x: 0, y: 0, width: 42, height: 40 },
     head: { x: 0, y: 0, width: 42, height: 16 },
   },
   score: [
@@ -58,5 +59,4 @@ export const RabbitConfig: Enemy.Config = {
       repeat: 0,
     }
   ],
-  debug: false,
 }

@@ -24,7 +24,6 @@ export class EnemyEntity implements Damageable.Entity {
   
   private graphics!: Phaser.GameObjects.Graphics;
   private config: Enemy.Config;
-  private scoreMap: Map<string, number>;
 
   private animations: Map<Enemy.AnimationName, Enemy.Animation> = new Map();
 
@@ -36,13 +35,15 @@ export class EnemyEntity implements Damageable.Entity {
     this.createAnimations(scene, config);
 
     this.container = scene.add.container(x, y);
-    this.gameObject = scene.physics.add.sprite(0, 0, this.animations.get('walk')!.key).setScale(config.scale).setDepth(1000);
+    
+    const textureKey = (config.texture || this.animations.get('walk'))!.key;
+
+    this.gameObject = scene.physics.add.sprite(0, 0, textureKey).setScale(config.scale);
     this.body = scene.physics.add.body(x, y, config.baunds.body.width, config.baunds.body.height);
 
     this.bloodController = new BloodController(scene);
     this.damageableController = new DamageableController({ health: config.health, permeability: 0 });
-    this.motionController = new MotionController2(scene, this.body, config.motion);
-
+    this.motionController = new MotionController2(scene, this.body, config.motion, config.debug);
 
     if (this.animations.has('walk')) {
       this.gameObject.play(this.animations.get('walk')!.key, true);
@@ -52,11 +53,6 @@ export class EnemyEntity implements Damageable.Entity {
     if (this.config.debug) {
       this.graphics = scene.add.graphics();
     }
-
-    this.scoreMap = new Map<string, number>();
-    this.config.score.forEach(rule => {
-      this.scoreMap.set(`${rule.target || ''}${typeof rule.death === 'boolean' ? rule.death ? 'D' : 'ND' : ''}${rule.weapon || ''}`, rule.value);
-    });
 
     this.container.add(this.gameObject);
     scene.add.existing(this.container);
@@ -236,8 +232,8 @@ export class EnemyEntity implements Damageable.Entity {
 
   public getBodyBounds(): Damageable.Body {
     return {
-      x: this.body.x - this.body.width / 2,
-      y: this.body.y - this.body.height / 2,
+      x: this.body.x - this.body.width / 2 + this.config.baunds.body.x,
+      y: this.body.y - this.body.height / 2 + this.config.baunds.body.y,
       width: this.body.width,
       height: this.body.height,
     };

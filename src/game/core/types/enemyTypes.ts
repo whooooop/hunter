@@ -1,8 +1,11 @@
+import { SpriteConfig } from "../../utils/sprite";
 import { WeaponType } from "../../weapons/WeaponTypes";
 
 export namespace Enemy {
   export enum Type {
     RABBIT = 'rabbit',
+    MOUSE = 'mouse',
+    BEAR = 'bear',
   }
 
   export namespace Events {
@@ -46,6 +49,8 @@ export namespace Enemy {
     killCombo?: killCombo[];
 
     animations: Animation[];
+
+    texture?: SpriteConfig;
   }
 
   interface ScoreRule {

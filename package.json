@@ -23,6 +23,7 @@
   "dependencies": {
     "@esotericsoftware/spine-phaser": "~4.1.0",
     "phaser": "^3.60.0",
+    "phaser3-rex-plugins": "^1.80.15",
     "socket.io-client": "^4.8.1",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.3",

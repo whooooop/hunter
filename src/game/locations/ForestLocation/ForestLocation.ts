@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { BaseLocation, LocationBounds } from '../../core/BaseLocation';
+import { Location } from '../../core/types/Location';
 import { ForestLocationConfig, DEFAULT_FOREST_CONFIG, FOREST_COLORS, INTERACTIVE_OBJECTS, CLOUDS } from './ForestLocationConfig';
 import { createLogger } from '../../../utils/logger';
 import { GameplayScene } from '../../scenes/GameplayScene/GameplayScene';
@@ -11,7 +11,6 @@ import skyImage from './assets/images/sky.png';
 import groundImage from './assets/images/ground.png';
 import rockImage from './assets/images/rock.png';
 import rockImage2 from './assets/images/rock2.png';
-import cloudImage from './assets/images/cloud.png';
 import { BaseShop } from '../../core/BaseShop';
 import { Clouds } from '../../ui/Clouds';
 
@@ -22,13 +21,14 @@ const ROCK_TEXTURE = 'rock_texture_' + generateStringWithLength(6);
 const ROCK_TEXTURE_2 = 'rock_texture_2_' + generateStringWithLength(6);
 const SKY_TEXTURE = 'sky_texture_' + generateStringWithLength(6);
 
-export class ForestLocation extends BaseLocation {
+export class ForestLocation implements Location.BaseClass {
+  private scene: Phaser.Scene;
   private config: ForestLocationConfig;
 
   private width: number = 0;
   private height: number = 0;
   private skyHeight: number = 0;
-  public bounds: LocationBounds = {
+  public bounds: Location.Bounds = {
     left: 0,
     right: 0,
     top: 0,
@@ -38,23 +38,21 @@ export class ForestLocation extends BaseLocation {
   private clouds!: Clouds;
   
   constructor(scene: Phaser.Scene, config: Partial<ForestLocationConfig> = {}) {
-    super(scene);
-    
-    // Объединяем стандартную конфигурацию с пользовательской
+    this.scene = scene;
+
     this.config = {
       ...DEFAULT_FOREST_CONFIG,
       ...config
     };
   }
   
-  /**
-   * Предзагрузка ресурсов для лесной локации
-   */
   public preload(): void {
+    console.log('ForestLocation preload');
     this.scene.load.image(SKY_TEXTURE, skyImage);
     this.scene.load.image(GROUND_TEXTURE, groundImage);
     this.scene.load.image(ROCK_TEXTURE, rockImage);
-    this.scene.load.image(ROCK_TEXTURE_2, rockImage2);  
+    this.scene.load.image(ROCK_TEXTURE_2, rockImage2);
+
     Clouds.preload(this.scene);
     ForestShop.preload(this.scene);
     SpruceTree.preload(this.scene);
@@ -65,21 +63,15 @@ export class ForestLocation extends BaseLocation {
     return this.config;
   }
   
-  /**
-   * Возвращает границы локации для ограничения движения игрока
-   */
-  public getBounds(): { left: number, right: number, top: number, bottom: number } {
+  public getBounds(): Location.Bounds {
     return this.bounds;
   }
   
-  // Реализация метода базового класса
   public create(): void {
-    // Получаем размеры экрана
     this.width = this.scene.cameras.main.width;
     this.height = this.scene.cameras.main.height;
     this.skyHeight = 188;
     
-    // Устанавливаем границы локации
     this.setupLocationBounds();
     
     this.createBackground();
@@ -111,8 +103,6 @@ export class ForestLocation extends BaseLocation {
   private createBackground(): void {
     // Создаем небо (на всю ширину экрана)
     const sky = this.scene.add.image(this.width / 2, this.skyHeight, SKY_TEXTURE);
-    
-    // Используем setScale вместо setDisplaySize для более точного контроля
     
     sky.setOrigin(0.5);
     sky.setDepth(0);
@@ -149,11 +139,8 @@ export class ForestLocation extends BaseLocation {
   }
   
   // Переопределяем метод destroy для очистки ресурсов
-  public override destroy(): void {
+  public destroy(): void {
     logger.info('Уничтожение лесной локации');
-    
-    // Вызываем метод базового класса
-    super.destroy();
   }
 
   /**
@@ -191,4 +178,4 @@ export class ForestLocation extends BaseLocation {
       this.scene.add.existing(shop);
     }
   }
-} 
+}

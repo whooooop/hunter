@@ -1,8 +1,12 @@
 import { EnemyEntity } from "../core/entities/EnemyEntity";
 import { Enemy } from "../core/types/enemyTypes";
-import { loadSpriteSheet } from "../utils/sprite";
+import { loadSprite, loadSpriteSheet } from "../utils/sprite";
 import { RabbitConfig } from "./rabbit/configs";
 import { RabbitEnemy } from "./rabbit/RabbitEnemy";
+import { MouseConfig } from "./mouse/config";
+import { MouseEnemy } from "./mouse/MouseEnemy";
+import { BearConfig } from "./bear/config";
+import { BearEnemy } from "./bear/BearEnemy";
 
 export const EnemyCollections: Record<Enemy.Type, {
   config: Enemy.Config,
@@ -12,6 +16,14 @@ export const EnemyCollections: Record<Enemy.Type, {
     config: RabbitConfig,
     enemy: RabbitEnemy,
   },
+  [Enemy.Type.MOUSE]: {
+    config: MouseConfig,
+    enemy: MouseEnemy,
+  },
+  [Enemy.Type.BEAR]: {
+    config: BearConfig,
+    enemy: BearEnemy,
+  },
 }
 
 export function preloadEnemies(scene: Phaser.Scene, enemies: Enemy.Type[]): void {
@@ -20,6 +32,9 @@ export function preloadEnemies(scene: Phaser.Scene, enemies: Enemy.Type[]): void
     EnemyConfig.animations.forEach(animation => {
       loadSpriteSheet(scene, animation);
     });
+    if (EnemyConfig.texture) {
+      loadSprite(scene, EnemyConfig.texture);
+    }
   });
 }
 
