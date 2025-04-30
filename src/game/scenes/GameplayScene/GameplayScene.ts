@@ -24,7 +24,7 @@ import { ScoreEvents, UpdateScoreEventPayload } from '../../core/types/scoreType
 import { WeaponController } from '../../core/controllers/WeaponController';
 import { testLevel } from '../../levels/test';
 import { ShopController } from '../../core/controllers/ShopController';
-import { WeaponPurchasedPayload } from '../../core/types/shopTypes';
+import { ShopEvents, WeaponPurchasedPayload } from '../../core/types/shopTypes';
 import { MultiplayerController } from '../../core/controllers/MultiplayerController';
 import { createEnemy } from '../../enemies';
 import { KeyBoardController } from '../../core/controllers/KeyBoardController';
@@ -123,9 +123,11 @@ export class GameplayScene extends Phaser.Scene {
 
   private singlePlayerInit(playerId: string): void {
     this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
-    this.setWeapon(playerId, WeaponType.GLOCK);
+    // this.setWeapon(playerId, WeaponType.GLOCK);
     this.waveController.start();
     this.projectileController.setSimulate(false);
+    emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
+    emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 5000 });
   }
 
   private multiplayerInit(playerId: string): void {
@@ -189,10 +191,6 @@ export class GameplayScene extends Phaser.Scene {
     }
   }
 
-  private handleWeaponPurchased(payload: WeaponPurchasedPayload): void {
-    this.setWeapon(payload.playerId, payload.weaponType);
-  }
-
   public spawnPlayer(playerId: string, x: number, y: number): void {
     if (this.players.has(playerId)) {
       logger.warn(`Player ${playerId} already exists.`);
@@ -203,11 +201,6 @@ export class GameplayScene extends Phaser.Scene {
     this.players.set(playerId, player);
 
     player.setLocationBounds(this.location.getBounds());
-  }
-
-  public setWeapon(playerId: string, weaponType: WeaponType): void {
-    logger.info(`Setting weapon for player ${playerId} to ${weaponType}`, playerId === this.mainPlayerId);
-    this.weaponController.setWeapon(playerId, weaponType);
   }
 
   /**

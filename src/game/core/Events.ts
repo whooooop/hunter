@@ -41,6 +41,7 @@ interface EventPayloadMap {
   [Player.Events.State.Remote]: Player.Events.State.Payload;
   [Player.Events.Join.Remote]: Player.Events.Join.Payload;
   [Player.Events.Left.Remote]: Player.Events.Left.Payload;
+  [Player.Events.ChangeWeapon.Local]: Player.Events.ChangeWeapon.Payload;
 
   // Shop
   [ShopEvents.WeaponPurchasedEvent]: WeaponPurchasedPayload;

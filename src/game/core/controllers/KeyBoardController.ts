@@ -1,4 +1,6 @@
 import { PlayerEntity } from "../entities/PlayerEntity";
+import { emitEvent } from "../Events";
+import { Player } from "../types/playerTypes";
 
 export class KeyBoardController {
   private scene: Phaser.Scene;
@@ -8,9 +10,12 @@ export class KeyBoardController {
   private fireKey: Phaser.Input.Keyboard.Key;
   private reloadKey: Phaser.Input.Keyboard.Key;
   private jumpKey: Phaser.Input.Keyboard.Key;
+  private changeWeaponKey: Phaser.Input.Keyboard.Key;
 
   private players: Map<string, PlayerEntity>;
   private playerId: string;
+
+  private changeWeaponKeyDisabled: boolean = false;
 
   constructor(scene: Phaser.Scene, players: Map<string, PlayerEntity>, playerId: string) {
     this.scene = scene;
@@ -21,6 +26,7 @@ export class KeyBoardController {
     this.cursors = scene.input.keyboard!.createCursorKeys();
     this.fireKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.reloadKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    this.changeWeaponKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.C);
     this.jumpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   }
 
@@ -32,6 +38,7 @@ export class KeyBoardController {
     this.handleJump(time, delta);
     this.handleFire(time, delta);
     this.handleReload(time, delta);
+    this.handleChangeWeapon(time, delta);
   }
 
   private handleMovement(time: number, delta: number): void {
@@ -50,6 +57,15 @@ export class KeyBoardController {
     }
     
     this.getPlayer()?.setMove(move.x, move.y);
+  }
+
+  private handleChangeWeapon(time: number, delta: number): void {
+    if (this.changeWeaponKey.isDown && !this.changeWeaponKeyDisabled) {
+      emitEvent(this.scene, Player.Events.ChangeWeapon.Local, { playerId: this.playerId });
+      this.changeWeaponKeyDisabled = true;
+    } else if (!this.changeWeaponKey.isDown) {
+      this.changeWeaponKeyDisabled = false;
+    }
   }
 
   private handleJump(time: number, delta: number): void {

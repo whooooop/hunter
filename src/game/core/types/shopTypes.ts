@@ -16,7 +16,7 @@ export interface ShopWeapon {
 }
 
 export interface ShopSlotElement {
-  background: Phaser.GameObjects.Sprite;
+  background: Phaser.GameObjects.Graphics;
   icon?: Phaser.GameObjects.Sprite;
   priceText?: Phaser.GameObjects.Text;
   weaponData: ShopWeapon; // Храним данные об оружии для легкого доступа

@@ -17,6 +17,13 @@ export namespace Player {
       }
     }
 
+    export namespace ChangeWeapon {
+      export const Local = 'PlayerChangeWeaponEvent';
+      export interface Payload {
+        playerId: string;
+      }
+    }
+
     export namespace SetWeapon {
       export const Local = 'PlayerSetWeaponEvent';
       export const Remote = 'PlayerSetWeaponRemoteEvent';

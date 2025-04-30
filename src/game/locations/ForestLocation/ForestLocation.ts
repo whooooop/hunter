@@ -55,7 +55,6 @@ export class ForestLocation implements Location.BaseClass {
     Clouds.preload(this.scene);
     ForestShop.preload(this.scene);
     SpruceTree.preload(this.scene);
-    BaseShop.preload(this.scene);
   }
   
   public getConfig(): ForestLocationConfig {
