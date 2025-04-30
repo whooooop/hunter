@@ -16,7 +16,7 @@ const groundTexture = {
 
 const skyTexture = {
   key: 'main_menu_sky',
-  url: mainMenuSky,
+  url: mainMenuSky, 
 }
 
 const mountainTexture_1 = {
@@ -69,11 +69,11 @@ export class BackgroundView {
     this.scene = scene;
     this.container = container;
 
-    const sky = this.scene.add.image(0, 0, skyTexture.key, settings.display.width).setOrigin(0, 0).setScale(1.2);
-    const mountain_3 = this.scene.add.image(0, 0, mountainTexture_3.key, settings.display.width).setOrigin(0, 0);
-    const mountain_2 = this.scene.add.image(0, 300, mountainTexture_2.key, settings.display.width).setOrigin(0, 0);
-    const mountain_1 = this.scene.add.image(0, 200, mountainTexture_1.key, settings.display.width).setOrigin(0, 0);
-    const ground = this.scene.add.image(0, -28, groundTexture.key, settings.display.width).setOrigin(0, 0);
+    const sky = this.scene.add.image(0, 0, skyTexture.key).setOrigin(0, 0);
+    const mountain_3 = this.scene.add.image(0, 0, mountainTexture_3.key).setOrigin(0, 0);
+    const mountain_2 = this.scene.add.image(0, 300, mountainTexture_2.key).setOrigin(0, 0);
+    const mountain_1 = this.scene.add.image(0, 200, mountainTexture_1.key).setOrigin(0, 0);
+    const ground = this.scene.add.image(0, -28, groundTexture.key).setOrigin(0, 0);
 
     this.container.add(sky);
     this.container.add(mountain_3);

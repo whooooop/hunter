@@ -5,7 +5,6 @@ import { UpdateScoreEventPayload } from "../types/scoreTypes";
 import { ScoreEvents } from "../types/scoreTypes";
 import { offEvent, onEvent } from "../Events";
 import { ShopEvents, ShopWeapon, WeaponPurchasedPayload } from "../types/shopTypes";
-import { Player } from "../types/playerTypes";
 
 export class ShopController {
   private scene: Phaser.Scene;
@@ -17,7 +16,6 @@ export class ShopController {
   private isNearbyPlayer: boolean = false;
   private interactablePlayerId: string | null = null;
   private openShopKey: Phaser.Input.Keyboard.Key;
-  private currentWeapon: Map<string, string> = new Map();
 
   constructor(scene: Phaser.Scene, players: Map<string, PlayerEntity>, playerId: string, shop: BaseShop, weapons: ShopWeapon[]) {
     this.scene = scene;
@@ -28,29 +26,10 @@ export class ShopController {
 
     onEvent(this.scene, ScoreEvents.UpdateScoreEvent, this.handleBalanceUpdate, this);
     onEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
-    onEvent(this.scene, Player.Events.ChangeWeapon.Local, this.handleChangeWeapon, this);
-    onEvent(this.scene, Player.Events.SetWeapon.Local, this.handleSetWeapon, this);
   }
 
   private handleBalanceUpdate(payload: UpdateScoreEventPayload) {
     this.playerBalance.set(payload.playerId, payload.score);
-  }
-
-  private handleSetWeapon(payload: Player.Events.SetWeapon.Payload) {
-    this.currentWeapon.set(payload.playerId, payload.weaponType);
-  }
-
-  private handleChangeWeapon(payload: Player.Events.ChangeWeapon.Payload) {
-    const purchasedWeapons = Array.from(this.playerPurchasedWeapons.get(payload.playerId) || []);
-    const currentWeapon = this.currentWeapon.get(payload.playerId);
-    const currentWeaponIndex = purchasedWeapons.indexOf(currentWeapon as WeaponType);
-    const nextWeapon = purchasedWeapons[currentWeaponIndex + 1];
-    if (nextWeapon) {
-      
-      this.currentWeapon.set(payload.playerId, nextWeapon);
-    } else {
-      this.currentWeapon.set(payload.playerId, purchasedWeapons[0]);
-    }
   }
 
   private handleWeaponPurchased(payload: WeaponPurchasedPayload) {

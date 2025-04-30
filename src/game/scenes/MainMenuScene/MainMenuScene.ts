@@ -3,6 +3,7 @@ import { playButtonTexture, shopButtonTexture, multiplayerButtonTexture, setting
 import { settings } from '../../settings';
 import { BackgroundView } from '../../views/background/BackgroundView';
 import { Location } from '../../core/types/Location';
+import { MultiplayerText, PlayText, SettingsText, ShopText } from './translates';
 
 interface MenuButton {
   text: string;
@@ -24,7 +25,7 @@ export class MainMenuScene extends Phaser.Scene {
   private multiplayerButton!: Phaser.GameObjects.Container;
   private buttons: Map<SceneKeys, MenuButton> = new Map([
     [SceneKeys.SHOP, {
-      text: 'SHOP',
+      text: ShopText.translate,
       texture: shopButtonTexture,
       position: {
         x: settings.display.width / 2 + 200,
@@ -39,7 +40,7 @@ export class MainMenuScene extends Phaser.Scene {
       sceneKey: SceneKeys.SHOP
     }],
     [SceneKeys.SETTINGS, {
-      text: 'SETTINGS',
+      text: SettingsText.translate,
       texture: settingsButtonTexture,
       position: {
         x: settings.display.width / 2 - 200,
@@ -54,7 +55,7 @@ export class MainMenuScene extends Phaser.Scene {
       sceneKey: SceneKeys.SETTINGS
     }],
     [SceneKeys.MULTIPLAYER, {
-      text: 'MULTIPLAYER',
+      text: MultiplayerText.translate,
       texture: multiplayerButtonTexture,
       position: {
         x: settings.display.width / 2 - 20,
@@ -97,7 +98,7 @@ export class MainMenuScene extends Phaser.Scene {
   createPlayButton(): void {
     const playButtonContainer = this.add.container(settings.display.width / 2, settings.display.height / 2 - 80).setDepth(50);
     const button = this.add.image(0, 0, playButtonTexture.key).setScale(playButtonTexture.scale);
-    const text = this.add.text(-30, 65, 'PLAY', { fontSize: '36px', color: '#ffffff' });
+    const text = this.add.text(-30, 65, PlayText.translate, { fontSize: '36px', color: '#ffffff' });
     playButtonContainer.setAlpha(0).setScale(0.8);
     playButtonContainer.add(button);
     playButtonContainer.add(text);

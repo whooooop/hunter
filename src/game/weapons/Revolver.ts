@@ -15,8 +15,8 @@ export const RevolverConfig: Weapon.Config = {
     url: RevolverTextureUrl,
     scale: 0.5,
     offset: {
-      x: 25,
-      y: 17,
+      x: 16,
+      y: 22,
     }
   },
 

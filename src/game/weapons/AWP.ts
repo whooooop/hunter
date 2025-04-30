@@ -9,7 +9,7 @@ import awpFireAudio from './assets/audio/awp_shoot_audio_0.mp3';
 const WeaponAWPTexture_0: WeaponTexture = {
   ...AWPImageTexture_0,
   offset: {
-    x: 40,
+    x: 28,
     y: 20,
   }
 }

@@ -7,8 +7,8 @@ import GrenadeThrowAudioUrl from './assets/audio/grenade_throw_audio_0.mp3';
 const GrenadeTexture_0: WeaponTexture = {
   ...GrenadeImageTexture_0,
   offset: {
-    x: 10,
-    y: 20,
+    x: 8,
+    y: 24,
   }
 }
 

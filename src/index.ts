@@ -7,8 +7,8 @@ import { ShopScene } from './game/scenes/ShopScene/ShopScene';
 import { SettingsScene } from './game/scenes/SettingsScene/SettingsScene';
 import { MultiplayerScene } from './game/scenes/MultiplayerScene/MultiplayerScene';
 import { SceneKeys } from './game/scenes';
-import { Location } from './game/core/types/Location';
 import { BootScene } from './game/scenes/BootScene';
+import { setDefaultLocale } from './utils/i18n';
 
 const originalLog = console.log;
 console.log = function(msg: any) {
@@ -46,9 +46,9 @@ const config: Phaser.Types.Core.GameConfig = {
 
 function initGame() {
   try {
+    setDefaultLocale('ru');
     const game = new Phaser.Game(config);
     game.scene.start(SceneKeys.BOOT);
-    // game.scene.start(SceneKeys.GAMEPLAY, { locationId: Location.Id.FOREST });
   } catch (error) {
     logger.error('Error', error);
   }

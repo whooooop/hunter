@@ -19,8 +19,8 @@ export const GlockConfig: Weapon.Config = {
     url: GlockTextureUrl,
     scale: 0.5,
     offset: {
-      x: 15,
-      y: 20,
+      x: 13,
+      y: 24,
     }
   },
 

@@ -6,6 +6,7 @@ import loadingBackgroundUrl from '../../assets/images/loading_background.png'
 import loadingLeftUrl from '../../assets/images/loading_left.png'
 import loadingRightUrl from '../../assets/images/loading_right.png'
 import loadingProgressUrl from '../../assets/images/loading_progress.png'
+import { LoadingText } from './translates';
 
 const logger = createLogger('LoadingScene');
 
@@ -85,7 +86,7 @@ export class LoadingView {
     const loadingText = this.scene.add.text(
       settings.display.width / 2, 
       center.y,
-      'DOWNLOAD', 
+      LoadingText.translate, 
       { fontSize: '26px', fontStyle: 'bold', color: '#ffffff' }
     ).setOrigin(0.5);
     

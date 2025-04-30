@@ -13,8 +13,8 @@ export const LauncherConfig: Weapon.Config = {
     url: LauncherTextureUrl, 
     scale: 0.5,
     offset: {
-      x: 15,
-      y: 22,
+      x: 22,
+      y: 20,
     }
   },
 

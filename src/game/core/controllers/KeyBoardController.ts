@@ -22,7 +22,6 @@ export class KeyBoardController {
     this.players = players;
     this.playerId = playerId;
 
-    // Настраиваем курсоры для управления
     this.cursors = scene.input.keyboard!.createCursorKeys();
     this.fireKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.reloadKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);

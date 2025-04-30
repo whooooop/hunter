@@ -12,8 +12,8 @@ export const MP5Config: Weapon.Config = {
     url: MP5TextureUrl, 
     scale: 0.5,
     offset: {
-      x: 20,
-      y: 25,
+      x: 14,
+      y: 23,
     }
   },
 

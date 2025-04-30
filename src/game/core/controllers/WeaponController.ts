@@ -16,7 +16,7 @@ export class WeaponController {
   private scene: Phaser.Scene;
   private players: Map<string, PlayerEntity>;
   private playerWeapons: Map<string, Map<WeaponType, WeaponEntity>> = new Map();
-  private currentWeapon: Map<string, WeaponEntity> = new Map();
+  private currentWeapon: Map<string, { entity: WeaponEntity, type: WeaponType }> = new Map();
   private weapons: Map<string, { weapon: WeaponEntity, playerId: string, name: WeaponType }> = new Map();
   
   constructor(scene: Phaser.Scene, players: Map<string, PlayerEntity>) {
@@ -26,6 +26,7 @@ export class WeaponController {
     onEvent(scene, Game.Events.State.Remote, this.handleGameState, this);
     onEvent(scene, Player.Events.SetWeapon.Remote, this.handleSetWeaponActionRemote, this);
     onEvent(scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
+    onEvent(scene, Player.Events.ChangeWeapon.Local, this.handleChangeWeapon, this);
   }
 
   private handleWeaponPurchased({ playerId, weaponType }: WeaponPurchasedPayload): void {
@@ -36,6 +37,22 @@ export class WeaponController {
     payload.weapons.forEach((weapon) => {
       this.createPlayerWeapon(weapon.weaponId, weapon.playerId, weapon.name as WeaponType);
     });
+  }
+
+  private handleChangeWeapon({ playerId }: Player.Events.ChangeWeapon.Payload): void {
+    const currentWeapon = this.getCurrentWeapon(playerId);
+    const playerWeapons = Array.from(this.playerWeapons.get(playerId)?.keys() || []);
+
+    console.log(currentWeapon);
+    if (currentWeapon) {
+      const currentWeaponIndex = playerWeapons.indexOf(currentWeapon.type);
+      const nextWeapon = playerWeapons[currentWeaponIndex + 1];
+      if (nextWeapon) {
+        this.setWeapon(playerId, nextWeapon);
+      } else {
+        this.setWeapon(playerId, playerWeapons[0]);
+      }
+    }
   }
 
   private handleSetWeaponActionRemote({ playerId, weaponId, weaponType }: Player.Events.SetWeapon.Payload): void {
@@ -65,8 +82,8 @@ export class WeaponController {
     return this.playerWeapons.get(playerId)!.get(weaponType)!;
   }
 
-  private getCurrentWeapon(playerId: string): WeaponEntity {
-    return this.currentWeapon.get(playerId)!;
+  private getCurrentWeapon(playerId: string): { entity: WeaponEntity, type: WeaponType } | undefined {
+    return this.currentWeapon.get(playerId);
   }
 
   private createPlayerWeapon(weaponId: string, playerId: string, weaponType: WeaponType): WeaponEntity {
@@ -102,12 +119,12 @@ export class WeaponController {
     const currentWeapon = this.getCurrentWeapon(playerId);
 
     if (currentWeapon) {
-      currentWeapon.setPosition(-2000, - 2000, 1);
+      currentWeapon.entity.setPosition(-2000, - 2000, 1);
     }
 
     const weapon = this.getWeapon(playerId, weaponType as WeaponType);
 
-    this.currentWeapon.set(playerId, weapon);
+    this.currentWeapon.set(playerId, { entity: weapon, type: weaponType as WeaponType });
     if (this.players.has(playerId)) {
       this.players.get(playerId)!.setWeapon(weapon);
     } else {
@@ -119,5 +136,6 @@ export class WeaponController {
     offEvent(this.scene, Game.Events.State.Remote, this.handleGameState, this);
     offEvent(this.scene, Player.Events.SetWeapon.Remote, this.handleSetWeaponActionRemote, this);
     offEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
+    offEvent(this.scene, Player.Events.ChangeWeapon.Local, this.handleChangeWeapon, this);
   }
 }

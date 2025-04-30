@@ -12,8 +12,8 @@ export const MachineConfig: Weapon.Config = {
     url: MachineTextureUrl, 
     scale: 0.5,
     offset: {
-      x: 30,
-      y: 20,
+      x: 20,
+      y: 18,
     }
   },
 
