@@ -47,7 +47,6 @@ export class ForestLocation implements Location.BaseClass {
   }
   
   public preload(): void {
-    console.log('ForestLocation preload');
     this.scene.load.image(SKY_TEXTURE, skyImage);
     this.scene.load.image(GROUND_TEXTURE, groundImage);
     this.scene.load.image(ROCK_TEXTURE, rockImage);
@@ -83,20 +82,10 @@ export class ForestLocation implements Location.BaseClass {
     this.createTrees();
   }
 
-  /**
-   * Устанавливает границы локации для ограничения движения игрока
-   */
   private setupLocationBounds(): void {
-    // Левая граница - край экрана
     this.bounds.left = 0;
-    
-    // Правая граница - край экрана
     this.bounds.right = this.width;
-    
-    // Верхняя граница - верхний край земли (небо недоступно)
     this.bounds.top = this.skyHeight - 40; // Отступ от неба
-    
-    // Нижняя граница - низ экрана
     this.bounds.bottom = this.height;
   }
 
@@ -133,19 +122,12 @@ export class ForestLocation implements Location.BaseClass {
     
   }
   
-  // Метод для обновления анимации травы
   public update(time: number, delta: number = 16): void {
     this.clouds.update(time, delta);
   }
   
-  // Переопределяем метод destroy для очистки ресурсов
-  public destroy(): void {
-    logger.info('Уничтожение лесной локации');
-  }
+  public destroy(): void {}
 
-  /**
-   * Создает ёлку и размещает ее справа на сцене
-   */
   private createTrees(): void {
     INTERACTIVE_OBJECTS.forEach(({ id, type, position, scale, health }) => {    
       const object = new SpruceTree(this.scene, id, position[0], position[1], {
@@ -153,7 +135,6 @@ export class ForestLocation implements Location.BaseClass {
         health
       });
       
-      // Добавляем дерево в группу интерактивных объектов
       if (this.scene instanceof GameplayScene) {
         const gameScene = this.scene as GameplayScene;
         gameScene.addDamageableObject(id, object);
@@ -161,17 +142,11 @@ export class ForestLocation implements Location.BaseClass {
     });
   }
 
-  /**
-   * Создает магазин на локации
-   */
   private createShop(): void {
-    // Размещаем магазин в левом углу ниже слоя неба
     const shopX = 50;
     const shopY = this.skyHeight - 20;
     
-    // Создаем магазин и добавляем его на сцену
     const shop = new ForestShop(this.scene, shopX, shopY);
-    // this.scene.add.existing(shop);
     if (this.scene instanceof GameplayScene) {
       const gameScene = this.scene as GameplayScene;
       gameScene.addShop(shop);

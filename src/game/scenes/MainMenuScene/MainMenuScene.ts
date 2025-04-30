@@ -2,6 +2,7 @@ import { SceneKeys } from '../index';
 import { playButtonTexture, shopButtonTexture, multiplayerButtonTexture, settingsButtonTexture } from './textures';
 import { settings } from '../../settings';
 import { BackgroundView } from '../../views/background/BackgroundView';
+import { Location } from '../../core/types/Location';
 
 interface MenuButton {
   text: string;
@@ -76,7 +77,6 @@ export class MainMenuScene extends Phaser.Scene {
   }
   
   preload() {
-    BackgroundView.preload(this);
     this.load.image(playButtonTexture.key, playButtonTexture.url);
     this.load.image(shopButtonTexture.key, shopButtonTexture.url);
     this.load.image(settingsButtonTexture.key, settingsButtonTexture.url);
@@ -84,7 +84,7 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   create() {
-    this.container = this.add.container(0, 0).setDepth(1000);
+    this.container = this.add.container(0, 0).setDepth(10);
     this.backgroundView = new BackgroundView(this, this.container);
     this.createPlayButton();
 
@@ -157,16 +157,16 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   play(): void {
-    this.goToScene(SceneKeys.LOADING);
+    this.goToScene(SceneKeys.GAMEPLAY,  { locationId: Location.Id.FOREST });
   }
 
-  goToScene(sceneKey: SceneKeys): void {
+  goToScene(sceneKey: SceneKeys, payload?: any): void {
     if (!this.ready) {
       return;
     }
     // this.scene.start(sceneKey);
     this.leaveScene().then(() => {
-      this.scene.start(sceneKey);
+      this.scene.start(sceneKey, payload);
     });
   }
 

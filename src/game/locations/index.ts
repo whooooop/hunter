@@ -10,6 +10,5 @@ export function getLocationClass(locationId: Location.Id): new (scene: Phaser.Sc
 }
 
 export function getLocation(scene: Phaser.Scene, locationId: Location.Id): Location.BaseClass {
-  console.log('getLocation', locationId);
   return new LocationCollections[locationId](scene);
 }
