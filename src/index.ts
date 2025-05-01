@@ -2,14 +2,10 @@ import * as Phaser from 'phaser';
 import { GameplayScene } from './game/scenes/GameplayScene/GameplayScene';
 import { settings } from './game/settings';
 import { logger } from './utils/logger';
-import { MainMenuScene } from './game/scenes/MainMenuScene/MainMenuScene';
-import { ShopScene } from './game/scenes/ShopScene/ShopScene';
-import { SettingsScene } from './game/scenes/SettingsScene/SettingsScene';
-import { MultiplayerScene } from './game/scenes/MultiplayerScene/MultiplayerScene';
 import { SceneKeys } from './game/scenes';
 import { BootScene } from './game/scenes/BootScene';
 import { setDefaultLocale } from './utils/i18n';
-import { SelectMapScene } from './game/scenes/SelectMap/SelectMapScene';
+import { MenuScene } from './game/scenes/MenuScene/MenuScene';
 
 const originalLog = console.log;
 console.log = function(msg: any) {
@@ -38,11 +34,7 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [
     BootScene,
     GameplayScene,
-    MainMenuScene,
-    ShopScene,
-    SettingsScene,
-    MultiplayerScene,
-    SelectMapScene
+    MenuScene
   ]
 };
 

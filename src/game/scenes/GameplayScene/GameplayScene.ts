@@ -24,7 +24,7 @@ import { ScoreEvents, UpdateScoreEventPayload } from '../../core/types/scoreType
 import { WeaponController } from '../../core/controllers/WeaponController';
 import { testLevel } from '../../levels/test';
 import { ShopController } from '../../core/controllers/ShopController';
-import { ShopEvents, WeaponPurchasedPayload } from '../../core/types/shopTypes';
+import { ShopEvents } from '../../core/types/shopTypes';
 import { MultiplayerController } from '../../core/controllers/MultiplayerController';
 import { createEnemy } from '../../enemies';
 import { KeyBoardController } from '../../core/controllers/KeyBoardController';

@@ -1,4 +1,4 @@
-import mainMenuPlayButton from '../../assets/images/play_button.png';
+import mainMenuPlayButton from './assets/play_button.png';
 import mainMenuShopButton from './assets/shop_button.png';
 import mainMenuSettingsButton from './assets/settings_button.png';
 import mainMenuMultiplayerButton from './assets/multiplayer_button.png';

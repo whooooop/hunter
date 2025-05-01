@@ -40,7 +40,7 @@ export class SelectMapScene extends Phaser.Scene {
   private levelCollection: Record<LevelId, Level.Config> = LevelCollection;
 
   constructor() {
-    super({ key: SceneKeys.SELECT_MAP });
+    super({ key: 'SELECT_MAP' });
   }
   
   preload() {
@@ -156,6 +156,6 @@ export class SelectMapScene extends Phaser.Scene {
   }
 
   back(): void {
-    this.scene.start(SceneKeys.MAIN_MENU);
+    this.scene.start(SceneKeys.MENU);
   }
 }

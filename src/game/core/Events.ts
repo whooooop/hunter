@@ -8,6 +8,7 @@ import { ScoreEvents, UpdateScoreEventPayload, IncreaseScoreEventPayload, Decrea
 import { Player } from './types/playerTypes';
 import { ShopEvents, WeaponPurchasedPayload } from './types/shopTypes';
 import { Game } from './types/gameTypes';
+import { MenuSceneTypes } from '../scenes/MenuScene/MenuSceneTypes';
 
 interface EventPayloadMap {
   // Game
@@ -48,6 +49,10 @@ interface EventPayloadMap {
 
   // Decals
   [Decals.Events.Local]: Decals.Events.Payload;
+
+  // Menu
+  [MenuSceneTypes.Events.Play.Name]: MenuSceneTypes.Events.Play.Payload;
+  [MenuSceneTypes.Events.GoToView.Name]: MenuSceneTypes.Events.GoToView.Payload;
 }
 
 export function emitEvent<E extends keyof EventPayloadMap>(scene: Phaser.Scene, name: E, payload: EventPayloadMap[E]): void;

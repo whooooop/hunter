@@ -2,6 +2,7 @@ import { SceneKeys } from ".";
 import { LoadingView } from "../views/loading/LoadingView";
 import { Location } from "../core/types/Location";
 import { BackgroundView } from "../views/background/BackgroundView";
+import { UiBackButton } from "../scenes/MenuScene/ui/backButton";
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -11,11 +12,12 @@ export class BootScene extends Phaser.Scene {
   preload() {
     LoadingView.preload(this);
     BackgroundView.preload(this);
+    UiBackButton.preload(this);
   }
 
   create() {
     // this.scene.start(SceneKeys.GAMEPLAY, { locationId: Location.Id.FOREST });
-    this.scene.start(SceneKeys.SELECT_MAP);
+    this.scene.start(SceneKeys.MENU);
     // this.scene.start(SceneKeys.MAIN_MENU);
   }
 }

@@ -1,4 +1,4 @@
-import { I18n } from "../../../utils/i18n";
+import { I18n } from "../../../../../utils/i18n";
 
 export const PlayText = I18n({
   en: 'PLAY',
