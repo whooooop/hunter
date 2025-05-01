@@ -21,6 +21,7 @@ export namespace Player {
       export const Local = 'PlayerChangeWeaponEvent';
       export interface Payload {
         playerId: string;
+        direction: 1 | -1;
       }
     }
 

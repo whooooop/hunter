@@ -1,0 +1,25 @@
+import { WeaponType } from "../../weapons/WeaponTypes";
+import { Wave } from "../controllers/WaveController";
+import { Location } from "./Location";
+
+export namespace Level {
+  export interface Config {
+    location: Location.Id;
+    name: { 
+      locale(locale: string): string; 
+      readonly translate: string; 
+    }
+    preview: {
+      key: string;
+      url: string;
+      scale: number;
+    }
+    waves: () => Wave[];
+    weapons: Weapon[];
+  }
+
+  export interface Weapon {
+    type: WeaponType;
+    price: number;
+  }
+}

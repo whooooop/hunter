@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { Location } from '../../core/types/Location';
-import { ForestLocationConfig, DEFAULT_FOREST_CONFIG, FOREST_COLORS, INTERACTIVE_OBJECTS, CLOUDS } from './ForestLocationConfig';
+import { FOREST_COLORS, INTERACTIVE_OBJECTS, CLOUDS } from './ForestLocationConfig';
 import { createLogger } from '../../../utils/logger';
 import { GameplayScene } from '../../scenes/GameplayScene/GameplayScene';
 import { ForestShop } from './components/ForestShop';
@@ -11,7 +11,6 @@ import skyImage from './assets/images/sky.png';
 import groundImage from './assets/images/ground.png';
 import rockImage from './assets/images/rock.png';
 import rockImage2 from './assets/images/rock2.png';
-import { BaseShop } from '../../core/BaseShop';
 import { Clouds } from '../../ui/Clouds';
 
 const logger = createLogger('ForestLocation');
@@ -23,7 +22,6 @@ const SKY_TEXTURE = 'sky_texture_' + generateStringWithLength(6);
 
 export class ForestLocation implements Location.BaseClass {
   private scene: Phaser.Scene;
-  private config: ForestLocationConfig;
 
   private width: number = 0;
   private height: number = 0;
@@ -37,13 +35,8 @@ export class ForestLocation implements Location.BaseClass {
 
   private clouds!: Clouds;
   
-  constructor(scene: Phaser.Scene, config: Partial<ForestLocationConfig> = {}) {
+  constructor(scene: Phaser.Scene) {
     this.scene = scene;
-
-    this.config = {
-      ...DEFAULT_FOREST_CONFIG,
-      ...config
-    };
   }
   
   public preload(): void {
@@ -55,10 +48,6 @@ export class ForestLocation implements Location.BaseClass {
     Clouds.preload(this.scene);
     ForestShop.preload(this.scene);
     SpruceTree.preload(this.scene);
-  }
-  
-  public getConfig(): ForestLocationConfig {
-    return this.config;
   }
   
   public getBounds(): Location.Bounds {

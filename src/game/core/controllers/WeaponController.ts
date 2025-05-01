@@ -39,18 +39,21 @@ export class WeaponController {
     });
   }
 
-  private handleChangeWeapon({ playerId }: Player.Events.ChangeWeapon.Payload): void {
+  private handleChangeWeapon({ playerId, direction }: Player.Events.ChangeWeapon.Payload): void {
     const currentWeapon = this.getCurrentWeapon(playerId);
     const playerWeapons = Array.from(this.playerWeapons.get(playerId)?.keys() || []);
 
-    console.log(currentWeapon);
     if (currentWeapon) {
       const currentWeaponIndex = playerWeapons.indexOf(currentWeapon.type);
-      const nextWeapon = playerWeapons[currentWeaponIndex + 1];
+      const nextWeapon = playerWeapons[currentWeaponIndex + direction];
       if (nextWeapon) {
         this.setWeapon(playerId, nextWeapon);
       } else {
-        this.setWeapon(playerId, playerWeapons[0]);
+        if (direction === 1) {
+          this.setWeapon(playerId, playerWeapons[0]);
+        } else {
+          this.setWeapon(playerId, playerWeapons[playerWeapons.length - 1]);
+        }
       }
     }
   }

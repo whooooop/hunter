@@ -9,6 +9,7 @@ import { MultiplayerScene } from './game/scenes/MultiplayerScene/MultiplayerScen
 import { SceneKeys } from './game/scenes';
 import { BootScene } from './game/scenes/BootScene';
 import { setDefaultLocale } from './utils/i18n';
+import { SelectMapScene } from './game/scenes/SelectMap/SelectMapScene';
 
 const originalLog = console.log;
 console.log = function(msg: any) {
@@ -40,7 +41,8 @@ const config: Phaser.Types.Core.GameConfig = {
     MainMenuScene,
     ShopScene,
     SettingsScene,
-    MultiplayerScene
+    MultiplayerScene,
+    SelectMapScene
   ]
 };
 

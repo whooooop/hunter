@@ -10,7 +10,8 @@ export class KeyBoardController {
   private fireKey: Phaser.Input.Keyboard.Key;
   private reloadKey: Phaser.Input.Keyboard.Key;
   private jumpKey: Phaser.Input.Keyboard.Key;
-  private changeWeaponKey: Phaser.Input.Keyboard.Key;
+  private nextWeaponKey: Phaser.Input.Keyboard.Key;
+  private prevWeaponKey: Phaser.Input.Keyboard.Key;
 
   private players: Map<string, PlayerEntity>;
   private playerId: string;
@@ -25,7 +26,8 @@ export class KeyBoardController {
     this.cursors = scene.input.keyboard!.createCursorKeys();
     this.fireKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.reloadKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-    this.changeWeaponKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.C);
+    this.nextWeaponKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.C);
+    this.prevWeaponKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     this.jumpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   }
 
@@ -59,10 +61,16 @@ export class KeyBoardController {
   }
 
   private handleChangeWeapon(time: number, delta: number): void {
-    if (this.changeWeaponKey.isDown && !this.changeWeaponKeyDisabled) {
-      emitEvent(this.scene, Player.Events.ChangeWeapon.Local, { playerId: this.playerId });
+    if (this.nextWeaponKey.isDown || this.prevWeaponKey.isDown) {
+      if (this.changeWeaponKeyDisabled) {
+        return;
+      }
+      emitEvent(this.scene, Player.Events.ChangeWeapon.Local, { 
+        playerId: this.playerId,
+        direction: this.nextWeaponKey.isDown ? 1 : -1
+      });
       this.changeWeaponKeyDisabled = true;
-    } else if (!this.changeWeaponKey.isDown) {
+    } else {
       this.changeWeaponKeyDisabled = false;
     }
   }

@@ -1,6 +1,4 @@
-import { settings } from "../../settings";
 import { CloudOptions, Clouds } from "../../ui/Clouds";
-// import { BlurPostFX } from 'phaser3-rex-plugins/plugins/blur-postfx.js';
 
 import mainMenuGround from '../../assets/images/ground.png';
 import mainMenuSky from '../../assets/images/sky.png';

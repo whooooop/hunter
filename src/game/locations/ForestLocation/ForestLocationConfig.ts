@@ -1,22 +1,10 @@
 import { hexToNumber } from '../../utils/colors';
 import { CloudOptions } from '../../ui/Clouds';
 
-export interface ForestLocationConfig {
-  background: string;
-  music?: string;
-  ambientSounds?: string[];
-}
-
-// Цвета для фона
 export const FOREST_COLORS = {
   skyColor: hexToNumber('#70b8bd'),  // Небо
   grassColor: hexToNumber('#43C774') // Трава
 };
-
-// Стандартная конфигурация для локации "Лес"
-export const DEFAULT_FOREST_CONFIG: ForestLocationConfig = {
-  background: 'forest_background',
-}; 
 
 export const CLOUDS: CloudOptions[] = [
   { position: [120, 90], scale: 0.5, alpha: 1, speed: 0.2, depth: 1, direction: 1 },
