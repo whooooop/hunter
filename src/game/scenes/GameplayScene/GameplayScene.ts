@@ -35,11 +35,12 @@ import { preloadFx } from '../../fx';
 import { Location } from '../../core/types/Location';
 import { getLocation } from '../../locations';
 import { LoadingView } from '../../views/loading/LoadingView';
+import { getLevel, LevelId } from '../../levels';
 
 const logger = createLogger('GameplayScene');
 
 interface GameplaySceneData {
-  locationId: Location.Id;
+  levelId: LevelId;
 }
 
 export class GameplayScene extends Phaser.Scene {
@@ -74,9 +75,10 @@ export class GameplayScene extends Phaser.Scene {
     });
   }
   
-  init({ locationId } : GameplaySceneData) {
+  init({ levelId } : GameplaySceneData) {
     this.loadingView = new LoadingView(this);
-    this.location = getLocation(this, locationId);
+    const level = getLevel(levelId);
+    this.location = getLocation(this, level.location);
   }
 
   async preload(): Promise<void> {

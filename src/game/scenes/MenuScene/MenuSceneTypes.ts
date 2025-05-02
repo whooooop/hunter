@@ -10,7 +10,9 @@ export namespace MenuSceneTypes {
   export namespace Events {
     export namespace Play {
       export const Name = 'MenuSceneEventPlay';
-      export interface Payload {}
+      export interface Payload {
+        levelId: string;
+      }
     }
 
     export namespace GoToView {

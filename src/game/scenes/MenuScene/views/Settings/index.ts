@@ -36,5 +36,7 @@ export class SettingsView implements MenuSceneTypes.View {
     });
   }
 
-  destroy(): void {}
+  destroy(): void {
+    this.container.destroy();
+  }
 }

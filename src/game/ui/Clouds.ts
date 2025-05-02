@@ -18,13 +18,15 @@ export interface CloudOptions {
 export class Clouds {
   private scene: Phaser.Scene;
   private clouds: Phaser.GameObjects.Image[] = [];
+  private container: Phaser.GameObjects.Container;
 
   static preload(scene: Phaser.Scene): void {
     scene.load.image(cloudTexture.key, cloudTexture.url);
   }
 
-  constructor(scene: Phaser.Scene, clouds: CloudOptions[]) {
+  constructor(scene: Phaser.Scene, clouds: CloudOptions[], container: Phaser.GameObjects.Container) {
     this.scene = scene;
+    this.container = container;
     this.createClouds(clouds);
   }
 
@@ -53,6 +55,7 @@ export class Clouds {
       
       // Добавляем в массив для обновления
       this.clouds.push(cloud);
+      this.container.add(cloud);
     });
   }
   

@@ -2,3 +2,4 @@
 # Todo
 
 - Stat
+- settings

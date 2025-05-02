@@ -11,8 +11,9 @@ import { SelectLevelView } from "./views/SelectLevel";
 
 export class MenuScene extends Phaser.Scene {
   private backgroundView!: BackgroundView;
-  private viewContainer!: Phaser.GameObjects.Container;
   private currentView!: MenuSceneTypes.View;
+
+  private container!: Phaser.GameObjects.Container;
 
   private views: Map<MenuSceneTypes.ViewKeys, new (scene: Phaser.Scene) => MenuSceneTypes.View> = new Map([
     [MenuSceneTypes.ViewKeys.HOME, HomeView],
@@ -32,40 +33,41 @@ export class MenuScene extends Phaser.Scene {
 
   preload(): void {
     HomeView.preload(this);
+    SelectLevelView.preload(this);
   }
 
   create(): void {
-    this.viewContainer = this.add.container(0, 0).setDepth(10);
-    this.backgroundView = new BackgroundView(this, this.viewContainer);
-    this.renderView(MenuSceneTypes.ViewKeys.HOME);
-
     onEvent(this, MenuSceneTypes.Events.Play.Name, this.playHandler, this);
     onEvent(this, MenuSceneTypes.Events.GoToView.Name, this.goToViewHandler, this);
+
+    this.container = this.add.container(0, 0);
+
+    this.backgroundView = new BackgroundView(this);
+    this.renderView(MenuSceneTypes.ViewKeys.HOME);
+
+    this.container.add(this.backgroundView.getContainer());
   }
 
   playHandler(payload: MenuSceneTypes.Events.Play.Payload): void {
-    console.log('playHandler', payload);
+    this.scene.start(SceneKeys.GAMEPLAY, { levelId: payload.levelId });
   }
 
   goToViewHandler(payload: MenuSceneTypes.Events.GoToView.Payload): void {
     this.renderView(payload.viewKey);
   }
   
-
   async renderView(viewName: MenuSceneTypes.ViewKeys): Promise<void>  {
     const View = this.views.get(viewName);
-    console.log('renderView', viewName, View);
     if (View) {
-      const view = new View(this);
       const leaveView = this.currentView;
-
       if (leaveView) {
         await leaveView.leave();
-        this.viewContainer.remove(leaveView.getContainer());
-        leaveView?.destroy();
+        this.container.remove(leaveView.getContainer());
+        leaveView.destroy();
       }
 
-      this.viewContainer.add(view.getContainer());
+      const view = new View(this);
+      this.container.add(view.getContainer());
       this.currentView = view;
       await view.enter();
     }

@@ -48,7 +48,8 @@ export class LoadingView {
     this.scene = scene;
     this.backgroundContainer = this.scene.add.container(0, 0).setDepth(10000);
     this.progressContainer = this.scene.add.container(0, 0).setDepth(10000);
-    this.backgroundView = new BackgroundView(this.scene, this.backgroundContainer);
+    this.backgroundView = new BackgroundView(this.scene);
+    this.backgroundContainer.add(this.backgroundView.getContainer());
     
     if (this.scene.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
       this.backgroundContainer.postFX.addBlur();

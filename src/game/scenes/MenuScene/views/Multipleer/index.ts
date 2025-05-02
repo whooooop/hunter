@@ -36,5 +36,7 @@ export class MultipleerView implements MenuSceneTypes.View {
     });
   }
 
-  destroy(): void {}
+  destroy(): void {
+    this.container.destroy();
+  }
 }

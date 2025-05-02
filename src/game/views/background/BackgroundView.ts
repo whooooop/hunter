@@ -1,36 +1,7 @@
 import { CloudOptions, Clouds } from "../../ui/Clouds";
-
-import mainMenuGround from '../../assets/images/ground.png';
-import mainMenuSky from '../../assets/images/sky.png';
-import mainMenuMountains_1 from '../../assets/images/mountains_1.png';
-import mainMenuMountains_2 from '../../assets/images/mountains_2.png';
-import mainMenuMountains_3 from '../../assets/images/mountains_3.png';
-
-
-const groundTexture = {
-  key: 'main_menu_ground',
-  url: mainMenuGround,
-}
-
-const skyTexture = {
-  key: 'main_menu_sky',
-  url: mainMenuSky, 
-}
-
-const mountainTexture_1 = {
-  key: 'main_menu_mountain_1',
-  url: mainMenuMountains_1,
-}
-
-const mountainTexture_2 = {
-  key: 'main_menu_mountain_2',
-  url: mainMenuMountains_2,
-}
-
-const mountainTexture_3 = {
-  key: 'main_menu_mountain_3',
-  url: mainMenuMountains_3,
-}
+import { mountainTexture_1, mountainTexture_2, mountainTexture_3 } from "./textures";
+import { groundTexture } from "./textures";
+import { skyTexture } from "./textures";
 
 const defaultOptions: BackgroundViewOptions = {
   clouds: [
@@ -62,10 +33,10 @@ export class BackgroundView {
     Clouds.preload(scene);
   }
 
-  constructor(scene: Phaser.Scene, container: Phaser.GameObjects.Container, options?: BackgroundViewOptions) {
+  constructor(scene: Phaser.Scene, options?: BackgroundViewOptions) {
     this.options = { ...defaultOptions, ...options };
     this.scene = scene;
-    this.container = container;
+    this.container = this.scene.add.container(0, 0);
 
     const sky = this.scene.add.image(0, 0, skyTexture.key).setOrigin(0, 0);
     const mountain_3 = this.scene.add.image(0, 0, mountainTexture_3.key).setOrigin(0, 0);
@@ -79,7 +50,12 @@ export class BackgroundView {
     this.container.add(mountain_1);
     this.container.add(ground);
 
-    this.clouds = new Clouds(scene, this.options.clouds);
+    this.clouds = new Clouds(scene, this.options.clouds, this.container);
+  }
+
+
+  getContainer(): Phaser.GameObjects.Container {
+    return this.container;
   }
 
   update(time: number, delta: number): void {

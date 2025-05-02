@@ -63,7 +63,7 @@ export class ForestLocation implements Location.BaseClass {
     
     this.createBackground();
 
-    this.clouds = new Clouds(this.scene, CLOUDS);
+    this.clouds = new Clouds(this.scene, CLOUDS, this.scene.add.container(0, 0));
 
     this.createShop();
     
