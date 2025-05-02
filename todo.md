@@ -6,3 +6,5 @@
 - Tasks
 - settings
 - Jump sound
+- decal indexed DB
+- multiplayer
