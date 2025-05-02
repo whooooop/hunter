@@ -1,6 +1,6 @@
 import { emitEvent } from "../../../../core/Events";
 import { MenuSceneTypes } from "../../MenuSceneTypes";
-import { UiBackButton } from "../../ui/backButton";
+import { UiBackButton } from "../../../../ui/BackButton";
 
 export class MultipleerView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;

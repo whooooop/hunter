@@ -1,5 +1,6 @@
 import { PlayerEntity } from "../entities/PlayerEntity";
 import { emitEvent } from "../Events";
+import { Game } from "../types/gameTypes";
 import { Player } from "../types/playerTypes";
 
 export class KeyBoardController {
@@ -12,12 +13,13 @@ export class KeyBoardController {
   private jumpKey: Phaser.Input.Keyboard.Key;
   private nextWeaponKey: Phaser.Input.Keyboard.Key;
   private prevWeaponKey: Phaser.Input.Keyboard.Key;
-
+  private pauseKey: Phaser.Input.Keyboard.Key;
   private players: Map<string, PlayerEntity>;
   private playerId: string;
 
   private changeWeaponKeyDisabled: boolean = false;
-
+  private pauseKeyDisabled: boolean = false;
+  
   constructor(scene: Phaser.Scene, players: Map<string, PlayerEntity>, playerId: string) {
     this.scene = scene;
     this.players = players;
@@ -29,6 +31,7 @@ export class KeyBoardController {
     this.nextWeaponKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.C);
     this.prevWeaponKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     this.jumpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.pauseKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
   }
 
   public update(time: number, delta: number): void {
@@ -40,6 +43,7 @@ export class KeyBoardController {
     this.handleFire(time, delta);
     this.handleReload(time, delta);
     this.handleChangeWeapon(time, delta);
+    this.handlePause(time, delta);
   }
 
   private handleMovement(time: number, delta: number): void {
@@ -58,6 +62,15 @@ export class KeyBoardController {
     }
     
     this.getPlayer()?.setMove(move.x, move.y);
+  }
+
+  private handlePause(time: number, delta: number): void {
+    if (this.pauseKey.isDown && !this.pauseKeyDisabled) {
+      emitEvent(this.scene, Game.Events.Pause.Local, {});
+      this.pauseKeyDisabled = true;
+    } else if (!this.pauseKey.isDown) {
+      this.pauseKeyDisabled = false;
+    }
   }
 
   private handleChangeWeapon(time: number, delta: number): void {

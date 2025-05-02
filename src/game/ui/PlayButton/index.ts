@@ -1,21 +1,22 @@
-import { settings } from '../../../../settings';
-import backButtonTexture from './assets/back.png';
+import playButtonTextureUrl from './play_button.png';
 
 const texture = {
-  key: 'backButton',
-  url: backButtonTexture,
+  key: 'playButton',
+  url: playButtonTextureUrl,
   scale: 0.5,
 }
 
-export class UiBackButton extends Phaser.GameObjects.Image {
+export class UiPlayButton extends Phaser.GameObjects.Image {
   static preload(scene: Phaser.Scene): void {
     scene.load.image(texture.key, texture.url);
   }
 
-  constructor(scene: Phaser.Scene, x: number = 80, y: number = settings.display.height - 80) {
+  constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, texture.key);
+
     this.setScale(texture.scale);
     this.setInteractive();
+    
     this.on('pointerdown', () => {
       this.setScale(texture.scale * 1); 
     });

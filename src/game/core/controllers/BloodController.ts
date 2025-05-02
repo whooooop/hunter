@@ -9,6 +9,7 @@ const logger = createLogger('BaseBlood');
 
 // --- ДОБАВЬ КЛЮЧ ТЕКСТУРЫ ---
 const VIGNETTE_TEXTURE_KEY = 'vignette_texture'; // Ключ для загруженной текстуры виньетки
+const pause = 1;
 
 // Дефолтные настройки для эффекта крови
 const defaultBloodOptions: Partial<Blood.BloodSplashConfig> = {

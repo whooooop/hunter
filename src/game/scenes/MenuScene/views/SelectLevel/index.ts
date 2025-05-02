@@ -2,7 +2,7 @@ import { emitEvent } from "../../../../core/Events";
 import { LevelCollection, LevelId } from "../../../../levels";
 import { plashka1MaskTexture, plashkaPodstavkaTexture, plashka1Texture } from "./textures";
 import { MenuSceneTypes } from "../../MenuSceneTypes";
-import { UiBackButton } from "../../ui/backButton";
+import { UiBackButton } from "../../../../ui/BackButton";
 import { Level } from "../../../../core/types/levelTypes";
 import { settings } from "../../../../settings";
 import { SelectLevelText } from "./translates";

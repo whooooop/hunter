@@ -36,6 +36,7 @@ import { Location } from '../../core/types/Location';
 import { getLocation } from '../../locations';
 import { LoadingView } from '../../views/loading/LoadingView';
 import { getLevel, LevelId } from '../../levels';
+import { PauseView } from '../../views/pause/PauseView';
 
 const logger = createLogger('GameplayScene');
 
@@ -64,11 +65,13 @@ export class GameplayScene extends Phaser.Scene {
   private multiplayerController!: MultiplayerController;
   private keyboardController!: KeyBoardController;
   private changeWeaponKey!: Phaser.Input.Keyboard.Key;
-
+  private pauseView!: PauseView;
   private mainPlayerId!: string;
   private players: Map<string, PlayerEntity> = new Map();
   private lastSentState: number = 0;
-  private lastStateHash: string = '';
+  private lastStateHash: string = ''
+
+  private isPause: boolean = false;
 
   constructor() {
     super({
@@ -88,7 +91,8 @@ export class GameplayScene extends Phaser.Scene {
     PlayerEntity.preload(this);
     BloodController.preload(this);
     WaveController.preloadEnemies(this, testLevel.waves);
-
+    PauseView.preload(this);
+    
     preloadWeapons(this);
     preloadProjectiles(this);
     preloadFx(this);
@@ -102,8 +106,13 @@ export class GameplayScene extends Phaser.Scene {
     onEvent(this, WaveEvents.SpawnEnemyEvent, (payload: SpawnEnemyPayload) => this.handleSpawnEnemy(payload));
     onEvent(this, Enemy.Events.Death.Local, (payload: Enemy.Events.Death.Payload) => this.handleEnemyDeath(payload));
     onEvent(this, ScoreEvents.UpdateScoreEvent, (payload: UpdateScoreEventPayload) => this.handleUpdateScore(payload));
+    onEvent(this, Game.Events.Pause.Local, (payload: Game.Events.Pause.Payload) => this.handlePause(payload));
+    onEvent(this, Game.Events.Replay.Local, (payload: Game.Events.Replay.Payload) => this.handleReplay(payload));
+    onEvent(this, Game.Events.Exit.Local, (payload: Game.Events.Exit.Payload) => this.handleExit(payload));
 
     this.location.create();
+
+    this.pauseView = new PauseView(this);
 
     this.scoreController = new ScoreController(this);
     this.bloodController = new BloodController(this);
@@ -113,12 +122,11 @@ export class GameplayScene extends Phaser.Scene {
     this.decalController = new DecalController(this, 0, 0, settings.display.width, settings.display.height, 5);
     this.projectileController = new ProjectileController(this, this.damageableObjects);
     this.waveController = new WaveController(this, createWavesConfig());
-
+    
     this.waveInfo = new WaveInfo(this);
     this.weaponStatus = new WeaponStatus(this);
 
     this.physics.world.setBounds(0, 0, settings.display.width, settings.display.height);
-
     this.shopController.setInteractablePlayerId(playerId);
 
     // this.multiplayerInit(playerId);
@@ -144,6 +152,26 @@ export class GameplayScene extends Phaser.Scene {
     this.multiplayerController.connect('GAME1', playerId).then(() => {
       this.waveController.start();
     });
+  }
+
+  private handlePause(payload: Game.Events.Pause.Payload): void {
+    this.isPause = !this.isPause;
+    if (this.isPause) {
+      // if (this.scene.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+      //   this.backgroundContainer.postFX.addBlur();
+      // }
+      this.pauseView.open();
+    } else {
+      this.pauseView.close();
+    }
+  }
+
+  private handleReplay(payload: Game.Events.Replay.Payload): void {
+
+  }
+
+  private handleExit(payload: Game.Events.Exit.Payload): void {
+    this.scene.start(SceneKeys.MENU);
   }
 
   private handleGameState(payload: Game.Events.State.Payload): void {

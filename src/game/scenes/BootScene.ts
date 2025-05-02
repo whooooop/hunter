@@ -1,7 +1,7 @@
 import { SceneKeys } from ".";
 import { LoadingView } from "../views/loading/LoadingView";
 import { BackgroundView } from "../views/background/BackgroundView";
-import { UiBackButton } from "../scenes/MenuScene/ui/backButton";
+import { UiBackButton } from "../ui/BackButton";
 import { LevelId } from "../levels";
 
 export class BootScene extends Phaser.Scene {
