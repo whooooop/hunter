@@ -60,6 +60,7 @@ export class GameplayScene extends Phaser.Scene {
   private scoreController!: ScoreController;
   private weaponController!: WeaponController;
   private shopController!: ShopController;
+  private bloodController!: BloodController;
   private multiplayerController!: MultiplayerController;
   private keyboardController!: KeyBoardController;
   private changeWeaponKey!: Phaser.Input.Keyboard.Key;
@@ -105,6 +106,7 @@ export class GameplayScene extends Phaser.Scene {
     this.location.create();
 
     this.scoreController = new ScoreController(this);
+    this.bloodController = new BloodController(this);
     this.keyboardController = new KeyBoardController(this, this.players, playerId);
     this.weaponController = new WeaponController(this, this.players);
     this.shopController = new ShopController(this, this.players, playerId, this.shop, testLevel.weapons);

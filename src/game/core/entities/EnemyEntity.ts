@@ -1,4 +1,4 @@
-import { BloodController, createSimpleBloodConfig } from "../controllers/BloodController";
+import { createSimpleBloodConfig } from "../controllers/BloodController";
 import { MotionController2 } from "../controllers/MotionController2";
 import { DamageableController } from "../controllers/DamageableController";
 import { Decals } from "../types/decals";
@@ -8,6 +8,7 @@ import { Enemy } from "../types/enemyTypes";
 import { ScoreEvents } from "../types/scoreTypes";
 import { createSpriteAnimation } from "../../utils/sprite";
 import { Damageable } from "../types/damageableTypes";
+import { Blood } from "../types/BloodTypes";
 
 export class EnemyEntity implements Damageable.Entity {
   private id: string;
@@ -17,7 +18,6 @@ export class EnemyEntity implements Damageable.Entity {
   private body: Phaser.Physics.Arcade.Body;
   private container: Phaser.GameObjects.Container;
 
-  private bloodController: BloodController;
   private damageableController: DamageableController;
   private motionController: MotionController2;
 
@@ -41,7 +41,6 @@ export class EnemyEntity implements Damageable.Entity {
     this.gameObject = scene.physics.add.sprite(0, 0, textureKey).setScale(config.scale);
     this.body = scene.physics.add.body(x, y, config.baunds.body.width, config.baunds.body.height);
 
-    this.bloodController = new BloodController(scene);
     this.damageableController = new DamageableController({ health: config.health, permeability: 0 });
     this.motionController = new MotionController2(scene, this.body, config.motion, config.debug);
 
@@ -165,9 +164,15 @@ export class EnemyEntity implements Damageable.Entity {
 
   protected createBloodSplash({ forceVector, hitPoint }: Damageable.Damage, target: Enemy.Body): void {
     const multiplier = target === 'head' ? 1.2 : 1;
-    const forceOrigin = { x: forceVector[0][0], y: forceVector[0][1] }; // Откуда летела пуля
-    const bulletConfig = createSimpleBloodConfig(multiplier);
-    this.bloodController.createBloodSplash(hitPoint[0], hitPoint[1], forceOrigin, bulletConfig);
+    const forceOrigin = { x: forceVector[0][0], y: forceVector[0][1] };
+    const bloodConfig = createSimpleBloodConfig(multiplier);
+
+    emitEvent(this.scene, Blood.Events.BloodSplash.Local, {
+      x: hitPoint[0],
+      y: hitPoint[1],
+      originPoint: forceOrigin,
+      config: bloodConfig,
+    });
   }
 
   public update(time: number, delta: number): void {

@@ -2,60 +2,16 @@ import * as Phaser from 'phaser';
 import { createLogger } from '../../../utils/logger';
 import { settings } from '../../settings';
 import { Decals } from '../types/decals';
-import { emitEvent } from '../Events';
+import { emitEvent, onEvent } from '../Events';
+import { Blood } from '../types/BloodTypes';
 
 const logger = createLogger('BaseBlood');
 
-export enum BLOOD_TEXTURES {
-  basic = 'blood_basic_texture',
-  drops = 'blood_drops_texture',
-  splatter = 'blood_splatter_texture'
-}
-
-// Интерфейс с параметрами для настройки эффекта брызг крови
-export interface BloodSplashOptions {
-    amount?: number;           // Количество частиц
-    size?: {                   // Размер частиц
-        min: number;           // Минимальный размер (масштаб)
-        max: number;           // Максимальный размер (масштаб)
-    };
-    speed?: {                  // Скорость частиц
-        min: number;           // Минимальная начальная скорость
-        max: number;           // Максимальная начальная скорость
-        multiplier: number;    // Множитель скорости (0-1 для замедления, >1 для ускорения)
-    };
-    gravity?: number;          // Сила гравитации
-    spread?: {                 // Разброс частиц
-        angle: number;         // Угол разброса по горизонтали (в радианах)
-        height: {              // Разброс по высоте (Y-координата)
-            min: number;       // Минимальный разброс по высоте
-            max: number;       // Максимальный разброс по высоте
-        }
-    };
-    initialVelocityY?: {       // Начальная вертикальная скорость
-        min: number;           // Минимальное значение
-        max: number;           // Максимальное значение
-    };
-    fallDistance?: {           // Максимальная дистанция падения
-        min: number;          
-        max: number;
-        factor: number;
-    };
-    drag?: {                   // Сопротивление воздуха
-        x: number;
-        y: number;
-    };
-    alpha?: {                  // Прозрачность
-        min: number;
-        max: number;
-    };
-    force?: number;            // Сила частицы
-    depth?: number;            // Приоритет отображения частиц (фиксированная глубина)
-    texture?: BLOOD_TEXTURES;      // Тип текстуры ('basic', 'drops', 'splatter')
-}
+// --- ДОБАВЬ КЛЮЧ ТЕКСТУРЫ ---
+const VIGNETTE_TEXTURE_KEY = 'vignette_texture'; // Ключ для загруженной текстуры виньетки
 
 // Дефолтные настройки для эффекта крови
-const defaultBloodOptions: BloodSplashOptions = {
+const defaultBloodOptions: Partial<Blood.BloodSplashConfig> = {
     amount: 5,
     size: {
         min: 0.3,
@@ -92,36 +48,51 @@ const defaultBloodOptions: BloodSplashOptions = {
         max: 0.9
     },
     depth: 10,
-    texture: BLOOD_TEXTURES.basic,
+    texture: Blood.Texture.basic,
+};
+
+// Интерфейс для опций эффекта крови на экране
+
+
+// Дефолтные настройки для крови на экране
+const defaultScreenBloodOptions: Blood.ScreenBloodSplashConfig = {
+    amount: Phaser.Math.Between(8, 15),
+    duration: Phaser.Math.Between(1500, 3000),
+    alpha: { min: 0.6, max: 0.9 },
+    scale: { min: 0.4, max: 1.2 },
+    dripChance: 0.3, // 30% брызг будут стекать
+    dripDistance: { min: 50, max: 200 },
+    showVignette: true,
+    vignetteAlpha: 0.25,
+    vignetteDepth: 9000,  // Глубоко, но ниже брызг
+    splashesDepth: 9001, // Брызги поверх рамки
 };
 
 export class BloodController {
   private scene: Phaser.Scene;
   private bloodParticles: Phaser.GameObjects.Sprite[] = [];
   
-  /**
-   * Конструктор системы крови
-   * @param scene Сцена для размещения эффектов крови
-   */
   constructor(scene: Phaser.Scene) {
       this.scene = scene;
+
+      if (settings.gameplay.blood.enabled) {
+        onEvent(this.scene, Blood.Events.BloodSplash.Local, this.createBloodSplash, this);
+        onEvent(this.scene, Blood.Events.ScreenBloodSplash.Local, this.createScreenBloodSplash, this);
+      }
   }
 
   static preload(scene: Phaser.Scene) {
-    createBasicBloodTexture(scene, BLOOD_TEXTURES.basic);
-    createBloodDropsTexture(scene, BLOOD_TEXTURES.drops);
-    createBloodSplatterTexture(scene, BLOOD_TEXTURES.splatter);
+    createBasicBloodTexture(scene, Blood.Texture.basic);
+    createBloodDropsTexture(scene, Blood.Texture.drops);
+    createBloodSplatterTexture(scene, Blood.Texture.splatter);
   }
   
-  /**
-   * Создает композитную частицу крови с несколькими каплями
-   */
   protected createCompositeBloodParticle(
       x: number,
       y: number,
-      settings: BloodSplashOptions
+      settings: Blood.BloodSplashConfig
   ): Phaser.Physics.Arcade.Sprite {
-      const baseTextureKey = settings.texture || BLOOD_TEXTURES.basic;
+      const baseTextureKey = settings.texture || Blood.Texture.basic;
       const bloodParticle = this.scene.physics.add.sprite(x, y, baseTextureKey);
       return bloodParticle;
   }
@@ -145,22 +116,15 @@ export class BloodController {
   
   /**
    * Создает брызги крови в указанной позиции с настраиваемыми параметрами
-   * @param x Координата X точки попадания
-   * @param y Координата Y точки попадания
-   * @param originPoint Координаты точки, откуда был произведен выстрел {x, y}
-   * @param options Настройки эффекта брызг крови
    */
   public createBloodSplash(
-      x: number, 
-      y: number, 
-      originPoint: { x: number, y: number },
-      splashOptions?: Partial<BloodSplashOptions>
+      { x, y, originPoint, config }: Blood.Events.BloodSplash.Payload
   ): void {
       if (!settings.gameplay.blood.enabled) {
           return;
       }
       // Объединяем переданные параметры с дефолтными
-      const options = { ...defaultBloodOptions, ...splashOptions };
+      const options = { ...defaultBloodOptions, ...config };
 
       // Вычисляем базовый угол на основе originPoint и hitPoint (x, y)
       const baseAngle = Math.atan2(y - originPoint.y, x - originPoint.x);
@@ -304,6 +268,104 @@ export class BloodController {
       });
   }
   
+  /**
+   * Создает эффект брызг крови "на экране" (камере).
+   * @param options Настройки эффекта
+   */
+  public createScreenBloodSplash(payload: Blood.Events.ScreenBloodSplash.Payload): void {
+    const config = { ...defaultScreenBloodOptions, ...payload.config };
+
+    const camera = this.scene.cameras.main;
+    const screenWidth = camera.width;
+    const screenHeight = camera.height;
+
+    // --- Создание Виньетки из Текстуры ---
+    let vignetteImage: Phaser.GameObjects.Image | null = null; 
+    if (config.showVignette && this.scene.textures.exists(VIGNETTE_TEXTURE_KEY)) {
+        // 1. Создаем Image с текстурой виньетки
+        vignetteImage = this.scene.add.image(
+            screenWidth / 2,
+            screenHeight / 2,
+            VIGNETTE_TEXTURE_KEY
+        );
+        vignetteImage.setScrollFactor(0);
+        vignetteImage.setDepth(config.vignetteDepth!); 
+        vignetteImage.setDisplaySize(screenWidth, screenHeight);
+        vignetteImage.setAlpha(0); 
+
+        // 2. Анимация появления/исчезновения (анимируем альфу)
+        const currentVignette = vignetteImage; 
+        this.scene.tweens.add({ 
+            targets: currentVignette,
+            alpha: config.vignetteAlpha!, 
+            duration: config.duration! * 0.1,
+            ease: 'Quad.easeOut',
+            yoyo: true,
+            hold: config.duration! * 0.8,
+            onComplete: () => {
+                currentVignette?.destroy();
+            }
+        });
+    } else if (config.showVignette) {
+        console.warn(`Vignette texture '${VIGNETTE_TEXTURE_KEY}' not found. Skipping vignette effect.`);
+    }
+    // --- Конец создания виньетки из Текстуры ---
+
+    // --- Создание Брызг ---
+    const screenBloodContainer = this.scene.add.container(0, 0); 
+    screenBloodContainer.setScrollFactor(0);
+    screenBloodContainer.setDepth(config.splashesDepth!); 
+
+    for (let i = 0; i < config.amount!; i++) { 
+        // Случайная позиция на экране
+        const x = Phaser.Math.Between(0, screenWidth);
+        const y = Phaser.Math.Between(0, screenHeight);
+
+        // Случайный масштаб и угол
+        const scale = Phaser.Math.FloatBetween(config.scale!.min, config.scale!.max);
+        const angle = Phaser.Math.Between(0, 360);
+        const alpha = Phaser.Math.FloatBetween(config.alpha!.min, config.alpha!.max);
+
+        // Создаем спрайт брызга
+        const splash = this.scene.add.sprite(x, y, Blood.Texture.splatter); // Используем текстуру брызг
+        splash.setOrigin(0.5);
+        splash.setScale(scale);
+        splash.setAngle(angle);
+        splash.setAlpha(alpha);
+
+        screenBloodContainer.add(splash);
+
+        // Анимация исчезновения для всех брызг
+        this.scene.tweens.add({
+            targets: splash,
+            alpha: 0,
+            duration: config.duration!, // Используем ! т.к. есть дефолтное значение
+            ease: 'Quad.easeIn', // Замедленное исчезновение
+            delay: Phaser.Math.Between(0, config.duration! * 0.1), // Небольшая случайная задержка
+            onComplete: () => {
+                splash.destroy(); // Уничтожаем брызг после исчезновения
+            }
+        });
+
+        // Анимация стекания для некоторых брызг
+        if (Math.random() < config.dripChance!) { // Используем ! т.к. есть дефолтное значение
+            const dripDist = Phaser.Math.Between(config.dripDistance!.min, config.dripDistance!.max);
+            this.scene.tweens.add({
+                targets: splash,
+                y: splash.y + dripDist, // Двигаем вниз
+                duration: config.duration! * Phaser.Math.FloatBetween(0.8, 1.2), // Немного разная скорость стекания
+                ease: 'Sine.easeIn' // Имитация ускорения
+            });
+        }
+    }
+
+    // --- Уничтожение контейнера ---
+     const currentContainer = screenBloodContainer;
+     this.scene.time.delayedCall(config.duration! * 1.2, () => {
+        currentContainer?.destroy();
+    });
+  }
+
   drawDecal(particle: Phaser.GameObjects.Sprite): void {
     emitEvent(this.scene, Decals.Events.Local, { object: particle, x: particle.x, y: particle.y, type: 'blood' });
   }
@@ -413,7 +475,7 @@ export function createBloodSplatterTexture(scene: Phaser.Scene, textureKey: stri
   graphics.destroy();
 }
 
-export function createSimpleBloodConfig(multiplier: number): BloodSplashOptions {
+export function createSimpleBloodConfig(multiplier: number): Partial<Blood.BloodSplashConfig> {
   return {
     amount: Phaser.Math.Between(50, 100) * multiplier,
     force: 20 * multiplier,

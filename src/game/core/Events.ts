@@ -9,7 +9,7 @@ import { Player } from './types/playerTypes';
 import { ShopEvents, WeaponPurchasedPayload } from './types/shopTypes';
 import { Game } from './types/gameTypes';
 import { MenuSceneTypes } from '../scenes/MenuScene/MenuSceneTypes';
-
+import { Blood } from './types/BloodTypes';
 interface EventPayloadMap {
   // Game
   [Game.Events.State.Remote]: Game.Events.State.Payload;
@@ -43,6 +43,10 @@ interface EventPayloadMap {
   [Player.Events.Join.Remote]: Player.Events.Join.Payload;
   [Player.Events.Left.Remote]: Player.Events.Left.Payload;
   [Player.Events.ChangeWeapon.Local]: Player.Events.ChangeWeapon.Payload;
+
+  // Blood
+  [Blood.Events.BloodSplash.Local]: Blood.Events.BloodSplash.Payload;
+  [Blood.Events.ScreenBloodSplash.Local]: Blood.Events.ScreenBloodSplash.Payload;
 
   // Shop
   [ShopEvents.WeaponPurchasedEvent]: WeaponPurchasedPayload;
