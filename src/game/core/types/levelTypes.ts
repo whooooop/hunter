@@ -9,7 +9,7 @@ export namespace Level {
       locale(locale: string): string; 
       readonly translate: string; 
     }
-    preview: {
+    preview?: {
       key: string;
       url: string;
       scale: number;

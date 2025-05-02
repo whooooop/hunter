@@ -20,7 +20,9 @@ export class SelectLevelView implements MenuSceneTypes.View {
     scene.load.image(plashkaPodstavkaTexture.key, plashkaPodstavkaTexture.url);
 
     for (const levelConfig of Object.values(LevelCollection)) {
-      scene.load.image(levelConfig.preview.key, levelConfig.preview.url);
+      if (levelConfig.preview) {
+        scene.load.image(levelConfig.preview.key, levelConfig.preview.url);
+      }
     }
   }
 
@@ -67,8 +69,9 @@ export class SelectLevelView implements MenuSceneTypes.View {
     const center = { x: settings.display.width / 2, y: settings.display.height / 2 };
     const blocks = [
       {
-        offsetX: 350,
-        offsetY: -60,
+        offsetX: 390,
+        offsetY: -10,
+        previewOffsetY: -60,
         previewOffsetX: 3,
         plashkaTexture: plashka1Texture,
         maskTexture: plashka1MaskTexture,
@@ -76,15 +79,17 @@ export class SelectLevelView implements MenuSceneTypes.View {
       },
       {
         offsetX: 0,
-        offsetY: 0,
+        offsetY: 20,
+        previewOffsetY: 0,
         previewOffsetX: 0,
         plashkaTexture: plashka1Texture,
         maskTexture: plashka1MaskTexture,
-        flipX: false,
+        flipX: true,
       },
       {
-        offsetX: 0,
+        offsetX: -390,
         offsetY: 0,
+        previewOffsetY: 0,
         previewOffsetX: 0,
         plashkaTexture: plashka1Texture,
         maskTexture: plashka1MaskTexture,
@@ -93,10 +98,11 @@ export class SelectLevelView implements MenuSceneTypes.View {
     ];
 
     Object.keys(this.levelCollection).forEach((levelId, index: number) => {
+      let preview: Phaser.GameObjects.Image | null = null;
       const levelConfig = this.levelCollection[levelId as LevelId];
       const blockConfig = blocks[index];
       const offsetX = blockConfig.offsetX;
-      const previewOffsetY = blockConfig.offsetY;
+      const previewOffsetY = blockConfig.previewOffsetY + blockConfig.offsetY;
       const previewOffsetX = blockConfig.previewOffsetX;
 
       const text = this.scene.add.text(0, -60, levelConfig.name.translate.toUpperCase(), { 
@@ -105,24 +111,27 @@ export class SelectLevelView implements MenuSceneTypes.View {
         stroke: '#000000', 
         strokeThickness: 2 
       }).setOrigin(0.5);
-      const container = this.scene.add.container(center.x, center.y);
+      const container = this.scene.add.container(center.x - offsetX, center.y + blockConfig.offsetY);
       const maskImage = this.scene.add.image(center.x - offsetX + previewOffsetX, center.y + previewOffsetY, blocks[index].maskTexture.key).setOrigin(0.5).setScale(blocks[index].maskTexture.scale).setFlipX(blockConfig.flipX as boolean).setVisible(false);
-      const preview = this.scene.add.image(previewOffsetX, previewOffsetY, levelConfig.preview.key)
-        .setOrigin(0.5)
-        .setScale(levelConfig.preview.scale)
-        .setTint(0xbbbbbb);
-      const mask = maskImage.createBitmapMask();
-      preview.setMask(mask);
-      
+      if (levelConfig.preview) {
+        preview = this.scene.add.image(previewOffsetX, previewOffsetY, levelConfig.preview.key)
+          .setOrigin(0.5)
+          .setScale(levelConfig.preview.scale)
+          .setTint(0xbbbbbb);
+          const mask = maskImage.createBitmapMask();
+          preview.setMask(mask);
+      }
+
       const plashka = this.scene.add.image(0, 0, blocks[index].plashkaTexture.key).setOrigin(0.5).setScale(blocks[index].plashkaTexture.scale).setFlipX(blockConfig.flipX as boolean);
       const plashkaPodstavka = this.scene.add.image(0, 180, plashkaPodstavkaTexture.key).setOrigin(0.5).setScale(plashkaPodstavkaTexture.scale);
 
       container.add(plashkaPodstavka);
       container.add(plashka);
       container.add(maskImage);
-      container.add(preview);
+      if (preview) {
+        container.add(preview);
+      }
       container.add(text);
-      container.setPosition(center.x - offsetX, center.y);
       plashka.setInteractive();
       plashka.on('pointerdown', () => {
         emitEvent(this.scene, MenuSceneTypes.Events.Play.Name, { levelId });

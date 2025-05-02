@@ -41,11 +41,10 @@ export class MenuScene extends Phaser.Scene {
     onEvent(this, MenuSceneTypes.Events.GoToView.Name, this.goToViewHandler, this);
 
     this.container = this.add.container(0, 0);
-
     this.backgroundView = new BackgroundView(this);
-    this.renderView(MenuSceneTypes.ViewKeys.HOME);
-
     this.container.add(this.backgroundView.getContainer());
+
+    this.renderView(MenuSceneTypes.ViewKeys.SELECT_LEVEL);
   }
 
   playHandler(payload: MenuSceneTypes.Events.Play.Payload): void {

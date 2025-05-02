@@ -1,6 +1,7 @@
 export namespace Location {
   export enum Id {
     FOREST = 'forest',
+    DESERT = 'desert',
   }
 
   export interface Bounds {
