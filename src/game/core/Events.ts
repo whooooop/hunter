@@ -58,11 +58,12 @@ interface EventPayloadMap {
   [MenuSceneTypes.Events.Play.Name]: MenuSceneTypes.Events.Play.Payload;
   [MenuSceneTypes.Events.GoToView.Name]: MenuSceneTypes.Events.GoToView.Payload;
 
-  // Pause
+  // Game
   [Game.Events.Pause.Local]: Game.Events.Pause.Payload;
   [Game.Events.Replay.Local]: Game.Events.Replay.Payload;
   [Game.Events.Resume.Local]: Game.Events.Resume.Payload;
   [Game.Events.Exit.Local]: Game.Events.Exit.Payload;
+  [Game.Events.Stat.Local]: Game.Events.Stat.Payload;
 }
 
 export function emitEvent<E extends keyof EventPayloadMap>(scene: Phaser.Scene, name: E, payload: EventPayloadMap[E]): void;

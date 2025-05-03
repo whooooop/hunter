@@ -2,37 +2,23 @@ import * as Phaser from 'phaser';
 import { PLAYER_POSITION_X, PLAYER_POSITION_Y } from '../../core/Constants';
 import { SceneKeys } from '../index';
 import { PlayerEntity } from '../../core/entities/PlayerEntity';
-import { WaveInfo } from '../../ui/WaveInfo';
 import { settings } from '../../settings';
 import { createLogger } from '../../../utils/logger';
-import { WeaponStatus } from '../../ui/WeaponStatus';
+import { WeaponStatus, WaveInfo } from '../../ui';
 import { BaseShop } from '../../core/BaseShop';
-import { ProjectileController } from '../../core/controllers/ProjectileController';
-import { BloodController } from '../../core/controllers/BloodController';
-import { DecalController } from '../../core/controllers/DecalController';
-import { SpawnEnemyPayload, WaveController } from '../../core/controllers/WaveController';
+import { DecalController, BloodController, ProjectileController, WaveController, ScoreController, ShopController, WeaponController, QuestController, MultiplayerController, KeyBoardController } from '../../core/controllers';
+import { Player, Enemy, Game, Damageable, Location, ShopEvents } from '../../core/types';
 import { createWavesConfig } from '../../levels/test/wavesConfig'
-import { WaveStartEventPayload, WaveEvents } from '../../core/controllers/WaveController';
+import { WaveStartEventPayload, WaveEvents, SpawnEnemyPayload } from '../../core/controllers/WaveController';
 import { generateId } from '../../../utils/stringGenerator';
 import { emitEvent, offEvent, onEvent } from '../../core/Events';
 import { preloadWeapons } from '../../weapons';
 import { WeaponType } from '../../weapons/WeaponTypes';
 import { preloadProjectiles } from '../../projectiles';
-import { Enemy } from '../../core/types/enemyTypes';
-import { ScoreController } from '../../core/controllers/ScoreController';
 import { ScoreEvents, UpdateScoreEventPayload } from '../../core/types/scoreTypes';
-import { WeaponController } from '../../core/controllers/WeaponController';
 import { testLevel } from '../../levels/test';
-import { ShopController } from '../../core/controllers/ShopController';
-import { ShopEvents } from '../../core/types/shopTypes';
-import { MultiplayerController } from '../../core/controllers/MultiplayerController';
 import { createEnemy } from '../../enemies';
-import { KeyBoardController } from '../../core/controllers/KeyBoardController';
-import { Player } from '../../core/types/playerTypes';
-import { Game } from '../../core/types/gameTypes';
-import { Damageable } from '../../core/types/damageableTypes';
 import { preloadFx } from '../../fx';
-import { Location } from '../../core/types/Location';
 import { getLocation } from '../../locations';
 import { LoadingView } from '../../views/loading/LoadingView';
 import { getLevel, LevelId } from '../../levels';
@@ -57,6 +43,7 @@ export class GameplayScene extends Phaser.Scene {
   private weaponStatus!: WeaponStatus;
   private decalController!: DecalController;
   private projectileController!: ProjectileController;
+  private questController!: QuestController;
   private waveController!: WaveController;
   private scoreController!: ScoreController;
   private weaponController!: WeaponController;
@@ -134,9 +121,12 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private singlePlayerInit(playerId: string): void {
+    this.questController = new QuestController(this);
+
     this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
     this.waveController.start();
     this.projectileController.setSimulate(false);
+
     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
     emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 5000 });
   }
