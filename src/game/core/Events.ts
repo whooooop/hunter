@@ -1,15 +1,8 @@
 import * as Phaser from 'phaser';
-import { SpawnEnemyPayload, WaveStartEventPayload } from './controllers/WaveController';
-import { WaveEvents } from './controllers/WaveController';
-import { Decals } from './types/decals';
-import { Weapon } from './types/weaponTypes';
-import { Enemy } from './types/enemyTypes';
-import { ScoreEvents, UpdateScoreEventPayload, IncreaseScoreEventPayload, DecreaseScoreEventPayload } from './types/scoreTypes';
-import { Player } from './types/playerTypes';
-import { ShopEvents, WeaponPurchasedPayload } from './types/shopTypes';
-import { Game } from './types/gameTypes';
 import { MenuSceneTypes } from '../scenes/MenuScene/MenuSceneTypes';
-import { Blood } from './types/BloodTypes';
+import { Player, Enemy, Weapon, Game, Star, Quest, Blood, Decals, ScoreEvents, UpdateScoreEventPayload, IncreaseScoreEventPayload, DecreaseScoreEventPayload, ShopEvents, WeaponPurchasedPayload } from './types';
+import { Wave } from './types/WaveTypes';
+
 interface EventPayloadMap {
   // Game
   [Game.Events.State.Remote]: Game.Events.State.Payload;
@@ -24,8 +17,8 @@ interface EventPayloadMap {
   [Weapon.Events.AimPoint.Local]: Weapon.Events.AimPoint.Payload;
 
   // Waves
-  [WaveEvents.WaveStartEvent]: WaveStartEventPayload;
-  [WaveEvents.SpawnEnemyEvent]: SpawnEnemyPayload;
+  [Wave.Events.WaveStart.Local]: Wave.Events.WaveStart.Payload;
+  [Wave.Events.Spawn.Local]: Wave.Events.Spawn.Payload;
 
   // Enemies
   [Enemy.Events.Death.Local]: Enemy.Events.Death.Payload;
@@ -59,11 +52,20 @@ interface EventPayloadMap {
   [MenuSceneTypes.Events.GoToView.Name]: MenuSceneTypes.Events.GoToView.Payload;
 
   // Game
+  [Game.Events.Enemies.Local]: Game.Events.Enemies.Payload;
   [Game.Events.Pause.Local]: Game.Events.Pause.Payload;
   [Game.Events.Replay.Local]: Game.Events.Replay.Payload;
   [Game.Events.Resume.Local]: Game.Events.Resume.Payload;
   [Game.Events.Exit.Local]: Game.Events.Exit.Payload;
   [Game.Events.Stat.Local]: Game.Events.Stat.Payload;
+
+  // Quest
+  [Quest.Evants.QuestCompleted.Local]: Quest.Evants.QuestCompleted.Payload;
+  [Quest.Evants.TaskCompleted.Local]: Quest.Evants.TaskCompleted.Payload;
+
+  // Star
+  [Star.Events.Increase.Local]: Star.Events.Increase.Payload;
+  [Star.Events.Decrease.Local]: Star.Events.Decrease.Payload;
 }
 
 export function emitEvent<E extends keyof EventPayloadMap>(scene: Phaser.Scene, name: E, payload: EventPayloadMap[E]): void;

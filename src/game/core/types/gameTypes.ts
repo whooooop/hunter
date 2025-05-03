@@ -10,6 +10,13 @@ export namespace Game {
       export type Payload = EventGameState;
     }
 
+    export namespace Enemies {
+      export const Local = 'GameEnemiesLocalEvent';
+      export type Payload = {
+        count: number;
+      };
+    }
+
     export namespace Pause {
       export const Local = 'GamePauseLocalEvent';
       export type Payload = {};

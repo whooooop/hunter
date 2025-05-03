@@ -1,8 +1,9 @@
 import * as Phaser from 'phaser';
-import { Quest } from '../types/QuestsTypes'; // Предполагаемый путь
+import { Quest } from '../types/QuestsTypes';
 import { createLogger, LogLevel } from '../../../utils/logger';
-import { offEvent, onEvent } from '../Events';
-import { Game } from '../types';
+import { emitEvent, offEvent, onEvent } from '../Events';
+import { Game, Star } from '../types';
+import { GameStorage } from '../GameStorage';
 
 const logger = createLogger('QuestController', {
   minLevel: LogLevel.DEBUG,
@@ -14,6 +15,7 @@ export class QuestController {
   private activeQuest: Quest.Config | null = null;
   private taskProgress: Map<string, number> = new Map();
   private completedTasks: Set<string> = new Set();
+  private gameStorage = new GameStorage();
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -41,14 +43,14 @@ export class QuestController {
 
   /**
    * Обрабатывает входящие игровые события для обновления прогресса квеста.
-   * @param eventType Тип игрового события (например, 'enemyKilled', 'playerDamaged').
-   * @param eventData Данные события (например, { enemyType: 'rabbit', bodyPart: 'head' }).
+   * @param eventType
+   * @param eventData
    */
   private handleGameEvent({ event, data }: Game.Events.Stat.Payload): void {
     logger.debug(`Handling game event: ${event}`, data);
 
     if (!this.activeQuest) {
-      return; // Нет активного квеста
+      return;
     }
 
     for (const task of this.activeQuest.tasks) {
@@ -157,13 +159,20 @@ export class QuestController {
    * @param task Завершенная задача.
    */
   private handleTaskCompletion(task: Quest.AnyTaskConfig): void {
-    if (this.completedTasks.has(task.id)) return; // Уже обработано
+    if (this.completedTasks.has(task.id)) return;
 
     this.completedTasks.add(task.id);
     logger.info(`Task '${task.id}' completed!`);
 
-    // TODO: Выдать награду за задачу?
-    // emitEvent(this.eventEmitter, Quest.Events.TaskCompleted, { taskId: task.id, reward: task.reward });
+    emitEvent(this.scene, Quest.Evants.TaskCompleted.Local, { 
+      questId: this.activeQuest!.id!, 
+      taskId: task.id 
+    });
+    // this.gameStorage.set()
+
+    if (task.reward.type === Quest.RewardType.Star) {
+      emitEvent(this.scene, Star.Events.Increase.Local, { value: task.reward.amount });
+    }
   }
 
   /**
@@ -172,16 +181,17 @@ export class QuestController {
    */
   private handleQuestCompletion(quest: Quest.Config): void {
     logger.info(`Quest '${quest.id}' completed! All tasks finished.`);
-    // TODO: Выдать финальную награду?
-    // TODO: Возможно, автоматически сбросить квест?
-    // this.setActiveQuest(null);
-    // emitEvent(this.eventEmitter, Quest.Events.QuestCompleted, { questId: quest.id });
+ 
+    emitEvent(this.scene, Quest.Evants.QuestCompleted.Local, { 
+      questId: quest.id 
+    });
+
+    // TODO: Set storage
   }
 
   // TODO: Добавить метод для получения текущего прогресса
   // public getQuestProgress(): QuestProgress | null { ... }
 
-  // TODO: Добавить метод для подписки на события квеста (завершение задачи/квеста)
   destroy(): void {
     logger.info('QuestController destroyed');
     offEvent(this.scene, Game.Events.Stat.Local, this.handleGameEvent, this);

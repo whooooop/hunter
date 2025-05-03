@@ -8,19 +8,18 @@ import { WeaponStatus, WaveInfo } from '../../ui';
 import { BaseShop } from '../../core/BaseShop';
 import { DecalController, BloodController, ProjectileController, WaveController, ScoreController, ShopController, WeaponController, QuestController, MultiplayerController, KeyBoardController } from '../../core/controllers';
 import { Player, Enemy, Game, Damageable, Location, ShopEvents, Level, ScoreEvents, UpdateScoreEventPayload } from '../../core/types';
-import { WaveStartEventPayload, WaveEvents, SpawnEnemyPayload } from '../../core/controllers/WaveController';
 import { generateId } from '../../../utils/stringGenerator';
 import { emitEvent, offEvent, onEvent } from '../../core/Events';
 import { preloadWeapons } from '../../weapons';
 import { WeaponType } from '../../weapons/WeaponTypes';
 import { preloadProjectiles } from '../../projectiles';
-import { testLevel } from '../../levels/test';
 import { createEnemy } from '../../enemies';
 import { preloadFx } from '../../fx';
 import { getLocation } from '../../locations';
 import { LoadingView } from '../../views/loading/LoadingView';
 import { getLevel, LevelId } from '../../levels';
 import { PauseView } from '../../views/pause/PauseView';
+import { Wave } from '../../core/types/WaveTypes';
 
 const logger = createLogger('GameplayScene');
 
@@ -89,8 +88,8 @@ export class GameplayScene extends Phaser.Scene {
     const playerId = window.location.search.split('player=')[1] || generateId();
     this.mainPlayerId = playerId;
 
-    onEvent(this, WaveEvents.WaveStartEvent, (payload: WaveStartEventPayload) => this.handleWaveStart(payload));
-    onEvent(this, WaveEvents.SpawnEnemyEvent, (payload: SpawnEnemyPayload) => this.handleSpawnEnemy(payload));
+    onEvent(this, Wave.Events.WaveStart.Local, (payload: Wave.Events.WaveStart.Payload) => this.handleWaveStart(payload));
+    onEvent(this, Wave.Events.Spawn.Local, (payload: Wave.Events.Spawn.Payload) => this.handleSpawnEnemy(payload));
     onEvent(this, Enemy.Events.Death.Local, (payload: Enemy.Events.Death.Payload) => this.handleEnemyDeath(payload));
     onEvent(this, ScoreEvents.UpdateScoreEvent, (payload: UpdateScoreEventPayload) => this.handleUpdateScore(payload));
     onEvent(this, Game.Events.Pause.Local, (payload: Game.Events.Pause.Payload) => this.handlePause(payload));
@@ -195,15 +194,21 @@ export class GameplayScene extends Phaser.Scene {
   private handleEnemyDeath({ id }: Enemy.Events.Death.Payload): void {
     this.enemies.delete(id);
     this.damageableObjects.delete(id);
+    emitEvent(this, Game.Events.Enemies.Local, {
+      count: this.enemies.size
+    });
   }
 
-  private handleSpawnEnemy({ id, enemyType, position, options }: SpawnEnemyPayload): void {
+  private handleSpawnEnemy({ id, enemyType, position, options }: Wave.Events.Spawn.Payload): void {
     const enemy = createEnemy(id, enemyType, this, position.x, position.y, options);
     this.enemies.set(id, enemy);
     this.damageableObjects.set(id, enemy);
+    emitEvent(this, Game.Events.Enemies.Local, {
+      count: this.enemies.size
+    });
   }
 
-  private handleWaveStart(payload: WaveStartEventPayload) {
+  private handleWaveStart(payload: Wave.Events.WaveStart.Payload) {
     this.waveInfo.start(payload)
   }
 
@@ -301,8 +306,8 @@ export class GameplayScene extends Phaser.Scene {
     this.multiplayerController.destroy();
     this.keyboardController.destroy();
 
-    offEvent(this, WaveEvents.WaveStartEvent, this.handleWaveStart, this);
-    offEvent(this, WaveEvents.SpawnEnemyEvent, this.handleSpawnEnemy, this);
+    offEvent(this, Wave.Events.WaveStart.Local, this.handleWaveStart, this);
+    offEvent(this, Wave.Events.Spawn.Local, this.handleSpawnEnemy, this);
     offEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
     offEvent(this, ScoreEvents.UpdateScoreEvent, this.handleUpdateScore, this);
     offEvent(this, Player.Events.Join.Remote, this.handlePlayerJoin, this);

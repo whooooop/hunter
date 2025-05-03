@@ -6,4 +6,4 @@
 - settings
 - decal indexed DB
 - multiplayer
-- waves
+- pause

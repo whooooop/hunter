@@ -1,14 +1,14 @@
 import { settings } from "../../settings";
-import { Wave } from '../../core/controllers/WaveController'
+import { Wave } from '../../core/types/WaveTypes'
 import { Enemy } from "../../core/types/enemyTypes";
 
-export function createWavesConfig(): Wave[] {
+export function createWavesConfig(): Wave.Config[] {
   const rightStartPointX = settings.display.width + 50;
 
   return [
     // Wave 1
     {
-      delay: 0,
+      waitAllEnemiesDead: false,
       spawns: [
         {
           delay: 0,
@@ -82,7 +82,7 @@ export function createWavesConfig(): Wave[] {
 
     // Wave 2
     {
-      delay: 5000,
+      waitAllEnemiesDead: true,
       spawns: [
         {
           delay: 1000,
@@ -117,9 +117,9 @@ export function createWavesConfig(): Wave[] {
       ],
     },
 
-    // // Wave 3
+    // Wave 3
     {
-      delay: 20000,
+      waitAllEnemiesDead: true,
       spawns: [
         {
           delay: 1000,

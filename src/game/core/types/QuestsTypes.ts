@@ -5,6 +5,22 @@ export namespace Quest {
     id: string;
     tasks: AnyTaskConfig[];
   }
+  
+  export namespace Evants {
+    export namespace QuestCompleted {
+      export const Local = 'QuestCompletedLocalEvent';
+      export interface Payload {
+        questId: string;
+      }
+    }
+    export namespace TaskCompleted {
+      export const Local = 'TaskCompletedLocalEvent';
+      export interface Payload {
+        questId: string;
+        taskId: string;
+      }
+    }
+  }
 
   export interface BaseTaskConfig {
     id: string;

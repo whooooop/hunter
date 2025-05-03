@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { hexToNumber } from '../utils/colors';
 import { COLORS } from '../core/Constants';
-import { WaveStartEventPayload } from '../core/controllers/WaveController';
+import { Wave } from '../core/types/WaveTypes';
 import { settings } from '../settings';
 
 export class WaveInfo {
@@ -97,7 +97,7 @@ export class WaveInfo {
       this.progressBar.fill();
   }
 
-  public start(wave: WaveStartEventPayload) {
+  public start(wave: Wave.Events.WaveStart.Payload) {
     this.startTime = this.scene.time.now;
     this.duration = wave.duration;
     this.waveNumber = wave.number;

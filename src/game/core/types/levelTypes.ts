@@ -1,5 +1,5 @@
 import { WeaponType } from "../../weapons/WeaponTypes";
-import { Wave } from "../controllers/WaveController";
+import { Wave } from "./WaveTypes";
 import { Location } from "./Location";
 import { Quest } from "./QuestsTypes";
 
@@ -15,7 +15,7 @@ export namespace Level {
       url: string;
       scale: number;
     }
-    waves: () => Wave[];
+    waves: () => Wave.Config[];
     quests: Quest.Config[];
     weapons: Weapon[];
   }
