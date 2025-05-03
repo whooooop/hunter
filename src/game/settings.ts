@@ -6,7 +6,7 @@ export const settings = {
     },
     audio: {
         weaponsVolume: 0.2,
-        effectsVolume: 0.5,
+        effectsVolume: 1,
         musicVolume: 0.5,
     },
     gameplay: {

@@ -4,6 +4,7 @@ import { createWavesConfig } from './wavesConfig';
 export const testLevel = {
   location: '',
   waves: createWavesConfig(),
+  quests: [],
   weapons: [
     // {
     //   type: WeaponType.GLOCK,

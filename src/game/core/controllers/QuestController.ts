@@ -1,10 +1,13 @@
 import * as Phaser from 'phaser';
 import { Quest } from '../types/QuestsTypes'; // Предполагаемый путь
-import { createLogger } from '../../../utils/logger';
+import { createLogger, LogLevel } from '../../../utils/logger';
 import { offEvent, onEvent } from '../Events';
 import { Game } from '../types';
 
-const logger = createLogger('QuestController');
+const logger = createLogger('QuestController', {
+  minLevel: LogLevel.DEBUG,
+  enabled: true,
+});
 
 export class QuestController {
   private scene: Phaser.Scene;
@@ -42,12 +45,11 @@ export class QuestController {
    * @param eventData Данные события (например, { enemyType: 'rabbit', bodyPart: 'head' }).
    */
   private handleGameEvent({ event, data }: Game.Events.Stat.Payload): void {
-    logger.info(`Handling game event: ${event}`, data);
+    logger.debug(`Handling game event: ${event}`, data);
 
     if (!this.activeQuest) {
       return; // Нет активного квеста
     }
-
 
     for (const task of this.activeQuest.tasks) {
       // Пропускаем уже завершенные задачи
@@ -59,14 +61,38 @@ export class QuestController {
       if (task.event === event) {
         // Проверяем условия задачи
         if (this.checkConditions(task.conditions, data)) {
-          // Увеличиваем прогресс
           const currentProgress = this.taskProgress.get(task.id) ?? 0;
-          const newProgress = currentProgress + 1; // Пока просто +1, можно будет брать из eventData
+          let newProgress = currentProgress; // Инициализируем новым значением
+          let targetValue = task.count; // Целевое значение по умолчанию
+
+          // Логика подсчета прогресса
+          if (task.count === -1 && task.value !== undefined && task.valueKey) {
+            // Случай 1: Накопление значения по valueKey
+            const eventValue = (data as any)[task.valueKey];
+            if (typeof eventValue === 'number') {
+              newProgress += eventValue;
+              targetValue = task.value; // Цель - накопить task.value
+              logger.debug(`Task '${task.id}' accumulating value by ${eventValue}. Progress: ${newProgress}/${targetValue}`);
+            } else {
+              logger.warn(`Task '${task.id}' requires numeric value for key '${task.valueKey}', but got:`, eventValue);
+              continue; // Пропускаем обновление, если значение некорректно
+            }
+          } else if (task.count > 0) {
+            // Случай 2: Подсчет событий
+            newProgress += 1;
+            targetValue = task.count; // Цель - достичь task.count
+            logger.debug(`Task '${task.id}' incrementing count. Progress: ${newProgress}/${targetValue}`);
+          } else {
+            // Некорректная конфигурация задачи (например, count 0 или -1 без value/valueKey)
+            logger.warn(`Task '${task.id}' has invalid configuration (count: ${task.count}, value: ${task.value}, valueKey: ${task.valueKey}). Skipping progress update.`);
+            continue;
+          }
+
+          // Обновляем прогресс
           this.taskProgress.set(task.id, newProgress);
-          logger.debug(`Task '${task.id}' progress: ${newProgress}/${task.count}`);
 
           // Проверяем завершение задачи
-          if (newProgress >= task.count) {
+          if (targetValue > 0 && newProgress >= targetValue) {
             this.handleTaskCompletion(task);
           }
         }

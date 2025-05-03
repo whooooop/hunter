@@ -11,6 +11,8 @@ export namespace Quest {
     reward: Reward;
     title: string;
     event: string;
+    valueKey?: string;
+    value?: number;
     count: number;
   }
 
@@ -104,17 +106,17 @@ export namespace Quest {
     }
     export interface Earn extends BaseTaskConfig {
       event: typeof Game.Events.Stat.EarnEvent.Event;
-      valueKey: Game.Events.Stat.Key.Score['key'];
+      valueKey?: Game.Events.Stat.Key.Score['key'];
       conditions: (Condition.Score)[];
     }
     export interface Spend extends BaseTaskConfig {
       event: typeof Game.Events.Stat.SpendEvent.Event;
-      valueKey: Game.Events.Stat.Key.Score['key'];
+      valueKey?: Game.Events.Stat.Key.Score['key'];
       conditions: (Condition.Score)[];
     }
     export interface WaveComplete extends BaseTaskConfig {
       event: typeof Game.Events.Stat.WaveCompleteEvent.Event;
-      valueKey: Game.Events.Stat.Key.WaveNumber['key'];
+      valueKey?: Game.Events.Stat.Key.WaveNumber['key'];
       conditions: (Condition.WaveNumber)[];
     }
   }

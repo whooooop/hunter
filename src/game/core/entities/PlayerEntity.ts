@@ -7,6 +7,8 @@ import { offEvent, onEvent } from '../Events';
 import { Player } from '../types/playerTypes';
 import { MotionController2 } from '../controllers/MotionController2';
 import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture } from '../../textures/PlayerTexture';
+import JumpAudioUrl from '../../assets/audio/jump.mp3';
+import { settings } from '../../settings';
 
 const logger = createLogger('Player');
 
@@ -14,6 +16,12 @@ const LEG_WALK_MAX_ROTATION = Phaser.Math.DegToRad(30);
 const LEG_JUMP_ROTATION = Phaser.Math.DegToRad(45);
 const WALK_CYCLE_SPEED_FACTOR = 0.05; // Множитель для скорости анимации ходьбы (подбирается экспериментально)
 const BODY_WALK_MAX_ROTATION = Phaser.Math.DegToRad(1); // Максимальный угол наклона тела при ходьбе
+
+
+const jumpAudio = {
+  key: 'player_jump',
+  url: JumpAudioUrl,
+}
 
 export class PlayerEntity {
   name = 'Player';
@@ -53,18 +61,22 @@ export class PlayerEntity {
 
   private shadow!: ShadowEntity;
 
+  private jumpAudio!: Phaser.Sound.BaseSound;
+
+
   static preload(scene: Phaser.Scene): void {
     scene.load.image(PlayerBodyTexture.key, PlayerBodyTexture.url);
     scene.load.image(PlayerHandTexture.key, PlayerHandTexture.url);
     scene.load.image(PlayerLegLeftTexture.key, PlayerLegLeftTexture.url);
     scene.load.image(PlayerLegRightTexture.key, PlayerLegRightTexture.url);
+    scene.load.audio(jumpAudio.key, jumpAudio.url);
   }
 
   constructor(scene: Phaser.Scene, id: string, x: number, y: number) {
     this.id = id;
     this.scene = scene;
     this.container = scene.add.container(x, y);
-    
+    this.jumpAudio = scene.sound.add(jumpAudio.key, { volume: settings.audio.effectsVolume });
 
     this.body = scene.physics.add.body(x, y, this.bodyWidth, this.bodyHeight);
     this.shadow = new ShadowEntity(scene, this.body);
@@ -221,7 +233,7 @@ export class PlayerEntity {
   }
   
   public setMove(moveX: number, moveY: number): void {
-    this.moveX = moveX;
+    this.moveX = moveX; 
     this.moveY = moveY;
     // this.handleDirectionChange(-1);
     this.motionController.setMove(this.moveX, this.moveY);
@@ -231,7 +243,11 @@ export class PlayerEntity {
    * Запускает прыжок игрока
    */
   public jump(): void {
+    if (this.motionController.isJumping()) {
+      return;
+    }
     this.motionController.jump();
+    this.jumpAudio.play();
   }
 
   

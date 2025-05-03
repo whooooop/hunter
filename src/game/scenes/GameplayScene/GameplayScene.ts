@@ -7,15 +7,13 @@ import { createLogger } from '../../../utils/logger';
 import { WeaponStatus, WaveInfo } from '../../ui';
 import { BaseShop } from '../../core/BaseShop';
 import { DecalController, BloodController, ProjectileController, WaveController, ScoreController, ShopController, WeaponController, QuestController, MultiplayerController, KeyBoardController } from '../../core/controllers';
-import { Player, Enemy, Game, Damageable, Location, ShopEvents } from '../../core/types';
-import { createWavesConfig } from '../../levels/test/wavesConfig'
+import { Player, Enemy, Game, Damageable, Location, ShopEvents, Level, ScoreEvents, UpdateScoreEventPayload } from '../../core/types';
 import { WaveStartEventPayload, WaveEvents, SpawnEnemyPayload } from '../../core/controllers/WaveController';
 import { generateId } from '../../../utils/stringGenerator';
 import { emitEvent, offEvent, onEvent } from '../../core/Events';
 import { preloadWeapons } from '../../weapons';
 import { WeaponType } from '../../weapons/WeaponTypes';
 import { preloadProjectiles } from '../../projectiles';
-import { ScoreEvents, UpdateScoreEventPayload } from '../../core/types/scoreTypes';
 import { testLevel } from '../../levels/test';
 import { createEnemy } from '../../enemies';
 import { preloadFx } from '../../fx';
@@ -38,6 +36,8 @@ export class GameplayScene extends Phaser.Scene {
   private shop!: BaseShop;
   private enemies: Map<string, Damageable.Entity> = new Map();
   private damageableObjects: Map<string, Damageable.Entity> = new Map();
+
+  private levelConfig!: Level.Config;
 
   private waveInfo!: WaveInfo;
   private weaponStatus!: WeaponStatus;
@@ -68,8 +68,8 @@ export class GameplayScene extends Phaser.Scene {
   
   init({ levelId } : GameplaySceneData) {
     this.loadingView = new LoadingView(this);
-    const level = getLevel(levelId);
-    this.location = getLocation(this, level.location);
+    this.levelConfig = getLevel(levelId);
+    this.location = getLocation(this, this.levelConfig.location);
   }
 
   async preload(): Promise<void> {
@@ -77,7 +77,7 @@ export class GameplayScene extends Phaser.Scene {
 
     PlayerEntity.preload(this);
     BloodController.preload(this);
-    WaveController.preloadEnemies(this, testLevel.waves);
+    WaveController.preloadEnemies(this, this.levelConfig.waves());
     PauseView.preload(this);
     
     preloadWeapons(this);
@@ -105,10 +105,10 @@ export class GameplayScene extends Phaser.Scene {
     this.bloodController = new BloodController(this);
     this.keyboardController = new KeyBoardController(this, this.players, playerId);
     this.weaponController = new WeaponController(this, this.players);
-    this.shopController = new ShopController(this, this.players, playerId, this.shop, testLevel.weapons);
+    this.shopController = new ShopController(this, this.players, playerId, this.shop, this.levelConfig.weapons);
     this.decalController = new DecalController(this, 0, 0, settings.display.width, settings.display.height, 5);
     this.projectileController = new ProjectileController(this, this.damageableObjects);
-    this.waveController = new WaveController(this, createWavesConfig());
+    this.waveController = new WaveController(this, this.levelConfig.waves());
     
     this.waveInfo = new WaveInfo(this);
     this.weaponStatus = new WeaponStatus(this);
@@ -122,6 +122,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private singlePlayerInit(playerId: string): void {
     this.questController = new QuestController(this);
+    this.questController.setActiveQuest(this.levelConfig.quests[0]);
 
     this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
     this.waveController.start();

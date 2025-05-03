@@ -1,6 +1,7 @@
 import { WeaponType } from "../../weapons/WeaponTypes";
 import { Wave } from "../controllers/WaveController";
 import { Location } from "./Location";
+import { Quest } from "./QuestsTypes";
 
 export namespace Level {
   export interface Config {
@@ -15,6 +16,7 @@ export namespace Level {
       scale: number;
     }
     waves: () => Wave[];
+    quests: Quest.Config[];
     weapons: Weapon[];
   }
 

@@ -11,5 +11,6 @@ export const DesertLevelConfig: Level.Config = {
   waves: () => {
     return [];
   },
+  quests: [],
   weapons: [],
 }
