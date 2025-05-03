@@ -32,6 +32,12 @@ export class ScoreController {
     this.scere.set(payload.playerId, score);
 
     emitEvent(this.scene, ScoreEvents.UpdateScoreEvent, { playerId: payload.playerId, score });
+    emitEvent(this.scene, Game.Events.Stat.Local, {
+      event: Game.Events.Stat.EarnEvent.Event,
+      data: {
+        score: payload.score,
+      },
+    });
   }
 
   private handleDecreaseScore(payload: DecreaseScoreEventPayload): void {
@@ -44,6 +50,12 @@ export class ScoreController {
     this.scere.set(payload.playerId, score);
 
     emitEvent(this.scene, ScoreEvents.UpdateScoreEvent, { playerId: payload.playerId, score });
+    emitEvent(this.scene, Game.Events.Stat.Local, {
+      event: Game.Events.Stat.SpendEvent.Event,
+      data: {
+        score: payload.score,
+      },
+    });
   }
 
   public destroy(): void {

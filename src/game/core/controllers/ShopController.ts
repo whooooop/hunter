@@ -3,8 +3,9 @@ import { PlayerEntity } from "../entities/PlayerEntity";
 import { WeaponType } from "../../weapons/WeaponTypes";
 import { UpdateScoreEventPayload } from "../types/scoreTypes";
 import { ScoreEvents } from "../types/scoreTypes";
-import { offEvent, onEvent } from "../Events";
+import { emitEvent, offEvent, onEvent } from "../Events";
 import { ShopEvents, ShopWeapon, WeaponPurchasedPayload } from "../types/shopTypes";
+import { Game } from "../types/gameTypes";
 
 export class ShopController {
   private scene: Phaser.Scene;
@@ -36,6 +37,13 @@ export class ShopController {
     const playerPurchasedWeapons = this.playerPurchasedWeapons.get(payload.playerId) || new Set();
     playerPurchasedWeapons.add(payload.weaponType);
     this.playerPurchasedWeapons.set(payload.playerId, playerPurchasedWeapons);
+    
+    emitEvent(this.scene, Game.Events.Stat.Local, {
+      event: Game.Events.Stat.PurchaseWeaponEvent.Event,
+      data: {
+        weaponName: payload.weaponType,
+      },
+    });
   }
 
   public update(time: number, delta: number) {

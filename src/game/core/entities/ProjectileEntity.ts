@@ -2,6 +2,7 @@ import { settings } from "../../settings";
 import { ExplosionFx } from "../../fx/explosion/ExplosionFx";
 import { Projectile } from "../../core/types/projectrileTypes";
 import { AudioAssets } from "../types/weaponTypes";
+import { WeaponType } from "../../weapons/WeaponTypes";
 
 const defaultOptions = {
   bounce: 0.2,
@@ -23,7 +24,7 @@ export class ProjectileEntity {
   protected speed: number[] = [100, 0];
   
   protected playerId!: string;
-  protected weaponName!: string;
+  protected weaponName!: WeaponType;
   
   // Точки, определяющие вектор
   protected startPoint: number[] = [0, 0];
@@ -74,11 +75,11 @@ export class ProjectileEntity {
     return this.playerId;
   }
 
-  public getWeaponName(): string {
+  public getWeaponName(): WeaponType {
     return this.weaponName;
   }
 
-  public assign(playerId: string, weaponName: string): this {
+  public assign(playerId: string, weaponName: WeaponType): this {
     this.playerId = playerId;
     this.weaponName = weaponName;
 

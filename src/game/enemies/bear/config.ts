@@ -2,6 +2,7 @@ import { Enemy } from '../../core/types/enemyTypes';
 import bearWalkTextureUrl from './assets/image6.png';
 
 export const BearConfig: Enemy.Config = {
+  type: Enemy.Type.BEAR,
   debug: true,
   health: 1200,
   scale: 1,

@@ -83,6 +83,15 @@ export class WaveController {
     }
   }
 
+  private waveComplete(waveIndex: number) {
+    emitEvent(this.scene, Game.Events.Stat.Local, {
+      event: Game.Events.Stat.WaveCompleteEvent.Event,
+      data: {
+        waveNumber: waveIndex + 1 
+      }
+    });
+  }
+
   private nextSpawn(waveIndex: number, spawnIndex: number) {
     const wave = this.waves[waveIndex];
     const spawns = wave.spawns;
@@ -101,11 +110,14 @@ export class WaveController {
         this.nextSpawn(waveIndex, spawnIndex + 1);
       } else {
         this.nextWave(waveIndex + 1);
+        this.waveComplete(waveIndex);
       }
     });
   }
 
-  private end () {}
+  private end () {
+    this.waveComplete(this.waves.length - 1);
+  }
 
   private calculateWaweDuration(waveIndex: number): number {
     const wave = this.waves[waveIndex];

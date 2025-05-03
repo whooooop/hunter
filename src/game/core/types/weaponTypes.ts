@@ -1,4 +1,5 @@
 import { ProjectileName } from "../../projectiles/ProjectileName";
+import { WeaponType } from "../../weapons/WeaponTypes";
 import { SightEntityOptions } from "../entities/SightEntity";
 import { ImageTexture } from "./texture";
 
@@ -36,7 +37,7 @@ export namespace Weapon {
         playerId: string;
         speed: number[];
         damage: number;
-        weaponName: string;
+        weaponName: WeaponType;
         projectile: ProjectileName;
         originPoint: { x: number, y: number };
         targetPoint: { x: number, y: number };
@@ -54,7 +55,7 @@ export namespace Weapon {
   }
 
   export interface Config {
-    name: string;
+    name: WeaponType;
     texture: WeaponTexture;
   
     // Патроны

@@ -21,6 +21,7 @@ export namespace Enemy {
   export type Body = 'head' | 'body' | 'eye';
 
   export interface Config {
+    type: Type;
     health: number;
     debug?: boolean;
     scale: number;
@@ -71,7 +72,7 @@ export namespace Enemy {
     height: number;
   }
 
-  interface killCombo {
+  export interface killCombo {
     rules: KillComboRule[];
     value: number;
   }

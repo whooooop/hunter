@@ -3,16 +3,18 @@ import { ProjectileEntity } from '../entities/ProjectileEntity';
 import { rayRectIntersectionRobust } from '../../utils/GeometryUtils';
 import { Weapon } from '../types/weaponTypes';
 import { createProjectile } from '../../projectiles';
-import { offEvent, onEvent } from '../Events';
+import { emitEvent, offEvent, onEvent } from '../Events';
 import { Projectile } from '../types/projectrileTypes';
 import { Damageable } from '../types/damageableTypes';
+import { Game } from '../types/gameTypes';
+import { WeaponType } from '../../weapons/WeaponTypes';
 
 interface Hit {
   projectile: ProjectileEntity;
   targetEntity: Damageable.Entity;
   hitPoint: number[];
   forceVector: number[][];
-  distance?: number;
+  distance: number;
   time: number;
 }
 
@@ -112,7 +114,8 @@ export class ProjectileController {
           projectile,
           targetEntity: enemy,
           forceVector: projectile.getForceVector(),
-          hitPoint: [hitX, hitY]
+          hitPoint: [hitX, hitY],
+          distance,
         });
       }
     });
@@ -295,11 +298,16 @@ export class ProjectileController {
 
     currentHits.forEach(group => {
       let damageForBullet = group.hits[0].projectile.getDamage(group.hits[0].distance);
+      let deathCount = 0;
+      let weaponName: WeaponType | null = null;
+      let projectileType: Projectile.Type | null = null;
 
       for (const [index, hit] of group.hits.entries()) {
         if (hit.targetEntity.getDead()) return;
+        weaponName = hit.projectile.getWeaponName();
+        projectileType = hit.projectile.getType();
 
-        const isBullet = hit.projectile.getType() === Projectile.Type.BULLET;
+        const isBullet = projectileType === Projectile.Type.BULLET;
         const damage = isBullet ? damageForBullet : hit.projectile.getDamage(hit.distance);   
         const damageResult = hit.targetEntity.takeDamage({
           simulate: this.simulate,
@@ -307,10 +315,14 @@ export class ProjectileController {
           hitPoint: hit.hitPoint,
           value: damage,
           playerId: hit.projectile.getPlayerId(),
-          weaponName: hit.projectile.getWeaponName(),
+          weaponName,
+          distance: hit.distance,
         });       
-        hit.projectile.onHit();
         
+        if(damageResult?.isDead) {
+          deathCount++;
+        }
+          
         if (isBullet) {
           if (damageResult && !damageResult.isPenetrated) {
             break;
@@ -319,6 +331,19 @@ export class ProjectileController {
             damageForBullet = Math.ceil(damageForBullet * 0.5);
           }
         }
+      }
+
+      if(deathCount >= 2 && weaponName && projectileType) {
+        emitEvent(this.scene, Game.Events.Stat.Local, {
+          event: Game.Events.Stat.DubleKillEvent.Event,
+          data: { weaponName, projectileType }
+        });
+      }
+      if(deathCount >= 3 && weaponName && projectileType) {
+        emitEvent(this.scene, Game.Events.Stat.Local, {
+          event: Game.Events.Stat.TripleKillEvent.Event,
+          data: { weaponName, projectileType }
+        });
       }
     });
   }

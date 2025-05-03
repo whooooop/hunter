@@ -40,7 +40,8 @@ export class DamageableController {
       isDead,
       permeability: this.permeability,
       isPenetrated: !!this.permeability || isDead,
-      target,
+      oneShotKill: isDead && !this.damages.length,
+      target
     }
 
     if (!damage.simulate) {

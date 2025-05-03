@@ -7,6 +7,7 @@ import { ProjectileBulletConfig } from "./Bullet"
 import { ProjectileName } from "./ProjectileName"
 import { ProjectilePelletsConfig } from "./Pellets"
 import { ProjectileProjectileConfig } from "./Projectile"
+import { WeaponType } from "../weapons/WeaponTypes"
 
 export const ProjectileConfigs: Record<ProjectileName, Projectile.Config> = {
   [ProjectileName.BULLET]: ProjectileBulletConfig,
@@ -35,7 +36,7 @@ export function createProjectile(
   originPoint: { x: number, y: number }, 
   targetPoint: { x: number, y: number }, 
   playerId: string, 
-  weaponName: string,
+  weaponName: WeaponType,
   speed: number[], 
   damage: number
 ): ProjectileEntity[] 

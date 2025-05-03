@@ -1,4 +1,5 @@
 import { Enemy } from "./enemyTypes";
+import { WeaponType } from "../../weapons/WeaponTypes";
 
 export namespace Damageable {
   export interface Config {
@@ -12,7 +13,8 @@ export namespace Damageable {
     hitPoint: number[];
     simulate: boolean;
     playerId: string;
-    weaponName: string;
+    distance: number;
+    weaponName: WeaponType;
   }
 
   export interface DamageResult {
@@ -21,6 +23,7 @@ export namespace Damageable {
     isPenetrated: boolean;
     permeability: number;
     target: Enemy.Body;
+    oneShotKill: boolean;
   }
 
   export interface Body {

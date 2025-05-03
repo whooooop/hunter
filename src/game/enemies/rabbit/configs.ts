@@ -4,6 +4,7 @@ import rabbitWalkTextureUrl from './assets/images/walking.png';
 import rabbitDeathTextureUrl from './assets/images/death.png';
 
 export const RabbitConfig: Enemy.Config = {
+  type: Enemy.Type.RABBIT,
   debug: true,
   health: 47,
   scale: 1,

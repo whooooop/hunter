@@ -9,6 +9,7 @@ import { ScoreEvents } from "../types/scoreTypes";
 import { createSpriteAnimation } from "../../utils/sprite";
 import { Damageable } from "../types/damageableTypes";
 import { Blood } from "../types/BloodTypes";
+import { Game } from "../types/gameTypes";
 
 export class EnemyEntity implements Damageable.Entity {
   private id: string;
@@ -78,12 +79,42 @@ export class EnemyEntity implements Damageable.Entity {
       const score = this.calculateScore(damage, result);
       this.addScore(score, damage.playerId);
       this.createBloodSplash(damage, target);
+
+      emitEvent(this.scene, Game.Events.Stat.Local, {
+        event: Game.Events.Stat.EnemyDamageEvent.Event,
+        data: {
+          enemyType: this.config.type,
+          weaponName: damage.weaponName,
+          body: target,
+          damage: damage.value,
+        }
+      });
+
       if (result?.isDead) {
-        const killCombo = this.calculateKillCombo();
+        const killCombo = this.findKillCombo();
         if (killCombo) {
-          this.addScore(killCombo, damage.playerId);
+          this.addScore(killCombo.value, damage.playerId);
+          emitEvent(this.scene, Game.Events.Stat.Local, {
+            event: Game.Events.Stat.ComboKillEvent.Event,
+            data: {
+              enemyType: this.config.type,
+            }
+          });
         }
         this.onDeath();
+      }
+
+      if (result.isDead) {
+        emitEvent(this.scene, Game.Events.Stat.Local, {
+          event: Game.Events.Stat.EnemyKillEvent.Event,
+          data: {
+            enemyType: this.config.type,
+            weaponName: damage.weaponName,
+            body: target,
+            oneShotKill: result.oneShotKill,
+            distance: damage.distance,
+          }
+        });
       }
     }
 
@@ -111,7 +142,7 @@ export class EnemyEntity implements Damageable.Entity {
     })?.value || 0;
   }
 
-  private calculateKillCombo(): number {
+  private findKillCombo(): Enemy.killCombo | undefined {
     const damages = this.damageableController.getDamages();
     return this.config.killCombo?.find(combo => {
       let lastIndex = -1;
@@ -127,7 +158,7 @@ export class EnemyEntity implements Damageable.Entity {
           }
         });
       });
-    })?.value || 0;
+    });
   }
 
   protected async onDeath(): Promise<void> {

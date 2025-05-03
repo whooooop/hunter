@@ -42,11 +42,12 @@ export class QuestController {
    * @param eventData Данные события (например, { enemyType: 'rabbit', bodyPart: 'head' }).
    */
   private handleGameEvent({ event, data }: Game.Events.Stat.Payload): void {
+    logger.info(`Handling game event: ${event}`, data);
+
     if (!this.activeQuest) {
       return; // Нет активного квеста
     }
 
-    logger.debug(`Handling game event: ${event}`, data);
 
     for (const task of this.activeQuest.tasks) {
       // Пропускаем уже завершенные задачи

@@ -18,12 +18,13 @@ import { emitEvent, offEvent, onEvent } from "../Events";
 import { Weapon, FireParams, AudioAssets } from "../types/weaponTypes";
 import { sleep } from '../../../utils/sleep';
 import { MuzzleFlash } from '../../fx/muzzleFlash/muzzleFlashFx';
+import { WeaponType } from '../../weapons/WeaponTypes';
 
 const logger = createLogger('WeaponEntity');
 
 export class WeaponEntity {
   private id: string; 
-  private name: string;
+  private name: WeaponType;
   private active: boolean = false;
   private scene: Phaser.Scene;
   private gameObject: Phaser.GameObjects.Sprite;

@@ -11,7 +11,7 @@ export const QuestsConfig: Quest.Config[] = [
         id: 'task_1',
         reward: { type: Quest.RewardType.Star, amount: 1 },
         title: 'Kill 5 rabbits',
-        event: 'kill',
+        event: Game.Events.Stat.EnemyKillEvent.Event,
         count: 5,
         conditions: [
           { key: 'enemyType', value: Enemy.Type.RABBIT },
@@ -21,7 +21,7 @@ export const QuestsConfig: Quest.Config[] = [
         id: 'task_2',
         reward: { type: Quest.RewardType.Star, amount: 1 },
         title: 'Kill 5 rabbits headshot',
-        event: 'kill',
+        event: Game.Events.Stat.EnemyKillEvent.Event,
         count: 5,
         conditions: [
           { key: 'weaponName', value: WeaponType.AWP },
