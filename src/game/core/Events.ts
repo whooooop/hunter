@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { MenuSceneTypes } from '../scenes/MenuScene/MenuSceneTypes';
-import { Player, Enemy, Weapon, Game, Star, Quest, Blood, Decals, ScoreEvents, UpdateScoreEventPayload, IncreaseScoreEventPayload, DecreaseScoreEventPayload, ShopEvents, WeaponPurchasedPayload } from './types';
+import { Player, Enemy, Weapon, Game, Quest, Blood, Decals, ScoreEvents, UpdateScoreEventPayload, IncreaseScoreEventPayload, DecreaseScoreEventPayload, ShopEvents, WeaponPurchasedPayload } from './types';
 import { Wave } from './types/WaveTypes';
 
 interface EventPayloadMap {
@@ -59,13 +59,6 @@ interface EventPayloadMap {
   [Game.Events.Exit.Local]: Game.Events.Exit.Payload;
   [Game.Events.Stat.Local]: Game.Events.Stat.Payload;
 
-  // Quest
-  [Quest.Evants.QuestCompleted.Local]: Quest.Evants.QuestCompleted.Payload;
-  [Quest.Evants.TaskCompleted.Local]: Quest.Evants.TaskCompleted.Payload;
-
-  // Star
-  [Star.Events.Increase.Local]: Star.Events.Increase.Payload;
-  [Star.Events.Decrease.Local]: Star.Events.Decrease.Payload;
 }
 
 export function emitEvent<E extends keyof EventPayloadMap>(scene: Phaser.Scene, name: E, payload: EventPayloadMap[E]): void;

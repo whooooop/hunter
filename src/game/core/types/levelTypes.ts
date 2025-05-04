@@ -2,14 +2,12 @@ import { WeaponType } from "../../weapons/WeaponTypes";
 import { Wave } from "./WaveTypes";
 import { Location } from "./Location";
 import { Quest } from "./QuestsTypes";
+import { I18nReturnType } from "../../../utils/i18n";
 
 export namespace Level {
   export interface Config {
     location: Location.Id;
-    name: { 
-      locale(locale: string): string; 
-      readonly translate: string; 
-    }
+    name: I18nReturnType<string>;
     preview?: {
       key: string;
       url: string;

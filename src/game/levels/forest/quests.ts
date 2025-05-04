@@ -1,16 +1,18 @@
-import { Enemy } from "../../core/types/enemyTypes";
-import { Game } from "../../core/types/gameTypes";
-import { Quest } from "../../core/types/QuestsTypes";
+import { I18n } from "../../../utils/i18n";
+import { Bank, Enemy, Game, Quest } from "../../core/types";
 import { WeaponType } from "../../weapons/WeaponTypes";
 
 export const quests: Quest.Config[] = [
   {
-    id: 'quest_1',
+    id: 'lfq1',
     tasks: [
       {
-        id: 'task_3',
-        reward: { type: Quest.RewardType.Star, amount: 1 },
-        title: 'Purchase weapon',
+        id: 'lfq1t1',
+        reward: { currency: Bank.Currency.Star, amount: 1 },
+        title: I18n({
+          en: 'Purchase revolver',
+          ru: 'Купить револьвер',
+        }),
         event: Game.Events.Stat.PurchaseWeaponEvent.Event,
         count: 1,
         conditions: [
@@ -18,9 +20,12 @@ export const quests: Quest.Config[] = [
         ]
       },
       {
-        id: 'task_4',
-        reward: { type: Quest.RewardType.Star, amount: 1 },
-        title: 'Earn 100 points',
+        id: 'lfq1t2',
+        reward: { currency: Bank.Currency.Star, amount: 1 },
+        title: I18n({
+          en: 'Earn 100 points',
+          ru: 'Заработать 100 очков',
+        }),
         event: Game.Events.Stat.EarnEvent.Event,
         valueKey: 'score',
         value: 100,
@@ -28,34 +33,31 @@ export const quests: Quest.Config[] = [
         conditions: []
       },
       {
-        id: 'task_5',
-        reward: { type: Quest.RewardType.Star, amount: 1 },
-        title: 'Damage 1000 points',
+        id: 'lfq1t3',
+        reward: { currency: Bank.Currency.Star, amount: 1 },
+        title: I18n({
+          en: 'Damage 1000 points',
+          ru: 'Нанести 1000 очков урона',
+        }),
         event: Game.Events.Stat.EnemyDamageEvent.Event,
         valueKey: 'damage',
         value: 500,
         count: -1,
         conditions: []
       },
-      {
-        id: 'task_1',
-        reward: { type: Quest.RewardType.Star, amount: 1 },
-        title: 'Kill 5 rabbits',
-        event: Game.Events.Stat.EnemyKillEvent.Event,
-        count: 5,
-        conditions: [
-          { key: 'enemyType', value: Enemy.Type.RABBIT },
-        ],
-      },
+     
     ]
   },
   {
-    id: 'quest_2',
+    id: 'lfq2',
     tasks: [
       {
-        id: 'task_1',
-        reward: { type: Quest.RewardType.Star, amount: 1 },
-        title: 'Kill 5 rabbits',
+        id: 'lfq1t4',
+        reward: { currency: Bank.Currency.Star, amount: 1 },
+        title: I18n({
+          en: 'Kill 5 rabbits',
+          ru: 'Убить 5 кроликов',
+        }),
         event: Game.Events.Stat.EnemyKillEvent.Event,
         count: 5,
         conditions: [
@@ -63,9 +65,25 @@ export const quests: Quest.Config[] = [
         ],
       },
       {
-        id: 'task_2',
-        reward: { type: Quest.RewardType.Star, amount: 1 },
-        title: 'Kill 5 rabbits headshot',
+        id: 'lfq2t1',
+        reward: { currency: Bank.Currency.Star, amount: 1 },
+        title: I18n({
+          en: 'Kill 15 rabbits',
+          ru: 'Убить 15 кроликов',
+        }),
+        event: Game.Events.Stat.EnemyKillEvent.Event,
+        count: 15,
+        conditions: [
+          { key: 'enemyType', value: Enemy.Type.RABBIT },
+        ],
+      },
+      {
+        id: 'lfq2t2',
+        reward: { currency: Bank.Currency.Star, amount: 1 },
+        title: I18n({
+          en: '5 AWP kills',
+          ru: '5 убийств из AWP',
+        }),
         event: Game.Events.Stat.EnemyKillEvent.Event,
         count: 5,
         conditions: [

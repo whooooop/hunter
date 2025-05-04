@@ -8,7 +8,6 @@ import { WeaponStatus, WaveInfo } from '../../ui';
 import { BaseShop } from '../../core/BaseShop';
 import { DecalController, BloodController, ProjectileController, WaveController, ScoreController, ShopController, WeaponController, QuestController, MultiplayerController, KeyBoardController } from '../../core/controllers';
 import { Player, Enemy, Game, Damageable, Location, ShopEvents, Level, ScoreEvents, UpdateScoreEventPayload } from '../../core/types';
-import { generateId } from '../../../utils/stringGenerator';
 import { emitEvent, offEvent, onEvent } from '../../core/Events';
 import { preloadWeapons } from '../../weapons';
 import { WeaponType } from '../../weapons/WeaponTypes';
@@ -18,8 +17,10 @@ import { preloadFx } from '../../fx';
 import { getLocation } from '../../locations';
 import { LoadingView } from '../../views/loading/LoadingView';
 import { getLevel, LevelId } from '../../levels';
-import { PauseView } from '../../views/pause/PauseView';
+import { PauseView } from '../../views/pause';
 import { Wave } from '../../core/types/WaveTypes';
+import { PlayerService } from '../../core/services/PlayerService';
+import { QuestService } from '../../core/services/QuestService';
 
 const logger = createLogger('GameplayScene');
 
@@ -31,12 +32,16 @@ export class GameplayScene extends Phaser.Scene {
   private location!: Location.BaseClass;
 
   private loadingView!: LoadingView;
+  private playerService: PlayerService;
+  private questService: QuestService;
   
   private shop!: BaseShop;
   private enemies: Map<string, Damageable.Entity> = new Map();
   private damageableObjects: Map<string, Damageable.Entity> = new Map();
 
   private levelConfig!: Level.Config;
+  private levelId!: LevelId;
+  private questId!: string;
 
   private waveInfo!: WaveInfo;
   private weaponStatus!: WeaponStatus;
@@ -63,11 +68,14 @@ export class GameplayScene extends Phaser.Scene {
     super({
       key: SceneKeys.GAMEPLAY
     });
+    this.playerService = PlayerService.getInstance();
+    this.questService = QuestService.getInstance();
   }
   
   init({ levelId } : GameplaySceneData) {
     this.loadingView = new LoadingView(this);
     this.levelConfig = getLevel(levelId);
+    this.levelId = levelId;
     this.location = getLocation(this, this.levelConfig.location);
   }
 
@@ -85,7 +93,7 @@ export class GameplayScene extends Phaser.Scene {
   }
   
   async create(): Promise<void> {
-    const playerId = window.location.search.split('player=')[1] || generateId();
+    const playerId = this.playerService.getCurrentPlayerId();
     this.mainPlayerId = playerId;
 
     onEvent(this, Wave.Events.WaveStart.Local, (payload: Wave.Events.WaveStart.Payload) => this.handleWaveStart(payload));
@@ -119,16 +127,20 @@ export class GameplayScene extends Phaser.Scene {
     this.singlePlayerInit(playerId);
   }
 
-  private singlePlayerInit(playerId: string): void {
-    this.questController = new QuestController(this);
-    this.questController.setActiveQuest(this.levelConfig.quests[0]);
+  private async singlePlayerInit(playerId: string): Promise<void> {
+    const quest = await this.questService.getCurrentQuest(this.levelId);
+
+    if (quest) {
+      this.questController = new QuestController(this, this.levelId, quest.id);
+      this.questId = quest.id;
+    }
 
     this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
     this.waveController.start();
     this.projectileController.setSimulate(false);
 
     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
-    emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 5000 });
+    // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
   }
 
   private multiplayerInit(playerId: string): void {
@@ -150,7 +162,10 @@ export class GameplayScene extends Phaser.Scene {
       // if (this.scene.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
       //   this.backgroundContainer.postFX.addBlur();
       // }
-      this.pauseView.open();
+      this.pauseView.open({
+        levelId: this.levelId,
+        questId: this.questId
+      });
     } else {
       this.pauseView.close();
     }

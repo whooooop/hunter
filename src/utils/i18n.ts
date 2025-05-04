@@ -65,3 +65,8 @@ export function I18n<T>(
   
   return result;
 }
+
+export type I18nReturnType<T> = {
+  locale(locale: string): T;
+  get translate(): T;
+}

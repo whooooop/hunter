@@ -1,31 +1,24 @@
-import { Game } from "../types/gameTypes";
-
+import { Game, Bank } from "../types";
+import { I18nReturnType } from "../../../utils/i18n";
 export namespace Quest {
+
+  export interface StorageState {
+    lastCompletedQuestId: string | null;
+  }
+
   export interface Config {
     id: string;
     tasks: AnyTaskConfig[];
   }
-  
-  export namespace Evants {
-    export namespace QuestCompleted {
-      export const Local = 'QuestCompletedLocalEvent';
-      export interface Payload {
-        questId: string;
-      }
-    }
-    export namespace TaskCompleted {
-      export const Local = 'TaskCompletedLocalEvent';
-      export interface Payload {
-        questId: string;
-        taskId: string;
-      }
-    }
+
+  export interface TaskState {
+    done: boolean;
   }
 
   export interface BaseTaskConfig {
     id: string;
     reward: Reward;
-    title: string;
+    title: I18nReturnType<string>;
     event: string;
     valueKey?: string;
     value?: number;
@@ -34,12 +27,8 @@ export namespace Quest {
 
   export interface Reward {
     id?: string;
-    type: RewardType;
+    currency: Bank.Currency;
     amount: number;
-  }
-
-  export enum RewardType {
-    Star = 'star'
   }
 
   export namespace Condition {

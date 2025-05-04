@@ -6,6 +6,7 @@ import { SceneKeys } from './game/scenes';
 import { BootScene } from './game/scenes/BootScene';
 import { setDefaultLocale } from './utils/i18n';
 import { MenuScene } from './game/scenes/MenuScene/MenuScene';
+import { PlayerService } from './game/core/services/PlayerService';
 
 const originalLog = console.log;
 console.log = function(msg: any) {
@@ -38,9 +39,11 @@ const config: Phaser.Types.Core.GameConfig = {
   ]
 };
 
-function initGame() {
+async function initGame() {
   try {
     setDefaultLocale('ru');
+    const playerService = PlayerService.getInstance();
+    await playerService.initPlayer();
     const game = new Phaser.Game(config);
     game.scene.start(SceneKeys.BOOT);
   } catch (error) {

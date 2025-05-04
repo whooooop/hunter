@@ -1,9 +1,10 @@
 import * as Phaser from 'phaser';
-import { Quest } from '../types/QuestsTypes';
 import { createLogger, LogLevel } from '../../../utils/logger';
-import { emitEvent, offEvent, onEvent } from '../Events';
-import { Game, Star } from '../types';
-import { GameStorage } from '../GameStorage';
+import { offEvent, onEvent } from '../Events';
+import { Quest, Bank, Game } from '../types';
+import { BankService } from '../services/BankService';
+import { QuestService } from '../services/QuestService';
+import { LevelId } from '../../levels';
 
 const logger = createLogger('QuestController', {
   minLevel: LogLevel.DEBUG,
@@ -15,18 +16,33 @@ export class QuestController {
   private activeQuest: Quest.Config | null = null;
   private taskProgress: Map<string, number> = new Map();
   private completedTasks: Set<string> = new Set();
-  private gameStorage = new GameStorage();
+  private bankService: BankService;
+  private questService: QuestService;
+  private levelId: LevelId;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, levelId: LevelId, questId: string) {
     this.scene = scene;
+    this.bankService = BankService.getInstance();
+    this.questService = QuestService.getInstance();
+    this.levelId = levelId;
+    
     onEvent(scene, Game.Events.Stat.Local, this.handleGameEvent, this);
+
+    this.init(levelId, questId);
+  }
+
+  private async init(levelId: LevelId, questId: string) {
+    const result = await this.questService.getQuestWithTasksState(levelId, questId);
+    if (result) { 
+      this.setActiveQuest(result.quest, result.tasks);
+    }
   }
 
   /**
    * Устанавливает активный квест и сбрасывает прогресс.
    * @param questConfig Конфигурация квеста или null для сброса.
    */
-  public setActiveQuest(questConfig: Quest.Config | null): void {
+  private setActiveQuest(questConfig: Quest.Config | null, tasksState: Record<string, Quest.TaskState>): void {
     logger.info(`Setting active quest: ${questConfig?.id ?? 'None'}`);
     this.activeQuest = questConfig;
     this.taskProgress.clear();
@@ -35,10 +51,11 @@ export class QuestController {
     if (this.activeQuest) {
       this.activeQuest.tasks.forEach(task => {
         this.taskProgress.set(task.id, 0);
+        if (tasksState[task.id].done) {
+          this.completedTasks.add(task.id);
+        }
       });
     }
-    // TODO: Отписаться от старых слушателей событий, если они были?
-    // TODO: Подписаться на нужные события для нового квеста?
   }
 
   /**
@@ -164,15 +181,12 @@ export class QuestController {
     this.completedTasks.add(task.id);
     logger.info(`Task '${task.id}' completed!`);
 
-    emitEvent(this.scene, Quest.Evants.TaskCompleted.Local, { 
-      questId: this.activeQuest!.id!, 
-      taskId: task.id 
-    });
-    // this.gameStorage.set()
 
-    if (task.reward.type === Quest.RewardType.Star) {
-      emitEvent(this.scene, Star.Events.Increase.Local, { value: task.reward.amount });
+    if (task.reward.currency === Bank.Currency.Star) {
+      this.bankService.increasePlayerBalance(Bank.Currency.Star, task.reward.amount);
     }
+
+    this.questService.setTaskCompleted(task.id);
   }
 
   /**
@@ -181,19 +195,10 @@ export class QuestController {
    */
   private handleQuestCompletion(quest: Quest.Config): void {
     logger.info(`Quest '${quest.id}' completed! All tasks finished.`);
- 
-    emitEvent(this.scene, Quest.Evants.QuestCompleted.Local, { 
-      questId: quest.id 
-    });
-
-    // TODO: Set storage
+    this.questService.setQuestCompleted(this.levelId, quest.id);
   }
 
-  // TODO: Добавить метод для получения текущего прогресса
-  // public getQuestProgress(): QuestProgress | null { ... }
-
   destroy(): void {
-    logger.info('QuestController destroyed');
     offEvent(this.scene, Game.Events.Stat.Local, this.handleGameEvent, this);
   }
 }

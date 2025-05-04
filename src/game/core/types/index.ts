@@ -14,4 +14,4 @@ export * from './scoreTypes';
 export * from './shopTypes';
 export * from './texture';
 export * from './weaponTypes';
-export * from './StarTypes';
+export * from './BaskTypes';

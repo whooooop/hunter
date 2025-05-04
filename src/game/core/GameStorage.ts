@@ -9,11 +9,23 @@ export class GameStorage {
 
   public async get<T>(key: string): Promise<T | null> {
     const value = window.localStorage.getItem(key);
-    return value ? JSON.parse(value) : null;
+    if (!value) {
+      return null;
+    }
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      return value as T;
+    }
   }
 
   public async set<T>(key: string, value: T): Promise<void> {
-    window.localStorage.setItem(key, JSON.stringify(value));
+    if (typeof value === 'object') {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } else {
+      // @ts-ignore
+      window.localStorage.setItem(key, value.toString());
+    }
   }
 
   public async delete(key: string): Promise<void> {

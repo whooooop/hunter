@@ -1,17 +1,19 @@
-import { emitEvent, onEvent } from "../../core/Events";
-import { Game } from "../../core/types/gameTypes";
+import { emitEvent } from "../../core/Events";
+import { BankService } from "../../core/services/BankService";
+import { QuestService } from "../../core/services/QuestService";
 import { settings } from "../../settings";
-import { UiMenuButton } from "../../ui/MenuButton";
-import { UiPlayButton } from "../../ui/PlayButton";
-import { UiReplayButton } from "../../ui/ReplayButton";
-import { UiStars } from "../../ui/Stars";
+import { UiStars, UiReplayButton, UiMenuButton, UiPlayButton } from "../../ui";
 import { PauseTask } from "./PauseTask";
 import { BlockTexture, BlockTitleTexture } from "./textures";
 import { pauseText } from "./translates";
+import { LevelId } from "../../levels";
+import { Game, Quest, Bank } from "../../core/types";
 
 export class PauseView {
   private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
+  private bankService: BankService;
+  private questService: QuestService;
 
   private isOpen: boolean = false;
 
@@ -29,15 +31,27 @@ export class PauseView {
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     this.container = this.scene.add.container(0, 0);
-
-    onEvent(this.scene, Game.Events.Pause.Local, this.open, this);
+    this.bankService = BankService.getInstance();
+    this.questService = QuestService.getInstance();
   }
 
-  open() {
+  open({ levelId, questId }: { levelId: LevelId, questId: string }) {
     if (this.isOpen) return;
     this.isOpen = true;
-
     this.render();
+
+    this.bankService.getPlayerBalance(Bank.Currency.Star).then((balance) => {
+      this.renderStars(balance);
+    });
+
+    if (levelId && questId) {
+      this.questService.getQuestWithTasksState(levelId, questId).then((result) => {
+        if (result) {
+          this.renderQuest(result.quest, result.tasks);
+        }
+      });
+    }
+
     this.container.setScale(0).setAlpha(0);
     this.scene.tweens.add({
       targets: this.container,
@@ -61,8 +75,6 @@ export class PauseView {
   }
 
   render() {
-    const starsCount = 4;
-
     this.container = this.scene.add.container(this.scene.cameras.main.width / 2, this.scene.cameras.main.height / 2)
       .setScale(0.5)
       .setAlpha(0)
@@ -72,7 +84,6 @@ export class PauseView {
     const blockTitle = this.scene.add.image(-200, -240, BlockTitleTexture.key).setScale(BlockTitleTexture.scale);
     const text = this.scene.add.text(-200, -240, pauseText.translate.toUpperCase(), { fontSize: 40, color: '#fff', fontFamily: settings.fontFamily }).setOrigin(0.5).setRotation(-0.05);
 
-    const stars = new UiStars(this.scene, 180, -220, starsCount);
     const playButton = new UiPlayButton(this.scene, -250, -100);
     const replayButton = new UiReplayButton(this.scene, -250, 30);
     const menuButton = new UiMenuButton(this.scene, -250, 160);
@@ -98,13 +109,19 @@ export class PauseView {
     this.container.add(playButton);
     this.container.add(replayButton);
     this.container.add(menuButton);
-    this.container.add(stars);
+  }
 
-    const task1 = new PauseTask(this.scene, 70, -100, 'Убить 5 белок из ав то м а та та та тат и потом та', 1, true, 1);
-    const task2 = new PauseTask(this.scene, 70, 20, 'Task 2', 2, false, 2);
-    const task3 = new PauseTask(this.scene, 70, 140, 'Task 3', 3, true, 3);
-    this.container.add(task1);
-    this.container.add(task2);
-    this.container.add(task3);
+  renderStars(balance: number = 0) {
+    const uiStars = new UiStars(this.scene, 180, -220, balance);
+    this.container.add(uiStars);
+  }
+
+  renderQuest(quest: Quest.Config | null, tasks: Record<string, Quest.TaskState>) {
+    if (!quest) return;
+    const positionY = -100;
+    quest.tasks.forEach((task: Quest.BaseTaskConfig, index: number) => {
+      const taskBlock = new PauseTask(this.scene, 70, positionY + index * 120, task.title.translate.toUpperCase(), index + 1, tasks[task.id].done, task.reward.amount);
+      this.container.add(taskBlock);
+    });
   }
 }

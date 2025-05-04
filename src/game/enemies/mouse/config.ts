@@ -3,7 +3,6 @@ import mouseWalkTextureUrl from './assets/image17.png';
 
 export const MouseConfig: Enemy.Config = {
   type: Enemy.Type.MOUSE,
-  debug: true,
   health: 47,
   scale: 1,
   motion: {

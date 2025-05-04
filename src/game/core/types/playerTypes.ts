@@ -3,6 +3,10 @@ import { EventPlayerJoined } from "../proto/generated/game";
 import { EventPlayerPosition } from "../proto/generated/game";
 
 export namespace Player {
+  export interface StorageState {
+    id: string;
+  }
+
   export namespace Events { 
 
     export namespace Join {
