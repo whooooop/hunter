@@ -1,5 +1,10 @@
+import { introFontBold, introFontRegular } from "./assets/fonts/intro";
+
 export const settings = {
-    fontFamily: 'sans-serif',
+    fontFamily: {
+      regular: introFontRegular.name,
+      bold: introFontBold.name,
+    },
     display: {
         width: 1280,
         height: 720,

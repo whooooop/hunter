@@ -21,7 +21,7 @@ export const quests: Quest.Config[] = [
       },
       {
         id: 'lfq1t2',
-        reward: { currency: Bank.Currency.Star, amount: 1 },
+        reward: { currency: Bank.Currency.Star, amount: 2 },
         title: I18n({
           en: 'Earn 100 points',
           ru: 'Заработать 100 очков',
@@ -34,7 +34,7 @@ export const quests: Quest.Config[] = [
       },
       {
         id: 'lfq1t3',
-        reward: { currency: Bank.Currency.Star, amount: 1 },
+        reward: { currency: Bank.Currency.Star, amount: 3 },
         title: I18n({
           en: 'Damage 1000 points',
           ru: 'Нанести 1000 очков урона',
@@ -56,7 +56,7 @@ export const quests: Quest.Config[] = [
         reward: { currency: Bank.Currency.Star, amount: 1 },
         title: I18n({
           en: 'Kill 5 rabbits',
-          ru: 'Убить 5 кроликов',
+          ru: 'Убить 5 кроликов a a a a a a ',
         }),
         event: Game.Events.Stat.EnemyKillEvent.Event,
         count: 5,
@@ -66,7 +66,7 @@ export const quests: Quest.Config[] = [
       },
       {
         id: 'lfq2t1',
-        reward: { currency: Bank.Currency.Star, amount: 1 },
+        reward: { currency: Bank.Currency.Star, amount: 2 },
         title: I18n({
           en: 'Kill 15 rabbits',
           ru: 'Убить 15 кроликов',
@@ -79,7 +79,7 @@ export const quests: Quest.Config[] = [
       },
       {
         id: 'lfq2t2',
-        reward: { currency: Bank.Currency.Star, amount: 1 },
+        reward: { currency: Bank.Currency.Star, amount: 3 },
         title: I18n({
           en: '5 AWP kills',
           ru: '5 убийств из AWP',

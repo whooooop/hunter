@@ -7,6 +7,7 @@ import { I18nReturnType } from "../../../utils/i18n";
 export namespace Level {
   export interface Config {
     location: Location.Id;
+    disabled?: boolean;
     name: I18nReturnType<string>;
     preview?: {
       key: string;

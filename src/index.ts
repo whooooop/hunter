@@ -7,6 +7,8 @@ import { BootScene } from './game/scenes/BootScene';
 import { setDefaultLocale } from './utils/i18n';
 import { MenuScene } from './game/scenes/MenuScene/MenuScene';
 import { PlayerService } from './game/core/services/PlayerService';
+import { introFontRegular, introFontBold } from './game/assets/fonts/intro';
+import { FontLoader } from './utils/font';
 
 const originalLog = console.log;
 console.log = function(msg: any) {
@@ -43,7 +45,13 @@ async function initGame() {
   try {
     setDefaultLocale('ru');
     const playerService = PlayerService.getInstance();
-    await playerService.initPlayer();
+
+    await Promise.all([
+      FontLoader(introFontRegular.name, introFontRegular.sources),
+      FontLoader(introFontBold.name, introFontBold.sources),
+      playerService.initPlayer()
+    ]);
+
     const game = new Phaser.Game(config);
     game.scene.start(SceneKeys.BOOT);
   } catch (error) {

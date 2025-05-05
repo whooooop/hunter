@@ -42,7 +42,7 @@ export class WaveInfo {
       
       // Создаем текст
       this.waveText = this.scene.add.text(0, 0, 'WAVE', {
-          fontFamily: settings.fontFamily,
+          fontFamily: settings.fontFamily.bold,
           fontSize: '40px',
           color: this.TEXT_COLOR
       });

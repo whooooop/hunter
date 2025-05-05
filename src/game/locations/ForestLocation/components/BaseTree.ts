@@ -118,7 +118,7 @@ export class BaseTree extends DecorEntity {
         hitY,
         gravity: 300,
         angle: [10, 350],
-        speed: [50, 150],
+        speed: [250, 450],
         duration: 600
     });
 
@@ -130,7 +130,7 @@ export class BaseTree extends DecorEntity {
         gravity: 120,
         angle: [-30, 210],
         speed: [30, 80],
-        duration: 1000
+        duration: 600
     });
   }
 

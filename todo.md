@@ -2,10 +2,12 @@
 # Todo
 
 - Stat
-- Tasks
 - settings
-- decal indexed DB
-- multiplayer
 - pause
 - machine shoot sound
+- boss
+- Loading Hints
+
+- multiplayer
 - crypto storage key & data
+- decal indexed DB

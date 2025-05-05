@@ -20,8 +20,8 @@ export class PauseTask extends Phaser.GameObjects.Container {
 
     const block = scene.add.image(0, 0, bkTexture.key).setOrigin(0.5).setScale(bkTexture.scale);
     const numberImage = scene.add.image(-170, 3, numberTexture.key).setOrigin(0.5).setScale(numberTexture.scale);
-    const numberText = scene.add.text(-170, 0, number.toString(), { fontSize: 24, color: '#fff', fontFamily: settings.fontFamily, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5);
-    const text = scene.add.text(-130, 0, title.toUpperCase(), { fontSize: 20, color: '#fff', fontFamily: settings.fontFamily, stroke: '#000', strokeThickness: 3 }).setOrigin(0, 0.5).setWordWrapWidth(270);
+    const numberText = scene.add.text(-170, 0, number.toString(), { fontSize: 24, color: '#fff', fontFamily: settings.fontFamily.regular, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5);
+    const text = scene.add.text(-130, 0, title.toUpperCase(), { fontSize: 20, color: '#fff', fontFamily: settings.fontFamily.regular, stroke: '#000', strokeThickness: 3 }).setOrigin(0, 0.5).setWordWrapWidth(270);
 
     this.add(block);
     this.add(numberImage);

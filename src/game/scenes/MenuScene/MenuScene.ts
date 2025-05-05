@@ -14,6 +14,7 @@ export class MenuScene extends Phaser.Scene {
   private currentView!: MenuSceneTypes.View;
 
   private container!: Phaser.GameObjects.Container;
+  private initialViewKey!: MenuSceneTypes.ViewKeys;
 
   private views: Map<MenuSceneTypes.ViewKeys, new (scene: Phaser.Scene) => MenuSceneTypes.View> = new Map([
     [MenuSceneTypes.ViewKeys.HOME, HomeView],
@@ -27,7 +28,8 @@ export class MenuScene extends Phaser.Scene {
     super({ key: SceneKeys.MENU });
   }
 
-  init() {
+  init({ view }: { view: MenuSceneTypes.ViewKeys }) {
+    this.initialViewKey = view;
     new LoadingView(this);
   }
 
@@ -44,7 +46,7 @@ export class MenuScene extends Phaser.Scene {
     this.backgroundView = new BackgroundView(this);
     this.container.add(this.backgroundView.getContainer());
 
-    this.renderView(MenuSceneTypes.ViewKeys.HOME);
+    this.renderView(this.initialViewKey);
   }
 
   playHandler(payload: MenuSceneTypes.Events.Play.Payload): void {

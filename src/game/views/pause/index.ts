@@ -82,7 +82,7 @@ export class PauseView {
     
     const block = this.scene.add.image(0, 0, BlockTexture.key).setScale(BlockTexture.scale);
     const blockTitle = this.scene.add.image(-200, -240, BlockTitleTexture.key).setScale(BlockTitleTexture.scale);
-    const text = this.scene.add.text(-200, -240, pauseText.translate.toUpperCase(), { fontSize: 40, color: '#fff', fontFamily: settings.fontFamily }).setOrigin(0.5).setRotation(-0.05);
+    const text = this.scene.add.text(-200, -240, pauseText.translate.toUpperCase(), { fontSize: 40, color: '#fff', fontFamily: settings.fontFamily.bold }).setOrigin(0.5).setRotation(-0.05);
 
     const playButton = new UiPlayButton(this.scene, -250, -100);
     const replayButton = new UiReplayButton(this.scene, -250, 30);

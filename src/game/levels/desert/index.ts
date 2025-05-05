@@ -4,6 +4,7 @@ import { Level } from '../../core/types/levelTypes';
 
 export const DesertLevelConfig: Level.Config = {
   location: Location.Id.DESERT,
+  disabled: true,
   name: I18n({
     en: 'Soon',
     ru: 'Скоро',

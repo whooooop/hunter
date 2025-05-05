@@ -81,7 +81,7 @@ export class WeaponStatus {
 
     private createCoinsText(): void {
         this.coinsText = this.scene.add.text(-this.width / 2 + 40, 0, this.coins.toString(), {
-            fontFamily: settings.fontFamily,
+            fontFamily: settings.fontFamily.regular,
             fontSize: '24px',
             color: this.TEXT_COLOR.toString(),
             fontStyle: 'bold'

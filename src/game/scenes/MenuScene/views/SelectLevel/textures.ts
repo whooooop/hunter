@@ -1,6 +1,7 @@
 import plashkaTextureUrl from './assets/plashka1.png';
-import plashkaMaskTextureUrl from './assets/mask1.png';
+import plashkaMaskTextureUrl from './assets/mask.png';
 import plashkaPodstavkaTextureUrl from './assets/podstavka.png';
+import circleTextureUrl from './assets/circle.png';
 
 export const plashka1Texture = {
   key: 'SelectLevelScene_plashka',
@@ -17,5 +18,11 @@ export const plashka1MaskTexture = {
 export const plashkaPodstavkaTexture = {
   key: 'SelectLevelScene_plashka_podstavka',
   url: plashkaPodstavkaTextureUrl,
+  scale: 0.5,
+}
+
+export const circleTexture = {
+  key: 'SelectLevelScene_circle',
+  url: circleTextureUrl,
   scale: 0.5,
 }

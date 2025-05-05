@@ -88,7 +88,7 @@ export class LoadingView {
       settings.display.width / 2, 
       center.y,
       LoadingText.translate, 
-      { fontSize: '26px', fontStyle: 'bold', color: '#ffffff' }
+      { fontSize: '26px', color: '#ffffff', fontFamily: settings.fontFamily.bold }
     ).setOrigin(0.5);
     
     this.progressContainer.add(background);

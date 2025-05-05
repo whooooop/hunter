@@ -30,6 +30,13 @@ module.exports = {
         }
       },
       {
+        test: /\.(ttf|woff|woff2)$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/fonts/[hash][ext]'
+        }
+      },
+      {
         test: /\.atlas\.png$/,
         type: 'asset/resource',
         generator: {

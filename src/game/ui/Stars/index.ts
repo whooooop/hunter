@@ -21,7 +21,7 @@ export class UiStars extends Phaser.GameObjects.Container {
 
     const stars = this.scene.add.image(0, 0, texture.key).setScale(texture.scale).setOrigin(0.5);
     const star = new UiStar(scene, -92, 2, 1);
-    this.starCountText = this.scene.add.text(30, 2, value.toString(), { fontSize: 20, color: '#fff', stroke: '#000', strokeThickness: 2, fontFamily: settings.fontFamily }).setOrigin(0.5);
+    this.starCountText = this.scene.add.text(30, 2, value.toString(), { fontSize: 20, color: '#fff', stroke: '#000', strokeThickness: 2, fontFamily: settings.fontFamily.regular }).setOrigin(0.5);
     
     this.add(stars);
     this.add(star);

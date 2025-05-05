@@ -294,7 +294,7 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
 
                 // Рисуем цену под иконкой
                 const priceText = this.scene.add.text(x, y + slotRadius * 0.7, weaponData.price.toString(), {
-                    fontFamily: settings.fontFamily,
+                    fontFamily: settings.fontFamily.regular,
                     fontSize: `${Math.round(slotSize * 0.22)}px`,
                     color: COLORS.INTERACTIVE_BUTTON_TEXT,
                     stroke: '#000000',
