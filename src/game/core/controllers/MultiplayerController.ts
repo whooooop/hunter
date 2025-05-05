@@ -94,7 +94,7 @@ export class MultiplayerController {
   }
 
   private clientHandleSpawnEnemy(payload: Wave.Events.Spawn.Payload): void {
-    this.socketClient.send(ProtoEventType.SpawnEnemy, payload);
+    // this.socketClient.send(ProtoEventType.SpawnEnemy, payload);
   }
 
   private clientHandleEnemyDeath(payload: Enemy.Events.Death.Payload): void {

@@ -104,7 +104,6 @@ export class PlayerEntity {
       friction: 800,
       maxVelocityX: 200,
       maxVelocityY: 200,
-      direction: 1,
     });
     
     onEvent(scene, Player.Events.State.Remote, this.handlePlayerStateRemote, this);

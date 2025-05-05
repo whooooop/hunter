@@ -10,7 +10,7 @@ import { BearEnemy } from "./bear/BearEnemy";
 
 export const EnemyCollections: Record<Enemy.Type, {
   config: Enemy.Config,
-  enemy: new (scene: Phaser.Scene, id: string, x: number, y: number) => EnemyEntity
+  enemy: new (scene: Phaser.Scene, id: string, spawnConfig: Enemy.SpawnConfig) => EnemyEntity
 }> = {
   [Enemy.Type.RABBIT]: {
     config: RabbitConfig,
@@ -38,6 +38,6 @@ export function preloadEnemies(scene: Phaser.Scene, enemies: Enemy.Type[]): void
   });
 }
 
-export function createEnemy(id: string, enemyType: Enemy.Type, scene: Phaser.Scene, x: number, y: number, options?: any | Enemy.Config): EnemyEntity {
-  return new EnemyCollections[enemyType].enemy(scene, id, x, y);
+export function createEnemy(id: string, enemyType: Enemy.Type, scene: Phaser.Scene, spawnConfig: Enemy.SpawnConfig): EnemyEntity {
+  return new EnemyCollections[enemyType].enemy(scene, id, spawnConfig);
 }

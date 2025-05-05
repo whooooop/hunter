@@ -34,7 +34,7 @@ export const SawedConfig: Weapon.Config = {
   reloadItemTime: 400,  // Скорость перезарядки одной еденицы в мс
   
   // Параметры стрельбы
-  fireRate: 1300,       // Задержка между выстрелами в мс
+  fireRate: 400,       // Задержка между выстрелами в мс
   aimingTime: 250,      // Время прицеливания в мс
   spreadAngle: 10,      // Угол разброса при выстреле в градусах
   automatic: false,

@@ -5,14 +5,6 @@ export const BearConfig: Enemy.Config = {
   type: Enemy.Type.BEAR,
   health: 1200,
   scale: 1,
-  motion: {
-    acceleration: 20,
-    deceleration: 8,
-    maxVelocityX: 40,
-    maxVelocityY: 2,
-    direction: -1,
-    friction: 0,
-  },
   offset: { x: 0, y: 0 },
   baunds: {
     body: { x: 0, y: 0, width: 130, height: 110 },

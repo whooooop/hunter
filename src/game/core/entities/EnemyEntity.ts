@@ -11,6 +11,14 @@ import { Damageable } from "../types/damageableTypes";
 import { Blood } from "../types/BloodTypes";
 import { Game } from "../types/gameTypes";
 
+const DEFAULT_MOTION = {
+  acceleration: 100,
+  deceleration: 20,
+  maxVelocityX: 50,
+  maxVelocityY: 40,
+  friction: 0,
+}
+
 export class EnemyEntity implements Damageable.Entity {
   private id: string;
   private destroyed: boolean = false;
@@ -20,9 +28,9 @@ export class EnemyEntity implements Damageable.Entity {
   private container: Phaser.GameObjects.Container;
 
   private damageableController: DamageableController;
-  private motionController: MotionController2;
+  protected motionController: MotionController2;
 
-  
+  private currentAnimation: Enemy.AnimationName | null = null;
   private graphics!: Phaser.GameObjects.Graphics;
   private config: Enemy.Config;
 
@@ -38,16 +46,15 @@ export class EnemyEntity implements Damageable.Entity {
     this.container = scene.add.container(x, y);
     
     const textureKey = (config.texture || this.animations.get('walk'))!.key;
+    const motionConfig: Enemy.Motion = { ...DEFAULT_MOTION, ...config.motion };
 
     this.gameObject = scene.physics.add.sprite(0, 0, textureKey).setScale(config.scale);
     this.body = scene.physics.add.body(x, y, config.baunds.body.width, config.baunds.body.height);
 
     this.damageableController = new DamageableController({ health: config.health, permeability: 0 });
-    this.motionController = new MotionController2(scene, this.body, config.motion, config.debug);
+    this.motionController = new MotionController2(scene, this.body, motionConfig, config.debug);
 
-    if (this.animations.has('walk')) {
-      this.gameObject.play(this.animations.get('walk')!.key, true);
-    }
+    this.setAnimation('walk');
     this.motionController.setMove(-1, 0);
     
     if (this.config.debug) {
@@ -161,6 +168,24 @@ export class EnemyEntity implements Damageable.Entity {
     });
   }
 
+  private setAnimation(animation: Enemy.AnimationName, ignoreIfPlaying: boolean = true): Phaser.GameObjects.GameObject | null {
+    if (this.animations.has(animation)) {
+      this.currentAnimation = animation;
+      return this.gameObject.play(this.animations.get(animation)!.key, ignoreIfPlaying);
+    }
+    return null;
+  }
+
+  setAnimationSpeedScale(scale: number): void {
+    if (!this.currentAnimation) return;
+    console.log('scale', this.currentAnimation);
+    if (this.currentAnimation === 'walk') {
+      this.gameObject.anims.timeScale = scale;
+    } else {
+      this.gameObject.anims.timeScale = 1;
+    }
+  }
+
   protected async onDeath(): Promise<void> {
     this.motionController.setMove(0, 0);
 
@@ -179,12 +204,13 @@ export class EnemyEntity implements Damageable.Entity {
     });
     
     this.destroy();
-}
+  }
 
   protected onDeathAnimation(): Promise<void> {
     return new Promise(resolve => {
-      if (this.animations.has('death')) {
-        this.gameObject.play(this.animations.get('death')!.key).on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      const animation = this.setAnimation('death');
+      if (animation) {
+        animation.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
           resolve();
         });
       } else {
@@ -210,6 +236,9 @@ export class EnemyEntity implements Damageable.Entity {
     this.motionController.update(time, delta);
 
     const position = this.motionController.getPosition();
+    const velocityScale = this.motionController.getVelocityScale();
+
+    this.setAnimationSpeedScale(velocityScale[0]);
 
     this.container.setPosition(position.x + this.config.offset.x, position.y + this.config.offset.y);
     this.container.setDepth(position.depth);

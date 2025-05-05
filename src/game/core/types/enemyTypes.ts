@@ -20,6 +20,15 @@ export namespace Enemy {
 
   export type Body = 'head' | 'body' | 'eye';
 
+  export interface Motion {
+    depthOffset?: number;
+    acceleration: number;
+    deceleration: number;
+    maxVelocityX: number;
+    maxVelocityY: number;
+    friction: number;
+  }
+
   export interface Config {
     type: Type;
     health: number;
@@ -31,15 +40,7 @@ export namespace Enemy {
       y: number;
     }
 
-    motion: {
-      depthOffset?: number;
-      acceleration: number;
-      deceleration: number;
-      maxVelocityX: number;
-      maxVelocityY: number;
-      friction: number;
-      direction: number;
-    }
+    motion?: Motion
 
     baunds: Bounds;
 
@@ -52,6 +53,15 @@ export namespace Enemy {
     animations: Animation[];
 
     texture?: SpriteConfig;
+  }
+
+  export interface SpawnConfig {
+    x: number;
+    y: number;
+    level?: number;
+    health?: number;
+    velocityX?: number;
+    velocityY?: number;
   }
 
   interface ScoreRule {

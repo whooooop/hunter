@@ -13,7 +13,6 @@ interface MotionControllerOptions {
   maxVelocityX: number;
   maxVelocityY: number;
   friction: number;
-  direction: number;
 }
 
 // Интерфейс для внешней силы с целевым смещением
@@ -52,6 +51,10 @@ export class MotionController2 {
   private jumpHeight: number = 0;
   private jumpDuration: number = 0;
   private jumpStartY: number = 0;
+
+  private targetMaxVelocityX: number = 0;
+  private targetMaxVelocityY: number = 0;
+  private lerpFactorVelocity: number = 0.1;
 
   private locationBounds: Location.Bounds | null = null;
 
@@ -105,11 +108,13 @@ export class MotionController2 {
 
     // Нормализуем вектор направления, чтобы диагональное движение не было быстрее
     const moveVector = new Phaser.Math.Vector2(moveX, moveY).normalize();
-
     // Устанавливаем ускорение на физическое тело
     // Если moveX/moveY = 0, ускорение будет 0, и drag замедлит объект
+    this.targetMaxVelocityX = Math.abs(moveX) * this.options.maxVelocityX;
+    this.targetMaxVelocityY = Math.abs(moveY) * this.options.maxVelocityY;
+
     this.body.setAcceleration(moveVector.x * this.options.acceleration, moveVector.y * this.options.acceleration);
-    
+
     // Сохраняем направление для других нужд (например, оружие)
     if (moveX < 0) {
         this.direction = -1;
@@ -150,6 +155,14 @@ export class MotionController2 {
       this.debugGraphics.lineStyle(2, hexToNumber('#fbb52f'), 1);
       this.debugGraphics.strokeRect(this.body.x - this.body.width / 2, this.body.y - this.body.height / 2, this.body.width, this.body.height);
     }
+
+    if (Phaser.Math.Distance.Between(this.body.maxVelocity.x, this.body.maxVelocity.y, this.targetMaxVelocityX, this.targetMaxVelocityY) > 1) {
+      this.body.setMaxVelocity(
+        Phaser.Math.Interpolation.Linear([this.body.maxVelocity.x, this.targetMaxVelocityX], this.lerpFactorVelocity),
+        Phaser.Math.Interpolation.Linear([this.body.maxVelocity.y, this.targetMaxVelocityY], this.lerpFactorVelocity)
+      );
+    }
+
   }
 
   public getPosition(): { x: number, y: number, jumpHeight: number, depth: number } {
@@ -159,6 +172,13 @@ export class MotionController2 {
       jumpHeight: this.jumpOffsetY,
       depth: this.getDepth(),
     };
+  }
+
+  public getVelocityScale(): [number, number] {
+    return [
+      Math.abs(this.body.velocity.x) / this.options.maxVelocityX, 
+      Math.abs(this.body.velocity.y) / this.options.maxVelocityY
+    ];
   }
 
   public setLocationBounds(bounds: Location.Bounds): void {

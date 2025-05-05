@@ -15,8 +15,7 @@ export namespace Wave {
       export type Payload = {
         id: string;
         enemyType: Enemy.Type;
-        position: { x: number, y: number };
-        options: any;
+        spawnConfig: Enemy.SpawnConfig;
       };
     }
 
@@ -29,8 +28,7 @@ export namespace Wave {
 
   export interface Spawn {
     delay: number;
-    position: [number, number];
     enemyType: Enemy.Type;
-    options: any;
+    spawnConfig: Enemy.SpawnConfig;
   }
 }

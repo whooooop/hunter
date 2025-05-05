@@ -30,7 +30,7 @@ export const MachineConfig: Weapon.Config = {
   // Параметры стрельбы
   fireRate: 60,       // Задержка между выстрелами в мс
   aimingTime: 2500,    // Время прицеливания в мс
-  spreadAngle: 5,      // Угол разброса при выстреле в градусах
+  spreadAngle: 2,      // Угол разброса при выстреле в градусах
   automatic: true,
 
   // Параметры отдачи

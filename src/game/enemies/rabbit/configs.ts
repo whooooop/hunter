@@ -7,14 +7,6 @@ export const RabbitConfig: Enemy.Config = {
   type: Enemy.Type.RABBIT,
   health: 47,
   scale: 1,
-  motion: {
-    acceleration: 10,
-    deceleration: 8,
-    maxVelocityX: 40,
-    maxVelocityY: 2,
-    direction: -1,
-    friction: 0,
-  },
   offset: { x: 24, y: -10 },
   baunds: {
     body: { x: 0, y: 0, width: 42, height: 40 },

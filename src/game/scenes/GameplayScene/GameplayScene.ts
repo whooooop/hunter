@@ -214,8 +214,8 @@ export class GameplayScene extends Phaser.Scene {
     });
   }
 
-  private handleSpawnEnemy({ id, enemyType, position, options }: Wave.Events.Spawn.Payload): void {
-    const enemy = createEnemy(id, enemyType, this, position.x, position.y, options);
+  private handleSpawnEnemy({ id, enemyType, spawnConfig }: Wave.Events.Spawn.Payload): void {
+    const enemy = createEnemy(id, enemyType, this, spawnConfig);
     this.enemies.set(id, enemy);
     this.damageableObjects.set(id, enemy);
     emitEvent(this, Game.Events.Enemies.Local, {

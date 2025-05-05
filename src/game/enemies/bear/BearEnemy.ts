@@ -1,9 +1,10 @@
 import { EnemyEntity } from "../../core/entities/EnemyEntity";
 import { BearConfig } from "./config";
+import { Enemy } from "../../core/types/enemyTypes";
 
 export class BearEnemy extends EnemyEntity {
-  constructor(scene: Phaser.Scene, id: string, x: number, y: number) {
-    super(scene, id, x, y, BearConfig);
+  constructor(scene: Phaser.Scene, id: string, spawnConfig: Enemy.SpawnConfig) {
+    super(scene, id, spawnConfig.x, spawnConfig.y, BearConfig);
   }
 
   // public update(time: number, delta: number): void {
