@@ -3,18 +3,21 @@ import { LevelCollection, LevelId } from "../../../../levels";
 import { plashka1MaskTexture, plashkaPodstavkaTexture, plashka1Texture, circleTexture } from "./textures";
 import { MenuSceneTypes } from "../../MenuSceneTypes";
 import { UiBackButton } from "../../../../ui/BackButton";
-import { Level, Quest } from "../../../../core/types";
+import { Level, Quest, Bank } from "../../../../core/types";
 import { settings } from "../../../../settings";
 import { SelectLevelText } from "./translates";
 import { QuestService } from "../../../../core/services/QuestService";
 import { UiStar } from "../../../../ui/Star";
 import { hexToNumber } from "../../../../utils/colors";
+import { BankService } from "../../../../core/services/BankService";
+import { UiStars } from "../../../../ui/Stars";
 
 export class SelectLevelView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
   protected container: Phaser.GameObjects.Container;
   private backButton: UiBackButton;
   private questService: QuestService;
+  private bankService: BankService;
 
   private levelCollection: Record<LevelId, Level.Config> = LevelCollection;
 
@@ -55,7 +58,8 @@ export class SelectLevelView implements MenuSceneTypes.View {
     scene.load.image(circleTexture.key, circleTexture.url);
 
     UiStar.preload(scene);
-
+    UiStars.preload(scene);
+    
     for (const levelConfig of Object.values(LevelCollection)) {
       if (levelConfig.preview) {
         scene.load.image(levelConfig.preview.key, levelConfig.preview.url);
@@ -68,6 +72,7 @@ export class SelectLevelView implements MenuSceneTypes.View {
     this.container = this.scene.add.container(0, 0);
     this.backButton = new UiBackButton(this.scene);
     this.questService = QuestService.getInstance();
+    this.bankService = BankService.getInstance();
 
     this.backButton.on('pointerdown', () => {
       emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.HOME });
@@ -80,6 +85,11 @@ export class SelectLevelView implements MenuSceneTypes.View {
       strokeThickness: 4,
       fontFamily: settings.fontFamily.bold
     }).setOrigin(0.5);
+
+    this.bankService.getPlayerBalance(Bank.Currency.Star).then((balance: number) => {
+      const uiStars = new UiStars(this.scene, 1100, 66, balance);
+      this.container.add(uiStars);
+    });
 
     this.renderBlocks();
     this.container.add(title);

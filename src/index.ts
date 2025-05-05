@@ -4,7 +4,7 @@ import { settings } from './game/settings';
 import { logger } from './utils/logger';
 import { SceneKeys } from './game/scenes';
 import { BootScene } from './game/scenes/BootScene';
-import { setDefaultLocale } from './utils/i18n';
+import { isSupportedLocale, setDefaultLocale } from './utils/i18n';
 import { MenuScene } from './game/scenes/MenuScene/MenuScene';
 import { PlayerService } from './game/core/services/PlayerService';
 import { introFontRegular, introFontBold } from './game/assets/fonts/intro';
@@ -43,7 +43,12 @@ const config: Phaser.Types.Core.GameConfig = {
 
 async function initGame() {
   try {
-    setDefaultLocale('ru');
+    const locale = window.location.search.split('locale=')[1];
+    if (isSupportedLocale(locale)) {
+      setDefaultLocale(locale);
+    } else {
+      setDefaultLocale('en');
+    }
     const playerService = PlayerService.getInstance();
 
     await Promise.all([

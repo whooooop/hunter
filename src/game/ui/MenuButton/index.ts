@@ -1,4 +1,5 @@
 import menuButtonTextureUrl from './menu.png';
+import { UiButton } from '../Button';
 
 const texture = {
   key: 'menuButton',
@@ -6,28 +7,13 @@ const texture = {
   scale: 0.5,
 }
 
-export class UiMenuButton extends Phaser.GameObjects.Image {
+export class UiMenuButton extends UiButton {
   static preload(scene: Phaser.Scene): void {
+    UiButton.preload(scene);
     scene.load.image(texture.key, texture.url);
   }
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, texture.key);
-
-    this.setScale(texture.scale);
-    this.setInteractive();
-    
-    this.on('pointerdown', () => {
-      this.setScale(texture.scale * 1); 
-    });
-    this.on('pointerup', () => {
-      this.setScale(texture.scale * 1.1);
-    });
-    this.on('pointerover', () => {
-      this.setScale(texture.scale * 1.1);
-    });
-    this.on('pointerout', () => {
-      this.setScale(texture.scale * 1);
-    });
+    super(scene, x, y, texture);
   }
 }
