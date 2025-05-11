@@ -15,3 +15,4 @@ export * from './shopTypes';
 export * from './texture';
 export * from './weaponTypes';
 export * from './BaskTypes';
+export * from './SettingsTypes';

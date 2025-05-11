@@ -1,8 +1,8 @@
-import { settings } from "../../settings";
 import { createLogger } from "../../../utils/logger";
 import { forceToTargetOffset, easeOutQuart, easeOutQuint } from "../../utils/ForceUtils";
 import { Location } from "../types/Location";
 import { hexToNumber } from "../../utils/colors";
+import { OBJECTS_DEPTH_OFFSET } from "../../config";
 
 const logger = createLogger('MotionController');
 
@@ -97,7 +97,7 @@ export class MotionController2 {
 
   public getDepth(): number {
     const depthOffset = this.options.depthOffset || 0;
-    return this.body.y + (this.body.height / 2) + depthOffset + settings.gameplay.depthOffset - this.jumpOffsetY;
+    return this.body.y + (this.body.height / 2) + depthOffset + OBJECTS_DEPTH_OFFSET - this.jumpOffsetY;
   }
 
   public setMove(moveX: number, moveY: number): void {

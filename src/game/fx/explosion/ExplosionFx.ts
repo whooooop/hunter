@@ -1,5 +1,5 @@
 import explosionTextureUrl from './assets/explosion.png';
-import { settings } from '../../settings';
+import { OBJECTS_DEPTH_OFFSET } from '../../config';
 
 const texture = {
   key: 'explosion_texture_0',
@@ -42,7 +42,7 @@ export class ExplosionFx {
     this.gameObject = scene.add.sprite(x, y, texture.key);
     this.gameObject.setScale(scale);
     this.gameObject.setOrigin(0.5, 1);
-    this.gameObject.setDepth(y + settings.gameplay.depthOffset);
+    this.gameObject.setDepth(y + OBJECTS_DEPTH_OFFSET);
     
     // Создаем анимацию взрыва, если она еще не создана
     this.createExplosionAnimation();

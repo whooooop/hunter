@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { hexToNumber } from '../../utils/colors';
 import { createLogger } from '../../../utils/logger';
-import { settings } from '../../settings';
+import { DISPLAY } from '../../config';
 
 const logger = createLogger('WeaponSight');
 
@@ -91,7 +91,7 @@ export class SightEntity {
 
   private drawRay(): void {
     this.graphics.lineStyle(this.options.lineThickness, this.color, this.options.alpha);
-    this.graphics.lineBetween(this.x, this.y, this.x + settings.display.width * this.direction, this.y);
+    this.graphics.lineBetween(this.x, this.y, this.x + DISPLAY.WIDTH * this.direction, this.y);
   } 
 
   private drawCrosshair(): void {

@@ -1,5 +1,5 @@
 import cloudUrl from '../assets/images/cloud.png';
-import { settings } from "../settings";
+import { DISPLAY } from "../config";
 
 const cloudTexture = {
   key: 'cloud',
@@ -76,10 +76,10 @@ export class Clouds {
       cloud.x += speed * direction * normalizedDelta;
       
       // Если облако вышло за границы экрана, перемещаем его на противоположную сторону
-      if (cloud.x > settings.display.width + cloud.width) {
+      if (cloud.x > DISPLAY.WIDTH + cloud.width) {
         cloud.x = -cloud.width;
       } else if (cloud.x < -cloud.width) {
-        cloud.x = settings.display.width + cloud.width;
+        cloud.x = DISPLAY.WIDTH + cloud.width;
       }
     });
   }

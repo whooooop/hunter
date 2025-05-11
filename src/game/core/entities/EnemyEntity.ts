@@ -63,6 +63,28 @@ export class EnemyEntity implements Damageable.Entity {
 
     this.container.add(this.gameObject);
     scene.add.existing(this.container);
+
+    const deathAnimation = this.config.animations.find(animation => animation.name === 'walk')!.key;
+
+    // setTimeout(() => {
+    //     const emitter = this.scene.add.particles(
+    //       0,
+    //       0,
+    //       deathAnimation,
+    //         {
+    //             speed: { min: -300, max: 300 },
+    //             angle: { min: 0, max: 360 },
+    //             lifespan: 1200,
+    //             quantity: 50,
+    //             gravityY: 400,
+    //         }
+    //     );
+    //     this.container.add(emitter);
+
+    //     emitter.explode(50, 0, 0);
+
+    //     this.gameObject.setVisible(false);
+    // }, 4000);
   }
 
   private getTargetDamage(damage: Damageable.Damage): Enemy.Body {
@@ -178,7 +200,6 @@ export class EnemyEntity implements Damageable.Entity {
 
   setAnimationSpeedScale(scale: number): void {
     if (!this.currentAnimation) return;
-    console.log('scale', this.currentAnimation);
     if (this.currentAnimation === 'walk') {
       this.gameObject.anims.timeScale = scale;
     } else {

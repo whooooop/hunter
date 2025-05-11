@@ -1,10 +1,11 @@
 import * as Phaser from 'phaser';
 import { createLogger } from '../../../utils/logger';
-import { settings } from '../../settings';
 import { Decals } from '../types/decals';
 import { emitEvent, onEvent } from '../Events';
 import { Blood } from '../types/BloodTypes';
+import { SettingsService } from '../services/SettingsService';
 
+const settingsService = SettingsService.getInstance();
 const logger = createLogger('BaseBlood');
 
 // --- ДОБАВЬ КЛЮЧ ТЕКСТУРЫ ---
@@ -76,7 +77,7 @@ export class BloodController {
   constructor(scene: Phaser.Scene) {
       this.scene = scene;
 
-      if (settings.gameplay.blood.enabled) {
+      if (settingsService.getValue('bloodEnabled')) {
         onEvent(this.scene, Blood.Events.BloodSplash.Local, this.createBloodSplash, this);
         onEvent(this.scene, Blood.Events.ScreenBloodSplash.Local, this.createScreenBloodSplash, this);
       }
@@ -121,7 +122,7 @@ export class BloodController {
   public createBloodSplash(
       { x, y, originPoint, config }: Blood.Events.BloodSplash.Payload
   ): void {
-      if (!settings.gameplay.blood.enabled) {
+      if (!settingsService.getValue('bloodEnabled')) {
           return;
       }
       // Объединяем переданные параметры с дефолтными

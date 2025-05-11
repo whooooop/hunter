@@ -1,6 +1,5 @@
 import * as Phaser from 'phaser';
 import { GameplayScene } from './game/scenes/GameplayScene/GameplayScene';
-import { settings } from './game/settings';
 import { logger } from './utils/logger';
 import { SceneKeys } from './game/scenes';
 import { BootScene } from './game/scenes/BootScene';
@@ -9,6 +8,8 @@ import { MenuScene } from './game/scenes/MenuScene/MenuScene';
 import { PlayerService } from './game/core/services/PlayerService';
 import { introFontRegular, introFontBold } from './game/assets/fonts/intro';
 import { FontLoader } from './utils/font';
+import { DISPLAY } from './game/config';
+import { SettingsService } from './game/core/services/SettingsService';
 
 const originalLog = console.log;
 console.log = function(msg: any) {
@@ -24,8 +25,8 @@ console.log = function(msg: any) {
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.WEBGL,
   parent: 'game-container',
-  width: settings.display.width,
-  height: settings.display.height,
+  width: DISPLAY.WIDTH,
+  height: DISPLAY.HEIGHT,
   backgroundColor: '#000000',
   physics: {
     default: 'arcade',
@@ -50,10 +51,12 @@ async function initGame() {
       setDefaultLocale('en');
     }
     const playerService = PlayerService.getInstance();
+    const settingsService = SettingsService.getInstance();
 
     await Promise.all([
       FontLoader(introFontRegular.name, introFontRegular.sources),
       FontLoader(introFontBold.name, introFontBold.sources),
+      settingsService.init(),
       playerService.initPlayer()
     ]);
 

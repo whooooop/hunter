@@ -1,4 +1,4 @@
-import { settings } from "../../settings";
+import { OBJECTS_DEPTH_OFFSET } from "../../config";
 import { hexToNumber } from "../../utils/colors";
 import { DamageableController } from "../controllers/DamageableController";
 import { Damageable } from "../types/damageableTypes";
@@ -21,7 +21,7 @@ export class DecorEntity implements Damageable.Entity {
     });
 
     this.gameObject.setDepth(
-      this.gameObject.y + this.gameObject.height / 2 * this.gameObject.scale + settings.gameplay.depthOffset + (config.depthOffset || 0) * this.gameObject.scale
+      this.gameObject.y + this.gameObject.height / 2 * this.gameObject.scale + OBJECTS_DEPTH_OFFSET + (config.depthOffset || 0) * this.gameObject.scale
     );
 
     if (this.debug) {

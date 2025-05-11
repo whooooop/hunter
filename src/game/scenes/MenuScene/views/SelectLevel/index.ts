@@ -4,13 +4,13 @@ import { plashka1MaskTexture, plashkaPodstavkaTexture, plashka1Texture, circleTe
 import { MenuSceneTypes } from "../../MenuSceneTypes";
 import { UiBackButton } from "../../../../ui/BackButton";
 import { Level, Quest, Bank } from "../../../../core/types";
-import { settings } from "../../../../settings";
 import { SelectLevelText } from "./translates";
 import { QuestService } from "../../../../core/services/QuestService";
 import { UiStar } from "../../../../ui/Star";
 import { hexToNumber } from "../../../../utils/colors";
 import { BankService } from "../../../../core/services/BankService";
 import { UiStars } from "../../../../ui/Stars";
+import { DISPLAY, FONT_FAMILY } from "../../../../config";
 
 export class SelectLevelView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
@@ -78,12 +78,12 @@ export class SelectLevelView implements MenuSceneTypes.View {
       emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.HOME });
     });
 
-    const title = this.scene.add.text(settings.display.width / 2, 65, SelectLevelText.translate.toUpperCase(), { 
+    const title = this.scene.add.text(DISPLAY.WIDTH / 2, 65, SelectLevelText.translate.toUpperCase(), { 
       fontSize: '36px', 
       color: '#ffffff', 
       stroke: '#000000', 
       strokeThickness: 4,
-      fontFamily: settings.fontFamily.bold
+      fontFamily: FONT_FAMILY.BOLD
     }).setOrigin(0.5);
 
     this.bankService.getPlayerBalance(Bank.Currency.Star).then((balance: number) => {
@@ -115,7 +115,7 @@ export class SelectLevelView implements MenuSceneTypes.View {
   }
 
   private renderBlocks(): void {
-    const center = { x: settings.display.width / 2, y: settings.display.height / 2 };
+    const center = { x: DISPLAY.WIDTH / 2, y: DISPLAY.HEIGHT / 2 };
 
     Object.keys(this.levelCollection).forEach((id: string, index: number) => {
       const levelId = id as LevelId;
@@ -131,7 +131,7 @@ export class SelectLevelView implements MenuSceneTypes.View {
         color: '#ffffff', 
         stroke: '#000000', 
         strokeThickness: 3,
-        fontFamily: settings.fontFamily.bold
+        fontFamily: FONT_FAMILY.BOLD
       }).setOrigin(0.5);
       const container = this.scene.add.container(center.x - offsetX, center.y + blockConfig.offsetY);
       const maskImage = this.scene.add.image(center.x - offsetX + previewOffsetX, center.y + previewOffsetY, this.blocks[index].maskTexture.key).setOrigin(0.5).setScale(this.blocks[index].maskTexture.scale).setFlipX(blockConfig.flipX as boolean).setVisible(false);
@@ -179,14 +179,14 @@ export class SelectLevelView implements MenuSceneTypes.View {
             color: '#ffffff', 
             stroke: '#000000', 
             strokeThickness: 2,
-            fontFamily: settings.fontFamily.regular,
+            fontFamily: FONT_FAMILY.REGULAR,
           }).setOrigin(0, 0.5).setWordWrapWidth(200);
           const number = this.scene.add.text(leftOffset, 0, `${index + 1}`, { 
             fontSize: '16px', 
             color: '#ffffff', 
             stroke: '#000000', 
             strokeThickness: 2,
-            fontFamily: settings.fontFamily.regular,
+            fontFamily: FONT_FAMILY.REGULAR,
           }).setOrigin(0.5);
 
           if (index !== quest.tasks.length - 1) {

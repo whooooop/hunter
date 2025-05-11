@@ -1,4 +1,4 @@
-import { settings } from '../../settings';
+import { DISPLAY } from '../../config';
 import { UiButton } from '../Button';
 import backButtonTexture from './back.png';
 
@@ -14,7 +14,7 @@ export class UiBackButton extends UiButton {
     UiButton.preload(scene);
   }
 
-  constructor(scene: Phaser.Scene, x: number = 80, y: number = settings.display.height - 80) {
+  constructor(scene: Phaser.Scene, x: number = 80, y: number = DISPLAY.HEIGHT - 80) {
     super(scene, x, y, texture);
   }
 }

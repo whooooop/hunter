@@ -5,8 +5,8 @@ import { COLORS } from '../core/Constants';
 import { WeaponType } from '../weapons/WeaponTypes';
 import { Player } from '../core/types/playerTypes';
 import { getWeaponConfig } from '../weapons';
-import { settings } from '../settings';
 import { onEvent } from '../core/Events';
+import { FONT_FAMILY } from '../config';
 
 const logger = createLogger('WeaponStatus');
 
@@ -81,7 +81,7 @@ export class WeaponStatus {
 
     private createCoinsText(): void {
         this.coinsText = this.scene.add.text(-this.width / 2 + 40, 0, this.coins.toString(), {
-            fontFamily: settings.fontFamily.bold,
+            fontFamily: FONT_FAMILY.BOLD,
             fontSize: '24px',
             color: this.TEXT_COLOR.toString(),
             fontStyle: 'bold'

@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import { hexToNumber } from '../utils/colors';
 import { COLORS } from '../core/Constants';
 import { Wave } from '../core/types/WaveTypes';
-import { settings } from '../settings';
+import { FONT_FAMILY } from '../config';
 
 export class WaveInfo {
   private scene: Phaser.Scene;
@@ -42,7 +42,7 @@ export class WaveInfo {
       
       // Создаем текст
       this.waveText = this.scene.add.text(0, 0, 'WAVE', {
-          fontFamily: settings.fontFamily.bold,
+          fontFamily: FONT_FAMILY.BOLD,
           fontSize: '40px',
           color: this.TEXT_COLOR
       });

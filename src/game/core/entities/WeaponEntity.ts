@@ -1,15 +1,6 @@
-// После выстрела оружие может наколоняться что внияет на последующие выстрелы
-// в момент выстрела мы определяем вектор направления (две точки, старта и прицеливания)
-// создание снаряда происходит в момент выстрела
-// далее снаряд активируется и действует по своим правилам
-// снаряд определяет траекторию исходя из своих настроек и вектора направления и приложенной силы
-// Также после создания мы добавить снаряд в HitManager, а в хитменеджере проверрять активацию снаряда
-// активация снаряда может быть моментальной, с задержкой или по внешнему воздействию
-// В момент активации ицем объекты взаимодействия и передем им разрушение
-
 import * as Phaser from 'phaser';
 import { SightEntity, SightEntityOptions } from "./SightEntity";
-import { settings } from '../../settings';
+import { SettingsService } from '../services/SettingsService';
 import { createLogger } from "../../../utils/logger";
 import { GameplayScene } from "../../scenes/GameplayScene/GameplayScene";
 import { ShellCasingEntity } from "./ShellCasingEntity";
@@ -21,6 +12,7 @@ import { MuzzleFlash } from '../../fx/muzzleFlash/muzzleFlashFx';
 import { WeaponType } from '../../weapons/WeaponTypes';
 
 const logger = createLogger('WeaponEntity');
+const settingsService = SettingsService.getInstance();
 
 export class WeaponEntity {
   private id: string; 
@@ -85,8 +77,6 @@ export class WeaponEntity {
       this.createMuzzleFlash(this.options.muzzleFlash);
     }
 
-    this.createAudioAssets();
-
     onEvent(this.scene, Weapon.Events.FireAction.Remote, this.handleFireAction, this);
   }
 
@@ -118,24 +108,6 @@ export class WeaponEntity {
 
     this.container.add(this.sight.getGameObject());
     this.updateSightState();
-  }
-
-  protected createAudioAssets(): void {
-    if (this.options.fireAudio) {
-      this.audioAssets.fire = this.scene.sound.add(this.options.fireAudio.key, { volume: settings.audio.weaponsVolume });
-    }
-    if (this.options.emptyAudio) {
-      this.audioAssets.empty = this.scene.sound.add(this.options.emptyAudio.key, { volume: settings.audio.weaponsVolume });
-    }
-    if (this.options.reloadAudio) {
-      this.audioAssets.reload = this.scene.sound.add(this.options.reloadAudio.key, { volume: settings.audio.weaponsVolume });
-    }
-    if (this.options.boltAudio) {
-      this.audioAssets.bolt = this.scene.sound.add(this.options.boltAudio.key, { volume: settings.audio.weaponsVolume });
-    }
-    if (this.options.reloadItemAudio) {
-      this.audioAssets.reloadItem = this.scene.sound.add(this.options.reloadItemAudio.key, { volume: settings.audio.weaponsVolume });
-    }
   }
 
   public activate(active: boolean): void {
@@ -393,35 +365,45 @@ export class WeaponEntity {
 
   // Звук пустого магазина
   protected playEmptySound(): void {
-    if (this.audioAssets.empty) {
-      this.audioAssets.empty.play();
+    if (this.options.emptyAudio) {
+      this.scene.sound.play(this.options.emptyAudio.key, { 
+        volume: settingsService.getValue('audioWeaponVolume') as number 
+      });
     }
   }
 
   // Звук перезарядки
   protected playReloadSound(): void {
-    if (this.audioAssets.reload) {
-      this.audioAssets.reload.play();
+    if (this.options.reloadAudio) {
+      this.scene.sound.play(this.options.reloadAudio.key, { 
+        volume: settingsService.getValue('audioWeaponVolume') as number 
+      });
     }
   }
 
   protected playReloadItemSound(): void {
-    if (this.audioAssets.reloadItem) {
-      this.audioAssets.reloadItem.play();
+    if (this.options.reloadItemAudio) {
+      this.scene.sound.play(this.options.reloadItemAudio.key, { 
+        volume: settingsService.getValue('audioWeaponVolume') as number 
+      });
     }
   }
 
   // Звук выстрела
   protected playFireSound(): void {
-    if (this.audioAssets.fire) {
-      this.audioAssets.fire.play();
+    if (this.options.fireAudio) {
+      this.scene.sound.play(this.options.fireAudio.key, { 
+        volume: settingsService.getValue('audioWeaponVolume') as number 
+      });
     }
   }
 
   // Звук затвора (взводной механизм)
   protected playBoltSound(): void {
-    if (this.audioAssets.bolt) {
-      this.audioAssets.bolt.play();
+    if (this.options.boltAudio) {
+      this.scene.sound.play(this.options.boltAudio.key, { 
+        volume: settingsService.getValue('audioWeaponVolume') as number 
+      });
     }
   }
 
@@ -511,8 +493,7 @@ export class WeaponEntity {
    * @param direction Направление выстрела (1 вправо, -1 влево)
    */
   protected ejectShellCasing(x: number, y: number, direction: number): void {
-    // Проверяем, включена ли функция отображения гильз
-    if (!settings.gameplay.shellCasings.enabled) {
+    if (!settingsService.getValue('shellCasingsEnabled')) {
       return;
     }
     const matrix = this.gameObject.getWorldTransformMatrix();

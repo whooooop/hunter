@@ -1,5 +1,4 @@
 import * as Phaser from 'phaser';
-import { settings } from '../../settings';
 import { createLogger } from '../../../utils/logger';
 import { BackgroundView } from '../background/BackgroundView';
 import loadingBackgroundUrl from '../../assets/images/loading_background.png'
@@ -7,6 +6,7 @@ import loadingLeftUrl from '../../assets/images/loading_left.png'
 import loadingRightUrl from '../../assets/images/loading_right.png'
 import loadingProgressUrl from '../../assets/images/loading_progress.png'
 import { LoadingText } from './translates';
+import { DISPLAY, FONT_FAMILY } from '../../config';
 
 const logger = createLogger('LoadingScene');
 
@@ -75,8 +75,8 @@ export class LoadingView {
   private loadCommonAssets(): void {
     const progressBarWidth = 608;
     const center = { 
-      x: settings.display.width / 2,
-      y: settings.display.height / 2
+      x: DISPLAY.WIDTH / 2,
+      y: DISPLAY.HEIGHT / 2
     }
     const background = this.scene.add.image(center.x, center.y, loadingBackground.key).setScale(loadingBackground.scale);
     const leftProgress = this.scene.add.image(center.x - progressBarWidth / 2 + 18, center.y, loadingLeft.key).setScale(loadingLeft.scale);
@@ -85,10 +85,10 @@ export class LoadingView {
   
     // Текст загрузки
     const loadingText = this.scene.add.text(
-      settings.display.width / 2, 
+      DISPLAY.WIDTH / 2, 
       center.y,
       LoadingText.translate, 
-      { fontSize: '26px', color: '#ffffff', fontFamily: settings.fontFamily.bold }
+      { fontSize: '26px', color: '#ffffff', fontFamily: FONT_FAMILY.BOLD }
     ).setOrigin(0.5);
     
     this.progressContainer.add(background);

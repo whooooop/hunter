@@ -2,7 +2,6 @@ import * as Phaser from 'phaser';
 import { PLAYER_POSITION_X, PLAYER_POSITION_Y } from '../../core/Constants';
 import { SceneKeys } from '../index';
 import { PlayerEntity } from '../../core/entities/PlayerEntity';
-import { settings } from '../../settings';
 import { createLogger } from '../../../utils/logger';
 import { WeaponStatus, WaveInfo } from '../../ui';
 import { BaseShop } from '../../core/BaseShop';
@@ -21,6 +20,7 @@ import { PauseView } from '../../views/pause';
 import { Wave } from '../../core/types/WaveTypes';
 import { PlayerService } from '../../core/services/PlayerService';
 import { QuestService } from '../../core/services/QuestService';
+import { DISPLAY } from '../../config';
 
 const logger = createLogger('GameplayScene');
 
@@ -113,14 +113,14 @@ export class GameplayScene extends Phaser.Scene {
     this.keyboardController = new KeyBoardController(this, this.players, playerId);
     this.weaponController = new WeaponController(this, this.players);
     this.shopController = new ShopController(this, this.players, playerId, this.shop, this.levelConfig.weapons);
-    this.decalController = new DecalController(this, 0, 0, settings.display.width, settings.display.height, 5);
+    this.decalController = new DecalController(this, 0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 5);
     this.projectileController = new ProjectileController(this, this.damageableObjects);
     this.waveController = new WaveController(this, this.levelConfig.waves());
     
     this.waveInfo = new WaveInfo(this);
     this.weaponStatus = new WeaponStatus(this);
 
-    this.physics.world.setBounds(0, 0, settings.display.width, settings.display.height);
+    this.physics.world.setBounds(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
     this.shopController.setInteractablePlayerId(playerId);
 
     // this.multiplayerInit(playerId);

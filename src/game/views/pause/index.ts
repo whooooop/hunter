@@ -1,13 +1,13 @@
 import { emitEvent } from "../../core/Events";
 import { BankService } from "../../core/services/BankService";
 import { QuestService } from "../../core/services/QuestService";
-import { settings } from "../../settings";
 import { UiStars, UiReplayButton, UiMenuButton, UiPlayButton } from "../../ui";
 import { PauseTask } from "./PauseTask";
 import { BlockTexture, BlockTitleTexture } from "./textures";
 import { pauseText } from "./translates";
 import { LevelId } from "../../levels";
 import { Game, Quest, Bank } from "../../core/types";
+import { FONT_FAMILY } from "../../config";
 
 export class PauseView {
   private scene: Phaser.Scene;
@@ -82,7 +82,7 @@ export class PauseView {
     
     const block = this.scene.add.image(0, 0, BlockTexture.key).setScale(BlockTexture.scale);
     const blockTitle = this.scene.add.image(-200, -240, BlockTitleTexture.key).setScale(BlockTitleTexture.scale);
-    const text = this.scene.add.text(-200, -240, pauseText.translate.toUpperCase(), { fontSize: 40, color: '#fff', fontFamily: settings.fontFamily.bold }).setOrigin(0.5).setRotation(-0.05);
+    const text = this.scene.add.text(-200, -240, pauseText.translate.toUpperCase(), { fontSize: 40, color: '#fff', fontFamily: FONT_FAMILY.BOLD }).setOrigin(0.5).setRotation(-0.05);
 
     const playButton = new UiPlayButton(this.scene, -250, -100);
     const replayButton = new UiReplayButton(this.scene, -250, 30);

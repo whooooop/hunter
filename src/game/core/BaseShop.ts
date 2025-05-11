@@ -1,9 +1,9 @@
-import { settings } from "../settings";
 import { COLORS } from "./Constants";
 import { hexToNumber } from "../utils/colors";
 import { WeaponType } from "../weapons/WeaponTypes";
 import { getWeaponConfig } from "../weapons";
 import { emitEvent } from "./Events";
+import { FONT_FAMILY, OBJECTS_DEPTH_OFFSET } from "../config";
 
 import { ShopWeapon, ShopSlotElement, ShopEvents } from "./types/shopTypes";
 import { Weapon } from "./types/weaponTypes";
@@ -76,7 +76,7 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
         this.setScale(this.options.scale);
         
         // Устанавливаем глубину отображения
-        this.setDepth(y + this.height / 2 * this.scale + settings.gameplay.depthOffset + (this.options.depthOffset || 0));
+        this.setDepth(y + this.height / 2 * this.scale + OBJECTS_DEPTH_OFFSET + (this.options.depthOffset || 0));
         
         // Создаем зону взаимодействия
         this.createInteractionZone();
@@ -294,7 +294,7 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
 
                 // Рисуем цену под иконкой
                 const priceText = this.scene.add.text(x, y + slotRadius * 0.7, weaponData.price.toString(), {
-                    fontFamily: settings.fontFamily.regular,
+                    fontFamily: FONT_FAMILY.REGULAR,
                     fontSize: `${Math.round(slotSize * 0.22)}px`,
                     color: COLORS.INTERACTIVE_BUTTON_TEXT,
                     stroke: '#000000',

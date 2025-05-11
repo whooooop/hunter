@@ -1,9 +1,9 @@
 import { MenuSceneTypes } from "../../MenuSceneTypes";
 import { MenuButton } from "./types";
-import { settings } from "../../../../settings";
 import { shopButtonTexture, settingsButtonTexture, multiplayerButtonTexture, playButtonTexture } from "./textures";
 import { ShopText, SettingsText, MultiplayerText, PlayText } from "./translates";
 import { emitEvent } from "../../../../core/Events";
+import { DISPLAY } from "../../../../config";
 
 export class HomeView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
@@ -23,12 +23,12 @@ export class HomeView implements MenuSceneTypes.View {
       text: ShopText.translate,
       texture: shopButtonTexture,
       position: {
-        x: settings.display.width / 2 + 200,
-        y: settings.display.height / 2 + 180,
+        x: DISPLAY.WIDTH / 2 + 200,
+        y: DISPLAY.HEIGHT / 2 + 180,
       },
       leaveOffset: {
         x: -250,
-        y: settings.display.height * -1,
+        y: DISPLAY.HEIGHT * -1,
       },
       delay: 200,
       textOffset: [-20, 28],
@@ -39,12 +39,12 @@ export class HomeView implements MenuSceneTypes.View {
       text: SettingsText.translate,
       texture: settingsButtonTexture,
       position: {
-        x: settings.display.width / 2 - 200,
-        y: settings.display.height / 2 + 200,
+        x: DISPLAY.WIDTH / 2 - 200,
+        y: DISPLAY.HEIGHT / 2 + 200,
       },
       leaveOffset: {
         x: -400,
-        y: settings.display.height * -1,
+        y: DISPLAY.HEIGHT * -1,
       },
       delay: 400,
       textOffset: [-90, 8],
@@ -55,12 +55,12 @@ export class HomeView implements MenuSceneTypes.View {
       text: MultiplayerText.translate,
       texture: multiplayerButtonTexture,
       position: {
-        x: settings.display.width / 2 - 20,
-        y: settings.display.height / 2 + 220,
+        x: DISPLAY.WIDTH / 2 - 20,
+        y: DISPLAY.HEIGHT / 2 + 220,
       },
       leaveOffset: {
         x: 150,
-        y: settings.display.height * -1,
+        y: DISPLAY.HEIGHT * -1,
       },
       delay: 600,
       textOffset: [-100, 23],
@@ -92,7 +92,7 @@ export class HomeView implements MenuSceneTypes.View {
   }
 
   private createPlayButton(): void {
-    const playButtonContainer = this.scene.add.container(settings.display.width / 2, settings.display.height / 2 - 80).setDepth(50);
+    const playButtonContainer = this.scene.add.container(DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 - 80).setDepth(50);
     const button = this.scene.add.image(0, 0, playButtonTexture.key).setScale(playButtonTexture.scale);
     const text = this.scene.add.text(-30, 65, PlayText.translate, { fontSize: '36px', color: '#ffffff' });
     playButtonContainer.setAlpha(0).setScale(0.8);

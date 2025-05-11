@@ -8,9 +8,10 @@ import { Player } from '../types/playerTypes';
 import { MotionController2 } from '../controllers/MotionController2';
 import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture } from '../../textures/PlayerTexture';
 import JumpAudioUrl from '../../assets/audio/jump.mp3';
-import { settings } from '../../settings';
+import { SettingsService } from '../services/SettingsService';
 
 const logger = createLogger('Player');
+const settingsService = SettingsService.getInstance();
 
 const LEG_WALK_MAX_ROTATION = Phaser.Math.DegToRad(30);
 const LEG_JUMP_ROTATION = Phaser.Math.DegToRad(45);
@@ -61,9 +62,6 @@ export class PlayerEntity {
 
   private shadow!: ShadowEntity;
 
-  private jumpAudio!: Phaser.Sound.BaseSound;
-
-
   static preload(scene: Phaser.Scene): void {
     scene.load.image(PlayerBodyTexture.key, PlayerBodyTexture.url);
     scene.load.image(PlayerHandTexture.key, PlayerHandTexture.url);
@@ -76,7 +74,6 @@ export class PlayerEntity {
     this.id = id;
     this.scene = scene;
     this.container = scene.add.container(x, y);
-    this.jumpAudio = scene.sound.add(jumpAudio.key, { volume: settings.audio.effectsVolume });
 
     this.body = scene.physics.add.body(x, y, this.bodyWidth, this.bodyHeight);
     this.shadow = new ShadowEntity(scene, this.body);
@@ -246,7 +243,7 @@ export class PlayerEntity {
       return;
     }
     this.motionController.jump();
-    this.jumpAudio.play();
+    this.scene.sound.play(jumpAudio.key, { volume: settingsService.getValue('audioEffectsVolume') as number });
   }
 
   

@@ -1,8 +1,10 @@
-import { settings } from "../../settings";
 import { ExplosionFx } from "../../fx/explosion/ExplosionFx";
 import { Projectile } from "../../core/types/projectrileTypes";
-import { AudioAssets } from "../types/weaponTypes";
 import { WeaponType } from "../../weapons/WeaponTypes";
+import { OBJECTS_DEPTH_OFFSET } from "../../config";
+import { SettingsService } from "../services/SettingsService";
+
+const settingsService = SettingsService.getInstance();
 
 const defaultOptions = {
   bounce: 0.2,
@@ -56,14 +58,6 @@ export class ProjectileEntity {
       }
       
       this.scene.add.existing(this.gameObject);
-    }
-
-    this.createAudioAssets();
-  }
-
-  protected createAudioAssets(): void {
-    if (this.options.activateAudio) {
-      this.audioAssets.activate = this.scene.sound.add(this.options.activateAudio.key, { volume: settings.audio.weaponsVolume });
     }
   }
 
@@ -197,13 +191,14 @@ export class ProjectileEntity {
   }
 
   protected activateExplosion(): void {
-    // эффект взрыва
     ExplosionFx.create(this.scene, this.gameObject.x, this.gameObject.y);
   }
 
   protected playActivateAudio(): void {
-    if (this.audioAssets.activate) {
-      this.audioAssets.activate.play();
+    if (this.options.activateAudio) {
+      this.scene.sound.play(this.options.activateAudio.key, { 
+        volume: settingsService.getValue('audioWeaponVolume') as number 
+      });
     }
   }
 
@@ -261,7 +256,7 @@ export class ProjectileEntity {
   public update(time: number, delta: number): void {
     if (this.destroyed) return;
     
-    this.gameObject.setDepth(this.gameObject.y + settings.gameplay.depthOffset);
+    this.gameObject.setDepth(this.gameObject.y + OBJECTS_DEPTH_OFFSET);
 
     // Для гранат выполняем дополнительные проверки
     if (this.options.type === Projectile.Type.GRENADE || this.options.type === Projectile.Type.MINE) {
