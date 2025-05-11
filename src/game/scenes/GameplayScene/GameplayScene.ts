@@ -6,7 +6,7 @@ import { createLogger } from '../../../utils/logger';
 import { WeaponStatus, WaveInfo } from '../../ui';
 import { BaseShop } from '../../core/BaseShop';
 import { DecalController, BloodController, ProjectileController, WaveController, ScoreController, ShopController, WeaponController, QuestController, MultiplayerController, KeyBoardController } from '../../core/controllers';
-import { Player, Enemy, Game, Damageable, Location, ShopEvents, Level, ScoreEvents, UpdateScoreEventPayload } from '../../core/types';
+import { Player, Enemy, Game, Damageable, Location, ShopEvents, Level, ScoreEvents, UpdateScoreEventPayload, Loading } from '../../core/types';
 import { emitEvent, offEvent, onEvent } from '../../core/Events';
 import { preloadWeapons } from '../../weapons';
 import { WeaponType } from '../../weapons/WeaponTypes';
@@ -20,6 +20,7 @@ import { PauseView } from '../../views/pause';
 import { Wave } from '../../core/types/WaveTypes';
 import { PlayerService } from '../../core/services/PlayerService';
 import { QuestService } from '../../core/services/QuestService';
+import { HintsService } from '../../core/services/HintsService';
 import { DISPLAY } from '../../config';
 
 const logger = createLogger('GameplayScene');
@@ -74,10 +75,14 @@ export class GameplayScene extends Phaser.Scene {
   }
   
   init({ levelId } : GameplaySceneData) {
-    this.loadingView = new LoadingView(this);
+    this.loadingView = new LoadingView(this, { minLoadingTime: 1000 });
     this.levelConfig = getLevel(levelId);
     this.levelId = levelId;
     this.location = getLocation(this, this.levelConfig.location);
+    
+    HintsService.getInstance().getHint().then(hint => {
+      this.loadingView.setHint(hint);
+    });
   }
 
   async preload(): Promise<void> {
@@ -104,6 +109,7 @@ export class GameplayScene extends Phaser.Scene {
     onEvent(this, Game.Events.Pause.Local, (payload: Game.Events.Pause.Payload) => this.handlePause(payload));
     onEvent(this, Game.Events.Replay.Local, (payload: Game.Events.Replay.Payload) => this.handleReplay(payload));
     onEvent(this, Game.Events.Exit.Local, (payload: Game.Events.Exit.Payload) => this.handleExit(payload));
+    onEvent(this, Loading.Events.LoadingComplete.Local, (payload: Loading.Events.LoadingComplete.Payload) => this.handleLoadingComplete(payload));
 
     this.location.create();
 
@@ -124,8 +130,12 @@ export class GameplayScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
     this.shopController.setInteractablePlayerId(playerId);
 
-    // this.multiplayerInit(playerId);
-    this.singlePlayerInit(playerId);
+   
+  }
+
+  private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
+     // this.multiplayerInit(playerId);
+     this.singlePlayerInit(this.mainPlayerId);
   }
 
   private async singlePlayerInit(playerId: string): Promise<void> {

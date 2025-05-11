@@ -12,7 +12,8 @@ import groundImage from './assets/images/ground.png';
 import rockImage from './assets/images/rock.png';
 import rockImage2 from './assets/images/rock2.png';
 import { Clouds } from '../../ui/Clouds';
-
+import { BirchTree } from './components/BirchTree';
+import { TREE_COLLECTIONS, TreeType } from './components';
 const logger = createLogger('ForestLocation');
 
 const GROUND_TEXTURE = 'ground_texture_' + generateStringWithLength(6);
@@ -48,6 +49,7 @@ export class ForestLocation implements Location.BaseClass {
     Clouds.preload(this.scene);
     ForestShop.preload(this.scene);
     SpruceTree.preload(this.scene);
+    BirchTree.preload(this.scene);
   }
   
   public getBounds(): Location.Bounds {
@@ -117,8 +119,10 @@ export class ForestLocation implements Location.BaseClass {
   public destroy(): void {}
 
   private createTrees(): void {
-    INTERACTIVE_OBJECTS.forEach(({ id, type, position, scale, health }) => {    
-      const object = new SpruceTree(this.scene, id, position[0], position[1], {
+    INTERACTIVE_OBJECTS.forEach(({ id, type, position, scale, health }) => {   
+      const TreeClass = TREE_COLLECTIONS[type];
+
+      const object = new TreeClass(this.scene, id, position[0], position[1], {
         scale,
         health
       });

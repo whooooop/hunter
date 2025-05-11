@@ -7,6 +7,8 @@ import loadingRightUrl from '../../assets/images/loading_right.png'
 import loadingProgressUrl from '../../assets/images/loading_progress.png'
 import { LoadingText } from './translates';
 import { DISPLAY, FONT_FAMILY } from '../../config';
+import { emitEvent } from '../../core/Events';
+import { Loading } from '../../core/types';
 
 const logger = createLogger('LoadingScene');
 
@@ -42,10 +44,12 @@ export class LoadingView {
   private rightProgress!: Phaser.GameObjects.Image;
   private progressBar!: Phaser.GameObjects.Image;
 
+  private minLoadingTime = 0;
   private maxProgressScale = 272;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, options?: { minLoadingTime: number }) {
     this.scene = scene;
+    this.minLoadingTime = options?.minLoadingTime || 0;
     this.backgroundContainer = this.scene.add.container(0, 0).setDepth(10000);
     this.progressContainer = this.scene.add.container(0, 0).setDepth(10000);
     this.backgroundView = new BackgroundView(this.scene);
@@ -83,7 +87,6 @@ export class LoadingView {
     this.rightProgress = this.scene.add.image(center.x + progressBarWidth / 2 - 17, center.y, loadingRight.key).setScale(loadingRight.scale).setVisible(false);
     this.progressBar = this.scene.add.image(center.x - progressBarWidth / 2 + 32, center.y, loadingProgress.key).setOrigin(0, 0.5).setScale(0, loadingProgress.scale);
   
-    // Текст загрузки
     const loadingText = this.scene.add.text(
       DISPLAY.WIDTH / 2, 
       center.y,
@@ -97,33 +100,62 @@ export class LoadingView {
     this.progressContainer.add(this.rightProgress);
     this.progressContainer.add(loadingText);
     
+    const startTime = Date.now();
+    let targetProgress = 0;
+
     this.scene.load.on('progress', (value: number) => {
-      this.progressBar.setScale(this.maxProgressScale * value, loadingProgress.scale);
-      if (value === 1) {
-        this.rightProgress.setVisible(true);
+      targetProgress = value;
+    });
+
+    const event = this.scene.time.addEvent({
+      delay: 16,
+      callback: () => {
+        const elapsedTime = Date.now() - startTime;
+        const progress = Math.min(targetProgress, elapsedTime / this.minLoadingTime);
+        
+        this.progressBar.setScale(this.maxProgressScale * progress, loadingProgress.scale);
+        if (progress === 1) {
+          this.rightProgress.setVisible(true);
+          event.destroy();
+          this.finishLoading();
+        }
+      },
+      loop: true
+    });
+
+  }
+
+  private finishLoading(): void {
+    this.scene.tweens.add({
+      targets: this.backgroundContainer,
+      alpha: 0,
+      duration: 600,
+      ease: 'Power2',
+      onComplete: () => {
+        this.backgroundContainer.destroy();
+      }   
+    });
+    this.scene.tweens.add({
+      targets: this.progressContainer,
+      alpha: 0,
+      duration: 200,
+      ease: 'Power2',
+      onComplete: () => { 
+        this.progressContainer.destroy();
       }
     });
+
+    emitEvent(this.scene, Loading.Events.LoadingComplete.Local, {});
+  }
+
+  setHint(hint: string): void {
+     const text = this.scene.add.text(
+      DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 + 180,
+      hint, 
+      { fontSize: '26px', color: '#ffffff', fontFamily: FONT_FAMILY.REGULAR, align: 'center' }
+    ).setOrigin(0.5).setWordWrapWidth(500);
     
-    this.scene.load.on('complete', () => {
-      this.scene.tweens.add({
-        targets: this.backgroundContainer,
-        alpha: 0,
-        duration: 600,
-        ease: 'Power2',
-        onComplete: () => {
-          this.backgroundContainer.destroy();
-        }   
-      });
-      this.scene.tweens.add({
-        targets: this.progressContainer,
-        alpha: 0,
-        duration: 200,
-        ease: 'Power2',
-        onComplete: () => { 
-          this.progressContainer.destroy();
-        }
-      });
-    });
+    this.progressContainer.add(text);
   }
   
   destroy(): void {

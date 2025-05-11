@@ -10,8 +10,8 @@ import forestPreview from './assets/preview.png';
 export const ForestLevelConfig: Level.Config = {
   location: Location.Id.FOREST,
   name: I18n({
-    en: 'Green Forest',
-    ru: 'Зеленый лес',
+    en: 'Spring Forest',
+    ru: 'Весенний лес',
   }),
   preview: {
     key: 'forest_location_preview',

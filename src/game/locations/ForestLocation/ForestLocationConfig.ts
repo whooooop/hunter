@@ -1,5 +1,6 @@
 import { hexToNumber } from '../../utils/colors';
 import { CloudOptions } from '../../ui/Clouds';
+import { TREE_TYPES } from './components';
 
 export const FOREST_COLORS = {
   skyColor: hexToNumber('#70b8bd'),  // Небо
@@ -16,11 +17,19 @@ export const CLOUDS: CloudOptions[] = [
 ];
 
 export const INTERACTIVE_OBJECTS = [
-  { id: 'object_spruce_1', type: 'spruce', position: [1100, 190], scale: 1, health: 1000 },
-  { id: 'object_spruce_2', type: 'spruce', position: [1250, 260], scale: 1, health: 1000 },
-  { id: 'object_spruce_3', type: 'spruce', position: [1000, 260], scale: 0.6, health: 1000 },
-  { id: 'object_spruce_4', type: 'spruce', position: [1050, 330], scale: 0.7, health: 1000 },
-  { id: 'object_spruce_5', type: 'spruce', position: [1080, 400], scale: 0.9, health: 1000 },
-  { id: 'object_spruce_6', type: 'spruce', position: [1140, 430], scale: 1, health: 1000 },
-  { id: 'object_spruce_7', type: 'spruce', position: [1180, 670], scale: 1, health: 1000 },
+  { id: 'object_spruce_1', type: TREE_TYPES.SPRUCE, position: [1100, 190], scale: 1, health: 1000 },
+  { id: 'object_spruce_2', type: TREE_TYPES.SPRUCE, position: [1250, 260], scale: 1, health: 1000 },
+  { id: 'object_spruce_3', type: TREE_TYPES.SPRUCE, position: [1000, 260], scale: 0.6, health: 1000 },
+  { id: 'object_spruce_4', type: TREE_TYPES.SPRUCE, position: [1050, 330], scale: 0.7, health: 1000 },
+  { id: 'object_spruce_5', type: TREE_TYPES.SPRUCE, position: [1080, 400], scale: 0.9, health: 1000 },
+  { id: 'object_spruce_6', type: TREE_TYPES.SPRUCE, position: [1140, 430], scale: 1, health: 1000 },
+  { id: 'object_spruce_7', type: TREE_TYPES.SPRUCE, position: [1180, 670], scale: 1, health: 1000 },
+  { id: 'object_birch_1', type: TREE_TYPES.BIRCH, position: [1150, 210], scale: 1.2, health: 1000 },
+  { id: 'object_birch_2', type: TREE_TYPES.BIRCH, position: [1100, 650], scale: 1, health: 1000 },
+  { id: 'object_birch_3', type: TREE_TYPES.BIRCH, position: [1020, 450], scale: 0.8, health: 1000 },
+  { id: 'object_birch_4', type: TREE_TYPES.BIRCH, position: [1170, 570], scale: 1, health: 1000 },
+  { id: 'object_birch_5', type: TREE_TYPES.BIRCH, position: [1100, 500], scale: 1, health: 1000 },
+  { id: 'object_birch_6', type: TREE_TYPES.BIRCH, position: [1050, 350], scale: 1, health: 1000 },
+  { id: 'object_birch_7', type: TREE_TYPES.BIRCH, position: [1090, 300], scale: 1, health: 1000 },
+  { id: 'object_birch_8', type: TREE_TYPES.BIRCH, position: [1180, 490], scale: 1, health: 1000 },
 ];

@@ -5,7 +5,6 @@ export async function FontLoader(fontName: string, sources: { url: string, forma
       await font.load();
       document.fonts.add(font);
       await document.fonts.ready;
-      console.log(`Font "${fontName}" loaded using ${format}`);
       return;
     } catch (e) {
       console.warn(`Failed to load font "${fontName}" from ${url}:`, e);
