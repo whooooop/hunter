@@ -16,6 +16,7 @@ export namespace Wave {
         id: string;
         enemyType: Enemy.Type;
         spawnConfig: Enemy.SpawnConfig;
+        boss: boolean;
       };
     }
 
@@ -30,5 +31,6 @@ export namespace Wave {
     delay: number;
     enemyType: Enemy.Type;
     spawnConfig: Enemy.SpawnConfig;
+    boss?: boolean;
   }
 }

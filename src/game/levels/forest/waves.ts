@@ -18,6 +18,22 @@ export function createWavesConfig(): Wave.Config[] {
         {
           delay: 5000,
           enemyType: Enemy.Type.RABBIT,
+          spawnConfig: { x: rightStartPointX, y: 350, velocityX: -1, health: 500 },
+          boss: true,
+        },
+      ],
+    },
+    {
+      waitAllEnemiesDead: true,
+      spawns: [
+        {
+          delay: 5000,
+          enemyType: Enemy.Type.RABBIT,
+          spawnConfig: { x: rightStartPointX, y: 550, velocityX: -1 },
+        },
+        {
+          delay: 5000,
+          enemyType: Enemy.Type.RABBIT,
           spawnConfig: { x: rightStartPointX, y: 350, velocityX: -1 },
         },
         {

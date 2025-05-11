@@ -6,7 +6,6 @@
 - pause
 - 2 enemies together
 - machine shoot sound
-- boss
 - Loading Hints
 
 - multiplayer

@@ -7,7 +7,9 @@ export class RabbitEnemy extends EnemyEntity {
   private antiAimBehavior: AntiAimBehavior;
   
   constructor(scene: Phaser.Scene, id: string, spawnConfig: Enemy.SpawnConfig) {
-    super(scene, id, spawnConfig.x, spawnConfig.y, RabbitConfig);
+    super(scene, id, spawnConfig.x, spawnConfig.y, RabbitConfig, {
+      health: spawnConfig.health || RabbitConfig.health,
+    });
 
     this.antiAimBehavior = new AntiAimBehavior(scene, this);
     

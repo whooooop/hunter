@@ -36,23 +36,23 @@ export class EnemyEntity implements Damageable.Entity {
 
   private animations: Map<Enemy.AnimationName, Enemy.Animation> = new Map();
 
-  constructor(scene: Phaser.Scene, id: string, x: number, y: number, config: Enemy.Config) {
+  constructor(scene: Phaser.Scene, id: string, x: number, y: number, config: Enemy.Config, overrideConfig?: Partial<Enemy.Config>) {
     this.id = id;
-    this.config = config;
+    this.config = { ...config, ...overrideConfig };
     this.scene = scene;
 
-    this.createAnimations(scene, config);
+    this.createAnimations(scene, this.config);
 
     this.container = scene.add.container(x, y);
     
     const textureKey = (config.texture || this.animations.get('walk'))!.key;
-    const motionConfig: Enemy.Motion = { ...DEFAULT_MOTION, ...config.motion };
+    const motionConfig: Enemy.Motion = { ...DEFAULT_MOTION, ...this.config.motion };
 
-    this.gameObject = scene.physics.add.sprite(0, 0, textureKey).setScale(config.scale);
-    this.body = scene.physics.add.body(x, y, config.baunds.body.width, config.baunds.body.height);
+    this.gameObject = scene.physics.add.sprite(0, 0, textureKey).setScale(this.config.scale);
+    this.body = scene.physics.add.body(x, y, this.config.baunds.body.width, this.config.baunds.body.height);
 
-    this.damageableController = new DamageableController({ health: config.health, permeability: 0 });
-    this.motionController = new MotionController2(scene, this.body, motionConfig, config.debug);
+    this.damageableController = new DamageableController({ health: this.config.health, permeability: 0 });
+    this.motionController = new MotionController2(scene, this.body, motionConfig, this.config.debug);
 
     this.setAnimation('walk');
     this.motionController.setMove(-1, 0);
@@ -314,6 +314,13 @@ export class EnemyEntity implements Damageable.Entity {
 
   public applyForce(vectorX: number, vectorY: number, force: number, strength?: number, decayRate?: number): void {
     this.motionController.applyForce(vectorX, vectorY, force, strength, decayRate);
+  }
+
+  public getHealth(): { current: number, max: number } {
+    return {
+      current: this.damageableController.getHealth(),
+      max: this.config.health,
+    };
   }
 
   public getBodyBounds(): Damageable.Body {

@@ -95,6 +95,7 @@ export class WaveController {
       
       emitEvent(this.scene, Wave.Events.Spawn.Local, {
         id: generateId(),
+        boss: spawn.boss || false,
         enemyType: spawn.enemyType,
         spawnConfig: spawn.spawnConfig,
       });

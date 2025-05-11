@@ -1,8 +1,9 @@
 import * as Phaser from 'phaser';
-import { hexToNumber } from '../utils/colors';
-import { COLORS } from '../core/Constants';
-import { Wave } from '../core/types/WaveTypes';
-import { FONT_FAMILY } from '../config';
+import { hexToNumber } from '../../utils/colors';
+import { COLORS } from '../../core/Constants';
+import { Wave } from '../../core/types/WaveTypes';
+import { FONT_FAMILY } from '../../config';
+import { waveText, bossText } from './translate';
 
 export class WaveInfo {
   private scene: Phaser.Scene;
@@ -12,6 +13,8 @@ export class WaveInfo {
   private startTime: number = 0;
   private duration: number = 0;
   private waveNumber: number = 1;
+  private bossProgress: number = 0;
+  private showBoss: boolean = false;
 
   private width: number = 322;
   private height: number = 58;
@@ -41,7 +44,7 @@ export class WaveInfo {
       this.progressBar.fillStyle(this.PROGRESS_COLOR);
       
       // Создаем текст
-      this.waveText = this.scene.add.text(0, 0, 'WAVE', {
+      this.waveText = this.scene.add.text(0, 0, waveText.translate.toUpperCase(), {
           fontFamily: FONT_FAMILY.BOLD,
           fontSize: '40px',
           color: this.TEXT_COLOR
@@ -97,14 +100,26 @@ export class WaveInfo {
       this.progressBar.fill();
   }
 
+  public showBossProgress(value: boolean): void {
+    this.showBoss = value;
+    if (value) {
+      this.waveText.setText(`${bossText.translate.toUpperCase()}`);
+    } else {
+      this.waveText.setText(`${waveText.translate.toUpperCase()} ${this.waveNumber}`);
+    }
+  }
+
+  public updateBossProgress(progress: number): void {
+    this.bossProgress = progress;
+  }
+
   public start(wave: Wave.Events.WaveStart.Payload) {
     this.startTime = this.scene.time.now;
     this.duration = wave.duration;
     this.waveNumber = wave.number;
     
-    this.waveText.setText(`WAVE ${this.waveNumber}`);
+    this.waveText.setText(`${waveText.translate.toUpperCase()} ${this.waveNumber}`);
     
-    // Анимируем контейнер при смене волны
     this.animateWaveChange();
   }
   
@@ -155,10 +170,17 @@ export class WaveInfo {
   }
   
   public getProgress(): number {
+    let progress = 0;
+
     if (!this.startTime) {
-      return 0;
+      return progress;
     }
-    const progress = (this.scene.time.now - this.startTime) / this.duration;
+
+    if (this.showBoss) {
+      progress = this.bossProgress;
+    } else {
+      progress = (this.scene.time.now - this.startTime) / this.duration;
+    }
     return Math.max(0, Math.min(100, progress * 100));
   }
   

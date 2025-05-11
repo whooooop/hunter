@@ -37,6 +37,7 @@ export class GameplayScene extends Phaser.Scene {
   
   private shop!: BaseShop;
   private enemies: Map<string, Damageable.Entity> = new Map();
+  private bosses: Map<string, Damageable.Entity> = new Map();
   private damageableObjects: Map<string, Damageable.Entity> = new Map();
 
   private levelConfig!: Level.Config;
@@ -214,10 +215,15 @@ export class GameplayScene extends Phaser.Scene {
     });
   }
 
-  private handleSpawnEnemy({ id, enemyType, spawnConfig }: Wave.Events.Spawn.Payload): void {
+  private handleSpawnEnemy({ id, enemyType, spawnConfig, boss }: Wave.Events.Spawn.Payload): void {
     const enemy = createEnemy(id, enemyType, this, spawnConfig);
     this.enemies.set(id, enemy);
     this.damageableObjects.set(id, enemy);
+
+    if (boss) {
+      this.bosses.set(id, enemy);
+    }
+
     emitEvent(this, Game.Events.Enemies.Local, {
       count: this.enemies.size
     });
@@ -268,6 +274,7 @@ export class GameplayScene extends Phaser.Scene {
       player.update(time, delta);
     });
 
+
     // Обновляем игрока
     if (mainPlayer) {
       // Обновляем состояние оружия в интерфейсе
@@ -287,6 +294,30 @@ export class GameplayScene extends Phaser.Scene {
     this.waveInfo.update(time, delta);  
 
     this.updatePlayerState(time, delta);
+    this.updateBossState(time, delta);
+  }
+
+  private updateBossState(time: number, delta: number): void {
+    if (!this.bosses.size) {
+      this.waveInfo.showBossProgress(false);
+      return;
+    }
+
+    let currentHp = 0
+    let maxHp = 0
+
+    this.bosses.forEach(boss => {
+      const { current, max } = boss.getHealth();
+      currentHp += current;
+      maxHp += max;
+    });
+
+    this.waveInfo.showBossProgress(true);
+    this.waveInfo.updateBossProgress(currentHp / maxHp);
+
+    if (currentHp <= 0) {
+      this.bosses.clear();
+    }
   }
 
   private updatePlayerState(time: number, delta: number): void {

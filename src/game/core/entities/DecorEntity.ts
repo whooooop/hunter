@@ -10,11 +10,13 @@ export class DecorEntity implements Damageable.Entity {
   protected damageableController: DamageableController;
   protected debugGraphics: Phaser.GameObjects.Graphics | null = null;
   protected debug: boolean = false;
+  protected config: Decor.Config;
 
   constructor(gameObject: Phaser.Physics.Arcade.Sprite, id: string, config: Decor.Config) {
     this.gameObject = gameObject;
     this.id = id;
-
+    this.config = config;
+    
     this.damageableController = new DamageableController({
       health: config.health,
       permeability: typeof config.permeability === 'number' ? config.permeability : 1
@@ -42,6 +44,13 @@ export class DecorEntity implements Damageable.Entity {
 
   public getDead(): boolean {
     return this.damageableController.getDead();
+  }
+
+  public getHealth(): { current: number, max: number } {
+    return {
+      current: this.damageableController.getHealth(),
+      max: this.config.health,
+    };
   }
 
   public update(time: number, delta: number): void {}

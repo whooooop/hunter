@@ -37,6 +37,7 @@ export namespace Damageable {
     takeDamage(damage: Damage): DamageResult | null;
     getBodyBounds(): Body;
     getDead(): boolean;
+    getHealth(): { current: number, max: number };
     update(time: number, delta: number): void;
   }
 }
