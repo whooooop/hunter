@@ -10,7 +10,6 @@ const logger = createLogger('BaseBlood');
 
 // --- ДОБАВЬ КЛЮЧ ТЕКСТУРЫ ---
 const VIGNETTE_TEXTURE_KEY = 'vignette_texture'; // Ключ для загруженной текстуры виньетки
-const pause = 1;
 
 // Дефолтные настройки для эффекта крови
 const defaultBloodOptions: Partial<Blood.BloodSplashConfig> = {
@@ -27,10 +26,6 @@ const defaultBloodOptions: Partial<Blood.BloodSplashConfig> = {
     gravity: 600,
     spread: {
         angle: Math.PI/7,
-        height: {
-            min: -5,
-            max: 15
-        }
     },
     initialVelocityY: {
         min: 15,
@@ -73,9 +68,14 @@ const defaultScreenBloodOptions: Blood.ScreenBloodSplashConfig = {
 export class BloodController {
   private scene: Phaser.Scene;
   private bloodParticles: Phaser.GameObjects.Sprite[] = [];
+  private bloodPools: Phaser.GameObjects.Container[] = [];
   
   constructor(scene: Phaser.Scene) {
       this.scene = scene;
+
+      // setTimeout(() => {
+      //   this.createBloodPool(300, 300, 50);
+      // }, 3000)
 
       if (settingsService.getValue('bloodEnabled')) {
         onEvent(this.scene, Blood.Events.BloodSplash.Local, this.createBloodSplash, this);
@@ -122,58 +122,30 @@ export class BloodController {
   public createBloodSplash(
       { x, y, originPoint, config }: Blood.Events.BloodSplash.Payload
   ): void {
-      if (!settingsService.getValue('bloodEnabled')) {
-          return;
-      }
       // Объединяем переданные параметры с дефолтными
       const options = { ...defaultBloodOptions, ...config };
 
       // Вычисляем базовый угол на основе originPoint и hitPoint (x, y)
       const baseAngle = Math.atan2(y - originPoint.y, x - originPoint.x);
 
-      // --- Расчет модификатора угла разброса --- 
-      // Берем абсолютный угол от горизонтали (0 до PI)
-      const absBaseAngle = Math.abs(baseAngle);
-      // Максимальное увеличение угла для строго вертикального попадания (90 градусов = PI/2)
-      const maxSpreadIncreaseFactor = 1.8; // Увеличиваем разброс почти в 2 раза при вертикальном попадании
-      // Интерполируем коэффициент от 1 (горизонтально) до maxSpreadIncreaseFactor (вертикально)
-      // Используем (PI/2 - absBaseAngle) / (PI/2) для получения значения от 0 (вертикально) до 1 (горизонтально), но нам нужен обратный эффект
-      // Используем absBaseAngle / (Math.PI / 2) для получения значения от 0 (горизонтально) до 1 (вертикально)
-      // Чтобы получить множитель от 1 до max, используем: 1 + (1 - abs(угол)/(PI/2)) * (max - 1) - не совсем то
-      // Проще: 1 + (вертикальность) * (макс_увеличение - 1)
-      // Вертикальность = 1 - (absBaseAngle / (Math.PI / 2)) ? Нет, наоборот.
-      // Вертикальность = abs( PI/2 - absBaseAngle ) / (PI/2) - значение от 0 (вертикально) до 1 (горизонтально) ? Тоже нет
-      // Синус может подойти: sin(absBaseAngle) дает 0 для горизонтали и 1 для вертикали
-      const verticalityFactor = Math.sin(absBaseAngle); // 0 для горизонтали, 1 для вертикали
-      const spreadAngleMultiplier = 1 + verticalityFactor * (maxSpreadIncreaseFactor - 1);
-      // Применяем модификатор к углу разброса из настроек
-      const effectiveSpreadAngle = options.spread!.angle * spreadAngleMultiplier;
-      // --- Конец расчета модификатора --- 
-      
       // Создаем массив для физических брызг
       const physicsParticles: Phaser.Physics.Arcade.Sprite[] = [];
       
       // Создаем новые частицы крови с физикой
       for (let i = 0; i < options.amount!; i++) {
-          // Применяем разброс по высоте для начальной позиции частицы
-          const heightSpread = Phaser.Math.Between(
-              options.spread!.height.min,
-              options.spread!.height.max
-          );
-          
           // Создаем композитную частицу крови
           const bloodParticle = this.createCompositeBloodParticle(
               x,
-              y + heightSpread,
+              y,
               options
           );
           
-          // Устанавливаем размер, вращение и прозрачность
+          // Устанавливаем размер и прозрачность
           bloodParticle.setScale(Phaser.Math.FloatBetween(options.size!.min, options.size!.max));
           bloodParticle.setAlpha(Phaser.Math.FloatBetween(options.alpha!.min, options.alpha!.max));
           bloodParticle.setDepth(options.depth!);
           bloodParticle.setCollideWorldBounds(false);
-          
+
           // Рассчитываем угол
           const spreadAngleOffset = Phaser.Math.FloatBetween(
               -options.spread!.angle, 
@@ -220,7 +192,7 @@ export class BloodController {
           // bloodParticle.setDrag(options.drag!.x, options.drag!.y);
           
           // Сохраняем данные для псевдо-3D
-          bloodParticle.setData('initialY', y + heightSpread);
+          bloodParticle.setData('initialY', y);
           bloodParticle.setData('maxFallDistance', maxFallDistance); // Используем рассчитанное значение
           
           // Добавляем в массив частиц
@@ -371,6 +343,74 @@ export class BloodController {
   drawDecal(particle: Phaser.GameObjects.Sprite): void {
     emitEvent(this.scene, Decals.Events.Local, { object: particle, x: particle.x, y: particle.y, type: 'blood' });
   }
+
+  /**
+   * Создает анимированную лужу крови
+   * @param x Центральная точка X
+   * @param y Центральная точка Y
+   * @param size Примерный размер лужи
+   */
+  public createBloodPool(x: number, y: number, size: number): void {
+    if (!settingsService.getValue('bloodEnabled')) return;
+
+    const poolContainer = this.scene.add.container(x, y);
+    poolContainer.setDepth(5);
+
+    const colors = [0x8B0000, 0x800000, 0xDC143C];
+
+    // Основной слой
+    const mainPool = this.scene.add.graphics();
+    poolContainer.add(mainPool);
+
+    // Дополнительные языки
+    const tongues: Phaser.GameObjects.Graphics[] = [];
+    const tonguesCount = Phaser.Math.Between(5, 8);
+    for (let i = 0; i < tonguesCount; i++) {
+      const tongue = this.scene.add.graphics();
+      poolContainer.add(tongue);
+      tongues.push(tongue);
+    }
+
+    // Второй слой (полупрозрачный)
+    const underPool = this.scene.add.graphics();
+    poolContainer.addAt(underPool, 0);
+
+    let progress = 0;
+    this.scene.tweens.add({
+      targets: { progress: 0 },
+      progress: 1,
+      duration: 1000,
+      ease: 'Sine.easeOut',
+      onUpdate: (tween) => {
+        progress = tween.getValue();
+
+        // Второй слой — чуть больше и прозрачнее
+        underPool.clear();
+        underPool.fillStyle(colors[1], 0.25);
+        underPool.fillEllipse(0, 0, size * 1.15 * progress, size * 0.55 * progress);
+
+        // Основной эллипс
+        mainPool.clear();
+        mainPool.fillStyle(colors[0], 0.8);
+        mainPool.fillEllipse(0, 0, size * progress, size * 0.45 * progress);
+
+        // // Языки
+        // tongues.forEach((tongue, i) => {
+        //   // tongue.clear();
+        //   const angle = (Math.PI * 2 / tonguesCount) * i + Phaser.Math.FloatBetween(-0.2, 0.2);
+        //   const r = (size * 0.5 + Phaser.Math.Between(8, 18)) * (progress);
+        //   const px = Math.cos(angle) * r;
+        //   const py = Math.sin(angle) * r * 0.45;
+        //   const tongueLen = Phaser.Math.Between(10, 22) * (1 - progress);
+        //   const tongueWidth = Phaser.Math.Between(6, 12) * (1 - progress);
+        //   tongue.fillStyle(colors[Phaser.Math.Between(0, colors.length - 1)], 0.7);
+        //   tongue.fillEllipse(px, py, tongueLen, tongueWidth);
+        // });
+      }
+    });
+
+  }
+
 }
 
 /**
@@ -479,6 +519,7 @@ export function createBloodSplatterTexture(scene: Phaser.Scene, textureKey: stri
 
 export function createSimpleBloodConfig(multiplier: number): Partial<Blood.BloodSplashConfig> {
   return {
+    // texture: Blood.Texture.drops,
     amount: Phaser.Math.Between(50, 100) * multiplier,
     force: 20 * multiplier,
     size: {
@@ -493,10 +534,6 @@ export function createSimpleBloodConfig(multiplier: number): Partial<Blood.Blood
     gravity: 700,
     spread: {
       angle: Math.PI/14,
-      height: {
-        min: -3, // Разброс вверх от точки попадания
-        max: 2   // Разброс вниз от точки попадания
-      }
     },
     fallDistance: {
       min: 1,

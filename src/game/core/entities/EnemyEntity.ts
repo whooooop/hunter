@@ -351,6 +351,7 @@ export class EnemyEntity implements Damageable.Entity {
   public destroy(): void {
     if (this.destroyed) return;
     this.gameObject.destroy();
+    this.body.destroy();
     this.motionController.destroy();
     this.destroyed = true;
 
