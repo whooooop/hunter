@@ -11,3 +11,11 @@ export const FONT_FAMILY = {
   REGULAR: introFontRegular.name,
   BOLD: introFontBold.name,
 };
+
+
+export const DEBUG = {
+  PHYSICS: false,
+  ENEMIES: false,
+  MOTION: false,
+  LOCATION: false,
+};

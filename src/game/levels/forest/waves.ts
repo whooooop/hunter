@@ -13,13 +13,53 @@ export function createWavesConfig(): Wave.Config[] {
         {
           delay: 0,
           enemyType: Enemy.Type.RABBIT,
-          spawnConfig: { x: 800, y: 350, velocityX: -1, health: 500 },
+          spawnConfig: { x: rightStartPointX, y: 450, velocityX: -3 },
         },
         {
-          delay: 5000,
+          delay: 0,
+          enemyType: Enemy.Type.HEDGEHOG,
+          spawnConfig: { x: rightStartPointX, y: 650, velocityX: -1 },
+        },
+        {
+          delay: 0,
+          enemyType: Enemy.Type.RACCOON,
+          spawnConfig: { x: rightStartPointX, y: 300, velocityX: -2 },
+        },
+        {
+          delay: 0,
+          enemyType: Enemy.Type.DEER,
+          spawnConfig: { x: rightStartPointX, y: 300, velocityX: -3 },
+        },
+        {
+          delay: 0,
+          enemyType: Enemy.Type.MOUSE,
+          spawnConfig: { x: rightStartPointX, y: 250, velocityX: -1, velocityY: 0.3 },
+        },
+        {
+          delay: 1000,
+          enemyType: Enemy.Type.CAPIBARA,
+          spawnConfig: { x: rightStartPointX, y: 350, velocityX: -4, velocityY: 0.3 },
+        },
+        {
+          delay: 1000,
           enemyType: Enemy.Type.RABBIT,
           spawnConfig: { x: rightStartPointX, y: 350, velocityX: -1, health: 500 },
           boss: true,
+        },
+        {
+          delay: 0,
+          enemyType: Enemy.Type.BEAR,
+          spawnConfig: { x: rightStartPointX, y: 250, velocityX: -3 },
+        },
+        {
+          delay: 0,
+          enemyType: Enemy.Type.HEDGEHOG,
+          spawnConfig: { x: rightStartPointX, y: 250, velocityX: -1 },
+        },
+        {
+          delay: 0,
+          enemyType: Enemy.Type.HEDGEHOG,
+          spawnConfig: { x: rightStartPointX, y: 650, velocityX: -1, velocityY: -0.3 },
         },
       ],
     },

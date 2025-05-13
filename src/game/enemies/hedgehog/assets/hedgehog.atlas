@@ -1,0 +1,16 @@
+hedgehog.atlas.png
+size:463,463
+filter:Linear,Linear
+pma:true
+ЗЛНога
+bounds:162,23,78,83
+ЗПрНога
+bounds:242,38,60,68
+ПЛНога
+bounds:2,2,78,104
+ППрНога
+bounds:82,15,78,91
+Тело
+bounds:2,108,451,353
+Ухо
+bounds:304,55,43,51

@@ -6,6 +6,10 @@ export namespace Enemy {
     RABBIT = 'rabbit',
     MOUSE = 'mouse',
     BEAR = 'bear',
+    CAPIBARA = 'capibara',
+    HEDGEHOG = 'hedgehog',
+    RACCOON = 'raccoon',
+    DEER = 'deer',
   }
 
   export namespace Events {
@@ -35,6 +39,9 @@ export namespace Enemy {
     debug?: boolean;
     scale: number;
 
+    velocityX?: number;
+    velocityY?: number;
+
     offset: {
       x: number;
       y: number;
@@ -50,9 +57,20 @@ export namespace Enemy {
 
     killCombo?: killCombo[];
 
-    animations: Animation[];
+    animations?: AnimationSprite[];
 
     texture?: SpriteConfig;
+
+    anims?: Record<string, string>;
+
+    spine?: {
+      key: string;
+      atlas: string;
+      json: string;
+      texture: string;
+      animations: Animation[];
+      timeScale?: number;
+    };
   }
 
   export interface SpawnConfig {
@@ -92,7 +110,7 @@ export namespace Enemy {
     weapon: WeaponType;
   }
 
-  export interface Animation {
+  export interface AnimationSprite {
     name: AnimationName;
     key: string;
     url: string;
@@ -102,6 +120,14 @@ export namespace Enemy {
     startFrame: number;
     endFrame: number;
     repeat: number;
+  }
+
+  export enum Animation {
+    WALK = 'walk',
+    DEATH = 'death',
+    WOUNDED = 'wounded',
+    DEATH_HEAD = 'deathHead',
+    RUN = 'run',
   }
 
   export type AnimationName = 'walk' | 'death';

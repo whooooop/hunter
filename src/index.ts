@@ -8,8 +8,9 @@ import { MenuScene } from './game/scenes/MenuScene/MenuScene';
 import { PlayerService } from './game/core/services/PlayerService';
 import { introFontRegular, introFontBold } from './game/assets/fonts/intro';
 import { FontLoader } from './utils/font';
-import { DISPLAY } from './game/config';
+import { DISPLAY, DEBUG } from './game/config';
 import { SettingsService } from './game/core/services/SettingsService';
+import { SpinePlugin } from "@esotericsoftware/spine-phaser"
 
 const originalLog = console.log;
 console.log = function(msg: any) {
@@ -30,10 +31,17 @@ const config: Phaser.Types.Core.GameConfig = {
   backgroundColor: '#000000',
   physics: {
     default: 'arcade',
-    // arcade: {
-    //   // gravity: { x: 0, y: 0 },
-    //   debug: false
-    // }
+    arcade: {
+      gravity: { x: 0, y: 0 },
+      debug: DEBUG.PHYSICS
+    }
+  },
+  plugins: {
+    scene: [{
+      key: "spine.SpinePlugin",
+      plugin: SpinePlugin,
+      mapping: "spine"
+    }]
   },
   scene: [
     BootScene,

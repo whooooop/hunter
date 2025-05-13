@@ -14,6 +14,8 @@ import rockImage2 from './assets/images/rock2.png';
 import { Clouds } from '../../ui/Clouds';
 import { BirchTree } from './components/BirchTree';
 import { TREE_COLLECTIONS, TreeType } from './components';
+import { DEBUG } from '../../config';
+import { hexToNumber } from '../../utils/colors';
 const logger = createLogger('ForestLocation');
 
 const GROUND_TEXTURE = 'ground_texture_' + generateStringWithLength(6);
@@ -70,12 +72,19 @@ export class ForestLocation implements Location.BaseClass {
     this.createShop();
     
     this.createTrees();
+
+    if (DEBUG.LOCATION) {
+      const graphics = this.scene.add.graphics();
+      graphics.setDepth(1000);
+      graphics.lineStyle(2, hexToNumber('#fbb52f'), 1);
+      graphics.strokeRect(this.bounds.left, this.bounds.top, this.bounds.right - this.bounds.left, this.bounds.bottom - this.bounds.top);
+    }
   }
 
   private setupLocationBounds(): void {
     this.bounds.left = 0;
     this.bounds.right = this.width;
-    this.bounds.top = this.skyHeight - 40; // Отступ от неба
+    this.bounds.top = this.skyHeight; // Отступ от неба
     this.bounds.bottom = this.height;
   }
 

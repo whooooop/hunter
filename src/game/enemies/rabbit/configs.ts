@@ -1,13 +1,15 @@
 import { Enemy } from '../../core/types/enemyTypes';
 import { WeaponType } from '../../weapons/WeaponTypes';
-import rabbitWalkTextureUrl from './assets/images/walking.png';
-import rabbitDeathTextureUrl from './assets/images/death.png';
+
+import atlasUrl from './assets/rabbit.atlas';
+import jsonUrl from './assets/rabbit.json';
+import textureUrl from './assets/rabbit.atlas.png';
 
 export const RabbitConfig: Enemy.Config = {
   type: Enemy.Type.RABBIT,
   health: 47,
-  scale: 1,
-  offset: { x: 24, y: -10 },
+  scale: 0.07,
+  offset: { x: 0, y: 20 },
   baunds: {
     body: { x: 0, y: 0, width: 42, height: 40 },
     head: { x: 0, y: 0, width: 42, height: 16 },
@@ -27,28 +29,16 @@ export const RabbitConfig: Enemy.Config = {
       { target: 'head', weapon: WeaponType.REVOLVER },
     ], value: 5 },
   ],
-  animations: [
-    {
-      name: 'walk',
-      key: 'rabbit_walk_0',
-      url: rabbitWalkTextureUrl,
-      frameWidth: 100,
-      frameHeight: 85,
-      frameRate: 60,
-      startFrame: 0,
-      endFrame: 29,
-      repeat: -1,
-    },
-    {
-      name: 'death',
-      key: 'rabbit_death_0',
-      url: rabbitDeathTextureUrl,
-      frameWidth: 100,
-      frameHeight: 85,
-      frameRate: 80,
-      startFrame: 0,
-      endFrame: 38,
-      repeat: 0,
-    }
-  ],
+  spine: {
+    key: Enemy.Type.RABBIT,
+    atlas: atlasUrl,
+    json: jsonUrl,
+    texture: textureUrl,
+    animations: [
+      Enemy.Animation.WALK, 
+      Enemy.Animation.WOUNDED, 
+      Enemy.Animation.DEATH_HEAD, 
+      Enemy.Animation.DEATH
+    ],
+  },
 }

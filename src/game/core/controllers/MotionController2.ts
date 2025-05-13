@@ -2,7 +2,7 @@ import { createLogger } from "../../../utils/logger";
 import { forceToTargetOffset, easeOutQuart, easeOutQuint } from "../../utils/ForceUtils";
 import { Location } from "../types/Location";
 import { hexToNumber } from "../../utils/colors";
-import { OBJECTS_DEPTH_OFFSET } from "../../config";
+import { DEBUG, OBJECTS_DEPTH_OFFSET } from "../../config";
 
 const logger = createLogger('MotionController');
 
@@ -64,15 +64,13 @@ export class MotionController2 {
   protected defaultForceStrength: number = 0.15; // Сила воздействия (чем больше, тем быстрее)
   protected forceThreshold: number = 0.01; // Порог для удаления силы
 
-  private debug: boolean;
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
   private debugRect!: Phaser.GameObjects.Rectangle;
 
-  constructor(scene: Phaser.Scene, body: Phaser.Physics.Arcade.Body, options: MotionControllerOptions, debug?: boolean) {
+  constructor(scene: Phaser.Scene, body: Phaser.Physics.Arcade.Body, options: MotionControllerOptions) {
     this.scene = scene;
     this.body = body;
     this.options = options;
-    this.debug = debug || false;
 
     // Настраиваем физические свойства тела
     if (this.body) {
@@ -80,7 +78,7 @@ export class MotionController2 {
         this.body.setMaxVelocity(this.options.maxVelocityX, this.options.maxVelocityY);
     }
 
-    if (this.debug) {
+    if (DEBUG.MOTION) {
       this.debugGraphics = scene.add.graphics();
       this.debugRect = scene.add.rectangle(this.body.x, this.body.y, this.body.width, this.body.height, 0x0000ff, 0.5);
     }
@@ -97,7 +95,7 @@ export class MotionController2 {
 
   public getDepth(): number {
     const depthOffset = this.options.depthOffset || 0;
-    return this.body.y + (this.body.height / 2) + depthOffset + OBJECTS_DEPTH_OFFSET - this.jumpOffsetY;
+    return this.body.y + (this.body.height) + depthOffset + OBJECTS_DEPTH_OFFSET - this.jumpOffsetY;
   }
 
   public setMove(moveX: number, moveY: number): void {
@@ -126,6 +124,22 @@ export class MotionController2 {
     }
   }
 
+  public setMoveDown(): void {
+    if (this.moveY < 0) {
+      this.setRevertY();
+    }
+  }
+
+  public setMoveUp(): void {
+    if (this.moveY > 0) {
+      this.setRevertY();
+    }
+  }
+
+  public setRevertY(): void {
+    this.setMove(this.moveX, this.moveY * -1);
+  }
+  
   public update(time: number, delta: number): void {
     // Ускорение и максимальная скорость теперь обрабатываются физикой через setMove
     this.handleJump(time, delta);
@@ -140,20 +154,21 @@ export class MotionController2 {
     if (this.locationBounds) {
       const halfWidth = this.body.width / 2;
       const halfHeight = this.body.height / 2;
-      this.body.x = Math.max(this.locationBounds.left + halfWidth, Math.min(this.locationBounds.right - halfWidth, this.body.x));
+      this.body.x = Math.max(this.locationBounds.left - halfWidth, Math.min(this.locationBounds.right - this.body.width, this.body.x));
       if (!this.jumping) {
-        this.body.y = Math.max(this.locationBounds.top + halfHeight, Math.min(this.locationBounds.bottom - halfHeight, this.body.y));
+        this.body.y = Math.max(this.locationBounds.top - halfHeight, Math.min(this.locationBounds.bottom - this.body.height, this.body.y));
       }
     }
 
     if (this.debugGraphics) {
+      const position = this.getPosition();
       this.debugGraphics.clear();
       this.debugGraphics.setDepth(1000);
       this.debugGraphics.fillStyle(hexToNumber('#d23a3a'));
-      this.debugGraphics.fillRect(this.body.x - this.body.width / 2, this.getDepth(), this.body.width, 1);
+      this.debugGraphics.fillRect(this.body.x - 20, this.getDepth(), this.body.width + 40, 1);
 
       this.debugGraphics.lineStyle(2, hexToNumber('#fbb52f'), 1);
-      this.debugGraphics.strokeRect(this.body.x - this.body.width / 2, this.body.y - this.body.height / 2, this.body.width, this.body.height);
+      this.debugGraphics.strokeRect(this.body.x, this.body.y, this.body.width, this.body.height);
     }
 
     if (Phaser.Math.Distance.Between(this.body.maxVelocity.x, this.body.maxVelocity.y, this.targetMaxVelocityX, this.targetMaxVelocityY) > 1) {
@@ -167,8 +182,8 @@ export class MotionController2 {
 
   public getPosition(): { x: number, y: number, jumpHeight: number, depth: number } {
     return {
-      x: this.body.x,
-      y: this.body.y,
+      x: this.body.x + this.body.width / 2,
+      y: this.body.y + this.body.height / 2,
       jumpHeight: this.jumpOffsetY,
       depth: this.getDepth(),
     };

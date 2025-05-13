@@ -1,15 +1,16 @@
 import { Enemy } from '../../core/types/enemyTypes';
-import atlasUrl from './assets/bear.atlas';
-import jsonUrl from './assets/bear.json';
-import textureUrl from './assets/bear.atlas.png';
+import atlasUrl from './assets/deer.atlas';
+import jsonUrl from './assets/deer.json';
+import textureUrl from './assets/deer.atlas.png';
 
-export const BearConfig: Enemy.Config = {
-  type: Enemy.Type.BEAR,
-  health: 1200,
+export const DeerConfig: Enemy.Config = {
+  type: Enemy.Type.DEER,
+  health: 47,
   scale: 0.1,
-  offset: { x: 0, y: 0 },
+  offset: { x: 0, y: 18 },
   baunds: {
-    body: { x: 0, y: 0, width: 130, height: 110 },
+    body: { x: 0, y: 0, width: 42, height: 40 },
+    head: { x: 0, y: 18, width: 42, height: 12 },
   },
   score: [
     { death: true, value: 50 },
@@ -17,7 +18,7 @@ export const BearConfig: Enemy.Config = {
   damageMultiplier: {},
   killCombo: [],
   spine: {
-    key: Enemy.Type.BEAR,
+    key: Enemy.Type.DEER,
     atlas: atlasUrl,
     texture: textureUrl,
     json: jsonUrl,

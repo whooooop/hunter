@@ -1,22 +1,31 @@
 import { Enemy } from '../../core/types/enemyTypes';
-import mouseWalkTextureUrl from './assets/image17.png';
+import mouseWalkTextureUrl from './assets/mouse.atlas.png';
+import jsonUrl from './assets/mouse.json';
+import atlasUrl from './assets/mouse.atlas';
 
 export const MouseConfig: Enemy.Config = {
   type: Enemy.Type.MOUSE,
   health: 47,
-  scale: 1,
-  offset: { x: 0, y: 0 },
+  scale: 0.1,
+  offset: { x: 0, y: 12 },
   baunds: {
-    body: { x: 0, y: 0, width: 42, height: 40 },
+    body: { x: 0, y: 0, width: 30, height: 24 },
   },
   score: [
     { death: true, value: 50 },
   ],
   damageMultiplier: {},
   killCombo: [],
-  texture: {
-    key: 'mouse_walk_0',
-    url: mouseWalkTextureUrl,
+  spine: {
+    key: Enemy.Type.MOUSE,
+    atlas: atlasUrl,
+    json: jsonUrl,
+    texture: mouseWalkTextureUrl,
+    timeScale: 2,
+    animations: [
+      Enemy.Animation.WALK,
+      Enemy.Animation.WOUNDED,
+      Enemy.Animation.DEATH,
+    ],
   },
-  animations: [],
 }

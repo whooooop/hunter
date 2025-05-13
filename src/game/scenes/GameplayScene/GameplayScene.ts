@@ -228,6 +228,7 @@ export class GameplayScene extends Phaser.Scene {
   private handleSpawnEnemy({ id, enemyType, spawnConfig, boss }: Wave.Events.Spawn.Payload): void {
     const enemy = createEnemy(id, enemyType, this, spawnConfig);
     this.enemies.set(id, enemy);
+    enemy.setLocationBounds(this.location.getBounds());
     this.damageableObjects.set(id, enemy);
 
     if (boss) {
