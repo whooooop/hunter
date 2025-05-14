@@ -3,56 +3,56 @@ size: 1085, 1085
 format: RGBA8888
 filter: Linear, Linear
 repeat: none
-ЗЛНога
+1
   rotate: false
   xy: 859, 606
   size: 224, 477
   orig: 224, 480
   offset: 0, 3
   index: -1
-ЗПрНога
+2
   rotate: false
   xy: 405, 36
   size: 172, 427
   orig: 172, 430
   offset: 0, 3
   index: -1
-ЛРог
+3
   rotate: false
   xy: 2, 141
   size: 401, 322
   orig: 401, 322
   offset: 0, 0
   index: -1
-ПЛНога
+4
   rotate: false
   xy: 928, 99
   size: 141, 505
   orig: 162, 505
   offset: 21, 0
   index: -1
-ППрНога
+5
   rotate: false
   xy: 579, 34
   size: 145, 429
   orig: 145, 431
   offset: 0, 2
   index: -1
-Прог
+6
   rotate: false
   xy: 726, 186
   size: 200, 277
   orig: 202, 277
   offset: 2, 0
   index: -1
-Тело
+7
   rotate: false
   xy: 2, 465
   size: 855, 618
   orig: 855, 750
   offset: 0, 132
   index: -1
-Ухо
+8
   rotate: false
   xy: 2, 46
   size: 98, 93

@@ -123,11 +123,11 @@ export namespace Enemy {
   }
 
   export enum Animation {
-    WALK = 'walk',
-    DEATH = 'death',
-    WOUNDED = 'wounded',
-    DEATH_HEAD = 'deathHead',
-    RUN = 'run',
+    WALK = 'Walk',
+    DEATH = 'Death',
+    WOUNDED = 'Wounded',
+    DEATH_HEAD = 'DeathHead',
+    RUN = 'Run',
   }
 
   export type AnimationName = 'walk' | 'death';

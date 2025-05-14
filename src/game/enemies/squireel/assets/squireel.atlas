@@ -1,0 +1,54 @@
+squireel.atlas.png
+size: 559, 559
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+1
+  rotate: false
+  xy: 200, 322
+  size: 225, 235
+  orig: 225, 235
+  offset: 0, 0
+  index: -1
+2
+  rotate: false
+  xy: 427, 381
+  size: 123, 176
+  orig: 123, 176
+  offset: 0, 0
+  index: -1
+3
+  rotate: false
+  xy: 200, 215
+  size: 89, 105
+  orig: 90, 105
+  offset: 1, 0
+  index: -1
+4
+  rotate: false
+  xy: 427, 212
+  size: 82, 167
+  orig: 82, 167
+  offset: 0, 0
+  index: -1
+5
+  rotate: false
+  xy: 301, 193
+  size: 88, 127
+  orig: 88, 127
+  offset: 0, 0
+  index: -1
+6
+  rotate: false
+  xy: 2, 2
+  size: 297, 208
+  orig: 301, 276
+  offset: 4, 65
+  index: -1
+7
+  rotate: false
+  xy: 2, 212
+  size: 196, 345
+  orig: 196, 345
+  offset: 0, 0
+  index: -1

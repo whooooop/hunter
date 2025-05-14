@@ -3,42 +3,42 @@ size: 1672, 1672
 format: RGBA8888
 filter: Linear, Linear
 repeat: none
-Голова
+1
   rotate: false
   xy: 2, 222
   size: 707, 644
   orig: 707, 644
   offset: 0, 0
   index: -1
-ЗЛНога
+2
   rotate: false
   xy: 1148, 237
   size: 257, 629
   orig: 257, 629
   offset: 0, 0
   index: -1
-ЗПрНога
+3
   rotate: false
   xy: 1407, 433
   size: 263, 459
   orig: 263, 459
   offset: 0, 0
   index: -1
-ПЛНога
+4
   rotate: false
   xy: 1190, 894
   size: 378, 776
   orig: 378, 776
   offset: 0, 0
   index: -1
-ППрНога
+5
   rotate: false
   xy: 711, 304
   size: 435, 562
   orig: 435, 562
   offset: 0, 0
   index: -1
-Тело
+6
   rotate: false
   xy: 2, 868
   size: 1186, 802
