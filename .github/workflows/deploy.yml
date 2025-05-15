@@ -48,5 +48,6 @@ jobs:
             docker run \
               -d \
               --restart always \
+              -p 8081:8081 \
               --name ${{ vars.APP_NAME }} \
               ${{ vars.APP_NAME }}:${{ github.sha }}
