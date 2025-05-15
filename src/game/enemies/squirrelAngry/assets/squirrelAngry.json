@@ -275,7 +275,7 @@
 	}
 ],
 "animations": {
-	"death": {
+	"Death": {
 		"bones": {
 			"bone13": {
 				"rotate": [
@@ -550,7 +550,7 @@
 			}
 		}
 	},
-	"deathHead": {
+	"DeathHead": {
 		"bones": {
 			"bone13": {
 				"rotate": [
@@ -892,7 +892,7 @@
 			}
 		}
 	},
-	"walk": {
+	"Walk": {
 		"bones": {
 			"bone": {
 				"rotate": [
@@ -1319,7 +1319,7 @@
 			}
 		}
 	},
-	"wounded": {
+	"Wounded": {
 		"bones": {
 			"bone": {
 				"rotate": [

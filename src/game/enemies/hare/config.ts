@@ -1,12 +1,12 @@
 import { Enemy } from '../../core/types/enemyTypes';
 import { WeaponType } from '../../weapons/WeaponTypes';
 
-import atlasUrl from './assets/rabbit.atlas';
-import jsonUrl from './assets/rabbit.json';
-import textureUrl from './assets/rabbit.atlas.png';
+import atlasUrl from './assets/hare.atlas';
+import jsonUrl from './assets/hare.json';
+import textureUrl from './assets/hare.atlas.png';
 
-export const RabbitConfig: Enemy.Config = {
-  type: Enemy.Type.RABBIT,
+export const HareConfig: Enemy.Config = {
+  type: Enemy.Type.HARE,
   health: 47,
   scale: 0.07,
   offset: { x: 0, y: 20 },
@@ -30,14 +30,13 @@ export const RabbitConfig: Enemy.Config = {
     ], value: 5 },
   ],
   spine: {
-    key: Enemy.Type.RABBIT,
+    key: Enemy.Type.HARE,
     atlas: atlasUrl,
     json: jsonUrl,
     texture: textureUrl,
     animations: [
       Enemy.Animation.WALK, 
       Enemy.Animation.WOUNDED, 
-      Enemy.Animation.DEATH_HEAD, 
       Enemy.Animation.DEATH
     ],
   },

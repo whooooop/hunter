@@ -3,13 +3,17 @@ import { WeaponType } from "../../weapons/WeaponTypes";
 
 export namespace Enemy {
   export enum Type {
-    RABBIT = 'rabbit',
+    HARE = 'hare',
     MOUSE = 'mouse',
     BEAR = 'bear',
     CAPIBARA = 'capibara',
     HEDGEHOG = 'hedgehog',
     RACCOON = 'raccoon',
     DEER = 'deer',
+    DEER_BABY = 'deerBaby',
+    SQUIREEL = 'squireel',
+    SQUIRREL_ANGRY = 'squirrelAngry',
+    WOLF = 'wolf',
   }
 
   export namespace Events {

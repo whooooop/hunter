@@ -61,7 +61,7 @@ export const quests: Quest.Config[] = [
         event: Game.Events.Stat.EnemyKillEvent.Event,
         count: 5,
         conditions: [
-          { key: 'enemyType', value: Enemy.Type.RABBIT },
+          { key: 'enemyType', value: Enemy.Type.HARE },
         ],
       },
       {
@@ -74,7 +74,7 @@ export const quests: Quest.Config[] = [
         event: Game.Events.Stat.EnemyKillEvent.Event,
         count: 15,
         conditions: [
-          { key: 'enemyType', value: Enemy.Type.RABBIT },
+          { key: 'enemyType', value: Enemy.Type.HARE },
         ],
       },
       {

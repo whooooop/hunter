@@ -15,7 +15,7 @@ export namespace Wave {
       export type Payload = {
         id: string;
         enemyType: Enemy.Type;
-        spawnConfig: Enemy.SpawnConfig;
+        config: Enemy.SpawnConfig;
         boss: boolean;
       };
     }
@@ -30,7 +30,7 @@ export namespace Wave {
   export interface Spawn {
     delay: number;
     enemyType: Enemy.Type;
-    spawnConfig: Enemy.SpawnConfig;
+    config: Enemy.SpawnConfig;
     boss?: boolean;
   }
 }

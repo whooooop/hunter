@@ -28,7 +28,6 @@ export class EnemyEntity implements Damageable.Entity {
   private id: string;
   private destroyed: boolean = false;
   private scene: Phaser.Scene;
-  protected gameObject!: Phaser.Physics.Arcade.Sprite;
   protected spineObject!: SpineGameObject;
   private body: Phaser.Physics.Arcade.Body;
   protected container: Phaser.GameObjects.Container;
@@ -59,10 +58,6 @@ export class EnemyEntity implements Damageable.Entity {
       this.spineObject.setScale(config.scale).setOrigin(0.5);
       this.spineObject.animationState.setAnimation(0, Enemy.Animation.WALK, true);
       this.container.add(this.spineObject);
-    } else {
-      // const textureKey = (config.texture)!.key;
-      // this.gameObject = scene.physics.add.sprite(0, 0, textureKey).setScale(this.config.scale);
-      // this.container.add(this.gameObject);
     }
 
     this.body = scene.physics.add.body(x, y, this.config.baunds.body.width, this.config.baunds.body.height);
@@ -101,7 +96,6 @@ export class EnemyEntity implements Damageable.Entity {
 
     //     emitter.explode(50, 0, 0);
 
-    //     this.gameObject.setVisible(false);
     // }, 4000);
   }
 
@@ -219,10 +213,8 @@ export class EnemyEntity implements Damageable.Entity {
   setAnimationSpeedScale(scale: number): void {
     if (!this.trackEntry) return;
     if (this.trackEntry.animation?.name === Enemy.Animation.DEATH || this.trackEntry.animation?.name === Enemy.Animation.DEATH_HEAD) {
-      // this.gameObject.anims.timeScale = 1;
       this.timeScaleTarget = 1 * (this.config.spine?.timeScale || 1);
     } else {
-      // this.gameObject.anims.timeScale = scale;
       this.timeScaleTarget = scale * (this.config.spine?.timeScale || 1);
     }
   }
@@ -234,13 +226,13 @@ export class EnemyEntity implements Damageable.Entity {
       id: this.id,
     });
 
-    const matrix = (this.gameObject || this.spineObject).getWorldTransformMatrix();
+    const matrix = this.spineObject.getWorldTransformMatrix();
 
     emitEvent(this.scene, Decals.Events.Local, {
       type: 'body',
       x: matrix.tx,
       y: matrix.ty,
-      object: this.gameObject || this.spineObject,
+      object: this.spineObject as unknown as Phaser.GameObjects.Sprite,
     });
     
     this.destroy();
@@ -387,7 +379,6 @@ export class EnemyEntity implements Damageable.Entity {
 
   public destroy(): void {
     if (this.destroyed) return;
-    this.gameObject?.destroy();
     this.spineObject?.destroy();
     this.body.destroy();
     this.motionController.destroy();

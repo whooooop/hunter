@@ -1,13 +1,13 @@
 import { EnemyEntity } from "../../core/entities/EnemyEntity";
-import { RabbitConfig } from "./configs";
+import { HareConfig } from "./config";
 import { AntiAimBehavior } from "../../behaviors/AntiAimBehavior";
 import { Enemy } from "../../core/types/enemyTypes";
 
-export class RabbitEnemy extends EnemyEntity {
+export class HareEnemy extends EnemyEntity {
   private antiAimBehavior: AntiAimBehavior;
   
   constructor(scene: Phaser.Scene, id: string, spawnConfig: Enemy.SpawnConfig) {
-    super(scene, id, spawnConfig.x, spawnConfig.y, RabbitConfig, spawnConfig);
+    super(scene, id, spawnConfig.x, spawnConfig.y, HareConfig, spawnConfig);
 
     this.antiAimBehavior = new AntiAimBehavior(scene, this);
   }

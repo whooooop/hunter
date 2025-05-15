@@ -1,0 +1,33 @@
+import { Enemy } from '../../core/types/enemyTypes';
+import wolfAtlasUrl from './assets/wolf.atlas.png';
+import jsonUrl from './assets/wolf.json';
+import atlasUrl from './assets/wolf.atlas';
+
+export const WolfConfig: Enemy.Config = {
+  type: Enemy.Type.WOLF,
+  health: 47,
+  scale: 0.1,
+  offset: { x: 0, y: 28 },
+  baunds: {
+    body: { x: 0, y: 0, width: 50, height: 50 },
+    head: { x: 0, y: 0, width: 25, height: 25 },
+  },
+  score: [
+    { death: true, value: 50 },
+  ],
+  damageMultiplier: {},
+  killCombo: [],
+  spine: {
+    key: Enemy.Type.WOLF,
+    atlas: atlasUrl,
+    json: jsonUrl,
+    texture: wolfAtlasUrl,
+    timeScale: 1.2,
+    animations: [
+      Enemy.Animation.WALK,
+      Enemy.Animation.WOUNDED,
+      Enemy.Animation.DEATH,
+      Enemy.Animation.DEATH_HEAD,
+    ],
+  },
+}

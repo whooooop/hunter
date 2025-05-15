@@ -10,6 +10,7 @@ export const MouseConfig: Enemy.Config = {
   offset: { x: 0, y: 12 },
   baunds: {
     body: { x: 0, y: 0, width: 30, height: 24 },
+    head: { x: 0, y: 0, width: 15, height: 15 },
   },
   score: [
     { death: true, value: 50 },

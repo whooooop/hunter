@@ -90,14 +90,14 @@ export class WaveController {
     const nextSpawn = spawns[spawnIndex + 1];
 
     this.scene.time.delayedCall(spawn.delay, () => {
-      const spawnConfig = spawn.spawnConfig;
-      spawnConfig.level = waveIndex + 1;
+      const config = spawn.config;
+      config.level = waveIndex + 1;
       
       emitEvent(this.scene, Wave.Events.Spawn.Local, {
         id: generateId(),
         boss: spawn.boss || false,
         enemyType: spawn.enemyType,
-        spawnConfig: spawn.spawnConfig,
+        config: spawn.config,
       });
 
       if (nextSpawn) {

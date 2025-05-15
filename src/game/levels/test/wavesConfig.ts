@@ -3,7 +3,7 @@ import { Enemy } from "../../core/types/enemyTypes";
 import { DISPLAY } from "../../config";
 
 export function createWavesConfig(): Wave.Config[] {
-  const rightStartPointX = DISPLAY.WIDTH + 50;
+  const x = DISPLAY.WIDTH + 50;
 
   return [
     // Wave 1
@@ -12,9 +12,9 @@ export function createWavesConfig(): Wave.Config[] {
       spawns: [
         {
           delay: 0,
-          enemyType: Enemy.Type.RABBIT,
-          spawnConfig: { 
-            x: rightStartPointX,
+          enemyType: Enemy.Type.HARE,
+          config: {
+            x,
             y: 300,
             velocityX: -1,
             velocityY: 0,
