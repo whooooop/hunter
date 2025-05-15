@@ -11,8 +11,9 @@ RUN apt-get update && apt-get install -y \
     g++
 COPY package*.json ./
 RUN npm ci
+RUN pwd
+RUN ls -la
 COPY . .
-RUN find src -name "*.test.ts" -delete
 RUN npm run build
 
 FROM nginx:alpine
