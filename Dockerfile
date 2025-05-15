@@ -1,12 +1,17 @@
 FROM node:20.11.1-slim AS base
-COPY . /app
 WORKDIR /app
 
 # FROM base AS prod-deps
 # # RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 
 FROM base AS build
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++
+COPY package*.json ./
 RUN npm ci
+COPY . .
 RUN find src -name "*.test.ts" -delete
 RUN npm run build
 
