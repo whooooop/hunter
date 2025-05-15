@@ -2,10 +2,17 @@ FROM node:20.11.1-slim AS base
 WORKDIR /app
 
 FROM base AS build
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++
 COPY . .
-RUN pwd
 RUN ls -la
-RUN npm ci
+RUN node -v
+RUN npm -v
+RUN npm ci --verbose
+RUN ls -la node_modules
+RUN ls -la src/game/fx/muzzleFlash
 RUN npm run build
 
 FROM nginx:alpine

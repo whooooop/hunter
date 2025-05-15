@@ -62,7 +62,11 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.vert', '.frag', '.glsl', '.geom']
+    extensions: ['.ts', '.tsx', '.js', '.vert', '.frag', '.glsl', '.geom'],
+    modules: [path.resolve(__dirname, 'src'), 'node_modules'],
+    alias: {
+      '@': path.resolve(__dirname, 'src')
+    }
   },
   plugins: [
     new CleanWebpackPlugin(),
