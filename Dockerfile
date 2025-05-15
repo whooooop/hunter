@@ -1,19 +1,11 @@
 FROM node:20.11.1-slim AS base
 WORKDIR /app
 
-# FROM base AS prod-deps
-# # RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
-
 FROM base AS build
-RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++
-COPY package*.json ./
-RUN npm ci
+COPY . .
 RUN pwd
 RUN ls -la
-COPY . .
+RUN npm ci
 RUN npm run build
 
 FROM nginx:alpine
