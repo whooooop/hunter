@@ -1,6 +1,6 @@
 import { hexToNumber } from '../../utils/colors';
 import { createSpriteAnimation } from '../../utils/sprite';
-import muzzleFlashUrl from './assets/muzzleFlash.png';
+import muzzleFlashUrl from './assets/MuzzleFlash.png';
 
 export const MuzzleFlashTexture = {
   key: 'muzzle_flash',

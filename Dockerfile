@@ -13,6 +13,7 @@ RUN npm -v
 RUN npm ci --verbose
 RUN ls -la node_modules
 RUN ls -la src/game/fx/muzzleFlash
+RUN ls -la src/game/fx/muzzleFlash/assets
 RUN npm run build
 
 FROM nginx:alpine
