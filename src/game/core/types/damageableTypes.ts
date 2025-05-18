@@ -15,6 +15,7 @@ export namespace Damageable {
     playerId: string;
     distance: number;
     weaponName: WeaponType;
+    penetratedCount: number;
   }
 
   export interface DamageResult {

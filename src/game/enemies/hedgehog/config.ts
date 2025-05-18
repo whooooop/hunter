@@ -22,11 +22,16 @@ export const HedgehogConfig: Enemy.Config = {
     atlas: atlasUrl,
     texture: textureUrl,
     json: jsonUrl,
-    timeScale: 5,
-    animations: [
-      Enemy.Animation.WALK, 
-      Enemy.Animation.DEATH,
-      Enemy.Animation.RUN,
-    ],
+    animations: {
+      [Enemy.Animation.WALK]: {
+        timeScale: 5
+      },
+      [Enemy.Animation.DEATH]: {
+        timeScale: 3
+      },
+      [Enemy.Animation.RUN]: {
+        timeScale: 3
+      },
+    },
   },
 }

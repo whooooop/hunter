@@ -15,7 +15,7 @@ export const HareConfig: Enemy.Config = {
     head: { x: 0, y: 0, width: 42, height: 16 },
   },
   score: [
-    { target: 'head', death: false, weapon: WeaponType.GLOCK, value: 10 },
+    { target: 'head', death: false, weapon: WeaponType.GLOCK, value: 10, maxPenCount: 0 },
     { target: 'head', death: true, weapon: WeaponType.GLOCK, value: 60 },
     { target: 'head', death: -1, weapon: WeaponType.REVOLVER, value: 70 },
     { death: true, value: 50 },
@@ -34,10 +34,16 @@ export const HareConfig: Enemy.Config = {
     atlas: atlasUrl,
     json: jsonUrl,
     texture: textureUrl,
-    animations: [
-      Enemy.Animation.WALK, 
-      Enemy.Animation.WOUNDED, 
-      Enemy.Animation.DEATH
-    ],
+    animations: {
+      [Enemy.Animation.WALK]: {
+        timeScale: 1
+      },
+      [Enemy.Animation.WOUNDED]: {
+        timeScale: 1
+      },
+      [Enemy.Animation.DEATH]: {
+        timeScale: 3
+      }
+    }
   },
 }

@@ -73,6 +73,7 @@ export class GameplayScene extends Phaser.Scene {
   private kills: number = 0;
 
   private isPause: boolean = false;
+  private isGameOver: boolean = false;
 
   constructor() {
     super({
@@ -83,7 +84,7 @@ export class GameplayScene extends Phaser.Scene {
   }
   
   init({ levelId } : GameplaySceneData) {
-    this.loadingView = new LoadingView(this, { minLoadingTime: 3000 });
+    this.loadingView = new LoadingView(this, { minLoadingTime: 2000 });
     this.levelConfig = getLevel(levelId);
     this.levelId = levelId;
     this.location = getLocation(this, this.levelConfig.location);
@@ -271,6 +272,10 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private handleSpawnEnemy({ id, enemyType, config, boss }: Wave.Events.Spawn.Payload): void {
+    if (this.isGameOver) {
+      return;
+    }
+
     const enemy = createEnemy(id, enemyType, this, config);
     this.enemies.set(id, enemy);
     enemy.setLocationBounds(this.location.getBounds());
@@ -344,6 +349,7 @@ export class GameplayScene extends Phaser.Scene {
     this.enemies.forEach((enemy) => {
       enemy.update(time, delta);
       if (enemy instanceof EnemyEntity && enemy.getPosition().x < 0) {
+        this.isGameOver = true;
         this.gameOverView.open({ attempt: this.attempt, time: this.playTime, kills: this.kills });
       }
     });

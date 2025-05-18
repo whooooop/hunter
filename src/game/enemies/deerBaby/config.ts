@@ -22,12 +22,19 @@ export const DeerBabyConfig: Enemy.Config = {
     atlas: atlasUrl,
     json: jsonUrl,
     texture: deerBabyWalkTextureUrl,
-    timeScale: 1,
-    animations: [
-      Enemy.Animation.WALK,
-      Enemy.Animation.WOUNDED,
-      Enemy.Animation.DEATH,
-      Enemy.Animation.DEATH_HEAD,
-    ],
+    animations: {
+      [Enemy.Animation.WALK]: {
+        timeScale: 1
+      },
+      [Enemy.Animation.WOUNDED]: {
+        timeScale: 1
+      },
+      [Enemy.Animation.DEATH]: {
+        timeScale: 1
+      },
+      [Enemy.Animation.DEATH_HEAD]: {
+        timeScale: 1
+      },
+    },
   },
 }

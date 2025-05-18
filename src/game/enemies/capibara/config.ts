@@ -23,11 +23,19 @@ export const CapibaraConfig: Enemy.Config = {
     atlas: atlasUrl,
     json: jsonUrl,
     texture: textureUrl,
-    animations: [
-      Enemy.Animation.WALK, 
-      Enemy.Animation.WOUNDED, 
-      Enemy.Animation.DEATH_HEAD, 
-      Enemy.Animation.DEATH
-    ],
+    animations: {
+      [Enemy.Animation.WALK]: {
+        timeScale: 1
+      },
+      [Enemy.Animation.WOUNDED]: {
+        timeScale: 1
+      },
+      [Enemy.Animation.DEATH_HEAD]: {
+        timeScale: 1
+      },
+      [Enemy.Animation.DEATH]: {
+        timeScale: 1
+      },
+    },
   },
 }

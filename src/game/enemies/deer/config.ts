@@ -22,11 +22,16 @@ export const DeerConfig: Enemy.Config = {
     atlas: atlasUrl,
     texture: textureUrl,
     json: jsonUrl,
-    timeScale: 1,
-    animations: [
-      Enemy.Animation.WALK, 
-      Enemy.Animation.DEATH,
-      Enemy.Animation.RUN,
-    ],
+    animations: {
+      [Enemy.Animation.WALK]: {
+        timeScale: 1
+      },
+      [Enemy.Animation.DEATH]: {
+        timeScale: 1
+      },
+      [Enemy.Animation.RUN]: {
+        timeScale: 1
+      },
+    },
   },
 }

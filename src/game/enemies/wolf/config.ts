@@ -22,12 +22,19 @@ export const WolfConfig: Enemy.Config = {
     atlas: atlasUrl,
     json: jsonUrl,
     texture: wolfAtlasUrl,
-    timeScale: 1.2,
-    animations: [
-      Enemy.Animation.WALK,
-      Enemy.Animation.WOUNDED,
-      Enemy.Animation.DEATH,
-      Enemy.Animation.DEATH_HEAD,
-    ],
+    animations: {
+      [Enemy.Animation.WALK]: {
+        timeScale: 1.2
+      },
+      [Enemy.Animation.WOUNDED]: {
+        timeScale: 1
+      },
+      [Enemy.Animation.DEATH]: {
+        timeScale: 1
+      },
+      [Enemy.Animation.DEATH_HEAD]: {
+        timeScale: 1
+      },
+    },
   },
 }

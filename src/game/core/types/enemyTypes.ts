@@ -72,8 +72,7 @@ export namespace Enemy {
       atlas: string;
       json: string;
       texture: string;
-      animations: Animation[];
-      timeScale?: number;
+      animations: Partial<Record<Animation, SpineAnimation>>;
     };
   }
 
@@ -86,11 +85,16 @@ export namespace Enemy {
     velocityY?: number;
   }
 
+  interface SpineAnimation {
+    timeScale: number;
+  }
+
   interface ScoreRule {
     target?: Body;
     weapon?: WeaponType;
     death: -1 | boolean;
     value: number;
+    maxPenCount?: number;
   }
 
   type Bounds = {

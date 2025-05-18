@@ -317,6 +317,7 @@ export class ProjectileController {
           playerId: hit.projectile.getPlayerId(),
           weaponName,
           distance: hit.distance,
+          penetratedCount: index
         });       
         
         if(damageResult?.isDead) {

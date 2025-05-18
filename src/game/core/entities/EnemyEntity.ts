@@ -178,7 +178,8 @@ export class EnemyEntity implements Damageable.Entity {
       return (
         (!rule.target || rule.target === result.target) &&
         (rule.death === -1 || rule.death === result.isDead) &&
-        (!rule.weapon || rule.weapon === damage.weaponName)
+        (!rule.weapon || rule.weapon === damage.weaponName) &&
+        (typeof rule.maxPenCount === 'number' ? damage.penetratedCount <= rule.maxPenCount : true)
       )
     })?.value || 0;
   }
@@ -203,7 +204,7 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   protected setAnimation(animation: Enemy.Animation, loop: boolean = true): void {
-    if (this.config.spine?.animations.includes(animation)) {
+    if (this.config.spine?.animations[animation]) {
       this.trackEntry = this.spineObject.animationState.setAnimation(0, animation, loop);
     } else {
       logger.warn('Animation not found', animation);
@@ -212,10 +213,12 @@ export class EnemyEntity implements Damageable.Entity {
 
   setAnimationSpeedScale(scale: number): void {
     if (!this.trackEntry) return;
+    const animationConfig = this.config.spine?.animations[this.trackEntry.animation?.name as Enemy.Animation];
+
     if (this.trackEntry.animation?.name === Enemy.Animation.DEATH || this.trackEntry.animation?.name === Enemy.Animation.DEATH_HEAD) {
-      this.timeScaleTarget = 1 * (this.config.spine?.timeScale || 1);
+      this.timeScaleTarget = 1 * (animationConfig?.timeScale || 1);
     } else {
-      this.timeScaleTarget = scale * (this.config.spine?.timeScale || 1);
+      this.timeScaleTarget = scale * (animationConfig?.timeScale || 1);
     }
   }
 
@@ -240,7 +243,7 @@ export class EnemyEntity implements Damageable.Entity {
 
   protected onDeathAnimation(): Promise<void> {
     return new Promise(resolve => {
-      if (this.config.spine?.animations.includes(Enemy.Animation.DEATH)) {
+      if (this.config.spine?.animations[Enemy.Animation.DEATH]) {
         this.setAnimation(Enemy.Animation.DEATH, false);
         this.spineObject.animationState.addListener({
           complete: () => resolve(),
@@ -255,7 +258,7 @@ export class EnemyEntity implements Damageable.Entity {
     const multiplier = target === 'head' ? 1.2 : 1;
     const forceOrigin = { x: forceVector[0][0], y: forceVector[0][1] };
     const bloodConfig = createSimpleBloodConfig(multiplier);
-
+    bloodConfig.texture = Blood.Texture.drops;
     emitEvent(this.scene, Blood.Events.BloodSplash.Local, {
       x: hitPoint[0],
       y: hitPoint[1],
@@ -271,7 +274,7 @@ export class EnemyEntity implements Damageable.Entity {
     const velocityScale = this.motionController.getVelocityScale();
 
     if (this.bounds) {
-      if (position.y < this.bounds.top + this.body.height / 2) {
+      if (position.y < this.bounds.top + this.body.height) {
         this.motionController.setMoveDown();
       } else if (position.y > this.bounds.bottom - this.body.height / 2) {
         this.motionController.setMoveUp();

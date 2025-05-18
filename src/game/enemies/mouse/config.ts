@@ -22,11 +22,16 @@ export const MouseConfig: Enemy.Config = {
     atlas: atlasUrl,
     json: jsonUrl,
     texture: mouseWalkTextureUrl,
-    timeScale: 2,
-    animations: [
-      Enemy.Animation.WALK,
-      Enemy.Animation.WOUNDED,
-      Enemy.Animation.DEATH,
-    ],
+    animations: {
+      [Enemy.Animation.WALK]: {
+        timeScale: 2
+      },
+      [Enemy.Animation.WOUNDED]: {
+        timeScale: 2
+      },
+      [Enemy.Animation.DEATH]: {
+        timeScale: 2
+      },
+    },
   },
 }
