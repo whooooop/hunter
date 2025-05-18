@@ -34,9 +34,18 @@ export class KeyBoardController {
     this.pauseKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
   }
 
+  public destroy(): void {
+    this.fireKey.destroy();
+    this.reloadKey.destroy();
+    this.jumpKey.destroy();
+    this.nextWeaponKey.destroy();
+    this.prevWeaponKey.destroy();
+    this.pauseKey.destroy();
+  }
+  
   public update(time: number, delta: number): void {
     if (!this.getPlayer()) {
-      return;
+      // return;
     }
     this.handleMovement(time, delta);
     this.handleJump(time, delta);
@@ -112,9 +121,5 @@ export class KeyBoardController {
     return this.players.get(this.playerId) || null;
   }
 
-  public destroy(): void {
-    this.fireKey.destroy();
-    this.reloadKey.destroy();
-    this.jumpKey.destroy();
-  }
+  
 }

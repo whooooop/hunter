@@ -4,6 +4,7 @@ import { shopButtonTexture, settingsButtonTexture, multiplayerButtonTexture, pla
 import { ShopText, SettingsText, MultiplayerText, PlayText } from "./translates";
 import { emitEvent } from "../../../../core/Events";
 import { DISPLAY } from "../../../../config";
+import { preloadImage } from "../../../../core/preload";
 
 export class HomeView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
@@ -79,10 +80,10 @@ export class HomeView implements MenuSceneTypes.View {
   }
 
   static preload(scene: Phaser.Scene): void {
-    scene.load.image(playButtonTexture.key, playButtonTexture.url);
-    scene.load.image(shopButtonTexture.key, shopButtonTexture.url);
-    scene.load.image(settingsButtonTexture.key, settingsButtonTexture.url);
-    scene.load.image(multiplayerButtonTexture.key, multiplayerButtonTexture.url);
+    preloadImage(scene, playButtonTexture);
+    preloadImage(scene, shopButtonTexture);
+    preloadImage(scene, settingsButtonTexture);
+    preloadImage(scene, multiplayerButtonTexture);
   }
 
   public update(time: number, delta: number): void {}

@@ -11,6 +11,7 @@ import { hexToNumber } from "../../../../utils/colors";
 import { BankService } from "../../../../core/services/BankService";
 import { UiStars } from "../../../../ui/Stars";
 import { DISPLAY, FONT_FAMILY } from "../../../../config";
+import { preloadImage } from "../../../../core/preload";
 
 export class SelectLevelView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
@@ -52,17 +53,17 @@ export class SelectLevelView implements MenuSceneTypes.View {
   ];
 
   static preload(scene: Phaser.Scene): void {
-    scene.load.image(plashka1Texture.key, plashka1Texture.url);
-    scene.load.image(plashka1MaskTexture.key, plashka1MaskTexture.url);
-    scene.load.image(plashkaPodstavkaTexture.key, plashkaPodstavkaTexture.url);
-    scene.load.image(circleTexture.key, circleTexture.url);
+    preloadImage(scene, plashka1Texture);
+    preloadImage(scene, plashka1MaskTexture);
+    preloadImage(scene, plashkaPodstavkaTexture);
+    preloadImage(scene, circleTexture);
 
     UiStar.preload(scene);
     UiStars.preload(scene);
     
     for (const levelConfig of Object.values(LevelCollection)) {
       if (levelConfig.preview) {
-        scene.load.image(levelConfig.preview.key, levelConfig.preview.url);
+        preloadImage(scene, levelConfig.preview);
       }
     }
   }

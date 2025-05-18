@@ -11,6 +11,7 @@ import { FontLoader } from './utils/font';
 import { DISPLAY, DEBUG } from './game/config';
 import { SettingsService } from './game/core/services/SettingsService';
 import { SpinePlugin } from "@esotericsoftware/spine-phaser"
+import { ReloadScene } from './game/scenes/ReloadScene';
 
 const originalLog = console.log;
 console.log = function(msg: any) {
@@ -46,7 +47,8 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [
     BootScene,
     GameplayScene,
-    MenuScene
+    MenuScene,
+    ReloadScene
   ]
 };
 

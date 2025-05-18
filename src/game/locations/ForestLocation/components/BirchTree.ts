@@ -1,6 +1,7 @@
 import { BaseTree } from "./BaseTree";
 
 import treeImage from '../assets/images/tree2.png';
+import { preloadSpriteSheet } from "../../../core/preload";
 
 interface Options {
     scale: number;
@@ -25,8 +26,8 @@ export class BirchTree extends BaseTree {
     }
 
     static preload(scene: Phaser.Scene): void {
-        scene.load.spritesheet(TEXTURE.key, treeImage, { frameWidth: TEXTURE.frameWidth, frameHeight: TEXTURE.frameHeight });
-        BaseTree.preload(scene);
+      preloadSpriteSheet(scene, { key: TEXTURE.key, url: treeImage, frameWidth: TEXTURE.frameWidth, frameHeight: TEXTURE.frameHeight });
+      BaseTree.preload(scene);
     }
 
     protected calculateFrameIndex(healthPercent: number): number {

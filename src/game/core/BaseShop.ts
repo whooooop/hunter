@@ -500,7 +500,5 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
         }
         if (this.interactionZone) this.interactionZone.destroy();
         if (this.interactionText) this.interactionText.destroy();
-
-        super.destroy();
     }
 }

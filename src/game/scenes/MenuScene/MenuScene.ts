@@ -51,6 +51,7 @@ export class MenuScene extends Phaser.Scene {
 
   playHandler(payload: MenuSceneTypes.Events.Play.Payload): void {
     this.scene.start(SceneKeys.GAMEPLAY, { levelId: payload.levelId });
+    this.clear();
   }
 
   goToViewHandler(payload: MenuSceneTypes.Events.GoToView.Payload): void {
@@ -81,7 +82,8 @@ export class MenuScene extends Phaser.Scene {
     }
   }
 
-  destroy(): void {
+  clear(): void {
+    console.log('clear MenuScene');
     offEvent(this, MenuSceneTypes.Events.Play.Name, this.playHandler, this);
     offEvent(this, MenuSceneTypes.Events.GoToView.Name, this.goToViewHandler, this);
   }

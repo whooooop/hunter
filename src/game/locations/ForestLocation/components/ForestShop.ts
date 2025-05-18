@@ -1,21 +1,26 @@
-import { generateStringWithLength } from "../../../../utils/stringGenerator";
+import { DEBUG } from "../../../config";
 import { BaseShop } from "../../../core/BaseShop";
+import { preloadImage } from "../../../core/preload";
 import shopImage from '../assets/images/shop.png';
 
-const TEXTURE_SHOP = 'shop_' + generateStringWithLength(6);
+const texture = {
+  key: 'forest_location_shop_texture',
+  url: shopImage,
+  scale: 0.5,
+}
 
 export class ForestShop extends BaseShop {
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, { 
-            texture: TEXTURE_SHOP,
-            scale: 0.5,
+            texture: texture.key,
+            scale: texture.scale,
             interactionRadius: 100,
             depthOffset: -50,
-            debug: false
+            debug: DEBUG.SHOP
         });
     }
 
     static preload(scene: Phaser.Scene): void {
-        scene.load.image(TEXTURE_SHOP, shopImage);
+      preloadImage(scene, texture);
     }
 }

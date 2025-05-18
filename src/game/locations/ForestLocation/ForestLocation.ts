@@ -5,23 +5,16 @@ import { createLogger } from '../../../utils/logger';
 import { GameplayScene } from '../../scenes/GameplayScene/GameplayScene';
 import { ForestShop } from './components/ForestShop';
 import { SpruceTree } from './components/SpruceTree';
-import { generateStringWithLength } from '../../../utils/stringGenerator';
 
-import skyImage from './assets/images/sky.png';
-import groundImage from './assets/images/ground.png';
-import rockImage from './assets/images/rock.png';
-import rockImage2 from './assets/images/rock2.png';
 import { Clouds } from '../../ui/Clouds';
 import { BirchTree } from './components/BirchTree';
 import { TREE_COLLECTIONS, TreeType } from './components';
 import { DEBUG } from '../../config';
 import { hexToNumber } from '../../utils/colors';
-const logger = createLogger('ForestLocation');
+import { preloadImage } from '../../core/preload';
+import { GroundTexture, RockTexture, RockTexture2, SkyTexture } from './textures';
 
-const GROUND_TEXTURE = 'ground_texture_' + generateStringWithLength(6);
-const ROCK_TEXTURE = 'rock_texture_' + generateStringWithLength(6);
-const ROCK_TEXTURE_2 = 'rock_texture_2_' + generateStringWithLength(6);
-const SKY_TEXTURE = 'sky_texture_' + generateStringWithLength(6);
+const logger = createLogger('ForestLocation');
 
 export class ForestLocation implements Location.BaseClass {
   private scene: Phaser.Scene;
@@ -43,10 +36,10 @@ export class ForestLocation implements Location.BaseClass {
   }
   
   public preload(): void {
-    this.scene.load.image(SKY_TEXTURE, skyImage);
-    this.scene.load.image(GROUND_TEXTURE, groundImage);
-    this.scene.load.image(ROCK_TEXTURE, rockImage);
-    this.scene.load.image(ROCK_TEXTURE_2, rockImage2);
+    preloadImage(this.scene, SkyTexture);
+    preloadImage(this.scene, GroundTexture);
+    preloadImage(this.scene, RockTexture);
+    preloadImage(this.scene, RockTexture2);
 
     Clouds.preload(this.scene);
     ForestShop.preload(this.scene);
@@ -90,13 +83,13 @@ export class ForestLocation implements Location.BaseClass {
 
   private createBackground(): void {
     // Создаем небо (на всю ширину экрана)
-    const sky = this.scene.add.image(this.width / 2, this.skyHeight, SKY_TEXTURE);
+    const sky = this.scene.add.image(this.width / 2, this.skyHeight, SkyTexture.key);
     
     sky.setOrigin(0.5);
     sky.setDepth(0);
 
     // Создаем землю под небом
-    const ground = this.scene.add.image(this.width / 2, this.skyHeight / 2, GROUND_TEXTURE);
+    const ground = this.scene.add.image(this.width / 2, this.skyHeight / 2, GroundTexture.key);
     ground.setDisplaySize(this.width, this.skyHeight);
     ground.setOrigin(0.5);
     ground.setDepth(5); // Выше неба, но ниже игровых объектов
@@ -109,12 +102,12 @@ export class ForestLocation implements Location.BaseClass {
 
 
     // Создаем текстуру для гор
-    const rockTexture = this.scene.add.image(this.width / 2, this.skyHeight / 2, ROCK_TEXTURE);
+    const rockTexture = this.scene.add.image(this.width / 2, this.skyHeight / 2, RockTexture.key);
     rockTexture.setDepth(3);
     rockTexture.setOrigin(0.5, 0.5);
     rockTexture.setDisplaySize(this.width, this.skyHeight);
 
-    const rockTexture2 = this.scene.add.image(this.width / 2, this.skyHeight / 2, ROCK_TEXTURE_2);
+    const rockTexture2 = this.scene.add.image(this.width / 2, this.skyHeight / 2, RockTexture2.key);
     rockTexture2.setDepth(2);
     rockTexture2.setOrigin(0.5, 0.5);
     rockTexture2.setDisplaySize(this.width, this.skyHeight);

@@ -18,4 +18,5 @@ export const DEBUG = {
   ENEMIES: false,
   MOTION: false,
   LOCATION: false,
+  SHOP: false,
 };

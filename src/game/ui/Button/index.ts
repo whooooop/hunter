@@ -1,6 +1,6 @@
 import ClickAudio from './click.mp3';
 
-const clickAudio = {
+export const clickAudio = {
   key: 'buttonClick',
   url: ClickAudio,
 }

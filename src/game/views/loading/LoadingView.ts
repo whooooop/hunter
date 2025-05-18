@@ -9,6 +9,7 @@ import { LoadingText } from './translates';
 import { DISPLAY, FONT_FAMILY } from '../../config';
 import { emitEvent } from '../../core/Events';
 import { Loading } from '../../core/types';
+import { loadAssets } from '../../core/preload';
 
 const logger = createLogger('LoadingScene');
 
@@ -100,29 +101,13 @@ export class LoadingView {
     this.progressContainer.add(this.rightProgress);
     this.progressContainer.add(loadingText);
     
-    const startTime = Date.now();
-    let targetProgress = 0;
-
-    this.scene.load.on('progress', (value: number) => {
-      targetProgress = value;
+    loadAssets(this.scene, this.minLoadingTime, (progress: number) => {
+      this.progressBar.setScale(this.maxProgressScale * progress, loadingProgress.scale);
+      if (progress === 1) {
+        this.rightProgress.setVisible(true);
+        this.finishLoading();
+      }
     });
-
-    const event = this.scene.time.addEvent({
-      delay: 16,
-      callback: () => {
-        const elapsedTime = Date.now() - startTime;
-        const progress = Math.min(targetProgress, elapsedTime / this.minLoadingTime);
-        
-        this.progressBar.setScale(this.maxProgressScale * progress, loadingProgress.scale);
-        if (progress === 1) {
-          this.rightProgress.setVisible(true);
-          event.destroy();
-          this.finishLoading();
-        }
-      },
-      loop: true
-    });
-
   }
 
   private finishLoading(): void {

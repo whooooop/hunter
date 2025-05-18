@@ -1,6 +1,6 @@
 import { generateStringWithLength } from "../../../../utils/stringGenerator";
 import { BaseTree } from "./BaseTree";
-
+import { preloadSpriteSheet } from "../../../core/preload";
 import treeImage from '../assets/images/tree.png';
 
 interface SpruceTreeOptions {
@@ -21,8 +21,8 @@ export class SpruceTree extends BaseTree {
     }
 
     static preload(scene: Phaser.Scene): void {
-        scene.load.spritesheet(TEXTURE, treeImage, { frameWidth: 76, frameHeight: 98 });
-        BaseTree.preload(scene);
+      preloadSpriteSheet(scene, { key: TEXTURE, url: treeImage, frameWidth: 76, frameHeight: 98 });
+      BaseTree.preload(scene);
     }
 
     protected calculateFrameIndex(healthPercent: number): number {

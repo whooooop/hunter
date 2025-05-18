@@ -1,6 +1,7 @@
 import starsTextureUrl from './stars.png';
 import { UiStar } from '../Star';
 import { FONT_FAMILY } from '../../config';
+import { preloadImage } from '../../core/preload';
 
 const texture = {
   key: 'stars',
@@ -12,7 +13,7 @@ export class UiStars extends Phaser.GameObjects.Container {
   private starCountText!: Phaser.GameObjects.Text;
 
   static preload(scene: Phaser.Scene): void {
-    scene.load.image(texture.key, texture.url);
+    preloadImage(scene, texture);
     UiStar.preload(scene);
   }
 

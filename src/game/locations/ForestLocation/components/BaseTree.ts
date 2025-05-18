@@ -5,6 +5,7 @@ import leafImage from '../assets/images/leaf.png';
 import woodChipImage from '../assets/images/wood_chip.png';
 import { DecorEntity } from '../../../core/entities/DecorEntity';
 import { Damageable } from '../../../core/types/damageableTypes';
+import { preloadImage } from '../../../core/preload';
 
 const logger = createLogger('Tree');
 
@@ -43,8 +44,8 @@ export class BaseTree extends DecorEntity {
   }
 
   static preload(scene: Phaser.Scene): void {
-    scene.load.image(TEXTURE_WOOOD_CHIP, woodChipImage);
-    scene.load.image(TEXTURE_WOOOD_LEAF, leafImage);
+    preloadImage(scene, { key: TEXTURE_WOOOD_CHIP, url: woodChipImage });
+    preloadImage(scene, { key: TEXTURE_WOOOD_LEAF, url: leafImage });
   }
 
   /**

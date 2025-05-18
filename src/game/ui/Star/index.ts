@@ -1,3 +1,4 @@
+import { preloadImage } from '../../core/preload';
 import starTextureUrl from './star.png';
 
 const texture = {
@@ -14,7 +15,7 @@ export class UiStar extends Phaser.GameObjects.Container {
   ];
 
   static preload(scene: Phaser.Scene): void {
-    scene.load.image(texture.key, texture.url);
+    preloadImage(scene, texture);
   }
 
   constructor(scene: Phaser.Scene, x: number, y: number, count: number) {

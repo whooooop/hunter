@@ -22,6 +22,9 @@ import { PlayerService } from '../../core/services/PlayerService';
 import { QuestService } from '../../core/services/QuestService';
 import { HintsService } from '../../core/services/HintsService';
 import { DISPLAY } from '../../config';
+import { GameOverView } from '../../views/gameover';
+import { MenuSceneTypes } from '../MenuScene/MenuSceneTypes';
+import { EnemyEntity } from '../../core/entities/EnemyEntity';
 
 const logger = createLogger('GameplayScene');
 
@@ -59,10 +62,15 @@ export class GameplayScene extends Phaser.Scene {
   private keyboardController!: KeyBoardController;
   private changeWeaponKey!: Phaser.Input.Keyboard.Key;
   private pauseView!: PauseView;
+  private gameOverView!: GameOverView;
   private mainPlayerId!: string;
   private players: Map<string, PlayerEntity> = new Map();
   private lastSentState: number = 0;
   private lastStateHash: string = ''
+
+  private attempt: number = 1;
+  private playTime: number = 0;
+  private kills: number = 0;
 
   private isPause: boolean = false;
 
@@ -75,7 +83,7 @@ export class GameplayScene extends Phaser.Scene {
   }
   
   init({ levelId } : GameplaySceneData) {
-    this.loadingView = new LoadingView(this, { minLoadingTime: 1000 });
+    this.loadingView = new LoadingView(this, { minLoadingTime: 3000 });
     this.levelConfig = getLevel(levelId);
     this.levelId = levelId;
     this.location = getLocation(this, this.levelConfig.location);
@@ -92,28 +100,65 @@ export class GameplayScene extends Phaser.Scene {
     BloodController.preload(this);
     WaveController.preloadEnemies(this, this.levelConfig.waves());
     PauseView.preload(this);
-    
+    GameOverView.preload(this);
+
     preloadWeapons(this);
     preloadProjectiles(this);
     preloadFx(this);
+  }
+
+  clear(): void {
+    this.isPause = false;
+    this.kills = 0;
+
+    this.location.destroy();
+    this.waveController.destroy();
+    this.scoreController.destroy();
+    this.weaponController.destroy();
+    this.shopController.destroy();
+    this.decalController.destroy();
+    this.projectileController.destroy();
+    this.waveInfo.destroy();
+    this.weaponStatus.destroy();
+    this.players.forEach(player => player.destroy());
+    this.players.clear();
+    this.enemies.clear();
+    this.damageableObjects.clear();
+    this.pauseView.close();
+    this.multiplayerController?.destroy();
+    this.keyboardController.destroy();
+
+    offEvent(this, Wave.Events.WaveStart.Local, this.handleWaveStart, this);
+    offEvent(this, Wave.Events.Spawn.Local, this.handleSpawnEnemy, this);
+    offEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
+    offEvent(this, ScoreEvents.UpdateScoreEvent, this.handleUpdateScore, this);
+    offEvent(this, Game.Events.Pause.Local, this.handlePause, this);
+    offEvent(this, Game.Events.Replay.Local, this.handleReplay, this);
+    offEvent(this, Game.Events.Exit.Local, this.handleExit, this);
+    offEvent(this, Loading.Events.LoadingComplete.Local, this.handleLoadingComplete, this);
+
+    offEvent(this, Player.Events.Join.Remote, this.handlePlayerJoin, this);
+    offEvent(this, Player.Events.Left.Remote, this.handlePlayerLeft, this);
+    offEvent(this, Game.Events.State.Remote, this.handleGameState, this);
   }
   
   async create(): Promise<void> {
     const playerId = this.playerService.getCurrentPlayerId();
     this.mainPlayerId = playerId;
 
-    onEvent(this, Wave.Events.WaveStart.Local, (payload: Wave.Events.WaveStart.Payload) => this.handleWaveStart(payload));
-    onEvent(this, Wave.Events.Spawn.Local, (payload: Wave.Events.Spawn.Payload) => this.handleSpawnEnemy(payload));
-    onEvent(this, Enemy.Events.Death.Local, (payload: Enemy.Events.Death.Payload) => this.handleEnemyDeath(payload));
-    onEvent(this, ScoreEvents.UpdateScoreEvent, (payload: UpdateScoreEventPayload) => this.handleUpdateScore(payload));
-    onEvent(this, Game.Events.Pause.Local, (payload: Game.Events.Pause.Payload) => this.handlePause(payload));
-    onEvent(this, Game.Events.Replay.Local, (payload: Game.Events.Replay.Payload) => this.handleReplay(payload));
-    onEvent(this, Game.Events.Exit.Local, (payload: Game.Events.Exit.Payload) => this.handleExit(payload));
-    onEvent(this, Loading.Events.LoadingComplete.Local, (payload: Loading.Events.LoadingComplete.Payload) => this.handleLoadingComplete(payload));
+    onEvent(this, Wave.Events.WaveStart.Local, this.handleWaveStart, this);
+    onEvent(this, Wave.Events.Spawn.Local, this.handleSpawnEnemy, this);
+    onEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
+    onEvent(this, ScoreEvents.UpdateScoreEvent, this.handleUpdateScore, this);
+    onEvent(this, Game.Events.Pause.Local, this.handlePause, this);
+    onEvent(this, Game.Events.Replay.Local, this.handleReplay, this);
+    onEvent(this, Game.Events.Exit.Local, this.handleExit, this);
+    onEvent(this, Loading.Events.LoadingComplete.Local, this.handleLoadingComplete, this);
 
     this.location.create();
 
     this.pauseView = new PauseView(this);
+    this.gameOverView = new GameOverView(this);
 
     this.scoreController = new ScoreController(this);
     this.bloodController = new BloodController(this);
@@ -129,8 +174,6 @@ export class GameplayScene extends Phaser.Scene {
 
     this.physics.world.setBounds(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
     this.shopController.setInteractablePlayerId(playerId);
-
-   
   }
 
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
@@ -170,9 +213,6 @@ export class GameplayScene extends Phaser.Scene {
   private handlePause(payload: Game.Events.Pause.Payload): void {
     this.isPause = !this.isPause;
     if (this.isPause) {
-      // if (this.scene.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
-      //   this.backgroundContainer.postFX.addBlur();
-      // }
       this.pauseView.open({
         levelId: this.levelId,
         questId: this.questId
@@ -183,11 +223,14 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private handleReplay(payload: Game.Events.Replay.Payload): void {
-
+    this.attempt++;
+    this.clear();
+    this.scene.start(SceneKeys.RELOAD, { sceneKey: SceneKeys.GAMEPLAY, payload: { levelId: this.levelId } });
   }
 
   private handleExit(payload: Game.Events.Exit.Payload): void {
-    this.scene.start(SceneKeys.MENU);
+    this.clear();
+    this.scene.start(SceneKeys.MENU, { view: MenuSceneTypes.ViewKeys.HOME });
   }
 
   private handleGameState(payload: Game.Events.State.Payload): void {
@@ -296,8 +339,11 @@ export class GameplayScene extends Phaser.Scene {
     }
   
     // Обновляем всех врагов
-    this.enemies.forEach(enemy => {
+    this.enemies.forEach((enemy) => {
       enemy.update(time, delta);
+      if (enemy instanceof EnemyEntity && enemy.getPosition().x < 0) {
+        this.gameOverView.open({ attempt: this.attempt, time: this.playTime, kills: this.kills });
+      }
     });
 
     // Обрабатываем попадания пуль
@@ -347,28 +393,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   destroy(): void {
-    this.location.destroy();
-    this.waveController.destroy();
-    this.scoreController.destroy();
-    this.weaponController.destroy();
-    this.shopController.destroy();
-    this.decalController.destroy();
-    this.projectileController.destroy();
-    this.waveInfo.destroy();
-    this.weaponStatus.destroy();
-    this.players.forEach(player => player.destroy());
-    this.players.clear();
-    this.enemies.clear();
-    this.damageableObjects.clear();
-    this.multiplayerController.destroy();
-    this.keyboardController.destroy();
-
-    offEvent(this, Wave.Events.WaveStart.Local, this.handleWaveStart, this);
-    offEvent(this, Wave.Events.Spawn.Local, this.handleSpawnEnemy, this);
-    offEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
-    offEvent(this, ScoreEvents.UpdateScoreEvent, this.handleUpdateScore, this);
-    offEvent(this, Player.Events.Join.Remote, this.handlePlayerJoin, this);
-    offEvent(this, Player.Events.Left.Remote, this.handlePlayerLeft, this);
-    offEvent(this, Game.Events.State.Remote, this.handleGameState, this);
+    this.clear();
   }
+
 } 

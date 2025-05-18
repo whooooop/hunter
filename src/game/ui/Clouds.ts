@@ -1,5 +1,6 @@
 import cloudUrl from '../assets/images/cloud.png';
 import { DISPLAY } from "../config";
+import { preloadImage } from '../core/preload';
 
 const cloudTexture = {
   key: 'cloud',
@@ -21,7 +22,7 @@ export class Clouds {
   private container: Phaser.GameObjects.Container;
 
   static preload(scene: Phaser.Scene): void {
-    scene.load.image(cloudTexture.key, cloudTexture.url);
+    preloadImage(scene, cloudTexture);
   }
 
   constructor(scene: Phaser.Scene, clouds: CloudOptions[], container: Phaser.GameObjects.Container) {
