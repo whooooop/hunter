@@ -19,5 +19,3 @@ export const MultiplayerText = I18n({
   en: 'MULTIPLAYER',
   ru: 'С ДРУГОМ'
 });
-
-

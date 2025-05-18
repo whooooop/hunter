@@ -31,7 +31,7 @@ export class GameOverView {
   private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
   private overlay: Phaser.GameObjects.Rectangle;
-  private depth: number = 1000;
+  private depth: number = 1100;
   private isOpen: boolean = false;
 
   static preload(scene: Phaser.Scene) {

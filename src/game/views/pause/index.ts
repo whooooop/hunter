@@ -7,15 +7,17 @@ import { BlockTexture, BlockTitleTexture } from "./textures";
 import { pauseText } from "./translates";
 import { LevelId } from "../../levels";
 import { Game, Quest, Bank } from "../../core/types";
-import { FONT_FAMILY } from "../../config";
+import { DISPLAY, FONT_FAMILY } from "../../config";
 
 export class PauseView {
   private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
   private bankService: BankService;
   private questService: QuestService;
+  private overlay: Phaser.GameObjects.Rectangle;
 
   private isOpen: boolean = false;
+  private depth: number = 1000;
 
   static preload(scene: Phaser.Scene) {
     UiPlayButton.preload(scene);
@@ -30,7 +32,8 @@ export class PauseView {
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    this.container = this.scene.add.container(0, 0);
+    this.container = this.scene.add.container(0, 0).setDepth(this.depth + 1);
+    this.overlay = this.scene.add.rectangle(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 0x000000, 0.5).setAlpha(0).setOrigin(0).setDepth(this.depth);
     this.bankService = BankService.getInstance();
     this.questService = QuestService.getInstance();
   }
@@ -52,12 +55,19 @@ export class PauseView {
       });
     }
 
+    this.overlay.setAlpha(0);
     this.container.setScale(0).setAlpha(0);
     this.scene.tweens.add({
+      ease: Phaser.Math.Easing.Bounce.Out,
       targets: this.container,
       scale: 1,
       alpha: 1,
-      duration: 100,
+      duration: 500,
+    });
+    this.scene.tweens.add({
+      targets: this.overlay,
+      alpha: 1,
+      duration: 300,
     });
   }
 
@@ -72,13 +82,18 @@ export class PauseView {
         this.isOpen = false;
       }
     });
+    this.scene.tweens.add({
+      targets: this.overlay,
+      alpha: 0,
+      duration: 200,
+    });
   }
 
   render() {
     this.container = this.scene.add.container(this.scene.cameras.main.width / 2, this.scene.cameras.main.height / 2)
       .setScale(0.5)
       .setAlpha(0)
-      .setDepth(9000);
+      .setDepth(this.depth);
     
     const block = this.scene.add.image(0, 0, BlockTexture.key).setScale(BlockTexture.scale);
     const blockTitle = this.scene.add.image(-200, -240, BlockTitleTexture.key).setScale(BlockTitleTexture.scale);

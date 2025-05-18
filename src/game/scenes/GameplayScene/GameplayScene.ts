@@ -110,6 +110,7 @@ export class GameplayScene extends Phaser.Scene {
 
   clear(): void {
     this.isPause = false;
+    this.isGameOver = false;
     this.kills = 0;
 
     this.location.destroy();
@@ -128,6 +129,8 @@ export class GameplayScene extends Phaser.Scene {
     this.pauseView.close();
     this.multiplayerController?.destroy();
     this.keyboardController.destroy();
+
+    this.resume();
 
     offEvent(this, Wave.Events.WaveStart.Local, this.handleWaveStart, this);
     offEvent(this, Wave.Events.Spawn.Local, this.handleSpawnEnemy, this);
@@ -216,14 +219,27 @@ export class GameplayScene extends Phaser.Scene {
 
   private handlePause(payload: Game.Events.Pause.Payload): void {
     this.isPause = !this.isPause;
+
     if (this.isPause) {
-      this.pauseView.open({
-        levelId: this.levelId,
-        questId: this.questId
-      });
+      this.pause();
     } else {
-      this.pauseView.close();
+      this.resume();
     }
+  }
+
+  private pause() {
+    this.pauseView.open({
+      levelId: this.levelId,
+      questId: this.questId
+    });
+    this.time.timeScale = 0;
+    this.physics.world.pause();
+  }
+
+  private resume() {
+    this.pauseView.close();
+    this.time.timeScale = 1;
+    this.physics.world.resume();
   }
 
   private handleReplay(payload: Game.Events.Replay.Payload): void {

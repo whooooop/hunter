@@ -1,6 +1,9 @@
 import { emitEvent } from "../../../../core/Events";
 import { MenuSceneTypes } from "../../MenuSceneTypes";
 import { UiBackButton } from "../../../../ui/BackButton";
+import { FONT_FAMILY } from "../../../../config";
+import { DISPLAY } from "../../../../config";
+import { SoonText } from "./translates";
 
 export class MultipleerView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
@@ -12,6 +15,9 @@ export class MultipleerView implements MenuSceneTypes.View {
     this.container = this.scene.add.container(0, 0);
     this.backButton = new UiBackButton(this.scene);
     this.container.add(this.backButton);
+
+    const text = this.scene.add.text(DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2, SoonText.translate, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#ffffff' }).setOrigin(0.5);
+    this.container.add(text);
 
     this.backButton.on('pointerdown', () => {
       emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.HOME });

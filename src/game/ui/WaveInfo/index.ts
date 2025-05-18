@@ -82,7 +82,11 @@ export class WaveInfo {
   }
   
   public update(time: number, delta: number): void {
-      const progress = this.getProgress();
+      if (this.scene.time.timeScale !== 1) {
+        this.startTime += (1 - this.scene.time.timeScale) * delta;
+      }
+
+      const progress = this.getProgress(time, delta);
       this.progressBar.clear();
       this.progressBar.fillStyle(this.PROGRESS_COLOR);
       
@@ -143,7 +147,7 @@ export class WaveInfo {
       scaleY: originalScale.y * 1.3,
       rotation: originalRotation - 0.15, // Небольшой наклон
       duration: 350,
-      ease: 'Power2',
+      ease: Phaser.Math.Easing.Bounce.Out,
       onComplete: () => {
         // 2. Анимация возврата к оригинальному состоянию с небольшим отскоком
         this.scene.tweens.add({
@@ -152,7 +156,7 @@ export class WaveInfo {
           scaleY: originalScale.y,
           rotation: originalRotation,
           duration: 400,
-          ease: 'Elastic.Out',
+          ease: Phaser.Math.Easing.Bounce.Out,
           easeParams: [1.5, 0.5]
         });
       }
@@ -169,7 +173,7 @@ export class WaveInfo {
     });
   }
   
-  public getProgress(): number {
+  public getProgress(time: number, delta: number): number {
     let progress = 0;
 
     if (!this.startTime) {
@@ -179,7 +183,7 @@ export class WaveInfo {
     if (this.showBoss) {
       progress = this.bossProgress;
     } else {
-      progress = (this.scene.time.now - this.startTime) / this.duration;
+      progress = (time - this.startTime) / this.duration;
     }
     return Math.max(0, Math.min(100, progress * 100));
   }

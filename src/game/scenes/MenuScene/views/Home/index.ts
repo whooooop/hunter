@@ -3,8 +3,9 @@ import { MenuButton } from "./types";
 import { shopButtonTexture, settingsButtonTexture, multiplayerButtonTexture, playButtonTexture } from "./textures";
 import { ShopText, SettingsText, MultiplayerText, PlayText } from "./translates";
 import { emitEvent } from "../../../../core/Events";
-import { DISPLAY } from "../../../../config";
+import { DISPLAY, FONT_FAMILY } from "../../../../config";
 import { preloadImage } from "../../../../core/preload";
+import { clickAudio } from "../../../../ui/Button";
 
 export class HomeView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
@@ -32,7 +33,7 @@ export class HomeView implements MenuSceneTypes.View {
         y: DISPLAY.HEIGHT * -1,
       },
       delay: 200,
-      textOffset: [-20, 28],
+      textOffset: [10, 40],
       viewKey: MenuSceneTypes.ViewKeys.SHOP
     },
     {
@@ -48,7 +49,7 @@ export class HomeView implements MenuSceneTypes.View {
         y: DISPLAY.HEIGHT * -1,
       },
       delay: 400,
-      textOffset: [-90, 8],
+      textOffset: [-10, 20],
       viewKey: MenuSceneTypes.ViewKeys.SETTINGS
     },
     {
@@ -64,7 +65,7 @@ export class HomeView implements MenuSceneTypes.View {
         y: DISPLAY.HEIGHT * -1,
       },
       delay: 600,
-      textOffset: [-100, 23],
+      textOffset: [0, 40],
       viewKey: MenuSceneTypes.ViewKeys.MULTIPLAYER
     }
   ]);
@@ -95,12 +96,15 @@ export class HomeView implements MenuSceneTypes.View {
   private createPlayButton(): void {
     const playButtonContainer = this.scene.add.container(DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 - 80).setDepth(50);
     const button = this.scene.add.image(0, 0, playButtonTexture.key).setScale(playButtonTexture.scale);
-    const text = this.scene.add.text(-30, 65, PlayText.translate, { fontSize: '36px', color: '#ffffff' });
+    const text = this.scene.add.text(4, 84, PlayText.translate, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#ffffff' }).setOrigin(0.5);
     playButtonContainer.setAlpha(0).setScale(0.8);
     playButtonContainer.add(button);
     playButtonContainer.add(text);
     button.setInteractive();
-    button.on('pointerdown', () => this.goToScene(MenuSceneTypes.ViewKeys.SELECT_LEVEL));
+    button.on('pointerdown', () => {
+      this.goToScene(MenuSceneTypes.ViewKeys.SELECT_LEVEL);
+      this.scene.sound.play(clickAudio.key);
+    });
     button.on('pointerover', () => {
       this.scene.tweens.add({
         targets: playButtonContainer,
@@ -125,9 +129,12 @@ export class HomeView implements MenuSceneTypes.View {
   private createMenuButton(data: MenuButton): void {
     const container = this.scene.add.container(data.position.x + data.leaveOffset.x, data.position.y + data.leaveOffset.y).setDepth(50);
     const button = this.scene.add.image(0, 0, data.texture.key).setScale(data.texture.scale);
-    const textObject = this.scene.add.text(data.textOffset[0], data.textOffset[1], data.text, { fontSize: `30px`, color: '#ffffff' });
+    const textObject = this.scene.add.text(data.textOffset[0], data.textOffset[1], data.text, { fontSize: 22, fontFamily: FONT_FAMILY.REGULAR, color: '#ffffff' }).setOrigin(0.5);
     button.setInteractive();
-    button.on('pointerdown', () => this.goToScene(data.viewKey));
+    button.on('pointerdown', () => {
+      this.goToScene(data.viewKey);
+      this.scene.sound.play(clickAudio.key);
+    });
     container.add(button);
     container.add(textObject);
     button.on('pointerover', () => {

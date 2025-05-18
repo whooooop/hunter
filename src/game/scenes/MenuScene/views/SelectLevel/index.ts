@@ -12,6 +12,7 @@ import { BankService } from "../../../../core/services/BankService";
 import { UiStars } from "../../../../ui/Stars";
 import { DISPLAY, FONT_FAMILY } from "../../../../config";
 import { preloadImage } from "../../../../core/preload";
+import { clickAudio } from "../../../../ui/Button";
 
 export class SelectLevelView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
@@ -162,6 +163,7 @@ export class SelectLevelView implements MenuSceneTypes.View {
       plashka.on('pointerdown', () => {
         if (levelConfig.disabled) return;
         emitEvent(this.scene, MenuSceneTypes.Events.Play.Name, { levelId });
+        this.scene.sound.play(clickAudio.key);
       });
 
       this.questService.getCurrentQuest(levelId).then((quest: Quest.Config | null) => {

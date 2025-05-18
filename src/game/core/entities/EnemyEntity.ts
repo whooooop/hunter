@@ -286,8 +286,10 @@ export class EnemyEntity implements Damageable.Entity {
     this.container.setPosition(position.x + this.config.offset.x, position.y + this.config.offset.y);
     this.container.setDepth(position.depth);
 
-    if (this.trackEntry) {
+    if (this.trackEntry && this.scene.time.timeScale) {
       this.spineObject.animationState.timeScale = Phaser.Math.Linear(this.spineObject.animationState.timeScale, this.timeScaleTarget, 0.25);
+    } else {
+      this.spineObject.animationState.timeScale = 0;
     }
 
     if (DEBUG.ENEMIES) {

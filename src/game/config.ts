@@ -21,4 +21,4 @@ export const DEBUG = {
   SHOP: false,
 };
 
-export const VERSION = '0.0.1 Alpha';
+export const VERSION = '0.0.2 Alpha';
