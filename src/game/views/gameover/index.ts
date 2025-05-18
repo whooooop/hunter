@@ -118,8 +118,8 @@ export class GameOverView {
     exitContainer.add(exitText);
     this.container.add(exitContainer);
 
-    const minutes = Math.floor(time / 60).toString().padStart(2, '0') ;
-    const seconds = (time % 60).toString().padStart(2, '0');
+    const minutes = Math.floor(time / 1000 / 60).toString().padStart(2, '0') ;
+    const seconds = Math.floor(time / 1000 % 60).toString().padStart(2, '0');
     const timeTextElement = this.scene.add.text(-100, -56, timeText.translate.toUpperCase() + ' ' + minutes + ':' + seconds, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#fff' }).setOrigin(0, 0.5);
     const killsTextElement = this.scene.add.text(-100, 0, killsText.translate.toUpperCase() + ' ' + kills, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#fff' }).setOrigin(0, 0.5);
     this.container.add(timeTextElement);

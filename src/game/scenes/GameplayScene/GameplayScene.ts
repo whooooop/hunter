@@ -179,6 +179,7 @@ export class GameplayScene extends Phaser.Scene {
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
      // this.multiplayerInit(playerId);
      this.singlePlayerInit(this.mainPlayerId);
+     this.playTime = 0;
   }
 
   private async singlePlayerInit(playerId: string): Promise<void> {
@@ -262,6 +263,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private handleEnemyDeath({ id }: Enemy.Events.Death.Payload): void {
     this.enemies.delete(id);
+    this.kills++;
     this.damageableObjects.delete(id);
     emitEvent(this, Game.Events.Enemies.Local, {
       count: this.enemies.size
@@ -352,6 +354,10 @@ export class GameplayScene extends Phaser.Scene {
 
     this.updatePlayerState(time, delta);
     this.updateBossState(time, delta);
+
+    if (!this.isPause) {
+      this.playTime += delta;
+    }
   }
 
   private updateBossState(time: number, delta: number): void {
