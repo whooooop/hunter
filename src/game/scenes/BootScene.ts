@@ -17,7 +17,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
-    this.scene.start(SceneKeys.GAMEPLAY, { levelId: LevelId.FOREST });
-    // this.scene.start(SceneKeys.MENU, { view: MenuSceneTypes.ViewKeys.HOME });
+    // this.scene.start(SceneKeys.GAMEPLAY, { levelId: LevelId.FOREST });
+    this.scene.start(SceneKeys.MENU, { view: MenuSceneTypes.ViewKeys.HOME });
   }
 }
