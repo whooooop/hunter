@@ -274,7 +274,7 @@ export class EnemyEntity implements Damageable.Entity {
     const velocityScale = this.motionController.getVelocityScale();
 
     if (this.bounds) {
-      if (position.y < this.bounds.top + this.body.height) {
+      if (position.y < this.bounds.top + this.body.height / 2) {
         this.motionController.setMoveDown();
       } else if (position.y > this.bounds.bottom - this.body.height / 2) {
         this.motionController.setMoveUp();
