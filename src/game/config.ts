@@ -20,3 +20,5 @@ export const DEBUG = {
   LOCATION: false,
   SHOP: false,
 };
+
+export const VERSION = '0.0.1 Alpha';

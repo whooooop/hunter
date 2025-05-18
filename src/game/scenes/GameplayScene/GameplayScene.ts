@@ -21,7 +21,7 @@ import { Wave } from '../../core/types/WaveTypes';
 import { PlayerService } from '../../core/services/PlayerService';
 import { QuestService } from '../../core/services/QuestService';
 import { HintsService } from '../../core/services/HintsService';
-import { DISPLAY } from '../../config';
+import { DISPLAY, VERSION } from '../../config';
 import { GameOverView } from '../../views/gameover';
 import { MenuSceneTypes } from '../MenuScene/MenuSceneTypes';
 import { EnemyEntity } from '../../core/entities/EnemyEntity';
@@ -172,6 +172,8 @@ export class GameplayScene extends Phaser.Scene {
     
     this.waveInfo = new WaveInfo(this);
     this.weaponStatus = new WeaponStatus(this);
+
+    const version = this.add.text(20, DISPLAY.HEIGHT - 30, VERSION, { fontSize: 16, color: '#ffffff' }).setDepth(10000);
 
     this.physics.world.setBounds(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
     this.shopController.setInteractablePlayerId(playerId);
