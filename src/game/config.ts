@@ -21,4 +21,7 @@ export const DEBUG = {
   SHOP: false,
 };
 
-export const VERSION = '0.0.2 Alpha';
+export const GAMEOVER = false;
+export const START_SCENE_GAMEPLAY = true;
+
+export const VERSION = '0.0.3 Alpha';

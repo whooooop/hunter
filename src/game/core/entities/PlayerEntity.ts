@@ -211,9 +211,9 @@ export class PlayerEntity {
     }
 
     if (this.shadow) {
-      this.shadow
-        .getContainer()
-        .setPosition(0, this.body.height / 2 + this.containerOffsetY - position.jumpHeight);
+      // this.shadow
+      //   .getContainer()
+      //   .setPosition(0, this.body.height / 2 + this.containerOffsetY - position.jumpHeight);
     }
 
     if (this.currentWeapon) {

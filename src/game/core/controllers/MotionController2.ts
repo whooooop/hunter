@@ -51,6 +51,9 @@ export class MotionController2 {
   private jumpHeight: number = 0;
   private jumpDuration: number = 0;
   private jumpStartY: number = 0;
+  private preJumpVelocityY: number = 0;
+  private jumpVelocityOffset: number = 0;
+  private jumpTargetY: number = 0;
 
   private targetMaxVelocityX: number = 0;
   private targetMaxVelocityY: number = 0;
@@ -146,11 +149,7 @@ export class MotionController2 {
 
     // Обновляем движение от внешних воздействий (отдача, ветер и т.д.) - все еще меняет позицию напрямую
     this.updateExternalForces(delta);
-    
-    // Если прыгаем, устанавливаем Y на основе jumpStartY и jumpOffsetY, переписывая физику
-    if (this.jumping) {
-      this.body.y = this.jumpStartY + this.jumpOffsetY;
-    }
+ 
     if (this.locationBounds) {
       const halfWidth = this.body.width / 2;
       const halfHeight = this.body.height / 2;
@@ -207,6 +206,16 @@ export class MotionController2 {
     this.jumpDuration = duration;
     this.jumpOffsetY = 0;
     this.jumpStartY = this.body.y;
+    this.preJumpVelocityY = this.body.velocity.y;
+    
+    // Рассчитываем смещение на основе сохраненной скорости
+    const velocityFactor = Math.abs(this.preJumpVelocityY) / this.options.maxVelocityY;
+    const maxOffset = this.body.height * 0.5;
+    this.jumpVelocityOffset = maxOffset * velocityFactor * Math.sign(this.preJumpVelocityY);
+    
+    // Устанавливаем целевую позицию приземления
+    this.jumpTargetY = this.jumpStartY + this.jumpVelocityOffset;
+    
     this.jumping = true;
   }
 
@@ -217,12 +226,18 @@ export class MotionController2 {
     if (!this.jumping) return;
     
     const jumpProgress = Math.min((time - this.startJumpTime) / this.jumpDuration, 1);
+    
+    // Рассчитываем высоту прыжка
     this.jumpOffsetY = -1 * this.jumpHeight * Math.sin(Math.PI * jumpProgress);
+    
+    // Рассчитываем позицию с учетом и прыжка, и смещения к целевой точке
+    const baseY = this.jumpStartY + (this.jumpTargetY - this.jumpStartY) * jumpProgress;
+    this.body.y = baseY + this.jumpOffsetY;
 
     if (jumpProgress >= 1) {
       this.jumping = false;
       this.jumpOffsetY = 0;
-      this.body.y = this.jumpStartY;
+      this.body.y = this.jumpTargetY;
       return;
     }
   }

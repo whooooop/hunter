@@ -21,7 +21,7 @@ import { Wave } from '../../core/types/WaveTypes';
 import { PlayerService } from '../../core/services/PlayerService';
 import { QuestService } from '../../core/services/QuestService';
 import { HintsService } from '../../core/services/HintsService';
-import { DISPLAY, VERSION } from '../../config';
+import { DISPLAY, GAMEOVER, VERSION } from '../../config';
 import { GameOverView } from '../../views/gameover';
 import { MenuSceneTypes } from '../MenuScene/MenuSceneTypes';
 import { EnemyEntity } from '../../core/entities/EnemyEntity';
@@ -366,7 +366,7 @@ export class GameplayScene extends Phaser.Scene {
     // Обновляем всех врагов
     this.enemies.forEach((enemy) => {
       enemy.update(time, delta);
-      if (enemy instanceof EnemyEntity && enemy.getPosition().x < 0) {
+      if (GAMEOVER && enemy instanceof EnemyEntity && enemy.getPosition().x < 0) {
         this.isGameOver = true;
         this.gameOverView.open({ attempt: this.attempt, time: this.playTime, kills: this.kills });
       }

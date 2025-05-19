@@ -1,10 +1,9 @@
 
 # Todo
 
-- pause
+- pause (fire/reload)
 - 2 enemies together
 - machine shoot sound
-- Jump inertion
 
 - Stat
 - settings view

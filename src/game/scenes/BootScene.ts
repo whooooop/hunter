@@ -4,6 +4,7 @@ import { BackgroundView } from "../views/background/BackgroundView";
 import { UiBackButton } from "../ui/BackButton";
 import { LevelId } from "../levels";
 import { MenuSceneTypes } from "./MenuScene/MenuSceneTypes";
+import { START_SCENE_GAMEPLAY } from "../config";
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -17,7 +18,10 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
-    // this.scene.start(SceneKeys.GAMEPLAY, { levelId: LevelId.FOREST });
-    this.scene.start(SceneKeys.MENU, { view: MenuSceneTypes.ViewKeys.HOME });
+    if (START_SCENE_GAMEPLAY) {
+      this.scene.start(SceneKeys.GAMEPLAY, { levelId: LevelId.FOREST });
+    } else {
+      this.scene.start(SceneKeys.MENU, { view: MenuSceneTypes.ViewKeys.HOME });
+    }
   }
 }
