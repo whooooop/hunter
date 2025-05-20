@@ -44,6 +44,7 @@ export namespace Player {
       export const Remote = 'PlayerStateRemoteEvent';
       export interface Payload {
         playerId: string;
+        movement: { x: number, y: number };
         position: { x: number, y: number };
       }
     }

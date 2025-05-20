@@ -9,7 +9,7 @@ export const ProjectileGrenadeConfig: Projectile.Config = {
   activateDelay: 1200,
   bounce: 1,
   gravity: 600,
-  radius: 100,
+  radius: 160,
   activateAudio: {
     key: 'explosion_activate_audio_0',
     url: ProjectileActivateAudioUrl,

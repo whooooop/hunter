@@ -112,7 +112,6 @@ export class GameplayScene extends Phaser.Scene {
     this.isPause = false;
     this.isGameOver = false;
     this.kills = 0;
-
     this.location.destroy();
     this.waveController.destroy();
     this.scoreController.destroy();
@@ -183,8 +182,8 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
-     // this.multiplayerInit(playerId);
-     this.singlePlayerInit(this.mainPlayerId);
+     this.multiplayerInit(this.mainPlayerId);
+    //  this.singlePlayerInit(this.mainPlayerId);
      this.playTime = 0;
   }
 
@@ -200,21 +199,8 @@ export class GameplayScene extends Phaser.Scene {
     this.waveController.start();
     this.projectileController.setSimulate(false);
 
-    emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
+    emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MINE, price: 0 });
     // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
-  }
-
-  private multiplayerInit(playerId: string): void {
-    onEvent(this, Game.Events.State.Remote, this.handleGameState, this);
-    onEvent(this, Player.Events.Join.Remote, this.handlePlayerJoin, this);
-    onEvent(this, Player.Events.Left.Remote, this.handlePlayerLeft, this);
-    
-    this.projectileController.setSimulate(false);
-
-    this.multiplayerController = new MultiplayerController(this);
-    this.multiplayerController.connect('GAME1', playerId).then(() => {
-      this.waveController.start();
-    });
   }
 
   private handlePause(payload: Game.Events.Pause.Payload): void {
@@ -253,6 +239,22 @@ export class GameplayScene extends Phaser.Scene {
     this.scene.start(SceneKeys.MENU, { view: MenuSceneTypes.ViewKeys.HOME });
   }
 
+  /** 
+   *      Multiplayer 
+   */
+  private multiplayerInit(playerId: string): void {
+    onEvent(this, Game.Events.State.Remote, this.handleGameState, this);
+    onEvent(this, Player.Events.Join.Remote, this.handlePlayerJoin, this);
+    onEvent(this, Player.Events.Left.Remote, this.handlePlayerLeft, this);
+    onEvent(this, Game.Events.Multiplayer.Ready.Local, this.handleMultiplayerReady, this);
+    onEvent(this, Wave.Events.Spawn.Remote, this.handleSpawnEnemy, this);
+
+    this.projectileController.setSimulate(true);
+
+    this.multiplayerController = new MultiplayerController(this);
+    this.multiplayerController.connect('GAME1', playerId).then(() => {});
+  }
+  
   private handleGameState(payload: Game.Events.State.Payload): void {
     payload.connected.forEach(playerId => {
       const player = payload.playersState.find(p => p.id === playerId);
@@ -265,6 +267,11 @@ export class GameplayScene extends Phaser.Scene {
         this.weaponController.setWeaponById({ playerId, weaponId: player.weaponId });
       }
     });
+  }
+
+  private handleMultiplayerReady(): void {
+    this.projectileController.setSimulate(false);
+    this.waveController.start();
   }
 
   private handlePlayerJoin({ playerId, playerState }: Player.Events.Join.Payload): void {
@@ -280,6 +287,11 @@ export class GameplayScene extends Phaser.Scene {
     }
   }
 
+
+
+
+
+
   private handleEnemyDeath({ id }: Enemy.Events.Death.Payload): void {
     this.enemies.delete(id);
     this.kills++;
@@ -293,7 +305,6 @@ export class GameplayScene extends Phaser.Scene {
     if (this.isGameOver) {
       return;
     }
-
     const enemy = createEnemy(id, enemyType, this, config);
     this.enemies.set(id, enemy);
     enemy.setLocationBounds(this.location.getBounds());
@@ -413,7 +424,7 @@ export class GameplayScene extends Phaser.Scene {
       return;
     }
     const state = player.getPlayerState();
-    const stateHash = (state.position.x + state.position.y).toString();
+    const stateHash = (state.position.x + state.position.y + state.movement.x + state.movement.y).toString();
     if (time - this.lastSentState < 40 || stateHash === this.lastStateHash) {
       return;
     }

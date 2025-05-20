@@ -37,6 +37,13 @@ export namespace Game {
       export type Payload = {};
     }
 
+    export namespace Multiplayer {
+      export namespace Ready {
+        export const Local = 'GameMultiplayerReadyLocalEvent';
+        export type Payload = {};
+      }
+    }
+
     export namespace Stat {
       export const Local = 'GameStatLocalEvent';
 

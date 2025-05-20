@@ -8,6 +8,7 @@ import { Projectile } from '../types/projectrileTypes';
 import { Damageable } from '../types/damageableTypes';
 import { Game } from '../types/gameTypes';
 import { WeaponType } from '../../weapons/WeaponTypes';
+import { DEBUG } from '../../config';
 
 interface Hit {
   projectile: ProjectileEntity;
@@ -24,7 +25,6 @@ interface HitGroup {
 }
 
 export class ProjectileController {
-  private debug: boolean = false;
   private scene: Phaser.Scene;
   private damageableObjects: Map<string, Damageable.Entity>;
   private projectiles: Set<ProjectileEntity> = new Set();
@@ -185,7 +185,7 @@ export class ProjectileController {
     });
     
     // Отображаем отладочный круг взрыва, если включен режим отладки
-    if (this.debug) {
+    if (DEBUG.PROJECTILES) {
         this.drawExplosionRadius(x, y, radius);
     }
     
@@ -222,7 +222,7 @@ export class ProjectileController {
    * Обрабатывает попадания пуль в нужное время
    */
   public update(currentTime: number, delta: number): void {
-    if (this.debug) {
+    if (DEBUG.PROJECTILES) {
       this.debugGraphics?.clear();
     }
 
@@ -278,7 +278,7 @@ export class ProjectileController {
 
         const [x, y] = projectile.getPosition();
 
-        if (this.debug) {
+        if (DEBUG.PROJECTILES) {
           this.drawExplosionRadius(x, y, activateRadius);
           this.drawExplosionRadius(enemyCenter.x, enemyCenter.y, 1);
         }

@@ -14,7 +14,7 @@ const WeaponMineTexture_0: WeaponTexture = {
 export const MineConfig: Weapon.Config = {
   name: WeaponType.MINE,
   texture: WeaponMineTexture_0,
-  reloadTime: 2000,    // Скорость перезарядки в мс
+  reloadTime: 1600,    // Скорость перезарядки в мс
   magazineSize: 1,     // Размер магазина
   damage: 5000,         // Урон от одного выстрела
   speed: [200, 0],   // Скорость пули

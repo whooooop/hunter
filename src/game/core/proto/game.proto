@@ -22,15 +22,13 @@ message Point {
   float y = 2;
 }
 
-message Event {
-  ProtoEventType eventType = 1;
+message Movement {
+  float x = 1;
+  float y = 2;
 }
 
-message PlayerState {
-  string id = 1;
-  Point position = 2;
-  string weaponId = 3;
-  int32 score = 4;
+message Event {
+  ProtoEventType eventType = 1;
 }
 
 message PlayerWeapon {
@@ -73,17 +71,35 @@ message EventWaveStart {
   int32 duration = 3;
 }
 
+message PlayerState {
+  string id = 1;
+  Point position = 2;
+  string weaponId = 4;
+  int32 score = 5;
+}
+
 message EventPlayerPosition {
   ProtoEventType eventType = 1;
   string playerId = 2;
   Point position = 3;
+  Movement movement = 4;
 }
 
 message EventSpawnEnemy {
   ProtoEventType eventType = 1;
   string id = 2;
   string enemyType = 3;
-  Point position = 4;
+  EnemySpawnConfig config = 4;
+  bool boss = 5;
+}
+
+message EnemySpawnConfig {
+  float x = 1;
+  float y = 2;
+  float velocityX = 3;
+  float velocityY = 4;
+  int32 level = 5;
+  int32 health = 6;
 }
 
 message EventEnemyDeath {

@@ -19,6 +19,6 @@ export const ProjectileProjectileConfig: Projectile.Config = {
   activateDelay: 600,
   bounce: 0,
   gravity: 500,
-  radius: 100,
-  activateRadius: 26,
+  radius: 160,
+  activateRadius: 40,
 }

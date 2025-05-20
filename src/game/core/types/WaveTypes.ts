@@ -12,6 +12,7 @@ export namespace Wave {
 
     export namespace Spawn {
       export const Local = 'waveSpawnLocalEvent';
+      export const Remote = 'waveSpawnRemoteEvent';
       export type Payload = {
         id: string;
         enemyType: Enemy.Type;

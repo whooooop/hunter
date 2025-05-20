@@ -14,14 +14,15 @@ export const FONT_FAMILY = {
 
 
 export const DEBUG = {
-  PHYSICS: false,
+  PHYSICS: true,
   ENEMIES: false,
-  MOTION: false,
-  LOCATION: false,
-  SHOP: false,
+  MOTION: true,
+  LOCATION: true,
+  SHOP: true,
+  PROJECTILES: true,
 };
 
 export const GAMEOVER = false;
 export const START_SCENE_GAMEPLAY = true;
 
-export const VERSION = '0.0.3 Alpha';
+export const VERSION = '0.0.3 Alpha'; 

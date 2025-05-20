@@ -17,16 +17,16 @@ const WeaponAWPTexture_0: WeaponTexture = {
 export const AWPConfig: Weapon.Config = {
   name: WeaponType.AWP,
   texture: WeaponAWPTexture_0,
-  reloadTime: 4000,      // Скорость перезарядки в мс
+  reloadTime: 2000,      // Скорость перезарядки в мс
   magazineSize: 8,      // Размер магазина
   damage: 1000,         // Урон от одного выстрела
   speed: [8000, 4000],  // Скорость пули
   fireRate: 400,       // Задержка между выстрелами в мс
-  boltTime: 2000,      // Задержка перед выстрелом в мс
+  boltTime: 1000,      // Задержка перед выстрелом в мс
   recoilForce: 30,      // Сила отдачи
   recoilRecovery: 5,    // Скорость восстановления от отдачи
   spreadAngle: 9,
-  aimingTime: 2000,
+  aimingTime: 1000,
   automatic: false,
   triggerRelease: true,
   hideSightWhenCantFire: true,

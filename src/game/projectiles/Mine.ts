@@ -5,8 +5,8 @@ import ProjectileActivateAudioUrl from '../weapons/assets/audio/explosion_audio_
 export const ProjectileMineConfig: Projectile.Config = {
   type: Projectile.Type.MINE,
   texture: MineImageTexture_0,
-  radius: 100,
-  activateRadius: 14,
+  radius: 160,
+  activateRadius: 30,
   drag: 800,
   gravity: 600,
   activateAudio: {

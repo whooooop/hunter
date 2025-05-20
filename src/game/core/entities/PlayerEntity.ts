@@ -44,17 +44,11 @@ export class PlayerEntity {
 
   private currentWeapon!: WeaponEntity | null;
   
-  private moveX: number = 0;
-  private moveY: number = 0;
   private direction: number = 1;
 
   private bodyHeight: number = 50;
   private bodyWidth: number = 50;
   private containerOffsetY: number = 20;
-
-  // Целевая позиция для интерполяции
-  private targetX: number | null = null;
-  private targetY: number | null = null;
 
   // Анимация ног
   private walkPhase: number = 0; // Текущая фаза анимации ходьбы
@@ -111,9 +105,12 @@ export class PlayerEntity {
       return;
     }
 
-    // Сохраняем целевую позицию вместо прямого присваивания
-    this.targetX = payload.position.x;
-    this.targetY = payload.position.y;
+    this.motionController.setState({
+      targetX: payload.position.x,
+      targetY: payload.position.y,
+      moveX: payload.movement.x,
+      moveY: payload.movement.y,
+    });
   }
 
   public getId(): string {
@@ -149,18 +146,6 @@ export class PlayerEntity {
     const position = this.motionController.getPosition();
     const isMoving = this.motionController.getVelocity().length() !== 0;
     const isJumping = this.motionController.isJumping();
-
-    // Интерполяция к целевой позиции
-    if (this.targetX && this.targetY) {
-      const lerpFactor = 0.15; // Коэффициент сглаживания (0-1). Меньше значение -> плавнее движение.
-      this.body.x = Phaser.Math.Interpolation.Linear([this.body.x, this.targetX], lerpFactor);
-      this.body.y = Phaser.Math.Interpolation.Linear([this.body.y, this.targetY], lerpFactor);
-      // Если очень близко к цели, "примагничиваемся", чтобы избежать дрожания
-      // if (Phaser.Math.Distance.Between(this.body.x, this.body.y, this.targetX, this.targetY) < 1) {
-      //   this.body.x = this.targetX;
-      //   this.body.y = this.targetY;
-      // }
-    }
 
     this.container.setDepth(position.depth);
     this.container.setPosition(position.x, position.y - this.containerOffsetY);
@@ -211,9 +196,9 @@ export class PlayerEntity {
     }
 
     if (this.shadow) {
-      // this.shadow
-      //   .getContainer()
-      //   .setPosition(0, this.body.height / 2 + this.containerOffsetY - position.jumpHeight);
+      this.shadow
+        .getContainer()
+        .setPosition(0, this.body.height / 2 + this.containerOffsetY - position.jumpHeight);
     }
 
     if (this.currentWeapon) {
@@ -222,17 +207,17 @@ export class PlayerEntity {
   }
 
   public getPlayerState(): Player.Events.State.Payload {
+    const position = this.motionController.getPosition();
     return { 
       playerId: this.id, 
-      position: { x: this.container.x, y: this.container.y } 
+      movement: { x: position.moveX, y: position.moveY },
+      position: { x: position.x, y: position.y } 
     };
   }
   
   public setMove(moveX: number, moveY: number): void {
-    this.moveX = moveX; 
-    this.moveY = moveY;
     // this.handleDirectionChange(-1);
-    this.motionController.setMove(this.moveX, this.moveY);
+    this.motionController.setMove(moveX, moveY);
   }
 
   /**

@@ -19,7 +19,8 @@ interface EventPayloadMap {
   // Waves
   [Wave.Events.WaveStart.Local]: Wave.Events.WaveStart.Payload;
   [Wave.Events.Spawn.Local]: Wave.Events.Spawn.Payload;
-
+  [Wave.Events.Spawn.Remote]: Wave.Events.Spawn.Payload;
+  
   // Enemies
   [Enemy.Events.Death.Local]: Enemy.Events.Death.Payload;
 
@@ -61,6 +62,9 @@ interface EventPayloadMap {
 
   // Loading
   [Loading.Events.LoadingComplete.Local]: Loading.Events.LoadingComplete.Payload;
+
+  // Multiplayer
+  [Game.Events.Multiplayer.Ready.Local]: Game.Events.Multiplayer.Ready.Payload;
 }
 
 export function emitEvent<E extends keyof EventPayloadMap>(scene: Phaser.Scene, name: E, payload: EventPayloadMap[E]): void;

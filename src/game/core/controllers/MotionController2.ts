@@ -55,6 +55,8 @@ export class MotionController2 {
   private jumpVelocityOffset: number = 0;
   private jumpTargetY: number = 0;
 
+  private targetX: number = 0;
+  private targetY: number = 0;
   private targetMaxVelocityX: number = 0;
   private targetMaxVelocityY: number = 0;
   private lerpFactorVelocity: number = 0.1;
@@ -144,6 +146,13 @@ export class MotionController2 {
   }
   
   public update(time: number, delta: number): void {
+     // Интерполяция к целевой позиции
+     if (this.targetX && this.targetY) {
+      const lerpFactor = 0.15; // Коэффициент сглаживания (0-1). Меньше значение -> плавнее движение.
+      this.body.x = Phaser.Math.Interpolation.Linear([this.body.x, this.targetX], lerpFactor);
+      this.body.y = Phaser.Math.Interpolation.Linear([this.body.y, this.targetY], lerpFactor);
+    }
+
     // Ускорение и максимальная скорость теперь обрабатываются физикой через setMove
     this.handleJump(time, delta);
 
@@ -179,13 +188,25 @@ export class MotionController2 {
 
   }
 
-  public getPosition(): { x: number, y: number, jumpHeight: number, depth: number } {
+  public getPosition(): { x: number, y: number, moveX: number, moveY: number, jumpHeight: number, depth: number } {
     return {
       x: this.body.x + this.body.width / 2,
       y: this.body.y + this.body.height / 2,
+      moveX: this.moveX,
+      moveY: this.moveY,
       jumpHeight: this.jumpOffsetY,
       depth: this.getDepth(),
     };
+  }
+
+  public setState(state: { targetX: number, targetY: number, moveX: number, moveY: number }): void {
+    this.setTarget(state.targetX, state.targetY);
+    this.setMove(state.moveX, state.moveY);
+  }
+
+  public setTarget(x: number, y: number): void {
+    this.targetX = x - this.body.width / 2;
+    this.targetY = y - this.body.height / 2;
   }
 
   public getVelocityScale(): [number, number] {

@@ -18,12 +18,19 @@ export class MultiplayerController {
   private scene: GameplayScene;
   private socketClient: SocketClient;
 
+  private isHost: boolean = false;
+  private playerId: string = '';
+  private connectedPlayers: Set<string> = new Set();
+  private maxPlayers: number = 2;
+
   constructor(scene: GameplayScene) {
     this.scene = scene;
     this.socketClient = new SocketClient();
   }
 
   public connect(gameId: string, playerId: string): Promise<void> {
+    this.playerId = playerId;
+
     return new Promise((resolve, reject) => {
       this.socketClient = new SocketClient();
       this.socketClient.connect(SERVER_URL, gameId, playerId)
@@ -72,12 +79,20 @@ export class MultiplayerController {
     this.socketClient.on('PlayerPosition', this.serverHandlePlayerPosition.bind(this));
 
     this.socketClient.on('WeaponFireAction', this.serverHandleFireEvent.bind(this));
-    // this.socketClient.on(SocketEvents.WaveStart, this.serverHandleWaveStart.bind(this));
-    // this.socketClient.on(SocketEvents.SpawnEnemy, this.serverHandleSpawnEnemy.bind(this));
-    // this.socketClient.on(SocketEvents.EnemyDeath, this.serverHandleEnemyDeath.bind(this));
+    this.socketClient.on('SpawnEnemy', this.serverHandleSpawnEnemy.bind(this));
+
+    // this.socketClient.on('WaveStart', this.serverHandleWaveStart.bind(this));
+    // this.socketClient.on('EnemyDeath', this.serverHandleEnemyDeath.bind(this));
     // this.socketClient.on(SocketEvents.PlayerScoreUpdate, this.serverHandlePlayerScoreUpdate.bind(this));
     // this.socketClient.on('WeaponPurchased', this.serverHandleWeaponPurchased.bind(this));
   }
+
+  private checkAllPlayersConnected(): void {
+    if (this.connectedPlayers.size === this.maxPlayers && this.isHost) {
+      emitEvent(this.scene, Game.Events.Multiplayer.Ready.Local, {});
+    }
+  }
+
 
   // Обработчики локальных событий
 
@@ -94,7 +109,19 @@ export class MultiplayerController {
   }
 
   private clientHandleSpawnEnemy(payload: Wave.Events.Spawn.Payload): void {
-    // this.socketClient.send(ProtoEventType.SpawnEnemy, payload);
+    this.socketClient.send(ProtoEventType.SpawnEnemy, {
+      id: payload.id,
+      enemyType: payload.enemyType,
+      config: {
+        x: payload.config.x,
+        y: payload.config.y,
+        velocityX: payload.config.velocityX ?? 0,
+        velocityY: payload.config.velocityY ?? 0,
+        level: payload.config.level ?? 0,
+        health: payload.config.health ?? 0
+      },
+      boss: payload.boss
+    });
   }
 
   private clientHandleEnemyDeath(payload: Enemy.Events.Death.Payload): void {
@@ -117,17 +144,23 @@ export class MultiplayerController {
   // Обработчики серверных событий
 
   private serverHandleGameState(payload: EventGameState): void {
+    this.isHost = payload.host === this.playerId;
+    this.connectedPlayers = new Set(payload.connected);
+    this.checkAllPlayersConnected();
     logger.debug(`Game state:`, payload);
     emitEvent(this.scene, Game.Events.State.Remote, payload);
   }
 
   private serverHandlePlayerJoined(payload: EventPlayerJoined): void {
     logger.info(`Player ${payload.playerId} joined.`);
+    this.connectedPlayers.add(payload.playerId);
+    this.checkAllPlayersConnected();
     emitEvent(this.scene, Player.Events.Join.Remote, payload);
   }
 
   private serverHandlePlayerLeft(payload: EventPlayerLeft): void {  
     logger.info(`Player ${payload.playerId} left.`);
+    this.connectedPlayers.delete(payload.playerId);
     emitEvent(this.scene, Player.Events.Left.Remote, payload);
   }
 
@@ -154,7 +187,19 @@ export class MultiplayerController {
   }
 
   private serverHandleSpawnEnemy(payload: EventSpawnEnemy): void {
-    logger.info(`Spawning enemy`, payload);
+    emitEvent(this.scene, Wave.Events.Spawn.Remote, {
+      id: payload.id,
+      enemyType: payload.enemyType as Enemy.Type,
+      config: {
+        x: payload.config?.x ?? 0,
+        y: payload.config?.y ?? 0,
+        velocityX: payload.config?.velocityX || undefined,
+        velocityY: payload.config?.velocityY || undefined,
+        level: payload.config?.level || undefined,
+        health: payload.config?.health || undefined
+      },
+      boss: payload.boss
+    });
   } 
 
   private serverHandleEnemyDeath(payload: EventEnemyDeath): void {

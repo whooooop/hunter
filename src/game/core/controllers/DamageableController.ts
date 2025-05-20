@@ -32,6 +32,7 @@ export class DamageableController {
 
   public takeDamage(damage: Damageable.Damage, target: Enemy.Body): Damageable.DamageResult | null {
     if (this.isDead) return null;
+    console.log('takeDamage', damage);
 
     const health = Math.max(0, this.health - damage.value);
     const isDead = health === 0;
@@ -50,6 +51,7 @@ export class DamageableController {
       this.damages.push({ damage, result });
     }
 
+    console.log('takeDamage', result);
     return result;
   }
 

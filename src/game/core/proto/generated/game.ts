@@ -102,15 +102,13 @@ export interface Point {
   y: number;
 }
 
-export interface Event {
-  eventType: ProtoEventType;
+export interface Movement {
+  x: number;
+  y: number;
 }
 
-export interface PlayerState {
-  id: string;
-  position: Point | undefined;
-  weaponId: string;
-  score: number;
+export interface Event {
+  eventType: ProtoEventType;
 }
 
 export interface PlayerWeapon {
@@ -153,17 +151,35 @@ export interface EventWaveStart {
   duration: number;
 }
 
+export interface PlayerState {
+  id: string;
+  position: Point | undefined;
+  weaponId: string;
+  score: number;
+}
+
 export interface EventPlayerPosition {
   eventType: ProtoEventType;
   playerId: string;
   position: Point | undefined;
+  movement: Movement | undefined;
 }
 
 export interface EventSpawnEnemy {
   eventType: ProtoEventType;
   id: string;
   enemyType: string;
-  position: Point | undefined;
+  config: EnemySpawnConfig | undefined;
+  boss: boolean;
+}
+
+export interface EnemySpawnConfig {
+  x: number;
+  y: number;
+  velocityX: number;
+  velocityY: number;
+  level: number;
+  health: number;
 }
 
 export interface EventEnemyDeath {
@@ -267,6 +283,82 @@ export const Point: MessageFns<Point> = {
   },
 };
 
+function createBaseMovement(): Movement {
+  return { x: 0, y: 0 };
+}
+
+export const Movement: MessageFns<Movement> = {
+  encode(message: Movement, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.x !== 0) {
+      writer.uint32(13).float(message.x);
+    }
+    if (message.y !== 0) {
+      writer.uint32(21).float(message.y);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): Movement {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMovement();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 13) {
+            break;
+          }
+
+          message.x = reader.float();
+          continue;
+        }
+        case 2: {
+          if (tag !== 21) {
+            break;
+          }
+
+          message.y = reader.float();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Movement {
+    return {
+      x: isSet(object.x) ? globalThis.Number(object.x) : 0,
+      y: isSet(object.y) ? globalThis.Number(object.y) : 0,
+    };
+  },
+
+  toJSON(message: Movement): unknown {
+    const obj: any = {};
+    if (message.x !== 0) {
+      obj.x = message.x;
+    }
+    if (message.y !== 0) {
+      obj.y = message.y;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<Movement>, I>>(base?: I): Movement {
+    return Movement.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<Movement>, I>>(object: I): Movement {
+    const message = createBaseMovement();
+    message.x = object.x ?? 0;
+    message.y = object.y ?? 0;
+    return message;
+  },
+};
+
 function createBaseEvent(): Event {
   return { eventType: 0 };
 }
@@ -321,116 +413,6 @@ export const Event: MessageFns<Event> = {
   fromPartial<I extends Exact<DeepPartial<Event>, I>>(object: I): Event {
     const message = createBaseEvent();
     message.eventType = object.eventType ?? 0;
-    return message;
-  },
-};
-
-function createBasePlayerState(): PlayerState {
-  return { id: "", position: undefined, weaponId: "", score: 0 };
-}
-
-export const PlayerState: MessageFns<PlayerState> = {
-  encode(message: PlayerState, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
-      writer.uint32(10).string(message.id);
-    }
-    if (message.position !== undefined) {
-      Point.encode(message.position, writer.uint32(18).fork()).join();
-    }
-    if (message.weaponId !== "") {
-      writer.uint32(26).string(message.weaponId);
-    }
-    if (message.score !== 0) {
-      writer.uint32(32).int32(message.score);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): PlayerState {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePlayerState();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.id = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.position = Point.decode(reader, reader.uint32());
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.weaponId = reader.string();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.score = reader.int32();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): PlayerState {
-    return {
-      id: isSet(object.id) ? globalThis.String(object.id) : "",
-      position: isSet(object.position) ? Point.fromJSON(object.position) : undefined,
-      weaponId: isSet(object.weaponId) ? globalThis.String(object.weaponId) : "",
-      score: isSet(object.score) ? globalThis.Number(object.score) : 0,
-    };
-  },
-
-  toJSON(message: PlayerState): unknown {
-    const obj: any = {};
-    if (message.id !== "") {
-      obj.id = message.id;
-    }
-    if (message.position !== undefined) {
-      obj.position = Point.toJSON(message.position);
-    }
-    if (message.weaponId !== "") {
-      obj.weaponId = message.weaponId;
-    }
-    if (message.score !== 0) {
-      obj.score = Math.round(message.score);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<PlayerState>, I>>(base?: I): PlayerState {
-    return PlayerState.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<PlayerState>, I>>(object: I): PlayerState {
-    const message = createBasePlayerState();
-    message.id = object.id ?? "";
-    message.position = (object.position !== undefined && object.position !== null)
-      ? Point.fromPartial(object.position)
-      : undefined;
-    message.weaponId = object.weaponId ?? "";
-    message.score = object.score ?? 0;
     return message;
   },
 };
@@ -1063,8 +1045,118 @@ export const EventWaveStart: MessageFns<EventWaveStart> = {
   },
 };
 
+function createBasePlayerState(): PlayerState {
+  return { id: "", position: undefined, weaponId: "", score: 0 };
+}
+
+export const PlayerState: MessageFns<PlayerState> = {
+  encode(message: PlayerState, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.position !== undefined) {
+      Point.encode(message.position, writer.uint32(18).fork()).join();
+    }
+    if (message.weaponId !== "") {
+      writer.uint32(34).string(message.weaponId);
+    }
+    if (message.score !== 0) {
+      writer.uint32(40).int32(message.score);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PlayerState {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePlayerState();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.position = Point.decode(reader, reader.uint32());
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.weaponId = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.score = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PlayerState {
+    return {
+      id: isSet(object.id) ? globalThis.String(object.id) : "",
+      position: isSet(object.position) ? Point.fromJSON(object.position) : undefined,
+      weaponId: isSet(object.weaponId) ? globalThis.String(object.weaponId) : "",
+      score: isSet(object.score) ? globalThis.Number(object.score) : 0,
+    };
+  },
+
+  toJSON(message: PlayerState): unknown {
+    const obj: any = {};
+    if (message.id !== "") {
+      obj.id = message.id;
+    }
+    if (message.position !== undefined) {
+      obj.position = Point.toJSON(message.position);
+    }
+    if (message.weaponId !== "") {
+      obj.weaponId = message.weaponId;
+    }
+    if (message.score !== 0) {
+      obj.score = Math.round(message.score);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PlayerState>, I>>(base?: I): PlayerState {
+    return PlayerState.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<PlayerState>, I>>(object: I): PlayerState {
+    const message = createBasePlayerState();
+    message.id = object.id ?? "";
+    message.position = (object.position !== undefined && object.position !== null)
+      ? Point.fromPartial(object.position)
+      : undefined;
+    message.weaponId = object.weaponId ?? "";
+    message.score = object.score ?? 0;
+    return message;
+  },
+};
+
 function createBaseEventPlayerPosition(): EventPlayerPosition {
-  return { eventType: 0, playerId: "", position: undefined };
+  return { eventType: 0, playerId: "", position: undefined, movement: undefined };
 }
 
 export const EventPlayerPosition: MessageFns<EventPlayerPosition> = {
@@ -1077,6 +1169,9 @@ export const EventPlayerPosition: MessageFns<EventPlayerPosition> = {
     }
     if (message.position !== undefined) {
       Point.encode(message.position, writer.uint32(26).fork()).join();
+    }
+    if (message.movement !== undefined) {
+      Movement.encode(message.movement, writer.uint32(34).fork()).join();
     }
     return writer;
   },
@@ -1112,6 +1207,14 @@ export const EventPlayerPosition: MessageFns<EventPlayerPosition> = {
           message.position = Point.decode(reader, reader.uint32());
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.movement = Movement.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1126,6 +1229,7 @@ export const EventPlayerPosition: MessageFns<EventPlayerPosition> = {
       eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
       playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
       position: isSet(object.position) ? Point.fromJSON(object.position) : undefined,
+      movement: isSet(object.movement) ? Movement.fromJSON(object.movement) : undefined,
     };
   },
 
@@ -1140,6 +1244,9 @@ export const EventPlayerPosition: MessageFns<EventPlayerPosition> = {
     if (message.position !== undefined) {
       obj.position = Point.toJSON(message.position);
     }
+    if (message.movement !== undefined) {
+      obj.movement = Movement.toJSON(message.movement);
+    }
     return obj;
   },
 
@@ -1153,12 +1260,15 @@ export const EventPlayerPosition: MessageFns<EventPlayerPosition> = {
     message.position = (object.position !== undefined && object.position !== null)
       ? Point.fromPartial(object.position)
       : undefined;
+    message.movement = (object.movement !== undefined && object.movement !== null)
+      ? Movement.fromPartial(object.movement)
+      : undefined;
     return message;
   },
 };
 
 function createBaseEventSpawnEnemy(): EventSpawnEnemy {
-  return { eventType: 0, id: "", enemyType: "", position: undefined };
+  return { eventType: 0, id: "", enemyType: "", config: undefined, boss: false };
 }
 
 export const EventSpawnEnemy: MessageFns<EventSpawnEnemy> = {
@@ -1172,8 +1282,11 @@ export const EventSpawnEnemy: MessageFns<EventSpawnEnemy> = {
     if (message.enemyType !== "") {
       writer.uint32(26).string(message.enemyType);
     }
-    if (message.position !== undefined) {
-      Point.encode(message.position, writer.uint32(34).fork()).join();
+    if (message.config !== undefined) {
+      EnemySpawnConfig.encode(message.config, writer.uint32(34).fork()).join();
+    }
+    if (message.boss !== false) {
+      writer.uint32(40).bool(message.boss);
     }
     return writer;
   },
@@ -1214,7 +1327,15 @@ export const EventSpawnEnemy: MessageFns<EventSpawnEnemy> = {
             break;
           }
 
-          message.position = Point.decode(reader, reader.uint32());
+          message.config = EnemySpawnConfig.decode(reader, reader.uint32());
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.boss = reader.bool();
           continue;
         }
       }
@@ -1231,7 +1352,8 @@ export const EventSpawnEnemy: MessageFns<EventSpawnEnemy> = {
       eventType: isSet(object.eventType) ? protoEventTypeFromJSON(object.eventType) : 0,
       id: isSet(object.id) ? globalThis.String(object.id) : "",
       enemyType: isSet(object.enemyType) ? globalThis.String(object.enemyType) : "",
-      position: isSet(object.position) ? Point.fromJSON(object.position) : undefined,
+      config: isSet(object.config) ? EnemySpawnConfig.fromJSON(object.config) : undefined,
+      boss: isSet(object.boss) ? globalThis.Boolean(object.boss) : false,
     };
   },
 
@@ -1246,8 +1368,11 @@ export const EventSpawnEnemy: MessageFns<EventSpawnEnemy> = {
     if (message.enemyType !== "") {
       obj.enemyType = message.enemyType;
     }
-    if (message.position !== undefined) {
-      obj.position = Point.toJSON(message.position);
+    if (message.config !== undefined) {
+      obj.config = EnemySpawnConfig.toJSON(message.config);
+    }
+    if (message.boss !== false) {
+      obj.boss = message.boss;
     }
     return obj;
   },
@@ -1260,9 +1385,150 @@ export const EventSpawnEnemy: MessageFns<EventSpawnEnemy> = {
     message.eventType = object.eventType ?? 0;
     message.id = object.id ?? "";
     message.enemyType = object.enemyType ?? "";
-    message.position = (object.position !== undefined && object.position !== null)
-      ? Point.fromPartial(object.position)
+    message.config = (object.config !== undefined && object.config !== null)
+      ? EnemySpawnConfig.fromPartial(object.config)
       : undefined;
+    message.boss = object.boss ?? false;
+    return message;
+  },
+};
+
+function createBaseEnemySpawnConfig(): EnemySpawnConfig {
+  return { x: 0, y: 0, velocityX: 0, velocityY: 0, level: 0, health: 0 };
+}
+
+export const EnemySpawnConfig: MessageFns<EnemySpawnConfig> = {
+  encode(message: EnemySpawnConfig, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.x !== 0) {
+      writer.uint32(13).float(message.x);
+    }
+    if (message.y !== 0) {
+      writer.uint32(21).float(message.y);
+    }
+    if (message.velocityX !== 0) {
+      writer.uint32(29).float(message.velocityX);
+    }
+    if (message.velocityY !== 0) {
+      writer.uint32(37).float(message.velocityY);
+    }
+    if (message.level !== 0) {
+      writer.uint32(40).int32(message.level);
+    }
+    if (message.health !== 0) {
+      writer.uint32(48).int32(message.health);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EnemySpawnConfig {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEnemySpawnConfig();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 13) {
+            break;
+          }
+
+          message.x = reader.float();
+          continue;
+        }
+        case 2: {
+          if (tag !== 21) {
+            break;
+          }
+
+          message.y = reader.float();
+          continue;
+        }
+        case 3: {
+          if (tag !== 29) {
+            break;
+          }
+
+          message.velocityX = reader.float();
+          continue;
+        }
+        case 4: {
+          if (tag !== 37) {
+            break;
+          }
+
+          message.velocityY = reader.float();
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.level = reader.int32();
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.health = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EnemySpawnConfig {
+    return {
+      x: isSet(object.x) ? globalThis.Number(object.x) : 0,
+      y: isSet(object.y) ? globalThis.Number(object.y) : 0,
+      velocityX: isSet(object.velocityX) ? globalThis.Number(object.velocityX) : 0,
+      velocityY: isSet(object.velocityY) ? globalThis.Number(object.velocityY) : 0,
+      level: isSet(object.level) ? globalThis.Number(object.level) : 0,
+      health: isSet(object.health) ? globalThis.Number(object.health) : 0,
+    };
+  },
+
+  toJSON(message: EnemySpawnConfig): unknown {
+    const obj: any = {};
+    if (message.x !== 0) {
+      obj.x = message.x;
+    }
+    if (message.y !== 0) {
+      obj.y = message.y;
+    }
+    if (message.velocityX !== 0) {
+      obj.velocityX = message.velocityX;
+    }
+    if (message.velocityY !== 0) {
+      obj.velocityY = message.velocityY;
+    }
+    if (message.level !== 0) {
+      obj.level = Math.round(message.level);
+    }
+    if (message.health !== 0) {
+      obj.health = Math.round(message.health);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<EnemySpawnConfig>, I>>(base?: I): EnemySpawnConfig {
+    return EnemySpawnConfig.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<EnemySpawnConfig>, I>>(object: I): EnemySpawnConfig {
+    const message = createBaseEnemySpawnConfig();
+    message.x = object.x ?? 0;
+    message.y = object.y ?? 0;
+    message.velocityX = object.velocityX ?? 0;
+    message.velocityY = object.velocityY ?? 0;
+    message.level = object.level ?? 0;
+    message.health = object.health ?? 0;
     return message;
   },
 };
