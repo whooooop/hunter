@@ -196,8 +196,8 @@ export function createWavesConfig(): Wave.Config[] {
         { delay: 1000, config: { x, y: y(1), velocityX: -5, }, enemyType: Enemy.Type.SQUIREEL },
         
         { 
-          boss: true, delay: 2000, enemyType: Enemy.Type.BEAR,
-          config: { x: x + 50, y: 400, velocityX: -1.2, },  
+          boss: true, delay: 2000, enemyType: Enemy.Type.DEER,
+          config: { x: x + 50, y: 400, velocityX: -4, },  
         },
       ],
     },

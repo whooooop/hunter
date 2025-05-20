@@ -5,7 +5,7 @@ import textureUrl from './assets/deer.atlas.png';
 
 export const DeerConfig: Enemy.Config = {
   type: Enemy.Type.DEER,
-  health: 47,
+  health: 400,
   scale: 0.1,
   offset: { x: 0, y: 44 },
   baunds: {
@@ -13,7 +13,7 @@ export const DeerConfig: Enemy.Config = {
     head: { x: 0, y: 0, width: 30, height: 20 },
   },
   score: [
-    { death: true, value: 50 },
+    { death: true, value: 400 },
   ],
   damageMultiplier: {},
   killCombo: [],
@@ -24,13 +24,13 @@ export const DeerConfig: Enemy.Config = {
     json: jsonUrl,
     animations: {
       [Enemy.Animation.WALK]: {
-        timeScale: 1
+        timeScale: 0.5
       },
       [Enemy.Animation.DEATH]: {
-        timeScale: 1
+        timeScale: 4
       },
       [Enemy.Animation.RUN]: {
-        timeScale: 1
+        timeScale: 0.5
       },
     },
   },
