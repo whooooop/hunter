@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package sync;
+
+enum MessageType {
+  SyncCollectionEvent = 0;
+  ExportCollectionEvent = 1;
+}
+
+message Message {
+  MessageType type = 1;
+  int64 timestamp = 2;
+  bytes payload = 3;
+}
+
+enum SyncCollectionEvents {
+  Add = 0;
+  Update = 1;
+  Remove = 2;
+}
+
+message SyncCollectionMessage {
+  SyncCollectionEvents event = 1;
+  string collectionId = 2;
+  string itemId = 3;
+  bytes payload = 4;
+}
+
+message ExportCollectionMessage {
+  string collectionId = 1;
+  repeated string itemIds = 2;
+  repeated bytes payload = 3;
+}
