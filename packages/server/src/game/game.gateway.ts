@@ -5,6 +5,7 @@ import { MultiplayerServer, ClientSocket } from '@hunter/multiplayer/dist/server
 import { playersCollection } from './collections/players.collection';
 import { connectionsCollection } from './collections/connections.collection';
 import { Connection, Player } from '@hunter/storage-proto';
+import { gameStorage } from './game.storage';
 
 type SessionData = {
     playerId: string;
@@ -23,10 +24,7 @@ export class GameGateway {
             onDisconnect: this.onDisconnect,
             namespace: {
                 timeout: 60000,
-                collections: [
-                    connectionsCollection,
-                    playersCollection,
-                ]
+                storageId: gameStorage
             }
         });
     }

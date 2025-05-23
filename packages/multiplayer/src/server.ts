@@ -7,3 +7,4 @@ export * from './ClientSocket';
 export * from './MultiplayerServer';
 
 export * from './Collection';
+export * from './StorageSpace';

@@ -1,7 +1,8 @@
+import { StorageSpace } from "./StorageSpace";
 import { SyncCollectionEvents } from "./sync";
 import { BinaryWriter } from "@bufbuild/protobuf/dist/cjs/wire/binary-encoding";
 
-
+export type CollectionId = string;
 type SyncCollectionEvent = keyof typeof SyncCollectionEvents;
 type FromUpdate = 'Server' | 'Client';
 
@@ -16,8 +17,14 @@ export interface SyncCollectionConfig<T> {
   decode: (data: Uint8Array) => T,
 }
 
+export function defineCollection<T extends object>(id: string, config: SyncCollectionConfig<T>): CollectionId {
+  SyncCollection.registry.set(id, config as unknown as SyncCollectionConfig<object>);
+  return id;
+}
+
 export class SyncCollection<T extends object> {
-  private id: string;
+  static readonly registry: Map<string, SyncCollectionConfig<object>> = new Map();
+
   private collection: Map<string, { data: T }> = new Map();
   private subscribers: Set<{event: SyncCollectionEvent, callback: (collection: SyncCollection<T>, from: FromUpdate, id: string, data: any) => void}> = new Set();
   private subscribersCount = new Map<SyncCollectionEvent, number>([
@@ -26,14 +33,23 @@ export class SyncCollection<T extends object> {
     ['Remove', 0],
   ]);
 
-  private config: SyncCollectionConfig<T>;
   private lastSendTime: Map<string, number> = new Map();
   private pendingUpdates: Map<string, { data: T, timer: NodeJS.Timeout }> = new Map();
   private __onSendBuffer: ((collectionId: string, event: SyncCollectionEvents, id: string, bytes: Uint8Array, excludeClientId?: string) => void) | null = null;
 
-  constructor(id: string, config: SyncCollectionConfig<T>) {
-    this.id = id;
-    this.config = config;
+  constructor(
+    private readonly id: CollectionId,
+    private readonly storage: StorageSpace,
+    private readonly config: SyncCollectionConfig<T>
+  ) {}
+
+  static create<T extends object>(id: string, storage: StorageSpace): SyncCollection<T> | null {
+    const config = SyncCollection.registry.get(id);
+    if (!config) {
+      console.error(`Collection ${id} not found`);
+      return null;
+    }
+    return new SyncCollection<T>(id, storage, config as unknown as SyncCollectionConfig<T>);
   }
 
   public getId(): string {
@@ -46,10 +62,6 @@ export class SyncCollection<T extends object> {
 
   public has(id: string): boolean {
     return this.collection.has(id);
-  }
-
-  public __setOnSendBuffer(onSendBuffer: (collectionId: string, event: SyncCollectionEvents, id: string, bytes: Uint8Array, excludeClientId?: string) => void): void {
-    this.__onSendBuffer = onSendBuffer;
   }
 
   public subscribe(event: 'Remove', callback: (collection: SyncCollection<T>, from: FromUpdate, id: string) => void): void 
@@ -102,6 +114,11 @@ export class SyncCollection<T extends object> {
 
   public getItem(id: string): T | undefined {
     return this.collection.get(id)?.data;
+  }
+
+  public getItems(): T[] {
+    return Array.from(this.collection.values())
+      .map(item => item.data);
   }
 
   public encodeAll(): Uint8Array[] {
@@ -187,7 +204,7 @@ export class SyncCollection<T extends object> {
   }
 
   private sendBuffer(id: string, event: SyncCollectionEvents, bytes: Uint8Array, excludeClientId?: string) {
-    this.__onSendBuffer?.(this.id, event, id, bytes, excludeClientId);
+    this.storage.__sendBuffer(this.id, event, id, bytes, excludeClientId);
   }
 
   public remoteUpdate(id: string, bytes: Uint8Array, broadcast: boolean = false, excludeClientId?: string): void {
@@ -233,3 +250,4 @@ export class SyncCollection<T extends object> {
     });
   }
 }
+

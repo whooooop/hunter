@@ -1,10 +1,12 @@
-import { ClientNamespace, ClientNamespaceConfig } from "./ClientNamespace";
+import { ClientNamespace } from "./ClientNamespace";
 import { SyncCollection } from "./Collection";
+import { StorageSpace } from "./StorageSpace";
 import { Message, MessageType, SyncCollectionEvents, SyncCollectionMessage } from "./sync";
+import { NamespaceId } from "./types";
 
 interface ClientMultiplayerConfig {
   baseUrl: string;
-  namespace: ClientNamespaceConfig;
+  storage: StorageSpace;
 }
 
 export class ClientMultiplayer {
@@ -18,14 +20,14 @@ export class ClientMultiplayer {
   private namespace!: ClientNamespace;
 
   constructor(
-    public readonly config: ClientMultiplayerConfig
+    protected readonly config: ClientMultiplayerConfig
   ) {}
 
   public get connected(): boolean {
     return this.isConnected && this.websocket?.readyState === WebSocket.OPEN;
   }
 
-  public connect(namespace: string, playerId: string): Promise<void> {
+  public connect(namespaceId: NamespaceId, playerId: string): Promise<void> {
     if (this.isConnected && this.websocket?.readyState === WebSocket.OPEN) {
       console.warn(`WebSocket already connected.`);
       return Promise.resolve();
@@ -53,9 +55,9 @@ export class ClientMultiplayer {
 
       const protocol = this.config.baseUrl.startsWith('https:') || this.config.baseUrl.startsWith('wss:') ? 'wss:' : 'ws:';
       const cleanHost = this.config.baseUrl.replace(/^(https?|wss?):\/\//, '');
-      const url = `${protocol}//${cleanHost}/game?namespace=${namespace}&playerId=${playerId}`;
+      const url = `${protocol}//${cleanHost}/game?namespace=${namespaceId}&playerId=${playerId}`;
 
-      this.namespace = new ClientNamespace(this, namespace, this.config.namespace);
+      this.namespace = new ClientNamespace(this, namespaceId, this.config.storage);
 
       try {
         this.websocket = new WebSocket(url);
@@ -103,7 +105,7 @@ export class ClientMultiplayer {
       
           const messageBytes = new Uint8Array(buffer);
           const messageData = Message.decode(messageBytes);
-      
+          
           if (messageData.type === MessageType.SyncCollectionEvent) {
             this.namespace.handleMessage('', messageData.payload);
           } else if (messageData.type === MessageType.ExportCollectionEvent) {

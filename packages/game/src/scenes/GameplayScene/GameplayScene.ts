@@ -25,6 +25,8 @@ import { DISPLAY, GAMEOVER, VERSION } from '../../config';
 import { GameOverView } from '../../views/gameover';
 import { MenuSceneTypes } from '../MenuScene/MenuSceneTypes';
 import { EnemyEntity } from '../../entities/EnemyEntity';
+import { gameStorage } from '../../storage';
+import { StorageSpace } from '@hunter/multiplayer/dist/client';
 
 const logger = createLogger('GameplayScene');
 
@@ -75,6 +77,8 @@ export class GameplayScene extends Phaser.Scene {
   private isPause: boolean = false;
   private isGameOver: boolean = false;
 
+  private storage!: StorageSpace;
+
   constructor() {
     super({
       key: SceneKeys.GAMEPLAY
@@ -88,6 +92,7 @@ export class GameplayScene extends Phaser.Scene {
     this.levelConfig = getLevel(levelId);
     this.levelId = levelId;
     this.location = getLocation(this, this.levelConfig.location);
+    this.storage = StorageSpace.create(gameStorage)!;
     
     HintsService.getInstance().getHint().then(hint => {
       this.loadingView.setHint(hint);
@@ -251,8 +256,13 @@ export class GameplayScene extends Phaser.Scene {
 
     this.projectileController.setSimulate(true);
 
-    this.multiplayerController = new MultiplayerController(this);
-    this.multiplayerController.connect('GAME1', playerId).then(() => {});
+    this.multiplayerController = new MultiplayerController(this, this.storage);
+    this.multiplayerController.connect('GAME1', playerId).then(() => {
+
+      setTimeout(() => {
+        this.multiplayerController.setReady();
+      }, 2000);
+    });
   }
   
   // private handleGameState(payload: Game.Events.State.Payload): void {

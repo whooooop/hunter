@@ -1,26 +1,14 @@
-// import { SocketClient } from '../network/SocketClient';
 import { emitEvent, offEvent, onEvent } from "../GameEvents";
-// import { EventPlayerJoined, EventPlayerSetWeapon, EventWeaponFireAction, EventWaveStart, EventSpawnEnemy, EventEnemyDeath, EventPlayerScoreUpdate, ProtoEventType, EventWeaponPurchased, EventPlayerLeft, EventGameState, EventPlayerPosition } from '../proto/generated/game';
-import { WeaponPurchasedPayload, ShopEvents } from "../types/shopTypes";
-import { Player } from "../types/playerTypes";
-import { Wave } from "../types/WaveTypes";
-import { Weapon } from "../types/weaponTypes";
-import { Enemy } from "../types/enemyTypes";
-import { ScoreEvents, UpdateScoreEventPayload } from "../types/scoreTypes";
 import { createLogger } from '../utils/logger';
 import { GameplayScene } from '../scenes/GameplayScene/GameplayScene';
 import { Game } from '../types/gameTypes';
-import { ClientMultiplayer } from '@hunter/multiplayer/dist/client';
-import { connectionsCollection } from '../storage/connections.collection';
-import { playersCollection } from '../storage/players.collection';
+import { ClientMultiplayer, StorageSpace } from '@hunter/multiplayer/dist/client';
+import { connectionsCollection } from "../storage/collections/connections.collection";
 
 const logger = createLogger('MultiplayerController');
 const SERVER_URL = 'ws://localhost:3000';
 
 export class MultiplayerController {
-  private scene: GameplayScene;
-  // private socketClient: SocketClient;
-
   private isHost: boolean = false;
   private playerId: string = '';
   private connectedPlayers: Set<string> = new Set();
@@ -28,50 +16,24 @@ export class MultiplayerController {
 
   private client: ClientMultiplayer;
 
-  constructor(scene: GameplayScene) {
-    this.scene = scene;
-    // this.socketClient = new SocketClient();
-
+  constructor(
+    private readonly scene: GameplayScene,
+    private readonly storage: StorageSpace
+  ) {
     this.client = new ClientMultiplayer({
       baseUrl: SERVER_URL,
-      namespace: {
-        collections: [
-          connectionsCollection,
-          playersCollection,
-        ]
-      }
+      storage: this.storage
     });
   }
 
   public connect(gameId: string, playerId: string): Promise<void> {
     this.playerId = playerId;
-
     return this.client.connect(gameId, playerId);
-    // return new Promise((resolve, reject) => {
-      // this.socketClient = new SocketClient();
-      // this.socketClient.connect(SERVER_URL, gameId, playerId)
-      //   .then(() => {
-      //       this.setupServerEventHandlers();
-      //       this.setupLocalEventHandlers();
-      //       resolve();
-      //       // logger.info('Sending JoinGame...');
-      //       // const joinRequest = JoinGame.create({ playerId });
-      //       // this.socketClient.send(SocketSentEvents.JoinGame, joinRequest);
-      //   })
-      //   .catch((error: Error) => {
-      //       logger.error('SocketClient connection failed:', error);
-      //       reject(error);
-      //   });
+  }
 
-      // this.socketClient.on('disconnect', () => {
-      //     logger.warn('SocketClient disconnected.');
-      //     reject();
-      // });
-
-      // this.socketClient.on('error', (error: any) => {
-      //     logger.error('SocketClient connection error:', error);
-      // });
-    // })
+  public setReady(): void {
+    const collections = this.storage.getCollection(connectionsCollection)!;
+    collections.updateItem(this.playerId, { ready: true });
   }
 
   // Обработчики локальных событий Phaser (отправка на сервер)

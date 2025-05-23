@@ -1,11 +1,14 @@
 import { BaseNamespace, BaseNamespaceConfig } from "./BaseNamespace";
 import { ClientSocket } from "./ClientSocket";
+import { CollectionId } from "./Collection";
 import { MultiplayerServer } from "./MultiplayerServer";
+import { StorageSpace, StorageSpaceId } from "./StorageSpace";
 import { ExportCollectionMessage, Message, MessageType } from "./sync";
-import { ClientId, CollectionId, NamespaceId } from "./types";
+import { ClientId, NamespaceId } from "./types";
 
 export interface ServerNamespaceConfig extends BaseNamespaceConfig {
     timeout: number;
+    storageId: StorageSpaceId;
 }
 
 export class ServerNamespace<SessionData extends object> extends BaseNamespace {
@@ -15,9 +18,13 @@ export class ServerNamespace<SessionData extends object> extends BaseNamespace {
     constructor(
         public readonly server: MultiplayerServer,
         public readonly id: NamespaceId,
-        public readonly config: ServerNamespaceConfig
+        protected readonly config: ServerNamespaceConfig
     ) {
-        super(id, config);
+        const storage = StorageSpace.create(config.storageId);
+        if (!storage) {
+            throw new Error(`Storage ${config.storageId} not found`);
+        }
+        super(id, storage, config);
     }
 
     public connectClient(clientSocket: ClientSocket<SessionData>) {
