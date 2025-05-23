@@ -151,9 +151,6 @@ export class PlayerEntity {
     const isMoving = this.motionController.getVelocity().length() !== 0;
     const isJumping = this.motionController.isJumping();
 
-    // this.state.position = { x: position.x, y: position.y };
-    // this.state.velocity = { x: position.moveX, y: position.moveY };
-
     this.container.setDepth(position.depth);
     this.container.setPosition(position.x, position.y - this.containerOffsetY);
 

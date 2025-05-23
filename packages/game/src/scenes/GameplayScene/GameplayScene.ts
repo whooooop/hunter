@@ -262,16 +262,16 @@ export class GameplayScene extends Phaser.Scene {
     this.projectileController.setSimulate(true);
     this.pingText = this.add.text(10, 10, '', { fontSize: 16, color: '#ffffff' }).setDepth(10000);
 
-    this.storage.getCollection(connectionStateCollection)!.subscribe('Add', (collection, from, id, data) => {
-      console.log('playerAdd', id, data);
+    this.storage.getCollection<Player.State>(playerStateCollection)!.subscribe('Add', (id, record, collection, from) => {
+      this.spawnPlayer(id, record);
     });
 
     this.multiplayerController = new MultiplayerController(this, this.storage);
     this.multiplayerController.connect('GAME1', playerId).then(() => {
       setTimeout(() => {
-          this.storage.getCollection<Player.State>(playerStateCollection)!.forEach((stateRecord, id, collection) => {
-            collection.setReadonly(id !== this.mainPlayerId, id);
-            this.spawnPlayer(id, stateRecord);
+          this.storage.getCollection<Player.State>(playerStateCollection)!.forEach((record, id, collection) => {
+            
+            this.spawnPlayer(id, record);
           });
           this.multiplayerController.setReady();
       }, 2000);
@@ -353,6 +353,9 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   public spawnPlayer(playerId: string, stateRecord: SyncCollectionRecord<Player.State>): void {
+    console.log('spawnPlayer', playerId, stateRecord);
+    this.storage.getCollection<Player.State>(playerStateCollection)!.setReadonly(playerId !== this.mainPlayerId, playerId);
+
     if (this.players.has(playerId)) {
       logger.warn(`Player ${playerId} already exists.`);
       return;

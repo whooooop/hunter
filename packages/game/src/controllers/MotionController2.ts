@@ -94,7 +94,6 @@ export class MotionController2 {
 
   public setState(state: SyncCollectionRecord<{positionX: number, positionY: number, velocityX: number, velocityY: number}>): void {
     this.state = state;
-    console.log(this.state);
   }
 
   public isMoving(): boolean {
