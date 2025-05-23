@@ -96,7 +96,7 @@ export class MultiplayerServer<Session extends object = any> {
 
     const messageData = Message.decode(messageBytes);
     if (messageData.type === MessageType.Ping) {
-      this.broadcast(clientId, messageBytes);
+      this.send(clientId, messageBytes);
       return;
     }
 
@@ -133,7 +133,7 @@ export class MultiplayerServer<Session extends object = any> {
     }
   }
 
-  public broadcast(clientId: string, bytes: Uint8Array) {
+  public send(clientId: string, bytes: Uint8Array) {
     const clientSocket = this.sockets.get(clientId);
     if (clientSocket && clientSocket.ws.readyState === WebSocket.OPEN) {
       clientSocket.ws.send(bytes);

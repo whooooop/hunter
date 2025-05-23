@@ -1,5 +1,4 @@
 import * as Phaser from 'phaser';
-import { PLAYER_POSITION_X, PLAYER_POSITION_Y } from '../../Constants';
 import { SceneKeys } from '../index';
 import { PlayerEntity } from '../../entities/PlayerEntity';
 import { createLogger } from '../../utils/logger';
@@ -26,7 +25,9 @@ import { GameOverView } from '../../views/gameover';
 import { MenuSceneTypes } from '../MenuScene/MenuSceneTypes';
 import { EnemyEntity } from '../../entities/EnemyEntity';
 import { gameStorage } from '../../storage';
-import { StorageSpace } from '@hunter/multiplayer/dist/client';
+import { StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
+import { playerStateCollection } from '../../storage/collections/playerState.collection';
+import { connectionStateCollection } from '../../storage/collections/connectionState.collection';
 
 const logger = createLogger('GameplayScene');
 
@@ -203,7 +204,7 @@ export class GameplayScene extends Phaser.Scene {
       this.questId = quest.id;
     }
 
-    this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
+    // this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
     this.waveController.start();
     this.projectileController.setSimulate(false);
 
@@ -259,12 +260,19 @@ export class GameplayScene extends Phaser.Scene {
     // onEvent(this, Wave.Events.Spawn.Remote, this.handleSpawnEnemy, this);
 
     this.projectileController.setSimulate(true);
-
     this.pingText = this.add.text(10, 10, '', { fontSize: 16, color: '#ffffff' }).setDepth(10000);
+
+    this.storage.getCollection(connectionStateCollection)!.subscribe('Add', (collection, from, id, data) => {
+      console.log('playerAdd', id, data);
+    });
 
     this.multiplayerController = new MultiplayerController(this, this.storage);
     this.multiplayerController.connect('GAME1', playerId).then(() => {
       setTimeout(() => {
+          this.storage.getCollection<Player.State>(playerStateCollection)!.forEach((stateRecord, id, collection) => {
+            collection.setReadonly(id !== this.mainPlayerId, id);
+            this.spawnPlayer(id, stateRecord);
+          });
           this.multiplayerController.setReady();
       }, 2000);
     });
@@ -344,13 +352,13 @@ export class GameplayScene extends Phaser.Scene {
     }
   }
 
-  public spawnPlayer(playerId: string, x: number, y: number): void {
+  public spawnPlayer(playerId: string, stateRecord: SyncCollectionRecord<Player.State>): void {
     if (this.players.has(playerId)) {
       logger.warn(`Player ${playerId} already exists.`);
       return;
     }
 
-    const player = new PlayerEntity(this, playerId, x, y);
+    const player = new PlayerEntity(this, playerId, stateRecord);
     this.players.set(playerId, player);
 
     player.setLocationBounds(this.location.getBounds());

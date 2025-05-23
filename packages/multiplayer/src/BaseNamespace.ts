@@ -54,8 +54,6 @@ export class BaseNamespace {
             } else if (message.event === SyncCollectionEvents.Remove) {
               collection.remoteRemove(message.itemId, broadcastRemoteMessages, clientId);
             }
-
-            console.log(`Collection ${message.collectionId} updated`, collection.getItems());
         } catch (error) {
             console.error(`Failed to decode sync collection message:`, error);
         }

@@ -66,13 +66,13 @@ export class ServerNamespace<SessionData extends object> extends BaseNamespace {
             payload: collection.encodeAll() 
         }).finish();
         const message = Message.encode({ type: MessageType.ExportCollectionEvent, timestamp: Date.now().toString(), payload: exportMessage }).finish();
-        this.server.broadcast(clientId, message);
+        this.server.send(clientId, message);
     }
 
     protected broadcast(messageBytes: Uint8Array, excludeClientId?: ClientId) {
         this.sockets.forEach((clientSocket) => {
             if (!excludeClientId || clientSocket.id !== excludeClientId) {
-                this.server.broadcast(clientSocket.id, messageBytes);
+                this.server.send(clientSocket.id, messageBytes);
             }
         });
     }

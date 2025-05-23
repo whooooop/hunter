@@ -9,114 +9,34 @@ import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 
 export const protobufPackage = "game";
 
-export interface Point {
-  x: number;
-  y: number;
-}
-
-export interface Connection {
+export interface ConnectionState {
   ready: boolean;
 }
 
-export interface Player {
-  id: string;
-  position: Point | undefined;
-  velocity: Point | undefined;
+export interface PlayerState {
+  positionX: number;
+  positionY: number;
+  velocityX: number;
+  velocityY: number;
   weaponId: string;
 }
 
-function createBasePoint(): Point {
-  return { x: 0, y: 0 };
-}
-
-export const Point: MessageFns<Point> = {
-  encode(message: Point, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.x !== 0) {
-      writer.uint32(13).float(message.x);
-    }
-    if (message.y !== 0) {
-      writer.uint32(21).float(message.y);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): Point {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePoint();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 13) {
-            break;
-          }
-
-          message.x = reader.float();
-          continue;
-        }
-        case 2: {
-          if (tag !== 21) {
-            break;
-          }
-
-          message.y = reader.float();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): Point {
-    return {
-      x: isSet(object.x) ? globalThis.Number(object.x) : 0,
-      y: isSet(object.y) ? globalThis.Number(object.y) : 0,
-    };
-  },
-
-  toJSON(message: Point): unknown {
-    const obj: any = {};
-    if (message.x !== 0) {
-      obj.x = message.x;
-    }
-    if (message.y !== 0) {
-      obj.y = message.y;
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<Point>, I>>(base?: I): Point {
-    return Point.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<Point>, I>>(object: I): Point {
-    const message = createBasePoint();
-    message.x = object.x ?? 0;
-    message.y = object.y ?? 0;
-    return message;
-  },
-};
-
-function createBaseConnection(): Connection {
+function createBaseConnectionState(): ConnectionState {
   return { ready: false };
 }
 
-export const Connection: MessageFns<Connection> = {
-  encode(message: Connection, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const ConnectionState: MessageFns<ConnectionState> = {
+  encode(message: ConnectionState, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.ready !== false) {
       writer.uint32(8).bool(message.ready);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): Connection {
+  decode(input: BinaryReader | Uint8Array, length?: number): ConnectionState {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseConnection();
+    const message = createBaseConnectionState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -137,11 +57,11 @@ export const Connection: MessageFns<Connection> = {
     return message;
   },
 
-  fromJSON(object: any): Connection {
+  fromJSON(object: any): ConnectionState {
     return { ready: isSet(object.ready) ? globalThis.Boolean(object.ready) : false };
   },
 
-  toJSON(message: Connection): unknown {
+  toJSON(message: ConnectionState): unknown {
     const obj: any = {};
     if (message.ready !== false) {
       obj.ready = message.ready;
@@ -149,70 +69,81 @@ export const Connection: MessageFns<Connection> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<Connection>, I>>(base?: I): Connection {
-    return Connection.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<ConnectionState>, I>>(base?: I): ConnectionState {
+    return ConnectionState.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<Connection>, I>>(object: I): Connection {
-    const message = createBaseConnection();
+  fromPartial<I extends Exact<DeepPartial<ConnectionState>, I>>(object: I): ConnectionState {
+    const message = createBaseConnectionState();
     message.ready = object.ready ?? false;
     return message;
   },
 };
 
-function createBasePlayer(): Player {
-  return { id: "", position: undefined, velocity: undefined, weaponId: "" };
+function createBasePlayerState(): PlayerState {
+  return { positionX: 0, positionY: 0, velocityX: 0, velocityY: 0, weaponId: "" };
 }
 
-export const Player: MessageFns<Player> = {
-  encode(message: Player, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
-      writer.uint32(10).string(message.id);
+export const PlayerState: MessageFns<PlayerState> = {
+  encode(message: PlayerState, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.positionX !== 0) {
+      writer.uint32(13).float(message.positionX);
     }
-    if (message.position !== undefined) {
-      Point.encode(message.position, writer.uint32(18).fork()).join();
+    if (message.positionY !== 0) {
+      writer.uint32(21).float(message.positionY);
     }
-    if (message.velocity !== undefined) {
-      Point.encode(message.velocity, writer.uint32(26).fork()).join();
+    if (message.velocityX !== 0) {
+      writer.uint32(29).float(message.velocityX);
+    }
+    if (message.velocityY !== 0) {
+      writer.uint32(37).float(message.velocityY);
     }
     if (message.weaponId !== "") {
-      writer.uint32(34).string(message.weaponId);
+      writer.uint32(42).string(message.weaponId);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): Player {
+  decode(input: BinaryReader | Uint8Array, length?: number): PlayerState {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePlayer();
+    const message = createBasePlayerState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1: {
-          if (tag !== 10) {
+          if (tag !== 13) {
             break;
           }
 
-          message.id = reader.string();
+          message.positionX = reader.float();
           continue;
         }
         case 2: {
-          if (tag !== 18) {
+          if (tag !== 21) {
             break;
           }
 
-          message.position = Point.decode(reader, reader.uint32());
+          message.positionY = reader.float();
           continue;
         }
         case 3: {
-          if (tag !== 26) {
+          if (tag !== 29) {
             break;
           }
 
-          message.velocity = Point.decode(reader, reader.uint32());
+          message.velocityX = reader.float();
           continue;
         }
         case 4: {
-          if (tag !== 34) {
+          if (tag !== 37) {
+            break;
+          }
+
+          message.velocityY = reader.float();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
             break;
           }
 
@@ -228,25 +159,29 @@ export const Player: MessageFns<Player> = {
     return message;
   },
 
-  fromJSON(object: any): Player {
+  fromJSON(object: any): PlayerState {
     return {
-      id: isSet(object.id) ? globalThis.String(object.id) : "",
-      position: isSet(object.position) ? Point.fromJSON(object.position) : undefined,
-      velocity: isSet(object.velocity) ? Point.fromJSON(object.velocity) : undefined,
+      positionX: isSet(object.positionX) ? globalThis.Number(object.positionX) : 0,
+      positionY: isSet(object.positionY) ? globalThis.Number(object.positionY) : 0,
+      velocityX: isSet(object.velocityX) ? globalThis.Number(object.velocityX) : 0,
+      velocityY: isSet(object.velocityY) ? globalThis.Number(object.velocityY) : 0,
       weaponId: isSet(object.weaponId) ? globalThis.String(object.weaponId) : "",
     };
   },
 
-  toJSON(message: Player): unknown {
+  toJSON(message: PlayerState): unknown {
     const obj: any = {};
-    if (message.id !== "") {
-      obj.id = message.id;
+    if (message.positionX !== 0) {
+      obj.positionX = message.positionX;
     }
-    if (message.position !== undefined) {
-      obj.position = Point.toJSON(message.position);
+    if (message.positionY !== 0) {
+      obj.positionY = message.positionY;
     }
-    if (message.velocity !== undefined) {
-      obj.velocity = Point.toJSON(message.velocity);
+    if (message.velocityX !== 0) {
+      obj.velocityX = message.velocityX;
+    }
+    if (message.velocityY !== 0) {
+      obj.velocityY = message.velocityY;
     }
     if (message.weaponId !== "") {
       obj.weaponId = message.weaponId;
@@ -254,18 +189,15 @@ export const Player: MessageFns<Player> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<Player>, I>>(base?: I): Player {
-    return Player.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<PlayerState>, I>>(base?: I): PlayerState {
+    return PlayerState.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<Player>, I>>(object: I): Player {
-    const message = createBasePlayer();
-    message.id = object.id ?? "";
-    message.position = (object.position !== undefined && object.position !== null)
-      ? Point.fromPartial(object.position)
-      : undefined;
-    message.velocity = (object.velocity !== undefined && object.velocity !== null)
-      ? Point.fromPartial(object.velocity)
-      : undefined;
+  fromPartial<I extends Exact<DeepPartial<PlayerState>, I>>(object: I): PlayerState {
+    const message = createBasePlayerState();
+    message.positionX = object.positionX ?? 0;
+    message.positionY = object.positionY ?? 0;
+    message.velocityX = object.velocityX ?? 0;
+    message.velocityY = object.velocityY ?? 0;
     message.weaponId = object.weaponId ?? "";
     return message;
   },

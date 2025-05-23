@@ -1,3 +1,4 @@
+import { PlayerState } from "@hunter/storage-proto/dist/storage";
 import { WeaponType } from "../weapons/WeaponTypes";
 // import { EventPlayerJoined } from "../proto/generated/game";
 // import { EventPlayerPosition } from "../proto/generated/game";
@@ -6,6 +7,8 @@ export namespace Player {
   export interface StorageState {
     id: string;
   }
+
+  export type State = PlayerState;
 
   export namespace Events { 
 

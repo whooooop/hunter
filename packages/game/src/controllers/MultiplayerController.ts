@@ -3,7 +3,7 @@ import { createLogger } from '../utils/logger';
 import { GameplayScene } from '../scenes/GameplayScene/GameplayScene';
 import { Game } from '../types/gameTypes';
 import { ClientMultiplayer, StorageSpace } from '@hunter/multiplayer/dist/client';
-import { connectionsCollection } from "../storage/collections/connections.collection";
+import { connectionStateCollection } from "../storage/collections/connectionState.collection";
 
 const logger = createLogger('MultiplayerController');
 const SERVER_URL = 'ws://localhost:3000';
@@ -37,7 +37,7 @@ export class MultiplayerController {
   }
 
   public setReady(): void {
-    const collections = this.storage.getCollection(connectionsCollection)!;
+    const collections = this.storage.getCollection(connectionStateCollection)!;
     collections.updateItem(this.playerId, { ready: true });
   }
 

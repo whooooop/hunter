@@ -3,6 +3,7 @@ import { forceToTargetOffset, easeOutQuart, easeOutQuint } from "../utils/ForceU
 import { Location } from "../types/Location";
 import { hexToNumber } from "../utils/colors";
 import { DEBUG, OBJECTS_DEPTH_OFFSET } from "../config";
+import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 
 const logger = createLogger('MotionController');
 
@@ -72,6 +73,8 @@ export class MotionController2 {
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
   private debugRect!: Phaser.GameObjects.Rectangle;
 
+  private state: SyncCollectionRecord<{positionX: number, positionY: number, velocityX: number, velocityY: number}> | null = null;
+
   constructor(scene: Phaser.Scene, body: Phaser.Physics.Arcade.Body, options: MotionControllerOptions) {
     this.scene = scene;
     this.body = body;
@@ -89,6 +92,10 @@ export class MotionController2 {
     }
   }
 
+  public setState(state: SyncCollectionRecord<{positionX: number, positionY: number, velocityX: number, velocityY: number}>): void {
+    this.state = state;
+    console.log(this.state);
+  }
 
   public isMoving(): boolean {
     return this.moveX !== 0 || this.moveY !== 0;
@@ -147,10 +154,11 @@ export class MotionController2 {
   
   public update(time: number, delta: number): void {
      // Интерполяция к целевой позиции
-     if (this.targetX && this.targetY) {
+     if (this.state?.readonly) {
       const lerpFactor = 0.15; // Коэффициент сглаживания (0-1). Меньше значение -> плавнее движение.
-      this.body.x = Phaser.Math.Interpolation.Linear([this.body.x, this.targetX], lerpFactor);
-      this.body.y = Phaser.Math.Interpolation.Linear([this.body.y, this.targetY], lerpFactor);
+      this.body.x = Phaser.Math.Interpolation.Linear([this.body.x, this.state?.data.positionX], lerpFactor);
+      this.body.y = Phaser.Math.Interpolation.Linear([this.body.y, this.state?.data.positionY], lerpFactor);
+      this.setMove(this.state?.data.velocityX, this.state?.data.velocityY);
     }
 
     // Ускорение и максимальная скорость теперь обрабатываются физикой через setMove
@@ -186,6 +194,12 @@ export class MotionController2 {
       );
     }
 
+    if (this.state && !this.state?.readonly) {
+      this.state.data.positionX = parseInt(this.body.x.toFixed(0), 10);
+      this.state.data.positionY = parseInt(this.body.y.toFixed(0), 10);
+      this.state.data.velocityX = this.moveX;
+      this.state.data.velocityY = this.moveY;
+    }
   }
 
   public getPosition(): { x: number, y: number, moveX: number, moveY: number, jumpHeight: number, depth: number } {
@@ -197,11 +211,6 @@ export class MotionController2 {
       jumpHeight: this.jumpOffsetY,
       depth: this.getDepth(),
     };
-  }
-
-  public setState(state: { targetX: number, targetY: number, moveX: number, moveY: number }): void {
-    this.setTarget(state.targetX, state.targetY);
-    this.setMove(state.moveX, state.moveY);
   }
 
   public setTarget(x: number, y: number): void {

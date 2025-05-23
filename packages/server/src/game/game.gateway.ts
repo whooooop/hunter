@@ -2,9 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { parse } from 'url';
 import { Server as HttpServer, IncomingMessage } from 'http';
 import { MultiplayerServer, ClientSocket } from '@hunter/multiplayer/dist/server';
-import { playersCollection } from './collections/players.collection';
-import { connectionsCollection } from './collections/connections.collection';
-import { Connection, Player } from '@hunter/storage-proto';
+import { playerStateCollection } from './collections/playerState.collection';
+import { connectionStateCollection } from './collections/connectionState.collection';
+import { ConnectionState, PlayerState } from '@hunter/storage-proto';
 import { gameStorage } from './game.storage';
 
 type SessionData = {
@@ -60,28 +60,29 @@ export class GameGateway {
     }
 
     private async onJoin(server: MultiplayerServer<SessionData>, clientSocket: ClientSocket<SessionData>) {
-        const connections = clientSocket.getCollection<Connection>(connectionsCollection)!;
-        const players = clientSocket.getCollection<Player>(playersCollection)!;
+        const connections = clientSocket.getCollection<ConnectionState>(connectionStateCollection)!;
+        const players = clientSocket.getCollection<PlayerState>(playerStateCollection)!;
         const player = players.getItem(clientSocket.session.playerId);
         
         connections.addItem(clientSocket.session.playerId, { ready: false });
 
         if (!player) {
             players.addItem(clientSocket.session.playerId, {
-                id: clientSocket.session.playerId,
-                position: { x: 0, y: 0 },
-                velocity: { x: 0, y: 0 },
+                positionX: 0,
+                positionY: 0,
+                velocityX: 0,
+                velocityY: 0,
                 weaponId: 'default',
             });
         }
 
         // Отправить игроку нужные состояния коллекций
-        clientSocket.namespace!.broadcastCollection(clientSocket.id, connectionsCollection);
-        clientSocket.namespace!.broadcastCollection(clientSocket.id, playersCollection);
+        clientSocket.namespace!.broadcastCollection(clientSocket.id, connectionStateCollection);
+        clientSocket.namespace!.broadcastCollection(clientSocket.id, playerStateCollection);
     }
 
     private async onDisconnect(server: MultiplayerServer<SessionData>, clientSocket: ClientSocket<SessionData>) {
-        const connections = clientSocket.getCollection<Connection>(connectionsCollection)!;
+        const connections = clientSocket.getCollection<ConnectionState>(connectionStateCollection)!;
         connections.removeItem(clientSocket.session.playerId);
     }
 

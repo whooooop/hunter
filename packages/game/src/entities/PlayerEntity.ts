@@ -9,6 +9,7 @@ import { MotionController2 } from '../controllers/MotionController2';
 import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture } from '../textures/PlayerTexture';
 import JumpAudioUrl from '../assets/audio/jump.mp3';
 import { SettingsService } from '../services/SettingsService';
+import { SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
 
 const logger = createLogger('Player');
 const settingsService = SettingsService.getInstance();
@@ -27,8 +28,6 @@ const jumpAudio = {
 export class PlayerEntity {
   name = 'Player';
 
-  private id: string;
-  private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
   private body: Phaser.Physics.Arcade.Body;
 
@@ -64,12 +63,16 @@ export class PlayerEntity {
     scene.load.audio(jumpAudio.key, jumpAudio.url);
   }
 
-  constructor(scene: Phaser.Scene, id: string, x: number, y: number) {
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly id: string,
+    private readonly state: SyncCollectionRecord<Player.State>
+  ) {
     this.id = id;
     this.scene = scene;
-    this.container = scene.add.container(x, y);
+    this.container = scene.add.container(0, 0);
 
-    this.body = scene.physics.add.body(x, y, this.bodyWidth, this.bodyHeight);
+    this.body = scene.physics.add.body(state.data.positionX, state.data.positionY, this.bodyWidth, this.bodyHeight);
     this.shadow = new ShadowEntity(scene, this.body);
     this.playerBody = scene.add.image(0, 0, PlayerBodyTexture.key).setScale(PlayerBodyTexture.scale);
     this.frontHand = scene.add.image(0, 0, PlayerHandTexture.key).setScale(PlayerHandTexture.scale).setPosition(-6, 24);
@@ -96,22 +99,23 @@ export class PlayerEntity {
       maxVelocityX: 200,
       maxVelocityY: 200,
     });
+    this.motionController.setState(state);
     
-    onEvent(scene, Player.Events.State.Remote, this.handlePlayerStateRemote, this);
+    // onEvent(scene, Player.Events.State.Remote, this.handlePlayerStateRemote, this);
   }
 
-  private handlePlayerStateRemote(payload: Player.Events.State.Payload): void {
-    if (payload.playerId !== this.id) {
-      return;
-    }
+  // private handlePlayerStateRemote(payload: Player.Events.State.Payload): void {
+  //   if (payload.playerId !== this.id) {
+  //     return;
+  //   }
 
-    this.motionController.setState({
-      targetX: payload.position.x,
-      targetY: payload.position.y,
-      moveX: payload.movement.x,
-      moveY: payload.movement.y,
-    });
-  }
+  //   this.motionController.setState({
+  //     targetX: payload.position.x,
+  //     targetY: payload.position.y,
+  //     moveX: payload.movement.x,
+  //     moveY: payload.movement.y,
+  //   });
+  // }
 
   public getId(): string {
     return this.id;
@@ -146,6 +150,9 @@ export class PlayerEntity {
     const position = this.motionController.getPosition();
     const isMoving = this.motionController.getVelocity().length() !== 0;
     const isJumping = this.motionController.isJumping();
+
+    // this.state.position = { x: position.x, y: position.y };
+    // this.state.velocity = { x: position.moveX, y: position.moveY };
 
     this.container.setDepth(position.depth);
     this.container.setPosition(position.x, position.y - this.containerOffsetY);
@@ -280,6 +287,6 @@ export class PlayerEntity {
     this.container.destroy();
     this.body.destroy();
     this.motionController.destroy();
-    offEvent(this.scene, Player.Events.State.Remote, this.handlePlayerStateRemote, this);
+    // offEvent(this.scene, Player.Events.State.Remote, this.handlePlayerStateRemote, this);
   }
 } 

@@ -2,18 +2,14 @@ syntax = "proto3";
 
 package game;
 
-message Point {
-  float x = 1;
-  float y = 2;
-}
-
-message Connection {
+message ConnectionState {
   bool ready = 1;
 }
 
-message Player {
-  string id = 1;
-  Point position = 2;
-  Point velocity = 3;
-  string weaponId = 4;
+message PlayerState {
+  float positionX = 1;
+  float positionY = 2;
+  float velocityX = 3;
+  float velocityY = 4;
+  string weaponId = 5;
 }

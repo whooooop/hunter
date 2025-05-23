@@ -17,7 +17,7 @@ export class ClientSocket<SessionData extends object> {
     ) {}
 
     send(bytes: Uint8Array) {
-        this.server.broadcast(this.id, bytes);
+        this.server.send(this.id, bytes);
     }
 
     async disconnect() {

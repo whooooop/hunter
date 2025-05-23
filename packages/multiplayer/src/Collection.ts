@@ -13,8 +13,21 @@ export interface SyncCollectionConfig<T> {
   saveData?: boolean,
   throttle?: number,
   reactive?: boolean,
+  readonly?: boolean,
   encode: (data: T) => BinaryWriter,
   decode: (data: Uint8Array) => T,
+}
+
+export interface SyncCollectionRecord<T> {
+  data: T;
+  __original: T;
+  readonly: boolean;
+}
+
+const defaultConfig: Partial<SyncCollectionConfig<object>> = {
+  saveData: true,
+  throttle: 50,
+  reactive: true,
 }
 
 export function defineCollection<T extends object>(id: string, config: SyncCollectionConfig<T>): CollectionId {
@@ -25,13 +38,14 @@ export function defineCollection<T extends object>(id: string, config: SyncColle
 export class SyncCollection<T extends object> {
   static readonly registry: Map<string, SyncCollectionConfig<object>> = new Map();
 
-  private collection: Map<string, { data: T }> = new Map();
+  private collection: Map<string, SyncCollectionRecord<T>> = new Map();
   private subscribers: Set<{event: SyncCollectionEvent, callback: (collection: SyncCollection<T>, from: FromUpdate, id: string, data: any) => void}> = new Set();
   private subscribersCount = new Map<SyncCollectionEvent, number>([
     ['Add', 0],
     ['Update', 0],
     ['Remove', 0],
   ]);
+  private readonlyItems: Set<string> = new Set();
 
   private lastSendTime: Map<string, number> = new Map();
   private pendingUpdates: Map<string, { data: T, timer: NodeJS.Timeout }> = new Map();
@@ -41,7 +55,9 @@ export class SyncCollection<T extends object> {
     private readonly id: CollectionId,
     private readonly storage: StorageSpace,
     private readonly config: SyncCollectionConfig<T>
-  ) {}
+  ) {
+    this.config = { ...defaultConfig, ...config };
+  }
 
   static create<T extends object>(id: string, storage: StorageSpace): SyncCollection<T> | null {
     const config = SyncCollection.registry.get(id);
@@ -121,6 +137,29 @@ export class SyncCollection<T extends object> {
       .map(item => item.data);
   }
 
+  public setReadonly(value: boolean, id?: string): void {
+    if (id) {
+      if (value) {
+        const item = this.collection.get(id);
+        this.readonlyItems.add(id);
+        item && (item.readonly = true);
+      } else {
+        this.readonlyItems.delete(id);
+        const item = this.collection.get(id);
+        item && (item.readonly = false);
+      }
+    } else {
+      this.config.readonly = value;
+      this.collection.forEach(item => item.readonly = value);
+    }
+  }
+
+  public forEach(callback: (item: SyncCollectionRecord<T>, id: string, collection: SyncCollection<T>) => void): void {
+    this.collection.forEach((item, id) => {
+      callback(item, id, this);
+    });
+  }
+
   public encodeAll(): Uint8Array[] {
     return Array.from(this.collection.values())
       .map(item => this.config.encode(item.data).finish()); 
@@ -128,9 +167,15 @@ export class SyncCollection<T extends object> {
 
   private localAdd(id: string, data: T): void {
     const reactive = this.config.reactive;
+
     const onChange = (key: keyof T, value: any, oldValue: any) => {
+      console.log('onChange', key, value, oldValue);
+      if (this.config.readonly || this.readonlyItems.has(id)) {
+        return;
+      }
       this.sendUpdate(id, data);
     };
+
     if (reactive) {
       const proxy = new Proxy(data as object, {
         set(obj: any, key: string | symbol, value: any) {
@@ -139,19 +184,29 @@ export class SyncCollection<T extends object> {
             obj[key] = value;
             onChange(key as keyof T, value, oldValue);
           }
-        return true;
+          return true;
         }
       });
-      this.collection.set(id, { data: proxy as T });
+      this.collection.set(id, { 
+        data: proxy as T,
+        __original: data,
+        readonly: this.config.readonly ?? this.readonlyItems.has(id)
+      });
     } else {
-      this.collection.set(id, { data });
+      this.collection.set(id, { 
+        data,
+        __original: data,
+        readonly: this.config.readonly ?? this.readonlyItems.has(id)
+      });
     }
   }
 
   private localUpdate(id: string, data: T): void {
     const item = this.collection.get(id);
     if (item) {
-      Object.assign(item.data, data);
+      Object.keys(data).forEach((key: string) => {
+        item.__original[key as keyof T] = data[key as keyof T];
+      });
     } else {
       this.localAdd(id, data);
     }
