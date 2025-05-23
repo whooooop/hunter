@@ -17,6 +17,12 @@ export class ClientMultiplayer {
   private connectionResolver: (() => void) | null = null;
   private connectionRejector: ((reason?: any) => void) | null = null;
 
+  private pingInterval: NodeJS.Timeout | null = null;
+  private pingTime: number = 3000;
+  private pingSendTime: number = 0;
+  private pingPending: boolean = false;
+  public ping: number = 0;
+
   private namespace!: ClientNamespace;
 
   constructor(
@@ -68,6 +74,14 @@ export class ClientMultiplayer {
           // this.emit('connect');
           if (this.connectionResolver) this.connectionResolver();
           this.resetConnectionPromiseStates();
+
+          this.pingInterval = setInterval(() => {
+            if (Date.now() - this.pingSendTime > 15000) this.pingPending = false;
+            if (this.pingPending) return;
+            this.pingSendTime = Date.now();
+            this.pingPending = true;
+            this.send(Message.encode({ type: MessageType.Ping, timestamp: '', payload: new Uint8Array() }).finish());
+          }, this.pingTime);
         };
 
         this.websocket.onerror = (event) => {
@@ -89,6 +103,7 @@ export class ClientMultiplayer {
           // this.emit('disconnect', event.reason || `Code: ${event.code}`);
           this.cleanupWebSocketResources();
           this.resetConnectionPromiseStates();
+          clearInterval(this.pingInterval!);
         };
 
         this.websocket.onmessage = (event: MessageEvent): void => {
@@ -106,6 +121,12 @@ export class ClientMultiplayer {
           const messageBytes = new Uint8Array(buffer);
           const messageData = Message.decode(messageBytes);
           
+          if (messageData.type === MessageType.Ping) {
+            this.ping = Date.now() - this.pingSendTime;
+            this.pingPending = false;
+            return;
+          }
+
           if (messageData.type === MessageType.SyncCollectionEvent) {
             this.namespace.handleMessage('', messageData.payload);
           } else if (messageData.type === MessageType.ExportCollectionEvent) {

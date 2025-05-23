@@ -93,7 +93,13 @@ export class MultiplayerServer<Session extends object = any> {
       console.warn(`Received empty message from ${clientId}. Ignoring.`);
       return;
     }
+
     const messageData = Message.decode(messageBytes);
+    if (messageData.type === MessageType.Ping) {
+      this.broadcast(clientId, messageBytes);
+      return;
+    }
+
     if (messageData.type === MessageType.SyncCollectionEvent) {
       const namespaceId = this.clientNamespaceMap.get(clientId)!;
       const namespace = this.namespaces.get(namespaceId)!;

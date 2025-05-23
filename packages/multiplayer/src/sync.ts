@@ -10,17 +10,21 @@ import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 export const protobufPackage = "sync";
 
 export enum MessageType {
-  SyncCollectionEvent = 0,
-  ExportCollectionEvent = 1,
+  Ping = 0,
+  SyncCollectionEvent = 1,
+  ExportCollectionEvent = 2,
   UNRECOGNIZED = -1,
 }
 
 export function messageTypeFromJSON(object: any): MessageType {
   switch (object) {
     case 0:
+    case "Ping":
+      return MessageType.Ping;
+    case 1:
     case "SyncCollectionEvent":
       return MessageType.SyncCollectionEvent;
-    case 1:
+    case 2:
     case "ExportCollectionEvent":
       return MessageType.ExportCollectionEvent;
     case -1:
@@ -32,6 +36,8 @@ export function messageTypeFromJSON(object: any): MessageType {
 
 export function messageTypeToJSON(object: MessageType): string {
   switch (object) {
+    case MessageType.Ping:
+      return "Ping";
     case MessageType.SyncCollectionEvent:
       return "SyncCollectionEvent";
     case MessageType.ExportCollectionEvent:

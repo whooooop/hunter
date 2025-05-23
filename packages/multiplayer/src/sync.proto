@@ -3,8 +3,9 @@ syntax = "proto3";
 package sync;
 
 enum MessageType {
-  SyncCollectionEvent = 0;
-  ExportCollectionEvent = 1;
+  Ping = 0;
+  SyncCollectionEvent = 1;
+  ExportCollectionEvent = 2;
 }
 
 message Message {

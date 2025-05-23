@@ -40,6 +40,8 @@ export class GameplayScene extends Phaser.Scene {
   private loadingView!: LoadingView;
   private playerService: PlayerService;
   private questService: QuestService;
+
+  private pingText!: Phaser.GameObjects.Text;
   
   private shop!: BaseShop;
   private enemies: Map<string, Damageable.Entity> = new Map();
@@ -76,6 +78,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private isPause: boolean = false;
   private isGameOver: boolean = false;
+  private isMultiplayer: boolean = false;
 
   private storage!: StorageSpace;
 
@@ -248,6 +251,7 @@ export class GameplayScene extends Phaser.Scene {
    *      Multiplayer 
    */
   private multiplayerInit(playerId: string): void {
+    this.isMultiplayer = true;
     // onEvent(this, Game.Events.State.Remote, this.handleGameState, this);
     // onEvent(this, Player.Events.Join.Remote, this.handlePlayerJoin, this);
     // onEvent(this, Player.Events.Left.Remote, this.handlePlayerLeft, this);
@@ -256,11 +260,12 @@ export class GameplayScene extends Phaser.Scene {
 
     this.projectileController.setSimulate(true);
 
+    this.pingText = this.add.text(10, 10, '', { fontSize: 16, color: '#ffffff' }).setDepth(10000);
+
     this.multiplayerController = new MultiplayerController(this, this.storage);
     this.multiplayerController.connect('GAME1', playerId).then(() => {
-
       setTimeout(() => {
-        this.multiplayerController.setReady();
+          this.multiplayerController.setReady();
       }, 2000);
     });
   }
@@ -364,6 +369,10 @@ export class GameplayScene extends Phaser.Scene {
   }
   
   update(time: number, delta: number): void {
+    if (this.isMultiplayer) {
+      this.pingText.setText(`Ping: ${this.multiplayerController.ping}ms`);
+    }
+
     const mainPlayer = this.players.get(this.mainPlayerId);
 
     this.location.update(time, delta);

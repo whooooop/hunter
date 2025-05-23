@@ -9,4 +9,5 @@
 - settings view
 - multiplayer
 - crypto storage key & data
+- transfer collection id
 - decal indexed DB

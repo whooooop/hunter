@@ -20,10 +20,15 @@ export class MultiplayerController {
     private readonly scene: GameplayScene,
     private readonly storage: StorageSpace
   ) {
+    (window as any)['_s'] = this.storage;
     this.client = new ClientMultiplayer({
       baseUrl: SERVER_URL,
       storage: this.storage
     });
+  }
+
+  public get ping(): number {
+    return this.client.ping;
   }
 
   public connect(gameId: string, playerId: string): Promise<void> {
