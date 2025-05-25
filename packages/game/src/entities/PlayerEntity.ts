@@ -123,10 +123,12 @@ export class PlayerEntity {
   public setWeapon(weapon: WeaponEntity): void {
     if (this.currentWeapon) {
       this.weaponContainer.remove(this.currentWeapon.getContainer());
+      this.currentWeapon.getContainer().setAlpha(0);
     }
     this.currentWeapon = weapon;
     this.currentWeapon.setPosition(0, 0, this.direction);
     this.weaponContainer.add(weapon.getContainer());
+    this.currentWeapon.getContainer().setAlpha(1);
   }
 
   public setLocationBounds(bounds: Location.Bounds): void {

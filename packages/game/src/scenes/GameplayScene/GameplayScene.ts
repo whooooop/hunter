@@ -267,6 +267,7 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.on<GameState>(gameStateCollection, 'Add', () => {
       const currentWeaponId = this.weaponController.getCurrentWeapon(playerId);
       const currentWeapon = this.storage.getCollection<PlayerWeapon>(playerWeaponCollection)!.getItem(playerId);
+      // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
 
       if (!currentWeaponId) {
         emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });

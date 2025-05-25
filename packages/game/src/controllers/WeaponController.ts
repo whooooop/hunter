@@ -102,10 +102,10 @@ export class WeaponController {
     }
 
     if (currentWeaponId) {
-      const currentWeapon = this.getWeapon(currentWeaponId);
-      if (currentWeapon) {
-        currentWeapon.setPosition(-2000, -2000, 1);
-      }
+      // const currentWeapon = this.getWeapon(currentWeaponId);
+      // if (currentWeapon) {
+      //   currentWeapon.hide();
+      // }
     }
 
     const weapon = this.getWeapon(weaponId);

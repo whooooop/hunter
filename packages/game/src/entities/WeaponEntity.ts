@@ -82,6 +82,8 @@ export class WeaponEntity {
       this.createMuzzleFlash(this.options.muzzleFlash);
     }
 
+    this.container.setAlpha(0);
+
     this.storage.on<WeaponFireEvent>(fireEventCollection, 'Add', this.handleFireAction.bind(this));
     this.storage.on<WeaponReloadEvent>(reloadEventCollection, 'Add', this.handleReloadAction.bind(this));
   }

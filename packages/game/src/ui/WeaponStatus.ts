@@ -46,6 +46,7 @@ export class WeaponStatus {
   ) {
     this.create();
 
+    this.storage.on<PlayerScoreState>(playerScoreStateCollection, 'Add', this.updateCoins.bind(this));
     this.storage.on<PlayerScoreState>(playerScoreStateCollection, 'Update', this.updateCoins.bind(this));
   }
 
