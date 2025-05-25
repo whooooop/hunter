@@ -1,11 +1,11 @@
-import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
+import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 import { EnemyEntity } from "../../entities/EnemyEntity";
 import { Enemy } from "../../types/enemyTypes";
 import { BearConfig } from "./config";
 
 export class BearEnemy extends EnemyEntity {
-  constructor(scene: Phaser.Scene, id: string, state: SyncCollectionRecord<Enemy.State>) {
-    super(scene, id, BearConfig, state);
+  constructor(scene: Phaser.Scene, id: string, state: SyncCollectionRecord<Enemy.State>, storage: StorageSpace) {
+    super(scene, id, BearConfig, state, storage);
 
     // scene.time.delayedCall(4000, () => {
     //   this.setAnimation(Enemy.Animation.RUN);

@@ -11,7 +11,6 @@ export namespace Weapon {
   export namespace Events {
     export namespace CreateProjectile {
       export const Local = 'WeaponCreateProjectileLocalEvent';
-      export const Remote = 'WeaponCreateProjectileRemoteEvent';
       export interface Payload {
         playerId: string;
         speed: number[];

@@ -294,7 +294,7 @@ export class GameplayScene extends Phaser.Scene {
       console.log('all ready');
       // game.started = true;
       this.projectileController.setSimulate(false);
-      // this.waveController.start();
+      this.waveController.start();
     }
   }
 
@@ -310,7 +310,7 @@ export class GameplayScene extends Phaser.Scene {
     if (this.isGameOver) {
       return;
     }
-    const enemy = createEnemy(id, record.data.type as Enemy.Type, this, record);
+    const enemy = createEnemy(id, record.data.type as Enemy.Type, this, record, this.storage);
     this.enemies.set(id, enemy);
     enemy.setLocationBounds(this.location.getBounds());
     this.damageableObjects.set(id, enemy);

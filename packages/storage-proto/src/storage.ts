@@ -69,6 +69,9 @@ export interface PlayerJumpEvent {
   playerId: string;
 }
 
+export interface EnemyDeathEvent {
+}
+
 function createBaseGameState(): GameState {
   return { host: "", createdAt: "0", playersCount: 0, started: false };
 }
@@ -975,6 +978,49 @@ export const PlayerJumpEvent: MessageFns<PlayerJumpEvent> = {
   fromPartial<I extends Exact<DeepPartial<PlayerJumpEvent>, I>>(object: I): PlayerJumpEvent {
     const message = createBasePlayerJumpEvent();
     message.playerId = object.playerId ?? "";
+    return message;
+  },
+};
+
+function createBaseEnemyDeathEvent(): EnemyDeathEvent {
+  return {};
+}
+
+export const EnemyDeathEvent: MessageFns<EnemyDeathEvent> = {
+  encode(_: EnemyDeathEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EnemyDeathEvent {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEnemyDeathEvent();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): EnemyDeathEvent {
+    return {};
+  },
+
+  toJSON(_: EnemyDeathEvent): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<EnemyDeathEvent>, I>>(base?: I): EnemyDeathEvent {
+    return EnemyDeathEvent.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<EnemyDeathEvent>, I>>(_: I): EnemyDeathEvent {
+    const message = createBaseEnemyDeathEvent();
     return message;
   },
 };

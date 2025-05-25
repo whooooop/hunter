@@ -61,3 +61,5 @@ message WeaponReloadEvent {
 message PlayerJumpEvent {
   string playerId = 1;
 }
+
+message EnemyDeathEvent {}

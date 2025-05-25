@@ -1,4 +1,4 @@
-import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
+import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 import { EnemyEntity } from "../entities/EnemyEntity";
 import { Enemy } from "../types/enemyTypes";
 import { loadSprite, loadSpriteSheet } from "../utils/sprite";
@@ -27,7 +27,7 @@ import { WolfConfig } from "./wolf/config";
 
 export const EnemyCollections: Record<Enemy.Type, {
   config: Enemy.Config,
-  enemy: new (scene: Phaser.Scene, id: string, record: SyncCollectionRecord<Enemy.State>) => EnemyEntity
+  enemy: new (scene: Phaser.Scene, id: string, record: SyncCollectionRecord<Enemy.State>, storage: StorageSpace) => EnemyEntity
 }> = {
   [Enemy.Type.HARE]: {
     config: HareConfig,
@@ -91,6 +91,6 @@ export function preloadEnemies(scene: Phaser.Scene, enemies: Enemy.Type[]): void
   });
 }
 
-export function createEnemy(id: string, enemyType: Enemy.Type, scene: Phaser.Scene, state: SyncCollectionRecord<Enemy.State>): EnemyEntity {
-  return new EnemyCollections[enemyType].enemy(scene, id, state);
+export function createEnemy(id: string, enemyType: Enemy.Type, scene: Phaser.Scene, state: SyncCollectionRecord<Enemy.State>, storage: StorageSpace): EnemyEntity {
+  return new EnemyCollections[enemyType].enemy(scene, id, state, storage);
 }

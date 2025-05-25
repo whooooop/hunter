@@ -1,11 +1,11 @@
-import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
+import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 import { EnemyEntity } from "../../entities/EnemyEntity";
 import { Enemy } from "../../types/enemyTypes";
 import { HedgehogConfig } from "./config";
 
 export class HedgehogEnemy extends EnemyEntity {
-  constructor(scene: Phaser.Scene, id: string, state: SyncCollectionRecord<Enemy.State>) {
-    super(scene, id, HedgehogConfig, state);
+  constructor(scene: Phaser.Scene, id: string, state: SyncCollectionRecord<Enemy.State>, storage: StorageSpace) {
+    super(scene, id, HedgehogConfig, state, storage);
 
     if (!state.readonly) {
       scene.time.delayedCall(3500, () => {

@@ -5,7 +5,7 @@ import { WeaponEntity } from "../entities/WeaponEntity";
 import { onEvent } from "../GameEvents";
 import { playerWeaponCollection } from "../storage/collections/playerWeapon.collection";
 import { weaponStateCollection } from "../storage/collections/weaponState.collection";
-import { ShopEvents, WeaponPurchasedPayload } from "../types";
+import { Player, ShopEvents, WeaponPurchasedPayload } from "../types";
 import { createLogger } from "../utils/logger";
 import { generateId } from "../utils/stringGenerator";
 import { createWeapon } from "../weapons";
@@ -24,7 +24,7 @@ export class WeaponController {
     private readonly storage: StorageSpace
   ) {
     onEvent(scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
-    // onEvent(scene, Player.Events.ChangeWeapon.Local, this.handleChangeWeapon, this);
+    onEvent(scene, Player.Events.ChangeWeapon.Local, this.handleChangeWeapon, this);
 
     this.storage.on<WeaponState>(weaponStateCollection, 'Add', this.addPlayerWeapon.bind(this));
     this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Add', this.updatePlayerCurrentWeapon.bind(this));
@@ -55,24 +55,26 @@ export class WeaponController {
     this.weapons.set(weaponId, weaponEntity);
   }
 
-  // private handleChangeWeapon({ playerId, direction }: Player.Events.ChangeWeapon.Payload): void {
-  //   const currentWeapon = this.getCurrentWeapon(playerId);
-  //   const playerWeapons = Array.from(this.playerWeapons.get(playerId)?.keys() || []);
+  private handleChangeWeapon({ playerId, direction }: Player.Events.ChangeWeapon.Payload): void {
+    const currentWeaponId = this.getCurrentWeapon(playerId);
+    const playerWeapons = Array.from(this.playerWeapons.get(playerId)?.keys() || []);
 
-  //   if (currentWeapon) {
-  //     const currentWeaponIndex = playerWeapons.indexOf(currentWeapon.type);
-  //     const nextWeapon = playerWeapons[currentWeaponIndex + direction];
-  //     if (nextWeapon) {
-  //       this.setWeapon(playerId, nextWeapon);
-  //     } else {
-  //       if (direction === 1) {
-  //         this.setWeapon(playerId, playerWeapons[0]);
-  //       } else {
-  //         this.setWeapon(playerId, playerWeapons[playerWeapons.length - 1]);
-  //       }
-  //     }
-  //   }
-  // }
+    if (!currentWeaponId) return;
+
+    const currentWeaponIndex = playerWeapons.indexOf(currentWeaponId);
+    let nextWeapon = playerWeapons[currentWeaponIndex + direction];
+    if (!nextWeapon) {
+      if (direction === 1) {
+        nextWeapon = playerWeapons[0];
+      } else {
+        nextWeapon = playerWeapons[playerWeapons.length - 1];
+      }
+    }
+
+    this.storage.getCollection<PlayerWeapon>(playerWeaponCollection)!.updateItem(playerId, {
+      weaponId: nextWeapon
+    });
+  }
 
   private getPlayerWeapon(playerId: string, weaponType: WeaponType): WeaponEntity | undefined {
     return this.playerWeapons.get(playerId)?.get(weaponType);

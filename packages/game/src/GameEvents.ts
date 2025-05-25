@@ -6,7 +6,6 @@ import { Wave } from './types/WaveTypes';
 interface EventPayloadMap {
   // Weapons
   [Weapon.Events.CreateProjectile.Local]: Weapon.Events.CreateProjectile.Payload;
-  [Weapon.Events.CreateProjectile.Remote]: Weapon.Events.CreateProjectile.Payload;
   [Weapon.Events.AimPoint.Local]: Weapon.Events.AimPoint.Payload;
 
   // Waves

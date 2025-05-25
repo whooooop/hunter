@@ -7,10 +7,7 @@ const logger = createLogger('MultiplayerController');
 const SERVER_URL = 'ws://localhost:3000';
 
 export class MultiplayerController {
-  private isHost: boolean = false;
   private playerId: string = '';
-  private connectedPlayers: Set<string> = new Set();
-  private maxPlayers: number = 2;
 
   private client: ClientMultiplayer;
 
@@ -40,15 +37,12 @@ export class MultiplayerController {
 
   // Обработчики локальных событий Phaser (отправка на сервер)
   // private setupLocalEventHandlers(): void {
-  //   onEvent(this.scene, Player.Events.State.Local, this.clientHandlePlayerState, this);
-
   //   onEvent(this.scene, Wave.Events.WaveStart.Local, this.clientHandleWaveStart, this);
   // }
 
   private setupServerEventHandlers(): void {
     // this.socketClient.on('WaveStart', this.serverHandleWaveStart.bind(this));
     // this.socketClient.on('EnemyDeath', this.serverHandleEnemyDeath.bind(this));
-    // this.socketClient.on('WeaponPurchased', this.serverHandleWeaponPurchased.bind(this));
   }
 
   // Обработчики локальных событий
