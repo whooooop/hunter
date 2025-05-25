@@ -1,7 +1,9 @@
 import { defineStorageSpace } from "@hunter/multiplayer/dist/client";
 import { connectionStateCollection } from "./collections/connectionState.collection";
 import { enemyStateCollection } from "./collections/enemyState.collection";
+import { fireEventCollection } from "./collections/fireEvent.collection";
 import { gameStateCollection } from "./collections/gameState.collection";
+import { jumpEventCollection } from "./collections/jumpEvent.collectio";
 import { playerScoreStateCollection } from "./collections/playerScoreState.collection";
 import { playerStateCollection } from "./collections/playerState.collection";
 import { playerWeaponCollection } from "./collections/playerWeapon.collection";
@@ -16,5 +18,8 @@ export const gameStorage = defineStorageSpace('game', {
     enemyStateCollection,
     weaponStateCollection,
     playerScoreStateCollection,
+
+    fireEventCollection,
+    jumpEventCollection,
   ],
 });

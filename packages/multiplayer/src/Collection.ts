@@ -233,7 +233,9 @@ export class SyncCollection<T extends object> {
       result = { data, __original, readonly };
     }
 
-    this.collection.set(id, result!);
+    if (this.config.saveData) {
+      this.collection.set(id, result!);
+    }
 
     return result!;
   }

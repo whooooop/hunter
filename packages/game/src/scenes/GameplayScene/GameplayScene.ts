@@ -175,7 +175,7 @@ export class GameplayScene extends Phaser.Scene {
 
     this.scoreController = new ScoreController(this, this.storage);
     this.bloodController = new BloodController(this);
-    this.keyboardController = new KeyBoardController(this, this.players, playerId);
+    this.keyboardController = new KeyBoardController(this, this.players, playerId, this.storage);
     this.weaponController = new WeaponController(this, this.players, this.storage);
     this.shopController = new ShopController(this, this.players, playerId, this.shop, this.levelConfig.weapons);
     this.decalController = new DecalController(this, 0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 5);
@@ -324,7 +324,7 @@ export class GameplayScene extends Phaser.Scene {
       return;
     }
 
-    const player = new PlayerEntity(this, playerId, stateRecord);
+    const player = new PlayerEntity(this, playerId, stateRecord, this.storage);
     this.players.set(playerId, player);
 
     if (playerId == this.mainPlayerId) {

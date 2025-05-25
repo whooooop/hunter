@@ -1,12 +1,12 @@
 import * as Phaser from 'phaser';
-import { ProjectileEntity } from '../entities/ProjectileEntity';
-import { rayRectIntersectionRobust } from '../utils/GeometryUtils';
-import { Weapon } from '../types/weaponTypes';
-import { createProjectile } from '../projectiles';
-import { emitEvent, offEvent, onEvent } from '../GameEvents';
-import { Projectile, Damageable, Game } from '../types/';
-import { WeaponType } from '../weapons/WeaponTypes';
 import { DEBUG } from '../config';
+import { ProjectileEntity } from '../entities/ProjectileEntity';
+import { emitEvent, offEvent, onEvent } from '../GameEvents';
+import { createProjectile } from '../projectiles';
+import { Damageable, Game, Projectile } from '../types/';
+import { Weapon } from '../types/weaponTypes';
+import { rayRectIntersectionRobust } from '../utils/GeometryUtils';
+import { WeaponType } from '../weapons/WeaponTypes';
 
 interface Hit {
   projectile: ProjectileEntity;
@@ -32,8 +32,8 @@ export class ProjectileController {
 
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
   constructor(
-    scene: Phaser.Scene, 
-    damageableObjects: Map<string, Damageable.Entity>, 
+    scene: Phaser.Scene,
+    damageableObjects: Map<string, Damageable.Entity>,
   ) {
     this.scene = scene;
     this.damageableObjects = damageableObjects;
@@ -42,7 +42,7 @@ export class ProjectileController {
 
     onEvent(scene, Weapon.Events.CreateProjectile.Local, this.handleCreateProjectile, this);
   }
-  
+
   public handleCreateProjectile({ projectile, originPoint, targetPoint, playerId, weaponName, speed, damage }: Weapon.Events.CreateProjectile.Payload): void {
     const objects = createProjectile(this.scene, projectile, originPoint, targetPoint, playerId, weaponName, speed, damage);
     objects.forEach(object => {
@@ -69,21 +69,21 @@ export class ProjectileController {
       hits: [],
       time: 0
     };
-    
+
     // Получаем вектор движения снаряда (две точки)
     const vectorPoints = projectile.getForceVector();
     const speed = projectile.getSpeed();
-    
+
     // Получаем координаты начала и конца вектора
     const startX = vectorPoints[0][0];
     const startY = vectorPoints[0][1];
     const endX = vectorPoints[1][0];
     const endY = vectorPoints[1][1];
-    
+
     // Вычисляем вектор направления
     const dirX = endX - startX;
     const dirY = endY - startY;
-    
+
     // Нормализуем вектор
     const length = Math.sqrt(dirX * dirX + dirY * dirY);
     const normalizedDirX = dirX / length;
@@ -92,21 +92,21 @@ export class ProjectileController {
     // Проверяем каждого врага на пересечение с продленным лучом
     this.damageableObjects.forEach((enemy) => {
       if (enemy.getDead()) return;
-      
+
       const enemyBounds = enemy.getBodyBounds();
-      
+
       // Используем метод определения пересечений
       const intersection = rayRectIntersectionRobust(
-        startX, startY, 
+        startX, startY,
         normalizedDirX, normalizedDirY,
-        enemyBounds.x, enemyBounds.y, 
+        enemyBounds.x, enemyBounds.y,
         enemyBounds.width, enemyBounds.height
       );
-      
+
       if (intersection) {
         const { hitX, hitY, distance } = intersection;
         const time = this.scene.time.now + (distance / speed[0] * 1000);
-        
+
         group.hits.push({
           time,
           projectile,
@@ -128,65 +128,65 @@ export class ProjectileController {
 
   private predictRadiusHits(projectile: ProjectileEntity): void {
     if (!this.scene || projectile.isDestroyed()) return;
-    
+
     // Получаем актуальные координаты проектиля
     const [x, y] = projectile.getPosition();
-    
+
     // Получаем радиус действия из проектиля
     const radius = projectile.getRadius();
-    
+
     // Массив для хранения обнаруженных попаданий
     const group: HitGroup = {
       hits: [],
       time: 0
     };
-    
+
     // Время активации взрыва (текущее время)
     const explosionTime = this.scene.time.now;
     // Проверяем всех врагов на нахождение в радиусе взрыва
     this.damageableObjects.forEach((enemy) => {
       if (enemy.getDead()) return;
-      
+
       // Получаем границы врага
       const enemyBounds = enemy.getBodyBounds();
       if (!enemyBounds) return;
-      
+
       // Получаем центр врага
       const enemyCenter = {
-          x: enemyBounds.x + enemyBounds.width / 2,
-          y: enemyBounds.y + enemyBounds.height / 2
+        x: enemyBounds.x + enemyBounds.width / 2,
+        y: enemyBounds.y + enemyBounds.height / 2
       };
-      
+
       // Вычисляем расстояние от центра взрыва до центра врага
       const distance = Phaser.Math.Distance.Between(x, y, enemyCenter.x, enemyCenter.y);
       // Проверяем, находится ли враг в радиусе взрыва
       if (distance <= radius) {
-          // Вычисляем точку попадания (на прямой между центром взрыва и врагом)
-          const angle = Math.atan2(enemyCenter.y - y, enemyCenter.x - x);
-          const hitPoint = {
-              x: x + Math.cos(angle) * Math.min(distance, radius),
-              y: y + Math.sin(angle) * Math.min(distance, radius)
-          };
-          
-          group.hits.push({
-              time: explosionTime,
-              projectile,
-              distance,
-              targetEntity: enemy,
-              hitPoint: [hitPoint.x, hitPoint.y],
-              forceVector: [
-                [x, y],
-                [hitPoint.x, hitPoint.y]
-              ]
-          });
+        // Вычисляем точку попадания (на прямой между центром взрыва и врагом)
+        const angle = Math.atan2(enemyCenter.y - y, enemyCenter.x - x);
+        const hitPoint = {
+          x: x + Math.cos(angle) * Math.min(distance, radius),
+          y: y + Math.sin(angle) * Math.min(distance, radius)
+        };
+
+        group.hits.push({
+          time: explosionTime,
+          projectile,
+          distance,
+          targetEntity: enemy,
+          hitPoint: [hitPoint.x, hitPoint.y],
+          forceVector: [
+            [x, y],
+            [hitPoint.x, hitPoint.y]
+          ]
+        });
       }
     });
-    
+
     // Отображаем отладочный круг взрыва, если включен режим отладки
     if (DEBUG.PROJECTILES) {
-        this.drawExplosionRadius(x, y, radius);
+      this.drawExplosionRadius(x, y, radius);
     }
-    
+
     // Добавляем все попадания в общий список
     if (group.hits.length > 0) {
       group.time = group.hits[0].time;
@@ -205,7 +205,7 @@ export class ProjectileController {
     this.debugGraphics?.fillCircle(x, y, 5);
     this.debugGraphics?.setDepth(1000);
   }
-  
+
   private sliceCurrentHits(currentTime: number): HitGroup[] {
     const currentHits: HitGroup[] = [];
     this.projectileHits = this.projectileHits.reduce((acc: HitGroup[], group: HitGroup) => {
@@ -264,14 +264,14 @@ export class ProjectileController {
 
       this.damageableObjects.forEach((enemy) => {
         if (enemy.getDead()) return;
-        
+
         // Получаем границы врага
         const enemyBounds = enemy.getBodyBounds();
-        
+
         // Получаем центр врага
         const enemyCenter = {
-            x: enemyBounds.x + enemyBounds.width / 2,
-            y: enemyBounds.y + enemyBounds.height * 0.9
+          x: enemyBounds.x + enemyBounds.width / 2,
+          y: enemyBounds.y + enemyBounds.height * 0.9
         };
 
         const [x, y] = projectile.getPosition();
@@ -306,7 +306,7 @@ export class ProjectileController {
         projectileType = hit.projectile.getType();
 
         const isBullet = projectileType === Projectile.Type.BULLET;
-        const damage = isBullet ? damageForBullet : hit.projectile.getDamage(hit.distance);   
+        const damage = isBullet ? damageForBullet : hit.projectile.getDamage(hit.distance);
         const damageResult = hit.targetEntity.takeDamage({
           simulate: this.simulate,
           forceVector: hit.forceVector,
@@ -316,12 +316,12 @@ export class ProjectileController {
           weaponName,
           distance: hit.distance,
           penetratedCount: index
-        });       
-        
-        if(damageResult?.isDead) {
+        });
+
+        if (damageResult?.isDead) {
           deathCount++;
         }
-          
+
         if (isBullet) {
           if (damageResult && !damageResult.isPenetrated) {
             break;
@@ -332,13 +332,13 @@ export class ProjectileController {
         }
       }
 
-      if(deathCount >= 2 && weaponName && projectileType) {
+      if (deathCount >= 2 && weaponName && projectileType) {
         emitEvent(this.scene, Game.Events.Stat.Local, {
           event: Game.Events.Stat.DubleKillEvent.Event,
           data: { weaponName, projectileType }
         });
       }
-      if(deathCount >= 3 && weaponName && projectileType) {
+      if (deathCount >= 3 && weaponName && projectileType) {
         emitEvent(this.scene, Game.Events.Stat.Local, {
           event: Game.Events.Stat.TripleKillEvent.Event,
           data: { weaponName, projectileType }

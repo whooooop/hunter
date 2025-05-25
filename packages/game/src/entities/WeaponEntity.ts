@@ -1,24 +1,26 @@
+import { SyncCollectionRecord } from '@hunter/multiplayer/dist/Collection';
+import { StorageSpace } from '@hunter/multiplayer/dist/StorageSpace';
+import { FireEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
-import { SightEntity, SightEntityOptions } from "./SightEntity";
-import { SettingsService } from '../services/SettingsService';
-import { createLogger } from "../utils/logger";
-import { GameplayScene } from "../scenes/GameplayScene/GameplayScene";
-import { ShellCasingEntity } from "./ShellCasingEntity";
-import { RecoilForceType } from "../types/recoilForce";
-import { emitEvent, offEvent, onEvent } from "../GameEvents";
-import { Weapon, FireParams, AudioAssets } from "../types";
-import { sleep } from '../utils/sleep';
 import { MuzzleFlash } from '../fx/muzzleFlash/muzzleFlashFx';
+import { emitEvent } from "../GameEvents";
+import { GameplayScene } from "../scenes/GameplayScene/GameplayScene";
+import { SettingsService } from '../services/SettingsService';
+import { fireEventCollection } from '../storage/collections/fireEvent.collection';
+import { AudioAssets, FireParams, Weapon } from "../types";
+import { RecoilForceType } from "../types/recoilForce";
+import { createLogger } from "../utils/logger";
+import { sleep } from '../utils/sleep';
 import { WeaponType } from '../weapons/WeaponTypes';
+import { ShellCasingEntity } from "./ShellCasingEntity";
+import { SightEntity, SightEntityOptions } from "./SightEntity";
 
 const logger = createLogger('WeaponEntity');
 const settingsService = SettingsService.getInstance();
 
 export class WeaponEntity {
-  private id: string; 
   private name: WeaponType;
   private active: boolean = false;
-  private scene: Phaser.Scene;
   private gameObject: Phaser.GameObjects.Sprite;
 
   protected lastFired: number = 0;
@@ -30,7 +32,6 @@ export class WeaponEntity {
   protected currentAmmo: number = 0;
   protected canFireAgain: boolean = true; // Флаг для неавтоматического оружия
   protected weaponAngle: number = 0; // Текущий угол наклона оружия
-  protected options: Weapon.Config;
 
   private container: Phaser.GameObjects.Container;
   private debugFirePoint!: Phaser.GameObjects.Ellipse;
@@ -51,11 +52,14 @@ export class WeaponEntity {
     bolt: null,
   }
 
-  constructor(scene: Phaser.Scene, id: string, options: Weapon.Config) {
-    this.id = id;
-    this.scene = scene;
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly id: string,
+    private readonly options: Weapon.Config,
+    private readonly playerId: string,
+    private readonly storage: StorageSpace
+  ) {
     this.name = options.name;
-    this.options = options;
     this.currentAmmo = this.options.magazineSize;
 
     this.gameObject = this.scene.add.sprite(0, 0, this.options.texture.key);
@@ -77,16 +81,24 @@ export class WeaponEntity {
       this.createMuzzleFlash(this.options.muzzleFlash);
     }
 
-    onEvent(this.scene, Weapon.Events.FireAction.Remote, this.handleFireAction, this);
+    this.storage.on<FireEvent>(fireEventCollection, 'Add', this.handleFireAction.bind(this));
   }
 
   public getContainer(): Phaser.GameObjects.Container {
     return this.container;
   }
 
-  private handleFireAction({ playerId, weaponId, originPoint, targetPoint, angleTilt }: Weapon.Events.FireAction.Payload): void {
-    if (weaponId == this.id) {
-      this.fireAction(playerId, originPoint, targetPoint, angleTilt);
+  private handleFireAction(eventId: string, record: SyncCollectionRecord<FireEvent>): void {
+    if (record.data.weaponId == this.id) {
+      this.fireAction(this.playerId, {
+        x: record.data.originX,
+        y: record.data.originY,
+      }, {
+        x: record.data.targetX,
+        y: record.data.targetY,
+      },
+        record.data.angleTilt
+      );
     }
   }
 
@@ -129,16 +141,16 @@ export class WeaponEntity {
   public canFire(time: number): boolean {
     // Если перезаряжаемся, стрелять нельзя
     if (this.isReloading) return false;
-    
+
     // Если взвод затвора, стрелять нельзя
     if (this.isBolt) return false;
 
     // Если нет патронов, стрелять нельзя
     if (this.isEmpty()) return false;
-    
+
     // Для неавтоматического оружия проверяем, был ли отпущен курок
     if (!this.canFireAgain) return false;
-    
+
     // Проверяем задержку между выстрелами
     return time - this.lastFired >= this.options.fireRate;
   }
@@ -161,7 +173,7 @@ export class WeaponEntity {
     this.isReloading = true;
 
     this.playReloadSound();
-    
+
     if (this.options.hideWhileReload) {
       this.gameObject.setVisible(false);
     }
@@ -232,11 +244,13 @@ export class WeaponEntity {
 
     this.currentAmmo--;
 
-    emitEvent(this.scene, Weapon.Events.FireAction.Local, { 
+    this.storage.getCollection<FireEvent>(fireEventCollection)!.addItem(Date.now().toString(), {
       weaponId: this.id,
       playerId,
-      originPoint,
-      targetPoint,
+      originX: originPoint.x,
+      originY: originPoint.y,
+      targetX: targetPoint.x,
+      targetY: targetPoint.y,
       angleTilt
     });
     this.fireAction(playerId, originPoint, targetPoint, angleTilt);
@@ -256,7 +270,7 @@ export class WeaponEntity {
     this.lastFired = this.scene.time.now;
 
     if (this.options.projectile) {
-      emitEvent(this.scene, Weapon.Events.CreateProjectile.Local, { 
+      emitEvent(this.scene, Weapon.Events.CreateProjectile.Local, {
         playerId,
         speed: this.options.speed,
         damage: this.options.damage,
@@ -271,7 +285,7 @@ export class WeaponEntity {
     if (this.options.shellCasings && this.scene instanceof GameplayScene) {
       this.ejectShellCasing(originPoint.x, originPoint.y, this.direction);
     }
-    
+
     this.muzzleFlash?.play();
     this.playFireSound();
     this.applyWeaponTilt(angleTilt);
@@ -299,7 +313,7 @@ export class WeaponEntity {
   }
 
   protected createProjectileEvent(playerId: string, originPoint: { x: number, y: number }, targetPoint: { x: number, y: number }): void {
-    
+
   }
 
   /**
@@ -308,26 +322,26 @@ export class WeaponEntity {
   private applyRecoil(direction: number): RecoilForceType {
     // Рассчитываем силу отдачи
     const recoilForce = this.calculateRecoilForce();
-    
+
     // Отдача всегда направлена влево (как при стрельбе вправо)
     const recoilVectorX = -direction;
-    
+
     // Нет вертикальной составляющей
     const recoilVectorY = 0;
-    
+
     // Уменьшаем множитель силы для более мягкой отдачи
     const boostedForce = recoilForce * 0.5;
-    
+
     // Настройки для экспоненциального затухания
     // Увеличиваем начальную силу воздействия для более быстрого старта
     const strength = 0.25;
-    
+
     // Ускоряем затухание
     const decayRate = 0.08;
-    
+
     // Применяем отдачу к игроку с экспоненциальным затуханием
     // Параметры: (направление по X, направление по Y, сила, скорость, затухание)
-    return { recoilVectorX, recoilVectorY, boostedForce, strength, decayRate }; 
+    return { recoilVectorX, recoilVectorY, boostedForce, strength, decayRate };
   }
 
   /**
@@ -336,22 +350,22 @@ export class WeaponEntity {
   private calculateRecoilForce(): number {
     // Базовая сила отдачи из настроек оружия
     let recoilForce = this.options.recoilForce;
-    
+
     // Увеличиваем отдачу при быстрой стрельбе
     const currentTime = this.scene.time.now;
     const timeSinceLastShot = currentTime - this.lastFired;
-    
+
     // Если прошло мало времени с последнего выстрела, увеличиваем отдачу
     const aimingTime = this.options.aimingTime || 0;
     if (this.lastFired !== 0 && timeSinceLastShot < aimingTime) {
       const recoilMultiplier = 1 + (aimingTime - timeSinceLastShot) / aimingTime;
       recoilForce *= recoilMultiplier;
     }
-    
+
     // Добавляем немного случайности для реалистичности
     const randomFactor = Phaser.Math.FloatBetween(0.9, 1.1);
     recoilForce *= randomFactor;
-    
+
     return recoilForce;
   }
 
@@ -366,8 +380,8 @@ export class WeaponEntity {
   // Звук пустого магазина
   protected playEmptySound(): void {
     if (this.options.emptyAudio) {
-      this.scene.sound.play(this.options.emptyAudio.key, { 
-        volume: settingsService.getValue('audioWeaponVolume') as number 
+      this.scene.sound.play(this.options.emptyAudio.key, {
+        volume: settingsService.getValue('audioWeaponVolume') as number
       });
     }
   }
@@ -375,16 +389,16 @@ export class WeaponEntity {
   // Звук перезарядки
   protected playReloadSound(): void {
     if (this.options.reloadAudio) {
-      this.scene.sound.play(this.options.reloadAudio.key, { 
-        volume: settingsService.getValue('audioWeaponVolume') as number 
+      this.scene.sound.play(this.options.reloadAudio.key, {
+        volume: settingsService.getValue('audioWeaponVolume') as number
       });
     }
   }
 
   protected playReloadItemSound(): void {
     if (this.options.reloadItemAudio) {
-      this.scene.sound.play(this.options.reloadItemAudio.key, { 
-        volume: settingsService.getValue('audioWeaponVolume') as number 
+      this.scene.sound.play(this.options.reloadItemAudio.key, {
+        volume: settingsService.getValue('audioWeaponVolume') as number
       });
     }
   }
@@ -392,8 +406,8 @@ export class WeaponEntity {
   // Звук выстрела
   protected playFireSound(): void {
     if (this.options.fireAudio) {
-      this.scene.sound.play(this.options.fireAudio.key, { 
-        volume: settingsService.getValue('audioWeaponVolume') as number 
+      this.scene.sound.play(this.options.fireAudio.key, {
+        volume: settingsService.getValue('audioWeaponVolume') as number
       });
     }
   }
@@ -401,8 +415,8 @@ export class WeaponEntity {
   // Звук затвора (взводной механизм)
   protected playBoltSound(): void {
     if (this.options.boltAudio) {
-      this.scene.sound.play(this.options.boltAudio.key, { 
-        volume: settingsService.getValue('audioWeaponVolume') as number 
+      this.scene.sound.play(this.options.boltAudio.key, {
+        volume: settingsService.getValue('audioWeaponVolume') as number
       });
     }
   }
@@ -435,10 +449,10 @@ export class WeaponEntity {
     if (timeSinceLastShot < aimingTime) {
       // Рассчитываем коэффициент прогресса (0 -> 1)
       const progress = timeSinceLastShot / aimingTime;
-      
+
       // Линейно интерполируем от текущего угла к 0
       this.weaponAngle = Phaser.Math.Linear(this.weaponAngle, 0, progress);
-      
+
       // Применяем текущий угол наклона
       this.container.setRotation(this.weaponAngle);
     } else {
@@ -449,7 +463,6 @@ export class WeaponEntity {
   }
 
   public setDepth(depth: number): this {
-    console.log('setDepth', depth);
     this.container.setDepth(depth);
     return this;
   }
@@ -466,7 +479,7 @@ export class WeaponEntity {
     if (this.sight) {
       const { innerX, innerY } = this.getFirePoint();
       this.sight.setPosition(innerX, innerY, direction);
-    } 
+    }
 
     return this;
   }
@@ -505,8 +518,6 @@ export class WeaponEntity {
       this.sight.destroy();
       this.sight = null;
     }
-
-    offEvent(this.scene, Weapon.Events.FireAction.Remote, this.handleFireAction, this);
   }
 
   /**

@@ -1,11 +1,9 @@
+import { StorageSpace } from "@hunter/multiplayer/dist/StorageSpace";
 import { PlayerEntity } from "../entities/PlayerEntity";
 import { emitEvent } from "../GameEvents";
 import { Game, Player } from "../types/";
 
 export class KeyBoardController {
-  private scene: Phaser.Scene;
-  private player: PlayerEntity | null = null;
-
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private fireKey: Phaser.Input.Keyboard.Key;
   private reloadKey: Phaser.Input.Keyboard.Key;
@@ -13,17 +11,16 @@ export class KeyBoardController {
   private nextWeaponKey: Phaser.Input.Keyboard.Key;
   private prevWeaponKey: Phaser.Input.Keyboard.Key;
   private pauseKey: Phaser.Input.Keyboard.Key;
-  private players: Map<string, PlayerEntity>;
-  private playerId: string;
 
   private changeWeaponKeyDisabled: boolean = false;
   private pauseKeyDisabled: boolean = false;
-  
-  constructor(scene: Phaser.Scene, players: Map<string, PlayerEntity>, playerId: string) {
-    this.scene = scene;
-    this.players = players;
-    this.playerId = playerId;
 
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly players: Map<string, PlayerEntity>,
+    private readonly playerId: string,
+    private readonly storage: StorageSpace
+  ) {
     this.cursors = scene.input.keyboard!.createCursorKeys();
     this.fireKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.reloadKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
@@ -41,7 +38,7 @@ export class KeyBoardController {
     this.prevWeaponKey.destroy();
     this.pauseKey.destroy();
   }
-  
+
   public update(time: number, delta: number): void {
     if (!this.getPlayer()) {
       // return;
@@ -62,13 +59,13 @@ export class KeyBoardController {
     } else if (this.cursors.right.isDown) {
       move.x = 1;
     }
-    
+
     if (this.cursors.up.isDown) {
       move.y = -1;
     } else if (this.cursors.down.isDown) {
       move.y = 1;
     }
-    
+
     this.getPlayer()?.setMove(move.x, move.y);
   }
 
@@ -86,7 +83,7 @@ export class KeyBoardController {
       if (this.changeWeaponKeyDisabled) {
         return;
       }
-      emitEvent(this.scene, Player.Events.ChangeWeapon.Local, { 
+      emitEvent(this.scene, Player.Events.ChangeWeapon.Local, {
         playerId: this.playerId,
         direction: this.nextWeaponKey.isDown ? 1 : -1
       });
@@ -120,5 +117,4 @@ export class KeyBoardController {
     return this.players.get(this.playerId) || null;
   }
 
-  
 }

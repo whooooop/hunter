@@ -1,18 +1,19 @@
 import { WeaponEntity } from "../entities/WeaponEntity";
-import { WeaponType } from "./WeaponTypes";
 import { Weapon } from "../types/weaponTypes";
+import { WeaponType } from "./WeaponTypes";
 
+import { StorageSpace } from "@hunter/multiplayer/dist/StorageSpace";
+import { createShellCasingTexture } from "../entities/ShellCasingEntity";
+import { AWPConfig } from "./AWP";
 import { GlockConfig } from "./Glock";
+import { GrenadeConfig } from "./Grenade";
+import { LauncherConfig } from "./Launcher";
+import { M4Config } from "./M4";
 import { MP5Config } from "./MP5";
 import { MachineConfig } from "./Machine";
-import { GrenadeConfig } from "./Grenade";
-import { SawedConfig } from "./Sawed";
 import { MineConfig } from "./Mine";
-import { AWPConfig } from "./AWP";
 import { RevolverConfig } from "./Revolver";
-import { M4Config } from "./M4";
-import { LauncherConfig } from "./Launcher";
-import { createShellCasingTexture } from "../entities/ShellCasingEntity";
+import { SawedConfig } from "./Sawed";
 
 export const WeaponConfigs: Record<WeaponType, Weapon.Config> = {
   [WeaponType.GLOCK]: GlockConfig,
@@ -29,7 +30,7 @@ export const WeaponConfigs: Record<WeaponType, Weapon.Config> = {
 
 export function preloadWeapons(scene: Phaser.Scene): void {
   createShellCasingTexture(scene);
-  
+
   Object.values(WeaponConfigs).forEach(WeaponConfig => {
     if (WeaponConfig.texture.url) {
       scene.load.image(WeaponConfig.texture.key, WeaponConfig.texture.url);
@@ -56,7 +57,7 @@ export function getWeaponConfig(weaponType: WeaponType): Weapon.Config {
   return WeaponConfigs[weaponType];
 }
 
-export function createWeapon(id: string, weaponType: WeaponType, scene: Phaser.Scene): WeaponEntity {
+export function createWeapon(id: string, weaponType: WeaponType, scene: Phaser.Scene, playerId: string, storage: StorageSpace): WeaponEntity {
   const WeaponConfig = WeaponConfigs[weaponType];
-  return new WeaponEntity(scene, id, WeaponConfig);
+  return new WeaponEntity(scene, id, WeaponConfig, playerId, storage);
 }

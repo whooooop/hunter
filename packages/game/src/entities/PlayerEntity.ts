@@ -1,8 +1,10 @@
-import { SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
+import { StorageSpace, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
+import { JumpEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import JumpAudioUrl from '../assets/audio/jump.mp3';
 import { MotionController2 } from '../controllers/MotionController2';
 import { SettingsService } from '../services/SettingsService';
+import { jumpEventCollection } from '../storage/collections/jumpEvent.collectio';
 import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture } from '../textures/PlayerTexture';
 import { Player } from '../types';
 import { Location } from '../types/Location';
@@ -65,7 +67,8 @@ export class PlayerEntity {
   constructor(
     private readonly scene: Phaser.Scene,
     private readonly id: string,
-    private readonly state: SyncCollectionRecord<Player.State>
+    private readonly state: SyncCollectionRecord<Player.State>,
+    private readonly storage: StorageSpace
   ) {
     this.id = id;
     this.scene = scene;
@@ -100,6 +103,12 @@ export class PlayerEntity {
     });
 
     this.motionController.setState(state);
+
+    this.storage.on<JumpEvent>(jumpEventCollection, 'Add', (playerId: string, record: SyncCollectionRecord<JumpEvent>) => {
+      if (playerId === this.id) {
+        this.jumpAction();
+      }
+    });
   }
 
   public getId(): string {
@@ -207,10 +216,14 @@ export class PlayerEntity {
     if (this.motionController.isJumping()) {
       return;
     }
+    this.storage.getCollection<JumpEvent>(jumpEventCollection)!.addItem(this.id, { playerId: this.id });
+    this.jumpAction();
+  }
+
+  private jumpAction(): void {
     this.motionController.jump();
     this.scene.sound.play(jumpAudio.key, { volume: settingsService.getValue('audioEffectsVolume') as number });
   }
-
 
   // private handleDirectionChange(direction: number): void {
   //   if (this.canChangeDirection) {

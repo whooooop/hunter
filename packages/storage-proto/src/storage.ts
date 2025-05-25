@@ -51,6 +51,20 @@ export interface WeaponState {
   type: string;
 }
 
+export interface FireEvent {
+  weaponId: string;
+  playerId: string;
+  originX: number;
+  originY: number;
+  targetX: number;
+  targetY: number;
+  angleTilt: number;
+}
+
+export interface JumpEvent {
+  playerId: string;
+}
+
 function createBaseGameState(): GameState {
   return { host: "", createdAt: "0", playersCount: 0, started: false };
 }
@@ -685,6 +699,220 @@ export const WeaponState: MessageFns<WeaponState> = {
     const message = createBaseWeaponState();
     message.playerId = object.playerId ?? "";
     message.type = object.type ?? "";
+    return message;
+  },
+};
+
+function createBaseFireEvent(): FireEvent {
+  return { weaponId: "", playerId: "", originX: 0, originY: 0, targetX: 0, targetY: 0, angleTilt: 0 };
+}
+
+export const FireEvent: MessageFns<FireEvent> = {
+  encode(message: FireEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.weaponId !== "") {
+      writer.uint32(10).string(message.weaponId);
+    }
+    if (message.playerId !== "") {
+      writer.uint32(18).string(message.playerId);
+    }
+    if (message.originX !== 0) {
+      writer.uint32(29).float(message.originX);
+    }
+    if (message.originY !== 0) {
+      writer.uint32(37).float(message.originY);
+    }
+    if (message.targetX !== 0) {
+      writer.uint32(45).float(message.targetX);
+    }
+    if (message.targetY !== 0) {
+      writer.uint32(53).float(message.targetY);
+    }
+    if (message.angleTilt !== 0) {
+      writer.uint32(61).float(message.angleTilt);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): FireEvent {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseFireEvent();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.weaponId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.playerId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 29) {
+            break;
+          }
+
+          message.originX = reader.float();
+          continue;
+        }
+        case 4: {
+          if (tag !== 37) {
+            break;
+          }
+
+          message.originY = reader.float();
+          continue;
+        }
+        case 5: {
+          if (tag !== 45) {
+            break;
+          }
+
+          message.targetX = reader.float();
+          continue;
+        }
+        case 6: {
+          if (tag !== 53) {
+            break;
+          }
+
+          message.targetY = reader.float();
+          continue;
+        }
+        case 7: {
+          if (tag !== 61) {
+            break;
+          }
+
+          message.angleTilt = reader.float();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): FireEvent {
+    return {
+      weaponId: isSet(object.weaponId) ? globalThis.String(object.weaponId) : "",
+      playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
+      originX: isSet(object.originX) ? globalThis.Number(object.originX) : 0,
+      originY: isSet(object.originY) ? globalThis.Number(object.originY) : 0,
+      targetX: isSet(object.targetX) ? globalThis.Number(object.targetX) : 0,
+      targetY: isSet(object.targetY) ? globalThis.Number(object.targetY) : 0,
+      angleTilt: isSet(object.angleTilt) ? globalThis.Number(object.angleTilt) : 0,
+    };
+  },
+
+  toJSON(message: FireEvent): unknown {
+    const obj: any = {};
+    if (message.weaponId !== "") {
+      obj.weaponId = message.weaponId;
+    }
+    if (message.playerId !== "") {
+      obj.playerId = message.playerId;
+    }
+    if (message.originX !== 0) {
+      obj.originX = message.originX;
+    }
+    if (message.originY !== 0) {
+      obj.originY = message.originY;
+    }
+    if (message.targetX !== 0) {
+      obj.targetX = message.targetX;
+    }
+    if (message.targetY !== 0) {
+      obj.targetY = message.targetY;
+    }
+    if (message.angleTilt !== 0) {
+      obj.angleTilt = message.angleTilt;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<FireEvent>, I>>(base?: I): FireEvent {
+    return FireEvent.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<FireEvent>, I>>(object: I): FireEvent {
+    const message = createBaseFireEvent();
+    message.weaponId = object.weaponId ?? "";
+    message.playerId = object.playerId ?? "";
+    message.originX = object.originX ?? 0;
+    message.originY = object.originY ?? 0;
+    message.targetX = object.targetX ?? 0;
+    message.targetY = object.targetY ?? 0;
+    message.angleTilt = object.angleTilt ?? 0;
+    return message;
+  },
+};
+
+function createBaseJumpEvent(): JumpEvent {
+  return { playerId: "" };
+}
+
+export const JumpEvent: MessageFns<JumpEvent> = {
+  encode(message: JumpEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.playerId !== "") {
+      writer.uint32(10).string(message.playerId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): JumpEvent {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseJumpEvent();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.playerId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): JumpEvent {
+    return { playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "" };
+  },
+
+  toJSON(message: JumpEvent): unknown {
+    const obj: any = {};
+    if (message.playerId !== "") {
+      obj.playerId = message.playerId;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<JumpEvent>, I>>(base?: I): JumpEvent {
+    return JumpEvent.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<JumpEvent>, I>>(object: I): JumpEvent {
+    const message = createBaseJumpEvent();
+    message.playerId = object.playerId ?? "";
     return message;
   },
 };

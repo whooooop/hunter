@@ -7,8 +7,6 @@ interface EventPayloadMap {
   // Weapons
   [Weapon.Events.CreateProjectile.Local]: Weapon.Events.CreateProjectile.Payload;
   [Weapon.Events.CreateProjectile.Remote]: Weapon.Events.CreateProjectile.Payload;
-  [Weapon.Events.FireAction.Local]: Weapon.Events.FireAction.Payload;
-  [Weapon.Events.FireAction.Remote]: Weapon.Events.FireAction.Payload;
   [Weapon.Events.ReloadAction.Local]: Weapon.Events.ReloadAction.Payload;
   [Weapon.Events.ReloadAction.Remote]: Weapon.Events.ReloadAction.Payload;
   [Weapon.Events.AimPoint.Local]: Weapon.Events.AimPoint.Payload;

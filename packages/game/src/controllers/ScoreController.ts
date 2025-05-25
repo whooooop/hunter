@@ -14,16 +14,9 @@ export class ScoreController {
   ) {
     this.scores = this.storage.getCollection<PlayerScoreState>(playerScoreStateCollection)!;
 
-    // onEvent(scene, Game.Events.State.Remote, this.handleGameState, this);
     onEvent(scene, ScoreEvents.IncreaseScoreEvent, this.handleIncreaseScore, this);
     onEvent(scene, ScoreEvents.DecreaseScoreEvent, this.handleDecreaseScore, this);
   }
-
-  // private handleGameState(payload: Game.Events.State.Payload): void {
-  //   payload.playersState.forEach((player) => {
-  //     this.scere.set(player.id, player.score);
-  //   });
-  // }
 
   private handleIncreaseScore(payload: IncreaseScoreEventPayload): void {
     if (!this.scores.has(payload.playerId)) {
@@ -32,7 +25,6 @@ export class ScoreController {
     const currentScore = this.scores.getItem(payload.playerId)!;
     currentScore.value += payload.score;
 
-    // emitEvent(this.scene, ScoreEvents.UpdateScoreEvent, { playerId: payload.playerId, score });
     emitEvent(this.scene, Game.Events.Stat.Local, {
       event: Game.Events.Stat.EarnEvent.Event,
       data: {
@@ -48,7 +40,6 @@ export class ScoreController {
     const currentScore = this.scores.getItem(payload.playerId)!;
     currentScore.value = Math.max(currentScore.value - payload.score, 0);
 
-    // emitEvent(this.scene, ScoreEvents.UpdateScoreEvent, { playerId: payload.playerId, score });
     emitEvent(this.scene, Game.Events.Stat.Local, {
       event: Game.Events.Stat.SpendEvent.Event,
       data: {
@@ -58,7 +49,6 @@ export class ScoreController {
   }
 
   public destroy(): void {
-    // offEvent(this.scene, Game.Events.State.Remote, this.handleGameState, this);
     offEvent(this.scene, ScoreEvents.IncreaseScoreEvent, this.handleIncreaseScore, this);
     offEvent(this.scene, ScoreEvents.DecreaseScoreEvent, this.handleDecreaseScore, this);
   }

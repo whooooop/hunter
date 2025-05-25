@@ -49,7 +49,7 @@ export class WeaponController {
 
     const playerWeapons = this.playerWeapons.get(record.data.playerId)!;
     const weaponType = record.data.type as WeaponType;
-    const weaponEntity = createWeapon(weaponId, weaponType, this.scene);
+    const weaponEntity = createWeapon(weaponId, weaponType, this.scene, record.data.playerId, this.storage);
 
     playerWeapons.set(weaponId, weaponEntity);
     this.weapons.set(weaponId, weaponEntity);

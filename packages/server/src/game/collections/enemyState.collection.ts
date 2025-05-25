@@ -1,4 +1,4 @@
-import { defineCollection } from "@hunter/multiplayer/dist/client";
+import { defineCollection } from "@hunter/multiplayer/dist/server";
 import { EnemyState } from "@hunter/storage-proto/dist/storage";
 
 export const enemyStateCollection = defineCollection<EnemyState>('enemyState', {
