@@ -1,16 +1,17 @@
 import { SyncCollectionRecord } from '@hunter/multiplayer/dist/Collection';
 import { StorageSpace } from '@hunter/multiplayer/dist/StorageSpace';
-import { FireEvent } from '@hunter/storage-proto/dist/storage';
+import { WeaponFireEvent, WeaponReloadEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import { MuzzleFlash } from '../fx/muzzleFlash/muzzleFlashFx';
 import { emitEvent } from "../GameEvents";
 import { GameplayScene } from "../scenes/GameplayScene/GameplayScene";
 import { SettingsService } from '../services/SettingsService';
-import { fireEventCollection } from '../storage/collections/fireEvent.collection';
+import { fireEventCollection, reloadEventCollection } from '../storage/collections/events.collectio';
 import { AudioAssets, FireParams, Weapon } from "../types";
 import { RecoilForceType } from "../types/recoilForce";
 import { createLogger } from "../utils/logger";
 import { sleep } from '../utils/sleep';
+import { generateId } from '../utils/stringGenerator';
 import { WeaponType } from '../weapons/WeaponTypes';
 import { ShellCasingEntity } from "./ShellCasingEntity";
 import { SightEntity, SightEntityOptions } from "./SightEntity";
@@ -81,14 +82,15 @@ export class WeaponEntity {
       this.createMuzzleFlash(this.options.muzzleFlash);
     }
 
-    this.storage.on<FireEvent>(fireEventCollection, 'Add', this.handleFireAction.bind(this));
+    this.storage.on<WeaponFireEvent>(fireEventCollection, 'Add', this.handleFireAction.bind(this));
+    this.storage.on<WeaponReloadEvent>(reloadEventCollection, 'Add', this.handleReloadAction.bind(this));
   }
 
   public getContainer(): Phaser.GameObjects.Container {
     return this.container;
   }
 
-  private handleFireAction(eventId: string, record: SyncCollectionRecord<FireEvent>): void {
+  private handleFireAction(eventId: string, record: SyncCollectionRecord<WeaponFireEvent>): void {
     if (record.data.weaponId == this.id) {
       this.fireAction(this.playerId, {
         x: record.data.originX,
@@ -99,6 +101,12 @@ export class WeaponEntity {
       },
         record.data.angleTilt
       );
+    }
+  }
+
+  private handleReloadAction(eventId: string, record: SyncCollectionRecord<WeaponReloadEvent>): void {
+    if (record.data.weaponId == this.id) {
+      this.reloadAction();
     }
   }
 
@@ -162,8 +170,7 @@ export class WeaponEntity {
   public reload(): void {
     if (this.isReloading || this.isBolt || this.currentAmmo === this.options.magazineSize) return;
 
-    emitEvent(this.scene, Weapon.Events.ReloadAction.Local, {
-      playerId: this.id,
+    this.storage.getCollection<WeaponReloadEvent>(reloadEventCollection)!.addItem(generateId(), {
       weaponId: this.id,
     });
     this.reloadAction();
@@ -244,7 +251,7 @@ export class WeaponEntity {
 
     this.currentAmmo--;
 
-    this.storage.getCollection<FireEvent>(fireEventCollection)!.addItem(Date.now().toString(), {
+    this.storage.getCollection<WeaponFireEvent>(fireEventCollection)!.addItem(generateId(), {
       weaponId: this.id,
       playerId,
       originX: originPoint.x,

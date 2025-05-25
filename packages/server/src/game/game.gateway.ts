@@ -89,13 +89,15 @@ export class GameGateway {
       });
     }
 
-    clientSocket.namespace!.broadcastCollection(clientSocket.id, connectionStateCollection);
-    clientSocket.namespace!.broadcastCollection(clientSocket.id, weaponStateCollection);
-    clientSocket.namespace!.broadcastCollection(clientSocket.id, enemyStateCollection);
-    clientSocket.namespace!.broadcastCollection(clientSocket.id, playerStateCollection);
-    clientSocket.namespace!.broadcastCollection(clientSocket.id, playerWeaponCollection);
-    clientSocket.namespace!.broadcastCollection(clientSocket.id, playerScoreStateCollection);
-    clientSocket.namespace!.broadcastCollection(clientSocket.id, gameStateCollection);
+    clientSocket.namespace!.sendCollections(clientSocket.id, [
+      connectionStateCollection,
+      weaponStateCollection,
+      enemyStateCollection,
+      playerStateCollection,
+      playerScoreStateCollection,
+      playerWeaponCollection,
+      gameStateCollection,
+    ]);
   }
 
   private async onDisconnect(server: MultiplayerServer<SessionData>, clientSocket: ClientSocket<SessionData>) {

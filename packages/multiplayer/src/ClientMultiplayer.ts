@@ -1,7 +1,7 @@
 import { ClientNamespace } from "./ClientNamespace";
 import { SyncCollection } from "./Collection";
 import { StorageSpace } from "./StorageSpace";
-import { Message, MessageType, SyncCollectionEvents, SyncCollectionMessage } from "./sync";
+import { BatchMessage, Message, MessageType, SyncCollectionEvents, SyncCollectionMessage } from "./sync";
 import { NamespaceId } from "./types";
 
 interface ClientMultiplayerConfig {
@@ -27,7 +27,7 @@ export class ClientMultiplayer {
 
   constructor(
     protected readonly config: ClientMultiplayerConfig
-  ) {}
+  ) { }
 
   public get connected(): boolean {
     return this.isConnected && this.websocket?.readyState === WebSocket.OPEN;
@@ -98,7 +98,7 @@ export class ClientMultiplayer {
           console.warn(`WebSocket disconnected from ${url}. Code: ${event.code}, Reason: '${event.reason}', WasClean: ${event.wasClean}`);
           this.isConnected = false;
           if (!event.wasClean && this.connectionRejector) {
-              this.connectionRejector(new Error(`WebSocket closed unexpectedly. Code: ${event.code}, Reason: ${event.reason}`));
+            this.connectionRejector(new Error(`WebSocket closed unexpectedly. Code: ${event.code}, Reason: ${event.reason}`));
           }
           // this.emit('disconnect', event.reason || `Code: ${event.code}`);
           this.cleanupWebSocketResources();
@@ -106,50 +106,62 @@ export class ClientMultiplayer {
           clearInterval(this.pingInterval!);
         };
 
-        this.websocket.onmessage = (event: MessageEvent): void => {
+        this.websocket.onmessage = (event: MessageEvent) => {
           if (!(event.data instanceof ArrayBuffer)) {
-              console.warn('Received non-ArrayBuffer message, ignoring:', event.data);
-              return;
+            console.warn('Received non-ArrayBuffer message, ignoring:', event.data);
+            return;
           }
-      
+
           const buffer = event.data as ArrayBuffer;
           if (buffer.byteLength < 1) {
             console.error('Received empty message (less than 1 byte), ignoring.');
             return;
           }
-      
-          const messageBytes = new Uint8Array(buffer);
-          const messageData = Message.decode(messageBytes);
-          
-          if (messageData.type === MessageType.Ping) {
-            this.ping = Date.now() - this.pingSendTime;
-            this.pingPending = false;
-            return;
-          }
 
-          if (messageData.type === MessageType.SyncCollectionEvent) {
-            this.namespace.handleMessage('', messageData.payload);
-          } else if (messageData.type === MessageType.ExportCollectionEvent) {
-            this.namespace.importCollection(messageData.payload);
-          } else {
-            console.error('Received unknown message type:', messageData.type);
-          }
-        };
+          const messageBytes = new Uint8Array(buffer);
+          this.handleMessage(messageBytes);
+        }
       } catch (error) {
         console.error(`Failed to create WebSocket instance for ${url}:`, error);
         if (this.connectionRejector) this.connectionRejector(error);
-          this.resetConnectionPromiseStates();
-        }
+        this.resetConnectionPromiseStates();
+      }
     });
 
     const promiseToReturn = this.connectionPromise;
     this.connectionPromise.finally(() => {
-        if (this.connectionPromise === promiseToReturn) {
-             this.connectionPromise = null;
-        }
+      if (this.connectionPromise === promiseToReturn) {
+        this.connectionPromise = null;
+      }
     });
 
     return promiseToReturn;
+  }
+
+  private handleMessage(messageBytes: Uint8Array): void {
+    const messageData = Message.decode(messageBytes);
+
+    if (messageData.type === MessageType.Ping) {
+      this.ping = Date.now() - this.pingSendTime;
+      this.pingPending = false;
+      return;
+    }
+
+    if (messageData.type === MessageType.Batch) {
+      const batchMessage = BatchMessage.decode(messageData.payload);
+      batchMessage.messages.forEach((messageBytes) => {
+        this.handleMessage(messageBytes);
+      });
+      return;
+    }
+
+    if (messageData.type === MessageType.SyncCollectionEvent) {
+      this.namespace.handleMessage('', messageData.payload);
+    } else if (messageData.type === MessageType.ExportCollectionEvent) {
+      this.namespace.importCollection(messageData.payload);
+    } else {
+      console.error('Received unknown message type:', messageData.type);
+    }
   }
 
   private resetConnectionPromiseStates() {
@@ -164,7 +176,7 @@ export class ClientMultiplayer {
       this.websocket.onclose = null;
       this.websocket.onmessage = null;
       this.websocket = null;
-     }
+    }
   }
 
   public disconnect(): void {
@@ -179,7 +191,7 @@ export class ClientMultiplayer {
     } else {
       console.warn('Attempted to disconnect, but WebSocket was not open or connecting.');
     }
-    if(this.connectionRejector) {
+    if (this.connectionRejector) {
       this.connectionRejector(new Error("Connection cancelled by disconnect()"));
     }
     this.resetConnectionPromiseStates();

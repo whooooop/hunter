@@ -9,16 +9,6 @@ export type WeaponTexture = ImageTexture & {
 
 export namespace Weapon {
   export namespace Events {
-
-    export namespace ReloadAction {
-      export const Local = 'WeaponReloadActionLocalEvent';
-      export const Remote = 'WeaponReloadActionRemoteEvent';
-      export interface Payload {
-        playerId: string;
-        weaponId: string;
-      }
-    }
-
     export namespace CreateProjectile {
       export const Local = 'WeaponCreateProjectileLocalEvent';
       export const Remote = 'WeaponCreateProjectileRemoteEvent';

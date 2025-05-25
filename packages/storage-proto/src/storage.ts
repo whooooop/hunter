@@ -51,7 +51,7 @@ export interface WeaponState {
   type: string;
 }
 
-export interface FireEvent {
+export interface WeaponFireEvent {
   weaponId: string;
   playerId: string;
   originX: number;
@@ -61,7 +61,11 @@ export interface FireEvent {
   angleTilt: number;
 }
 
-export interface JumpEvent {
+export interface WeaponReloadEvent {
+  weaponId: string;
+}
+
+export interface PlayerJumpEvent {
   playerId: string;
 }
 
@@ -703,12 +707,12 @@ export const WeaponState: MessageFns<WeaponState> = {
   },
 };
 
-function createBaseFireEvent(): FireEvent {
+function createBaseWeaponFireEvent(): WeaponFireEvent {
   return { weaponId: "", playerId: "", originX: 0, originY: 0, targetX: 0, targetY: 0, angleTilt: 0 };
 }
 
-export const FireEvent: MessageFns<FireEvent> = {
-  encode(message: FireEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const WeaponFireEvent: MessageFns<WeaponFireEvent> = {
+  encode(message: WeaponFireEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.weaponId !== "") {
       writer.uint32(10).string(message.weaponId);
     }
@@ -733,10 +737,10 @@ export const FireEvent: MessageFns<FireEvent> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): FireEvent {
+  decode(input: BinaryReader | Uint8Array, length?: number): WeaponFireEvent {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFireEvent();
+    const message = createBaseWeaponFireEvent();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -805,7 +809,7 @@ export const FireEvent: MessageFns<FireEvent> = {
     return message;
   },
 
-  fromJSON(object: any): FireEvent {
+  fromJSON(object: any): WeaponFireEvent {
     return {
       weaponId: isSet(object.weaponId) ? globalThis.String(object.weaponId) : "",
       playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
@@ -817,7 +821,7 @@ export const FireEvent: MessageFns<FireEvent> = {
     };
   },
 
-  toJSON(message: FireEvent): unknown {
+  toJSON(message: WeaponFireEvent): unknown {
     const obj: any = {};
     if (message.weaponId !== "") {
       obj.weaponId = message.weaponId;
@@ -843,11 +847,11 @@ export const FireEvent: MessageFns<FireEvent> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<FireEvent>, I>>(base?: I): FireEvent {
-    return FireEvent.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<WeaponFireEvent>, I>>(base?: I): WeaponFireEvent {
+    return WeaponFireEvent.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<FireEvent>, I>>(object: I): FireEvent {
-    const message = createBaseFireEvent();
+  fromPartial<I extends Exact<DeepPartial<WeaponFireEvent>, I>>(object: I): WeaponFireEvent {
+    const message = createBaseWeaponFireEvent();
     message.weaponId = object.weaponId ?? "";
     message.playerId = object.playerId ?? "";
     message.originX = object.originX ?? 0;
@@ -859,22 +863,80 @@ export const FireEvent: MessageFns<FireEvent> = {
   },
 };
 
-function createBaseJumpEvent(): JumpEvent {
+function createBaseWeaponReloadEvent(): WeaponReloadEvent {
+  return { weaponId: "" };
+}
+
+export const WeaponReloadEvent: MessageFns<WeaponReloadEvent> = {
+  encode(message: WeaponReloadEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.weaponId !== "") {
+      writer.uint32(10).string(message.weaponId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WeaponReloadEvent {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWeaponReloadEvent();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.weaponId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): WeaponReloadEvent {
+    return { weaponId: isSet(object.weaponId) ? globalThis.String(object.weaponId) : "" };
+  },
+
+  toJSON(message: WeaponReloadEvent): unknown {
+    const obj: any = {};
+    if (message.weaponId !== "") {
+      obj.weaponId = message.weaponId;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<WeaponReloadEvent>, I>>(base?: I): WeaponReloadEvent {
+    return WeaponReloadEvent.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<WeaponReloadEvent>, I>>(object: I): WeaponReloadEvent {
+    const message = createBaseWeaponReloadEvent();
+    message.weaponId = object.weaponId ?? "";
+    return message;
+  },
+};
+
+function createBasePlayerJumpEvent(): PlayerJumpEvent {
   return { playerId: "" };
 }
 
-export const JumpEvent: MessageFns<JumpEvent> = {
-  encode(message: JumpEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const PlayerJumpEvent: MessageFns<PlayerJumpEvent> = {
+  encode(message: PlayerJumpEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.playerId !== "") {
       writer.uint32(10).string(message.playerId);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): JumpEvent {
+  decode(input: BinaryReader | Uint8Array, length?: number): PlayerJumpEvent {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseJumpEvent();
+    const message = createBasePlayerJumpEvent();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -895,11 +957,11 @@ export const JumpEvent: MessageFns<JumpEvent> = {
     return message;
   },
 
-  fromJSON(object: any): JumpEvent {
+  fromJSON(object: any): PlayerJumpEvent {
     return { playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "" };
   },
 
-  toJSON(message: JumpEvent): unknown {
+  toJSON(message: PlayerJumpEvent): unknown {
     const obj: any = {};
     if (message.playerId !== "") {
       obj.playerId = message.playerId;
@@ -907,11 +969,11 @@ export const JumpEvent: MessageFns<JumpEvent> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<JumpEvent>, I>>(base?: I): JumpEvent {
-    return JumpEvent.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<PlayerJumpEvent>, I>>(base?: I): PlayerJumpEvent {
+    return PlayerJumpEvent.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<JumpEvent>, I>>(object: I): JumpEvent {
-    const message = createBaseJumpEvent();
+  fromPartial<I extends Exact<DeepPartial<PlayerJumpEvent>, I>>(object: I): PlayerJumpEvent {
+    const message = createBasePlayerJumpEvent();
     message.playerId = object.playerId ?? "";
     return message;
   },

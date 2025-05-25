@@ -44,7 +44,7 @@ message WeaponState {
   string type = 3;
 }
 
-message FireEvent {
+message WeaponFireEvent {
   string weaponId = 1;
   string playerId = 2;
   float originX = 3;
@@ -54,6 +54,10 @@ message FireEvent {
   float angleTilt = 7;
 }
 
-message JumpEvent {
+message WeaponReloadEvent {
+  string weaponId = 1;
+}
+
+message PlayerJumpEvent {
   string playerId = 1;
 }

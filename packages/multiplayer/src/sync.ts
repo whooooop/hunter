@@ -11,8 +11,9 @@ export const protobufPackage = "sync";
 
 export enum MessageType {
   Ping = 0,
-  SyncCollectionEvent = 1,
-  ExportCollectionEvent = 2,
+  Batch = 1,
+  SyncCollectionEvent = 2,
+  ExportCollectionEvent = 3,
   UNRECOGNIZED = -1,
 }
 
@@ -22,9 +23,12 @@ export function messageTypeFromJSON(object: any): MessageType {
     case "Ping":
       return MessageType.Ping;
     case 1:
+    case "Batch":
+      return MessageType.Batch;
+    case 2:
     case "SyncCollectionEvent":
       return MessageType.SyncCollectionEvent;
-    case 2:
+    case 3:
     case "ExportCollectionEvent":
       return MessageType.ExportCollectionEvent;
     case -1:
@@ -38,6 +42,8 @@ export function messageTypeToJSON(object: MessageType): string {
   switch (object) {
     case MessageType.Ping:
       return "Ping";
+    case MessageType.Batch:
+      return "Batch";
     case MessageType.SyncCollectionEvent:
       return "SyncCollectionEvent";
     case MessageType.ExportCollectionEvent:
@@ -91,6 +97,11 @@ export interface Message {
   type: MessageType;
   timestamp: string;
   payload: Uint8Array;
+}
+
+export interface BatchMessage {
+  type: MessageType;
+  messages: Uint8Array[];
 }
 
 export interface SyncCollectionMessage {
@@ -194,6 +205,82 @@ export const Message: MessageFns<Message> = {
     message.type = object.type ?? 0;
     message.timestamp = object.timestamp ?? "0";
     message.payload = object.payload ?? new Uint8Array(0);
+    return message;
+  },
+};
+
+function createBaseBatchMessage(): BatchMessage {
+  return { type: 0, messages: [] };
+}
+
+export const BatchMessage: MessageFns<BatchMessage> = {
+  encode(message: BatchMessage, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.type !== 0) {
+      writer.uint32(8).int32(message.type);
+    }
+    for (const v of message.messages) {
+      writer.uint32(18).bytes(v!);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): BatchMessage {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseBatchMessage();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.type = reader.int32() as any;
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.messages.push(reader.bytes());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): BatchMessage {
+    return {
+      type: isSet(object.type) ? messageTypeFromJSON(object.type) : 0,
+      messages: globalThis.Array.isArray(object?.messages) ? object.messages.map((e: any) => bytesFromBase64(e)) : [],
+    };
+  },
+
+  toJSON(message: BatchMessage): unknown {
+    const obj: any = {};
+    if (message.type !== 0) {
+      obj.type = messageTypeToJSON(message.type);
+    }
+    if (message.messages?.length) {
+      obj.messages = message.messages.map((e) => base64FromBytes(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<BatchMessage>, I>>(base?: I): BatchMessage {
+    return BatchMessage.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<BatchMessage>, I>>(object: I): BatchMessage {
+    const message = createBaseBatchMessage();
+    message.type = object.type ?? 0;
+    message.messages = object.messages?.map((e) => e) || [];
     return message;
   },
 };

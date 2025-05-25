@@ -82,7 +82,7 @@ export class WeaponController {
     return this.weapons.get(weaponId)!;
   }
 
-  private getCurrentWeapon(playerId: string): string | undefined {
+  public getCurrentWeapon(playerId: string): string | undefined {
     return this.currentWeapon.get(playerId);
   }
 
@@ -92,6 +92,10 @@ export class WeaponController {
 
   public setWeapon(playerId: string, weaponId: string): void {
     const currentWeaponId = this.getCurrentWeapon(playerId);
+    const player = this.players.get(playerId);
+    if (!player) {
+      return;
+    }
 
     if (currentWeaponId === weaponId) {
       return;

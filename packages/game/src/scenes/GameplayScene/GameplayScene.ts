@@ -259,6 +259,13 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.on<Player.State>(playerStateCollection, 'Add', this.spawnPlayer.bind(this));
     this.storage.on<ConnectionState>(connectionStateCollection, 'Update', this.handleConnectionState.bind(this));
     this.storage.on<GameState>(gameStateCollection, 'Add', () => {
+      const currentWeaponId = this.weaponController.getCurrentWeapon(playerId);
+      const currentWeapon = this.storage.getCollection<PlayerWeapon>(playerWeaponCollection)!.getItem(playerId);
+
+      if (!currentWeaponId) {
+        emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
+      }
+
       this.multiplayerController.setReady();
     });
 
@@ -327,12 +334,13 @@ export class GameplayScene extends Phaser.Scene {
     const player = new PlayerEntity(this, playerId, stateRecord, this.storage);
     this.players.set(playerId, player);
 
-    if (playerId == this.mainPlayerId) {
-      const weaponId = this.storage.getCollection<PlayerWeapon>(playerWeaponCollection)!.getItem(playerId)?.weaponId;
-      if (!weaponId) {
-        emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
-      }
-    }
+    // if (playerId == this.mainPlayerId) {
+    //   const weaponId = this.storage.getCollection<PlayerWeapon>(playerWeaponCollection)!.getItem(playerId)?.weaponId;
+    //   if (!weaponId) {
+    //     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
+    //   } else {
+    //   }
+    // }
 
     player.setLocationBounds(this.location.getBounds());
   }

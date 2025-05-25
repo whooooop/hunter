@@ -1,14 +1,15 @@
 import { StorageSpace, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
-import { JumpEvent } from '@hunter/storage-proto/dist/storage';
+import { PlayerJumpEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import JumpAudioUrl from '../assets/audio/jump.mp3';
 import { MotionController2 } from '../controllers/MotionController2';
 import { SettingsService } from '../services/SettingsService';
-import { jumpEventCollection } from '../storage/collections/jumpEvent.collectio';
+import { jumpEventCollection } from '../storage/collections/events.collectio';
 import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture } from '../textures/PlayerTexture';
 import { Player } from '../types';
 import { Location } from '../types/Location';
 import { createLogger } from '../utils/logger';
+import { generateId } from '../utils/stringGenerator';
 import { ShadowEntity } from './ShadowEntity';
 import { WeaponEntity } from './WeaponEntity';
 
@@ -104,8 +105,8 @@ export class PlayerEntity {
 
     this.motionController.setState(state);
 
-    this.storage.on<JumpEvent>(jumpEventCollection, 'Add', (playerId: string, record: SyncCollectionRecord<JumpEvent>) => {
-      if (playerId === this.id) {
+    this.storage.on<PlayerJumpEvent>(jumpEventCollection, 'Add', (eventId: string, record: SyncCollectionRecord<PlayerJumpEvent>) => {
+      if (record.data.playerId === this.id) {
         this.jumpAction();
       }
     });
@@ -216,7 +217,7 @@ export class PlayerEntity {
     if (this.motionController.isJumping()) {
       return;
     }
-    this.storage.getCollection<JumpEvent>(jumpEventCollection)!.addItem(this.id, { playerId: this.id });
+    this.storage.getCollection<PlayerJumpEvent>(jumpEventCollection)!.addItem(generateId(), { playerId: this.id });
     this.jumpAction();
   }
 

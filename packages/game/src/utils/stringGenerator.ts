@@ -35,11 +35,11 @@ export function generateString(charset: string = CHARS.DIGITS + CHARS.LOWERCASE 
   let result = '';
   const length = 6;
   const charactersLength = charset.length;
-  
+
   for (let i = 0; i < length; i++) {
     result += charset.charAt(Math.floor(Math.random() * charactersLength));
   }
-  
+
   return result;
 }
 
@@ -56,11 +56,11 @@ export function generateString(charset: string = CHARS.DIGITS + CHARS.LOWERCASE 
 export function generateStringWithLength(length: number, charset: string = CHARS.ALL): string {
   let result = '';
   const charactersLength = charset.length;
-  
+
   for (let i = 0; i < length; i++) {
     result += charset.charAt(Math.floor(Math.random() * charactersLength));
   }
-  
+
   return result;
 }
 
@@ -71,4 +71,4 @@ export function generateId(): string {
 /**
  * Экспортируем наборы символов для удобного использования в других модулях
  */
-export { CHARS }; 
+export { CHARS };
