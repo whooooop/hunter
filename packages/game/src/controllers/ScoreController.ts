@@ -1,13 +1,19 @@
-import { offEvent, onEvent, emitEvent } from "../GameEvents";
-import { IncreaseScoreEventPayload, DecreaseScoreEventPayload, ScoreEvents, Game } from '../types';
+import { SyncCollection } from "@hunter/multiplayer/dist/Collection";
+import { StorageSpace } from "@hunter/multiplayer/dist/StorageSpace";
+import { PlayerScoreState } from "@hunter/storage-proto/dist/storage";
+import { emitEvent, offEvent, onEvent } from "../GameEvents";
+import { playerScoreStateCollection } from "../storage/collections/playerScoreState.collection";
+import { DecreaseScoreEventPayload, Game, IncreaseScoreEventPayload, ScoreEvents } from '../types';
 
 export class ScoreController {
-  private scene: Phaser.Scene;
-  private scere: Map<string, number> = new Map();
+  private scores: SyncCollection<PlayerScoreState>
 
-  constructor(scene: Phaser.Scene) {
-    this.scene = scene;
-    
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly storage: StorageSpace
+  ) {
+    this.scores = this.storage.getCollection<PlayerScoreState>(playerScoreStateCollection)!;
+
     // onEvent(scene, Game.Events.State.Remote, this.handleGameState, this);
     onEvent(scene, ScoreEvents.IncreaseScoreEvent, this.handleIncreaseScore, this);
     onEvent(scene, ScoreEvents.DecreaseScoreEvent, this.handleDecreaseScore, this);
@@ -20,15 +26,13 @@ export class ScoreController {
   // }
 
   private handleIncreaseScore(payload: IncreaseScoreEventPayload): void {
-    if (!this.scere.has(payload.playerId)) {
-      this.scere.set(payload.playerId, 0);
-    } 
-    const currentScore = this.scere.get(payload.playerId)!;
-    const score = currentScore + payload.score;
+    if (!this.scores.has(payload.playerId)) {
+      this.scores.addItem(payload.playerId, { value: 0 });
+    }
+    const currentScore = this.scores.getItem(payload.playerId)!;
+    currentScore.value += payload.score;
 
-    this.scere.set(payload.playerId, score);
-
-    emitEvent(this.scene, ScoreEvents.UpdateScoreEvent, { playerId: payload.playerId, score });
+    // emitEvent(this.scene, ScoreEvents.UpdateScoreEvent, { playerId: payload.playerId, score });
     emitEvent(this.scene, Game.Events.Stat.Local, {
       event: Game.Events.Stat.EarnEvent.Event,
       data: {
@@ -38,15 +42,13 @@ export class ScoreController {
   }
 
   private handleDecreaseScore(payload: DecreaseScoreEventPayload): void {
-    if (!this.scere.has(payload.playerId)) {
-      this.scere.set(payload.playerId, 0);
-    } 
-    const currentScore = this.scere.get(payload.playerId)!;
-    const score = Math.max(currentScore - payload.score, 0);
+    if (!this.scores.has(payload.playerId)) {
+      this.scores.addItem(payload.playerId, { value: 0 });
+    }
+    const currentScore = this.scores.getItem(payload.playerId)!;
+    currentScore.value = Math.max(currentScore.value - payload.score, 0);
 
-    this.scere.set(payload.playerId, score);
-
-    emitEvent(this.scene, ScoreEvents.UpdateScoreEvent, { playerId: payload.playerId, score });
+    // emitEvent(this.scene, ScoreEvents.UpdateScoreEvent, { playerId: payload.playerId, score });
     emitEvent(this.scene, Game.Events.Stat.Local, {
       event: Game.Events.Stat.SpendEvent.Event,
       data: {
