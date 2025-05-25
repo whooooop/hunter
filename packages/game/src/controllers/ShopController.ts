@@ -1,49 +1,31 @@
+import { StorageSpace, SyncCollection } from "@hunter/multiplayer/dist/client";
+import { PlayerScoreState, WeaponState } from "@hunter/storage-proto/dist/storage";
 import { BaseShop } from "../BaseShop";
 import { PlayerEntity } from "../entities/PlayerEntity";
+import { playerScoreStateCollection } from "../storage/collections/playerScoreState.collection";
+import { weaponStateCollection } from "../storage/collections/weaponState.collection";
+import { ShopWeapon } from "../types/shopTypes";
 import { WeaponType } from "../weapons/WeaponTypes";
-import { UpdateScoreEventPayload } from "../types/scoreTypes";
-import { ScoreEvents } from "../types/scoreTypes";
-import { emitEvent, offEvent, onEvent } from "../GameEvents";
-import { ShopEvents, ShopWeapon, WeaponPurchasedPayload } from "../types/shopTypes";
-import { Game } from "../types";
+
 
 export class ShopController {
-  private scene: Phaser.Scene;
-  private shop: BaseShop;
-  private players: Map<string, PlayerEntity>;
-  private playerBalance: Map<string, number> = new Map();
-  private playerPurchasedWeapons: Map<string, Set<WeaponType>> = new Map();
-  private weapons: ShopWeapon[];
   private isNearbyPlayer: boolean = false;
   private interactablePlayerId: string | null = null;
   private openShopKey: Phaser.Input.Keyboard.Key;
+  private scoreStore: SyncCollection<PlayerScoreState>;
+  private weaponsStore: SyncCollection<WeaponState>;
 
-  constructor(scene: Phaser.Scene, players: Map<string, PlayerEntity>, playerId: string, shop: BaseShop, weapons: ShopWeapon[]) {
-    this.scene = scene;
-    this.shop = shop;
-    this.players = players;
-    this.weapons = weapons;
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly players: Map<string, PlayerEntity>,
+    private readonly playerId: string,
+    private readonly shop: BaseShop,
+    private readonly weapons: ShopWeapon[],
+    private readonly storage: StorageSpace
+  ) {
     this.openShopKey = this.scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
-
-    onEvent(this.scene, ScoreEvents.UpdateScoreEvent, this.handleBalanceUpdate, this);
-    onEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
-  }
-
-  private handleBalanceUpdate(payload: UpdateScoreEventPayload) {
-    this.playerBalance.set(payload.playerId, payload.score);
-  }
-
-  private handleWeaponPurchased(payload: WeaponPurchasedPayload) {
-    const playerPurchasedWeapons = this.playerPurchasedWeapons.get(payload.playerId) || new Set();
-    playerPurchasedWeapons.add(payload.weaponType);
-    this.playerPurchasedWeapons.set(payload.playerId, playerPurchasedWeapons);
-    
-    emitEvent(this.scene, Game.Events.Stat.Local, {
-      event: Game.Events.Stat.PurchaseWeaponEvent.Event,
-      data: {
-        weaponName: payload.weaponType,
-      },
-    });
+    this.scoreStore = this.storage.getCollection<PlayerScoreState>(playerScoreStateCollection)!;
+    this.weaponsStore = this.storage.getCollection<WeaponState>(weaponStateCollection)!;
   }
 
   public update(time: number, delta: number) {
@@ -80,13 +62,17 @@ export class ShopController {
   }
 
   private openShop(playerId: string): void {
-    const playerBalance = this.playerBalance.get(playerId)!;
-    const playerPurchasedWeapons = this.playerPurchasedWeapons.get(playerId) || new Set();
-    this.shop.openShop(playerId, playerBalance, playerPurchasedWeapons, this.weapons);
+    const playerBalance = this.scoreStore.getItem(playerId)?.value || 0;
+    const playerWeapons = new Set<WeaponType>();
+
+    this.weaponsStore.forEach((record) => {
+      if (record.data.playerId === playerId) {
+        playerWeapons.add(record.data.type as WeaponType);
+      }
+    });
+
+    this.shop.openShop(playerId, playerBalance, playerWeapons, this.weapons);
   }
 
-  public destroy(): void {
-    offEvent(this.scene, ScoreEvents.UpdateScoreEvent, this.handleBalanceUpdate, this);
-    offEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
-  }
+  public destroy(): void { }
 }

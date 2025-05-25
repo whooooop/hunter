@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { MenuSceneTypes } from './scenes/MenuScene/MenuSceneTypes';
-import { Blood, Decals, DecreaseScoreEventPayload, Enemy, Game, IncreaseScoreEventPayload, Loading, Player, ScoreEvents, ShopEvents, UpdateScoreEventPayload, Weapon, WeaponPurchasedPayload } from './types';
+import { Blood, Decals, DecreaseScoreEventPayload, Enemy, Game, IncreaseScoreEventPayload, Loading, Player, ScoreEvents, ShopEvents, Weapon, WeaponPurchasedPayload } from './types';
 import { Wave } from './types/WaveTypes';
 
 interface EventPayloadMap {
@@ -18,7 +18,6 @@ interface EventPayloadMap {
   // Score
   [ScoreEvents.IncreaseScoreEvent]: IncreaseScoreEventPayload;
   [ScoreEvents.DecreaseScoreEvent]: DecreaseScoreEventPayload;
-  [ScoreEvents.UpdateScoreEvent]: UpdateScoreEventPayload;
 
   // Player
   [Player.Events.ChangeWeapon.Local]: Player.Events.ChangeWeapon.Payload;

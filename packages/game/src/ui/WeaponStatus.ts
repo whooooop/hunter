@@ -1,6 +1,10 @@
+import { SyncCollectionRecord } from '@hunter/multiplayer/dist/Collection';
+import { StorageSpace } from '@hunter/multiplayer/dist/StorageSpace';
+import { PlayerScoreState } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import { COLORS } from '../Constants';
 import { FONT_FAMILY } from '../config';
+import { playerScoreStateCollection } from '../storage/collections/playerScoreState.collection';
 import { hexToNumber } from '../utils/colors';
 import { createLogger } from '../utils/logger';
 import { WeaponType } from '../weapons/WeaponTypes';
@@ -8,7 +12,6 @@ import { WeaponType } from '../weapons/WeaponTypes';
 const logger = createLogger('WeaponStatus');
 
 export class WeaponStatus {
-  private scene: Phaser.Scene;
   private container!: Phaser.GameObjects.Container;
   private background!: Phaser.GameObjects.Graphics;
   private weaponCircle!: Phaser.GameObjects.Graphics;
@@ -36,9 +39,14 @@ export class WeaponStatus {
   private currentAmmo: number = 0; // Инициализируем нулем
   private currentWeapon: WeaponType | null = null;
 
-  constructor(scene: Phaser.Scene) {
-    this.scene = scene;
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly storage: StorageSpace,
+    private readonly playerId: string
+  ) {
     this.create();
+
+    this.storage.on<PlayerScoreState>(playerScoreStateCollection, 'Update', this.updateCoins.bind(this));
   }
 
   private create(): void {
@@ -289,9 +297,11 @@ export class WeaponStatus {
     }
   }
 
-  public setCoins(coins: number): void {
-    this.coins = coins;
-    this.coinsText.setText(this.coins.toString());
+  private updateCoins(playerId: string, record: SyncCollectionRecord<PlayerScoreState>): void {
+    if (playerId === this.playerId) {
+      this.coins = record.data.value;
+      this.coinsText.setText(this.coins.toString());
+    }
   }
 
   public destroy(): void {

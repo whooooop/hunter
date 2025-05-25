@@ -21,7 +21,7 @@ import { enemyStateCollection } from '../../storage/collections/enemyState.colle
 import { gameStateCollection } from '../../storage/collections/gameState.collection';
 import { playerStateCollection } from '../../storage/collections/playerState.collection';
 import { playerWeaponCollection } from '../../storage/collections/playerWeapon.collection';
-import { Damageable, Enemy, Game, Level, Loading, Location, Player, ScoreEvents, ShopEvents, UpdateScoreEventPayload } from '../../types/';
+import { Damageable, Enemy, Game, Level, Loading, Location, Player, ScoreEvents, ShopEvents } from '../../types/';
 import { Wave } from '../../types/WaveTypes';
 import { WaveInfo, WeaponStatus } from '../../ui';
 import { createLogger } from '../../utils/logger';
@@ -146,7 +146,6 @@ export class GameplayScene extends Phaser.Scene {
 
     offEvent(this, Wave.Events.WaveStart.Local, this.handleWaveStart, this);
     offEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
-    offEvent(this, ScoreEvents.UpdateScoreEvent, this.handleUpdateScore, this);
     offEvent(this, Game.Events.Pause.Local, this.handlePause, this);
     offEvent(this, Game.Events.Replay.Local, this.handleReplay, this);
     offEvent(this, Game.Events.Exit.Local, this.handleExit, this);
@@ -159,13 +158,12 @@ export class GameplayScene extends Phaser.Scene {
 
     onEvent(this, Wave.Events.WaveStart.Local, this.handleWaveStart, this);
     onEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
-    onEvent(this, ScoreEvents.UpdateScoreEvent, this.handleUpdateScore, this);
     onEvent(this, Game.Events.Pause.Local, this.handlePause, this);
     onEvent(this, Game.Events.Replay.Local, this.handleReplay, this);
     onEvent(this, Game.Events.Exit.Local, this.handleExit, this);
     onEvent(this, Loading.Events.LoadingComplete.Local, this.handleLoadingComplete, this);
 
-
+    this.storage.on<Player.State>(playerStateCollection, 'Add', this.spawnPlayer.bind(this));
     this.storage.on<EnemyState>(enemyStateCollection, 'Add', this.handleSpawnEnemy.bind(this));
 
     this.location.create();
@@ -177,23 +175,29 @@ export class GameplayScene extends Phaser.Scene {
     this.bloodController = new BloodController(this);
     this.keyboardController = new KeyBoardController(this, this.players, playerId, this.storage);
     this.weaponController = new WeaponController(this, this.players, this.storage);
-    this.shopController = new ShopController(this, this.players, playerId, this.shop, this.levelConfig.weapons);
+    this.shopController = new ShopController(this, this.players, playerId, this.shop, this.levelConfig.weapons, this.storage);
     this.decalController = new DecalController(this, 0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 5);
     this.projectileController = new ProjectileController(this, this.damageableObjects);
     this.waveController = new WaveController(this, this.levelConfig.waves(), this.storage);
 
     this.waveInfo = new WaveInfo(this);
-    this.weaponStatus = new WeaponStatus(this);
+    this.weaponStatus = new WeaponStatus(this, this.storage, playerId);
 
     this.add.text(20, DISPLAY.HEIGHT - 30, VERSION, { fontSize: 16, color: '#ffffff' }).setDepth(10000);
 
     this.physics.world.setBounds(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
     this.shopController.setInteractablePlayerId(playerId);
+
+    (window as any)['_s'] = this.storage;
   }
 
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
-    this.multiplayerInit(this.mainPlayerId);
-    //  this.singlePlayerInit(this.mainPlayerId);
+    const gameId = new URLSearchParams(window.location.search).get('game');
+    if (gameId) {
+      this.multiplayerInit(this.mainPlayerId, gameId);
+    } else {
+      this.singlePlayerInit(this.mainPlayerId);
+    }
     this.playTime = 0;
   }
 
@@ -205,10 +209,13 @@ export class GameplayScene extends Phaser.Scene {
       this.questId = quest.id;
     }
 
+    this.storage.getCollection<Player.State>(playerStateCollection)!.addItem(playerId, { x: 0, y: 0, vx: 0, vy: 0 });
+    emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
+
     this.waveController.start();
     this.projectileController.setSimulate(false);
 
-    // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
+    emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
   }
 
   private handlePause(payload: Game.Events.Pause.Payload): void {
@@ -250,13 +257,12 @@ export class GameplayScene extends Phaser.Scene {
   /** 
    *      Multiplayer 
    */
-  private multiplayerInit(playerId: string): void {
+  private multiplayerInit(playerId: string, gameId: string): void {
     this.isMultiplayer = true;
 
     this.projectileController.setSimulate(true);
     this.pingText = this.add.text(10, 10, '', { fontSize: 16, color: '#ffffff' }).setDepth(10000);
 
-    this.storage.on<Player.State>(playerStateCollection, 'Add', this.spawnPlayer.bind(this));
     this.storage.on<ConnectionState>(connectionStateCollection, 'Update', this.handleConnectionState.bind(this));
     this.storage.on<GameState>(gameStateCollection, 'Add', () => {
       const currentWeaponId = this.weaponController.getCurrentWeapon(playerId);
@@ -275,7 +281,7 @@ export class GameplayScene extends Phaser.Scene {
     });
 
     this.multiplayerController = new MultiplayerController(this, this.storage);
-    this.multiplayerController.connect('GAME1', playerId).then(() => { });
+    this.multiplayerController.connect(gameId, playerId).then(() => { });
   }
 
   private handleConnectionState() {
@@ -315,12 +321,6 @@ export class GameplayScene extends Phaser.Scene {
 
   private handleWaveStart(payload: Wave.Events.WaveStart.Payload) {
     this.waveInfo.start(payload)
-  }
-
-  private handleUpdateScore(payload: UpdateScoreEventPayload): void {
-    if (payload.playerId === this.mainPlayerId) {
-      this.weaponStatus.setCoins(payload.score);
-    }
   }
 
   public spawnPlayer(playerId: string, stateRecord: SyncCollectionRecord<Player.State>): void {

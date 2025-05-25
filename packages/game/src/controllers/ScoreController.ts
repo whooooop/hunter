@@ -23,7 +23,7 @@ export class ScoreController {
       this.scores.addItem(payload.playerId, { value: 0 });
     }
     const currentScore = this.scores.getItem(payload.playerId)!;
-    currentScore.value += payload.score;
+    this.scores.updateItem(payload.playerId, { value: currentScore.value + payload.score });
 
     emitEvent(this.scene, Game.Events.Stat.Local, {
       event: Game.Events.Stat.EarnEvent.Event,
@@ -38,7 +38,7 @@ export class ScoreController {
       this.scores.addItem(payload.playerId, { value: 0 });
     }
     const currentScore = this.scores.getItem(payload.playerId)!;
-    currentScore.value = Math.max(currentScore.value - payload.score, 0);
+    this.scores.updateItem(payload.playerId, { value: Math.max(currentScore.value - payload.score, 0) });
 
     emitEvent(this.scene, Game.Events.Stat.Local, {
       event: Game.Events.Stat.SpendEvent.Event,

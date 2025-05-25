@@ -211,15 +211,16 @@ export class SyncCollection<T extends object> {
     this.incrementStat('ClientAdd');
     const onChange = (key: keyof T, value: any, oldValue: any) => {
       // console.log('onChange', key, value, oldValue);
-      if (this.config.readonly || this.readonlyItems.has(id)) {
-        return;
-      }
+
       this.sendUpdate(id, data);
     };
 
     if (reactive) {
       const proxy = new Proxy(data as object, {
-        set(obj: any, key: string | symbol, value: any) {
+        set: (obj: any, key: string | symbol, value: any) => {
+          if (readonly) {
+            return false;
+          }
           const oldValue = obj[key];
           if (oldValue !== value) {
             obj[key] = value;

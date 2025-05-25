@@ -89,7 +89,6 @@ export class WaveController {
 
     this.scene.time.delayedCall(spawn.delay, () => {
       const enemyConfig = EnemyCollections[spawn.state.type as Enemy.Type].config;
-      console.log('add enemy');
       this.enemyCollection.addItem(generateId(), {
         type: spawn.state.type,
         x: spawn.state.x,
