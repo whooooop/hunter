@@ -1,25 +1,25 @@
+import { StorageSpace, SyncCollection } from "@hunter/multiplayer/dist/client";
+import { emitEvent } from "../GameEvents";
+import { EnemyCollections, preloadEnemies } from "../enemies";
+import { enemyStateCollection } from "../storage/collections/enemyState.collection";
+import { Enemy, Game, Wave } from "../types";
 import { generateId } from "../utils/stringGenerator";
-import { Enemy, Game } from "../types";
-import { emitEvent, offEvent, onEvent } from "../GameEvents";
-import { preloadEnemies } from "../enemies";
-import { Wave } from "../types/WaveTypes";
-
 
 export class WaveController {
-  private scene: Phaser.Scene;
-  private waves: Wave.Config[];
   private currentWave: number = 0;
-  private spawnedEnemies: number = 0;
   private waitingForEnemies: boolean = false;
-  
-  constructor(scene: Phaser.Scene, waves: Wave.Config[]) {
-    this.scene = scene;
-    this.waves = waves;
-    this.currentWave = 0;
-    this.spawnedEnemies = 0;
+  private enemyCollection: SyncCollection<Enemy.State>;
 
-    // onEvent(scene, Game.Events.State.Remote, this.handleGameState, this);
-    onEvent(scene, Game.Events.Enemies.Local, this.handleEnemiesCount, this);
+  constructor(
+    private scene: Phaser.Scene,
+    private waves: Wave.Config[],
+    private storage: StorageSpace
+  ) {
+    this.currentWave = 0;
+
+    this.enemyCollection = this.storage.getCollection<Enemy.State>(enemyStateCollection)!;
+
+    this.enemyCollection.subscribe('Remove', this.handleEnemyDeath.bind(this));
   }
 
   // private handleGameState(payload: Game.Events.State.Payload): void {
@@ -30,9 +30,8 @@ export class WaveController {
     this.nextWave(0);
   }
 
-  private handleEnemiesCount({ count }: Game.Events.Enemies.Payload): void {
-    this.spawnedEnemies = count;
-    if (this.waitingForEnemies && this.spawnedEnemies === 0) {
+  private handleEnemyDeath(): void {
+    if (this.waitingForEnemies && this.enemyCollection.getSize() === 0) {
       this.waveComplete(this.currentWave);
     }
   }
@@ -41,7 +40,7 @@ export class WaveController {
     const enemys = new Set<Enemy.Type>();
     waves.forEach(wave => {
       wave.spawns.forEach(spawn => {
-        enemys.add(spawn.enemyType);
+        enemys.add(spawn.state.type as Enemy.Type);
       });
     });
     return preloadEnemies(scene, Array.from(enemys));
@@ -53,7 +52,7 @@ export class WaveController {
 
     if (wave) {
       const waveDuration = this.calculateWaweDuration(waveIndex);
-  
+
       emitEvent(this.scene, Wave.Events.WaveStart.Local, {
         number: waveIndex + 1,
         duration: waveDuration
@@ -70,7 +69,7 @@ export class WaveController {
     emitEvent(this.scene, Game.Events.Stat.Local, {
       event: Game.Events.Stat.WaveCompleteEvent.Event,
       data: {
-        waveNumber: waveIndex + 1 
+        waveNumber: waveIndex + 1
       }
     });
 
@@ -89,20 +88,23 @@ export class WaveController {
     const nextSpawn = spawns[spawnIndex + 1];
 
     this.scene.time.delayedCall(spawn.delay, () => {
-      const config = spawn.config;
-      config.level = waveIndex + 1;
-      
-      emitEvent(this.scene, Wave.Events.Spawn.Local, {
-        id: generateId(),
-        boss: spawn.boss || false,
-        enemyType: spawn.enemyType,
-        config: spawn.config,
-      });
+      const enemyConfig = EnemyCollections[spawn.state.type as Enemy.Type].config;
+      console.log('add enemy');
+      this.enemyCollection.addItem(generateId(), {
+        type: spawn.state.type,
+        x: spawn.state.x,
+        y: spawn.state.y,
+        vx: spawn.state.vx || 0,
+        vy: spawn.state.vy || 0,
+        health: spawn.state.health || enemyConfig.health,
+        boss: spawn.state.boss || false,
+        level: spawn.state.level || waveIndex + 1,
+      })
 
       if (nextSpawn) {
         this.nextSpawn(waveIndex, spawnIndex + 1);
       } else {
-        if (!wave.waitAllEnemiesDead || this.spawnedEnemies === 0) {
+        if (!wave.waitAllEnemiesDead || this.enemyCollection.getSize() === 0) {
           this.waveComplete(waveIndex);
         } else {
           this.waitingForEnemies = true;
@@ -111,8 +113,8 @@ export class WaveController {
     });
   }
 
-  private end () {
-    
+  private end() {
+
   }
 
   private calculateWaweDuration(waveIndex: number): number {
@@ -125,11 +127,8 @@ export class WaveController {
   }
 
   public update(time: number, delta: number): void {
-   
-  } 
 
-  public destroy(): void {
-    // offEvent(this.scene, Game.Events.State.Remote, this.handleGameState, this);
-    offEvent(this.scene, Game.Events.Enemies.Local, this.handleEnemiesCount, this);
   }
+
+  public destroy(): void { }
 }

@@ -1,12 +1,9 @@
 import * as Phaser from 'phaser';
 import { MenuSceneTypes } from './scenes/MenuScene/MenuSceneTypes';
-import { Player, Enemy, Weapon, Game, Blood, Decals, ScoreEvents, UpdateScoreEventPayload, IncreaseScoreEventPayload, DecreaseScoreEventPayload, ShopEvents, WeaponPurchasedPayload, Loading } from './types';
+import { Blood, Decals, DecreaseScoreEventPayload, Enemy, Game, IncreaseScoreEventPayload, Loading, Player, ScoreEvents, ShopEvents, UpdateScoreEventPayload, Weapon, WeaponPurchasedPayload } from './types';
 import { Wave } from './types/WaveTypes';
- 
-interface EventPayloadMap {
-  // Game 
-  // [Game.Events.State.Remote]: Game.Events.State.Payload;
 
+interface EventPayloadMap {
   // Weapons
   [Weapon.Events.CreateProjectile.Local]: Weapon.Events.CreateProjectile.Payload;
   [Weapon.Events.CreateProjectile.Remote]: Weapon.Events.CreateProjectile.Payload;
@@ -18,9 +15,7 @@ interface EventPayloadMap {
 
   // Waves
   [Wave.Events.WaveStart.Local]: Wave.Events.WaveStart.Payload;
-  [Wave.Events.Spawn.Local]: Wave.Events.Spawn.Payload;
-  [Wave.Events.Spawn.Remote]: Wave.Events.Spawn.Payload;
-   
+
   // Enemies
   [Enemy.Events.Death.Local]: Enemy.Events.Death.Payload;
 
@@ -30,12 +25,6 @@ interface EventPayloadMap {
   [ScoreEvents.UpdateScoreEvent]: UpdateScoreEventPayload;
 
   // Player
-  [Player.Events.SetWeapon.Local]: Player.Events.SetWeapon.Payload;
-  [Player.Events.State.Local]: Player.Events.State.Payload;
-  [Player.Events.SetWeapon.Remote]: Player.Events.SetWeapon.Payload;
-  [Player.Events.State.Remote]: Player.Events.State.Payload;
-  // [Player.Events.Join.Remote]: Player.Events.Join.Payload;
-  // [Player.Events.Left.Remote]: Player.Events.Left.Payload;
   [Player.Events.ChangeWeapon.Local]: Player.Events.ChangeWeapon.Payload;
 
   // Blood
@@ -53,7 +42,6 @@ interface EventPayloadMap {
   [MenuSceneTypes.Events.GoToView.Name]: MenuSceneTypes.Events.GoToView.Payload;
 
   // Game
-  [Game.Events.Enemies.Local]: Game.Events.Enemies.Payload;
   [Game.Events.Pause.Local]: Game.Events.Pause.Payload;
   [Game.Events.Replay.Local]: Game.Events.Replay.Payload;
   [Game.Events.Resume.Local]: Game.Events.Resume.Payload;
@@ -63,46 +51,44 @@ interface EventPayloadMap {
   // Loading
   [Loading.Events.LoadingComplete.Local]: Loading.Events.LoadingComplete.Payload;
 
-  // Multiplayer
-  [Game.Events.Multiplayer.Ready.Local]: Game.Events.Multiplayer.Ready.Payload;
 }
 
 export function emitEvent<E extends keyof EventPayloadMap>(scene: Phaser.Scene, name: E, payload: EventPayloadMap[E]): void;
 export function emitEvent<E extends keyof EventPayloadMap>(
-    scene: Phaser.Scene, 
-    name: E, 
-    ...args: EventPayloadMap[E] extends void ? [] : [EventPayloadMap[E]]
+  scene: Phaser.Scene,
+  name: E,
+  ...args: EventPayloadMap[E] extends void ? [] : [EventPayloadMap[E]]
 ): void {
-    scene.events.emit(name, ...args);
+  scene.events.emit(name, ...args);
 }
 
 // Перегрузка для onEvent
 // 1. Для событий с payload
 export function onEvent<E extends keyof EventPayloadMap>(
-    scene: Phaser.Scene, 
-    name: E, 
-    callback: (payload: EventPayloadMap[E]) => void, 
-    context?: any
+  scene: Phaser.Scene,
+  name: E,
+  callback: (payload: EventPayloadMap[E]) => void,
+  context?: any
 ): void;
 export function onEvent<E extends keyof EventPayloadMap>(
-    scene: Phaser.Scene, 
-    name: E, 
-    callback: EventPayloadMap[E] extends void ? () => void : (payload: EventPayloadMap[E]) => void, 
-    context?: any
+  scene: Phaser.Scene,
+  name: E,
+  callback: EventPayloadMap[E] extends void ? () => void : (payload: EventPayloadMap[E]) => void,
+  context?: any
 ): void {
-    scene.events.on(name, callback, context);
+  scene.events.on(name, callback, context);
 }
 
 export function offEvent<E extends keyof EventPayloadMap>(
-  scene: Phaser.Scene, 
-  name: E, 
-  callback: (payload: EventPayloadMap[E]) => void, 
+  scene: Phaser.Scene,
+  name: E,
+  callback: (payload: EventPayloadMap[E]) => void,
   context?: any
 ): void;
 export function offEvent<E extends keyof EventPayloadMap>(
-  scene: Phaser.Scene, 
-  name: E, 
-  callback: EventPayloadMap[E] extends void ? () => void : (payload: EventPayloadMap[E]) => void, 
+  scene: Phaser.Scene,
+  name: E,
+  callback: EventPayloadMap[E] extends void ? () => void : (payload: EventPayloadMap[E]) => void,
   context?: any
 ): void {
   scene.events.off(name, callback, context);

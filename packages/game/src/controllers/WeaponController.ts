@@ -1,141 +1,120 @@
-import { WeaponEntity } from "../entities/WeaponEntity";
-import { createWeapon } from "../weapons";
-import { WeaponType } from "../weapons/WeaponTypes";
+import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
+import { PlayerWeapon, WeaponState } from "@hunter/storage-proto/dist/storage";
 import { PlayerEntity } from "../entities/PlayerEntity";
+import { WeaponEntity } from "../entities/WeaponEntity";
+import { onEvent } from "../GameEvents";
+import { playerWeaponCollection } from "../storage/collections/playerWeapon.collection";
+import { weaponStateCollection } from "../storage/collections/weaponState.collection";
+import { ShopEvents, WeaponPurchasedPayload } from "../types";
 import { createLogger } from "../utils/logger";
 import { generateId } from "../utils/stringGenerator";
-import { Player, WeaponPurchasedPayload, ShopEvents } from "../types";
-import { emitEvent, offEvent, onEvent } from "../GameEvents";
+import { createWeapon } from "../weapons";
+import { WeaponType } from "../weapons/WeaponTypes";
 
 const logger = createLogger('WeaponController');
 
 export class WeaponController {
-  private scene: Phaser.Scene;
-  private players: Map<string, PlayerEntity>;
-  private playerWeapons: Map<string, Map<WeaponType, WeaponEntity>> = new Map();
-  private currentWeapon: Map<string, { entity: WeaponEntity, type: WeaponType }> = new Map();
-  private weapons: Map<string, { weapon: WeaponEntity, playerId: string, name: WeaponType }> = new Map();
-  
-  constructor(scene: Phaser.Scene, players: Map<string, PlayerEntity>) {
-    this.scene = scene;
-    this.players = players;
+  private playerWeapons: Map<string, Map<string, WeaponEntity>> = new Map();
+  private currentWeapon: Map<string, string> = new Map();
+  private weapons: Map<string, WeaponEntity> = new Map();
 
-    // onEvent(scene, Game.Events.State.Remote, this.handleGameState, this);
-    onEvent(scene, Player.Events.SetWeapon.Remote, this.handleSetWeaponActionRemote, this);
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly players: Map<string, PlayerEntity>,
+    private readonly storage: StorageSpace
+  ) {
     onEvent(scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
-    onEvent(scene, Player.Events.ChangeWeapon.Local, this.handleChangeWeapon, this);
+    // onEvent(scene, Player.Events.ChangeWeapon.Local, this.handleChangeWeapon, this);
+
+    this.storage.on<WeaponState>(weaponStateCollection, 'Add', this.addPlayerWeapon.bind(this));
+    this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Add', this.updatePlayerCurrentWeapon.bind(this));
+    this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Update', this.updatePlayerCurrentWeapon.bind(this));
   }
 
   private handleWeaponPurchased({ playerId, weaponType }: WeaponPurchasedPayload): void {
-    this.setWeapon(playerId, weaponType);
+    const weaponId = generateId();
+    this.storage.getCollection<WeaponState>(weaponStateCollection)!.addItem(weaponId, {
+      playerId,
+      type: weaponType,
+    });
+    this.storage.getCollection<PlayerWeapon>(playerWeaponCollection)!.updateItem(playerId, {
+      weaponId
+    });
   }
 
-  // private handleGameState(payload: Game.Events.State.Payload): void {
-  //   // payload.weapons.forEach((weapon) => {
-  //   //   this.createPlayerWeapon(weapon.weaponId, weapon.playerId, weapon.name as WeaponType);
-  //   // });
-  // }
-
-  private handleChangeWeapon({ playerId, direction }: Player.Events.ChangeWeapon.Payload): void {
-    const currentWeapon = this.getCurrentWeapon(playerId);
-    const playerWeapons = Array.from(this.playerWeapons.get(playerId)?.keys() || []);
-
-    if (currentWeapon) {
-      const currentWeaponIndex = playerWeapons.indexOf(currentWeapon.type);
-      const nextWeapon = playerWeapons[currentWeaponIndex + direction];
-      if (nextWeapon) {
-        this.setWeapon(playerId, nextWeapon); 
-      } else {
-        if (direction === 1) {
-          this.setWeapon(playerId, playerWeapons[0]);
-        } else {
-          this.setWeapon(playerId, playerWeapons[playerWeapons.length - 1]);
-        }
-      }
+  private addPlayerWeapon(weaponId: string, record: SyncCollectionRecord<WeaponState>): void {
+    if (!this.playerWeapons.has(record.data.playerId)) {
+      this.playerWeapons.set(record.data.playerId, new Map());
     }
+
+    const playerWeapons = this.playerWeapons.get(record.data.playerId)!;
+    const weaponType = record.data.type as WeaponType;
+    const weaponEntity = createWeapon(weaponId, weaponType, this.scene);
+
+    playerWeapons.set(weaponId, weaponEntity);
+    this.weapons.set(weaponId, weaponEntity);
   }
 
-  private handleSetWeaponActionRemote({ playerId, weaponId, weaponType }: Player.Events.SetWeapon.Payload): void {
-    const weapon = this.getPlayerWeapon(playerId, weaponType);
-    if (!weapon) {
-      this.createPlayerWeapon(weaponId, playerId, weaponType);
-    } 
-    // this.setWeaponAction({ playerId, weaponId, weaponType });
-  }
+  // private handleChangeWeapon({ playerId, direction }: Player.Events.ChangeWeapon.Payload): void {
+  //   const currentWeapon = this.getCurrentWeapon(playerId);
+  //   const playerWeapons = Array.from(this.playerWeapons.get(playerId)?.keys() || []);
+
+  //   if (currentWeapon) {
+  //     const currentWeaponIndex = playerWeapons.indexOf(currentWeapon.type);
+  //     const nextWeapon = playerWeapons[currentWeaponIndex + direction];
+  //     if (nextWeapon) {
+  //       this.setWeapon(playerId, nextWeapon);
+  //     } else {
+  //       if (direction === 1) {
+  //         this.setWeapon(playerId, playerWeapons[0]);
+  //       } else {
+  //         this.setWeapon(playerId, playerWeapons[playerWeapons.length - 1]);
+  //       }
+  //     }
+  //   }
+  // }
 
   private getPlayerWeapon(playerId: string, weaponType: WeaponType): WeaponEntity | undefined {
     return this.playerWeapons.get(playerId)?.get(weaponType);
   }
 
-  public getWeapon(playerId: string, weaponType: WeaponType): WeaponEntity {
-    if (!this.playerWeapons.has(playerId)) {
-      this.playerWeapons.set(playerId, new Map());
-    }
-
-    if (!this.playerWeapons.get(playerId)!.has(weaponType)) {
-      const id = generateId();
-      const weapon = createWeapon(id, weaponType, this.scene);
-      this.playerWeapons.get(playerId)!.set(weaponType, weapon);
-      return weapon;
-    }
-
-    return this.playerWeapons.get(playerId)!.get(weaponType)!;
+  public getWeapon(weaponId: string): WeaponEntity {
+    return this.weapons.get(weaponId)!;
   }
 
-  private getCurrentWeapon(playerId: string): { entity: WeaponEntity, type: WeaponType } | undefined {
+  private getCurrentWeapon(playerId: string): string | undefined {
     return this.currentWeapon.get(playerId);
   }
 
-  private createPlayerWeapon(weaponId: string, playerId: string, weaponType: WeaponType): WeaponEntity {
-    if (!this.playerWeapons.has(playerId)) {
-      this.playerWeapons.set(playerId, new Map());
-    }
-
-    const weapon = createWeapon(weaponId, weaponType, this.scene);
-    this.playerWeapons.get(playerId)!.set(weaponType, weapon);
-    this.weapons.set(weaponId, { weapon, playerId, name: weaponType });
-    return weapon;
+  private setCurrentWeapon(playerId: string, weaponId: string): void {
+    this.currentWeapon.set(playerId, weaponId);
   }
 
-  public setWeapon(playerId: string, weaponType: WeaponType): void {
-    const weaponId = generateId();
-    const weapon = this.getPlayerWeapon(playerId, weaponType);
-    if (!weapon) {
-      this.createPlayerWeapon(weaponId, playerId, weaponType);
-    } 
-    emitEvent(this.scene, Player.Events.SetWeapon.Local, { playerId, weaponId, weaponType });
-    this.setWeaponAction({ playerId, weaponId, weaponType });
+  public setWeapon(playerId: string, weaponId: string): void {
+    const currentWeaponId = this.getCurrentWeapon(playerId);
+
+    if (currentWeaponId === weaponId) {
+      return;
+    }
+
+    if (currentWeaponId) {
+      const currentWeapon = this.getWeapon(currentWeaponId);
+      if (currentWeapon) {
+        currentWeapon.setPosition(-2000, -2000, 1);
+      }
+    }
+
+    const weapon = this.getWeapon(weaponId);
+    this.setCurrentWeapon(playerId, weaponId);
+    this.players.get(playerId)!.setWeapon(weapon);
   }
-  
-  public setWeaponById({ playerId, weaponId }: Omit<Player.Events.SetWeapon.Payload, 'weaponType'>): void {
-    const weapon = this.weapons.get(weaponId);
 
-    if (weapon) {
-      this.setWeaponAction({ playerId, weaponId, weaponType: weapon.name });
-    }
-  }
-
-  public setWeaponAction({ playerId, weaponType }: Player.Events.SetWeapon.Payload): void {
-    const currentWeapon = this.getCurrentWeapon(playerId);
-
-    if (currentWeapon) {
-      currentWeapon.entity.setPosition(-2000, - 2000, 1);
-    }
-
-    const weapon = this.getWeapon(playerId, weaponType as WeaponType);
-
-    this.currentWeapon.set(playerId, { entity: weapon, type: weaponType as WeaponType });
-    if (this.players.has(playerId)) {
-      this.players.get(playerId)!.setWeapon(weapon);
-    } else {
-      logger.warn('Player not found', playerId);
-    }
+  private updatePlayerCurrentWeapon(playerId: string, record: SyncCollectionRecord<PlayerWeapon>): void {
+    this.setWeapon(playerId, record.data.weaponId);
   }
 
   public destroy(): void {
-    // offEvent(this.scene, Game.Events.State.Remote, this.handleGameState, this);
-    offEvent(this.scene, Player.Events.SetWeapon.Remote, this.handleSetWeaponActionRemote, this);
-    offEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
-    offEvent(this.scene, Player.Events.ChangeWeapon.Local, this.handleChangeWeapon, this);
+    // offEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
+    // offEvent(this.scene, Player.Events.ChangeWeapon.Local, this.handleChangeWeapon, this);
   }
 }

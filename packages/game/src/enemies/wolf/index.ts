@@ -1,9 +1,10 @@
+import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 import { EnemyEntity } from "../../entities/EnemyEntity";
-import { WolfConfig } from "./config";
 import { Enemy } from "../../types/enemyTypes";
+import { WolfConfig } from "./config";
 
 export class WolfEnemy extends EnemyEntity {
-  constructor(scene: Phaser.Scene, id: string, spawnConfig: Enemy.SpawnConfig) {
-    super(scene, id, spawnConfig.x, spawnConfig.y, WolfConfig, spawnConfig);
+  constructor(scene: Phaser.Scene, id: string, state: SyncCollectionRecord<Enemy.State>) {
+    super(scene, id, WolfConfig, state);
   }
 }

@@ -1,22 +1,17 @@
-import { createSimpleBloodConfig } from "../controllers/BloodController";
-import { MotionController2 } from "../controllers/MotionController2";
-import { DamageableController } from "../controllers/DamageableController";
-import { emitEvent } from "../GameEvents";
-import { hexToNumber } from "../utils/colors";
 import { SpineGameObject, TrackEntry } from "@esotericsoftware/spine-phaser";
+import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 import { DEBUG } from "../config";
-import { Game, Blood, Enemy, Location, Damageable, ScoreEvents, Decals } from "../types/";
+import { createSimpleBloodConfig } from "../controllers/BloodController";
+import { DamageableController } from "../controllers/DamageableController";
+import { MotionController2 } from "../controllers/MotionController2";
+import { emitEvent } from "../GameEvents";
+import { Blood, Damageable, Decals, Enemy, Game, Location, ScoreEvents } from "../types/";
+import { hexToNumber } from "../utils/colors";
 import { Logger } from "../utils/logger";
 
 const logger = new Logger('EnemyEntity');
 
 const DEFAULT_MOTION = {
-  // acceleration: 100,
-  // deceleration: 20,
-  // maxVelocityX: 50,
-  // maxVelocityY: 40,
-  // friction: 0,
-
   acceleration: 800,
   deceleration: 200,
   friction: 800,
@@ -25,9 +20,7 @@ const DEFAULT_MOTION = {
 }
 
 export class EnemyEntity implements Damageable.Entity {
-  private id: string;
   private destroyed: boolean = false;
-  private scene: Phaser.Scene;
   protected spineObject!: SpineGameObject;
   private body: Phaser.Physics.Arcade.Body;
   protected container: Phaser.GameObjects.Container;
@@ -40,17 +33,17 @@ export class EnemyEntity implements Damageable.Entity {
   protected motionController: MotionController2;
 
   private graphics!: Phaser.GameObjects.Graphics;
-  private config: Enemy.Config;
 
-  constructor(scene: Phaser.Scene, id: string, x: number, y: number, config: Enemy.Config, spawnConfig?: Partial<Enemy.SpawnConfig>) {
-    this.id = id;
-    this.config = { ...config, ...spawnConfig };
-    this.scene = scene;
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly id: string,
+    private readonly config: Enemy.Config,
+    private readonly state: SyncCollectionRecord<Enemy.State>
+  ) {
+    // this.config = { ...config, ...state.data };
 
-    // this.createAnimations(scene, this.config);
+    this.container = scene.add.container(this.state.data.x, this.state.data.y);
 
-    this.container = scene.add.container(x, y);
-    
     const motionConfig: Enemy.Motion = { ...DEFAULT_MOTION, ...this.config.motion };
 
     if (config.spine) {
@@ -60,17 +53,19 @@ export class EnemyEntity implements Damageable.Entity {
       this.container.add(this.spineObject);
     }
 
-    this.body = scene.physics.add.body(x, y, this.config.baunds.body.width, this.config.baunds.body.height);
+    this.body = scene.physics.add.body(this.state.data.x, this.state.data.y, this.config.baunds.body.width, this.config.baunds.body.height);
 
-    this.damageableController = new DamageableController({ health: this.config.health, permeability: 0 });
+    this.damageableController = new DamageableController({ health: this.state.data.health, permeability: 0 });
     this.motionController = new MotionController2(scene, this.body, motionConfig);
-
+    this.motionController.setState(this.state);
     this.setAnimation(Enemy.Animation.WALK);
 
-    if (this.config.velocityX || this.config.velocityY) {
-      this.motionController.setMove(this.config.velocityX || -1, this.config.velocityY || 0);
+    if (!this.state.readonly) {
+      if (this.state.data.vx || this.state.data.vy) {
+        this.motionController.setMove(this.state.data.vx, this.state.data.vy);
+      }
     }
-    
+
     if (DEBUG.ENEMIES) {
       this.graphics = scene.add.graphics();
     }
@@ -162,13 +157,6 @@ export class EnemyEntity implements Damageable.Entity {
     return result;
   }
 
-  // private createAnimations(scene: Phaser.Scene, config: Enemy.Config): void {
-  //   config.animations?.forEach(animation => {
-  //     this.animations.set(animation.name, animation);
-  //     createSpriteAnimation(scene, animation);
-  //   });
-  // }
-
   private addScore(score: number, playerId: string): void {
     emitEvent(this.scene, ScoreEvents.IncreaseScoreEvent, { score, playerId });
   }
@@ -237,7 +225,7 @@ export class EnemyEntity implements Damageable.Entity {
       y: matrix.ty,
       object: this.spineObject as unknown as Phaser.GameObjects.Sprite,
     });
-    
+
     this.destroy();
   }
 

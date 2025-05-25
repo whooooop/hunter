@@ -1,14 +1,11 @@
+import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 import { EnemyEntity } from "../../entities/EnemyEntity";
-import { MouseConfig } from "./config";
 import { Enemy } from "../../types/enemyTypes";
+import { MouseConfig } from "./config";
 
 export class MouseEnemy extends EnemyEntity {
-  constructor(scene: Phaser.Scene, id: string, spawnConfig: Enemy.SpawnConfig) {
-    super(scene, id, spawnConfig.x, spawnConfig.y, MouseConfig);
-
-    if (spawnConfig.velocityX || spawnConfig.velocityY) {
-      this.motionController.setMove(spawnConfig.velocityX || 0, spawnConfig.velocityY || 0);
-    }
+  constructor(scene: Phaser.Scene, id: string, state: SyncCollectionRecord<Enemy.State>) {
+    super(scene, id, MouseConfig, state);
   }
 
   // public update(time: number, delta: number): void {

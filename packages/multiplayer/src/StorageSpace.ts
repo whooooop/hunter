@@ -1,4 +1,4 @@
-import { CollectionId, SyncCollection } from "./Collection";
+import { CollectionId, FromUpdate, SyncCollection, SyncCollectionEvent, SyncCollectionRecord } from "./Collection";
 import { SyncCollectionEvents } from "./sync";
 
 export type StorageSpaceId = string;
@@ -42,8 +42,8 @@ export class StorageSpace {
 
   public getCollection<T extends object>(collectionId: CollectionId): SyncCollection<T> | null {
     if (!this.collections.has(collectionId)) {
-        console.error(`Collection ${collectionId} not found`);
-        return null;
+      console.error(`Collection ${collectionId} not found`);
+      return null;
     }
     return this.collections.get(collectionId) as unknown as SyncCollection<T>;
   }
@@ -56,10 +56,30 @@ export class StorageSpace {
     return collection.getSize();
   }
 
+  on<T extends object>(collectionId: CollectionId, event: SyncCollectionEvent, callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): this {
+    const collection = this.getCollection(collectionId);
+    if (!collection) {
+      throw new Error(`Collection ${collectionId} not found`);
+    }
+    // @ts-ignore
+    collection.subscribe(event, callback);
+    return this;
+  }
+
+  off<T extends object>(collectionId: CollectionId, event: SyncCollectionEvent, callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): this {
+    const collection = this.getCollection(collectionId);
+    if (!collection) {
+      throw new Error(`Collection ${collectionId} not found`);
+    }
+    // @ts-ignore
+    collection.unsubscribe(event, callback);
+    return this;
+  }
+
   public importCollectionBytes(collectionId: CollectionId, ids: string[], payloadBytes: Uint8Array[]) {
     const collection = this.getCollection(collectionId);
     if (!collection) {
-        return;
+      return;
     }
     if (ids.length !== payloadBytes.length) {
       console.error(`Collection ${collectionId} has a different number of items than the payload`);

@@ -42,11 +42,11 @@ export class ServerNamespace<SessionData extends object> extends BaseNamespace {
         this.lastMessageTime = Date.now();
     }
 
-    public getConnectionsSize() {
+    public getConnectionsSize(): number {
         return this.sockets.size;
     }
 
-    public getConnections() {
+    public getConnections(): ClientSocket<SessionData>[] {
         return Array.from(this.sockets.values());
     }
 

@@ -1,33 +1,37 @@
+import { StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
+import { ConnectionState, EnemyState, GameState, PlayerWeapon } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
-import { SceneKeys } from '../index';
-import { PlayerEntity } from '../../entities/PlayerEntity';
-import { createLogger } from '../../utils/logger';
-import { WeaponStatus, WaveInfo } from '../../ui';
 import { BaseShop } from '../../BaseShop';
-import { DecalController, BloodController, ProjectileController, WaveController, ScoreController, ShopController, WeaponController, QuestController, MultiplayerController, KeyBoardController } from '../../controllers';
-import { Player, Enemy, Game, Damageable, Location, ShopEvents, Level, ScoreEvents, UpdateScoreEventPayload, Loading } from '../../types/';
-import { emitEvent, offEvent, onEvent } from '../../GameEvents';
-import { preloadWeapons } from '../../weapons';
-import { WeaponType } from '../../weapons/WeaponTypes';
-import { preloadProjectiles } from '../../projectiles';
+import { DISPLAY, GAMEOVER, VERSION } from '../../config';
+import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../../controllers';
 import { createEnemy } from '../../enemies';
+import { EnemyEntity } from '../../entities/EnemyEntity';
+import { PlayerEntity } from '../../entities/PlayerEntity';
 import { preloadFx } from '../../fx';
-import { getLocation } from '../../locations';
-import { LoadingView } from '../../views/loading/LoadingView'; 
+import { emitEvent, offEvent, onEvent } from '../../GameEvents';
 import { getLevel, LevelId } from '../../levels';
-import { PauseView } from '../../views/pause';
-import { Wave } from '../../types/WaveTypes';
+import { getLocation } from '../../locations';
+import { preloadProjectiles } from '../../projectiles';
+import { HintsService } from '../../services/HintsService';
 import { PlayerService } from '../../services/PlayerService';
 import { QuestService } from '../../services/QuestService';
-import { HintsService } from '../../services/HintsService';
-import { DISPLAY, GAMEOVER, VERSION } from '../../config';
-import { GameOverView } from '../../views/gameover';
-import { MenuSceneTypes } from '../MenuScene/MenuSceneTypes';
-import { EnemyEntity } from '../../entities/EnemyEntity';
 import { gameStorage } from '../../storage';
-import { StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
-import { playerStateCollection } from '../../storage/collections/playerState.collection';
 import { connectionStateCollection } from '../../storage/collections/connectionState.collection';
+import { enemyStateCollection } from '../../storage/collections/enemyState.collection';
+import { gameStateCollection } from '../../storage/collections/gameState.collection';
+import { playerStateCollection } from '../../storage/collections/playerState.collection';
+import { playerWeaponCollection } from '../../storage/collections/playerWeapon.collection';
+import { Damageable, Enemy, Game, Level, Loading, Location, Player, ScoreEvents, ShopEvents, UpdateScoreEventPayload } from '../../types/';
+import { Wave } from '../../types/WaveTypes';
+import { WaveInfo, WeaponStatus } from '../../ui';
+import { createLogger } from '../../utils/logger';
+import { GameOverView } from '../../views/gameover';
+import { LoadingView } from '../../views/loading/LoadingView';
+import { PauseView } from '../../views/pause';
+import { preloadWeapons } from '../../weapons';
+import { WeaponType } from '../../weapons/WeaponTypes';
+import { SceneKeys } from '../index';
+import { MenuSceneTypes } from '../MenuScene/MenuSceneTypes';
 
 const logger = createLogger('GameplayScene');
 
@@ -43,7 +47,7 @@ export class GameplayScene extends Phaser.Scene {
   private questService: QuestService;
 
   private pingText!: Phaser.GameObjects.Text;
-  
+
   private shop!: BaseShop;
   private enemies: Map<string, Damageable.Entity> = new Map();
   private bosses: Map<string, Damageable.Entity> = new Map();
@@ -90,14 +94,14 @@ export class GameplayScene extends Phaser.Scene {
     this.playerService = PlayerService.getInstance();
     this.questService = QuestService.getInstance();
   }
-  
-  init({ levelId } : GameplaySceneData) {
+
+  init({ levelId }: GameplaySceneData) {
     this.loadingView = new LoadingView(this, { minLoadingTime: 2000 });
     this.levelConfig = getLevel(levelId);
     this.levelId = levelId;
     this.location = getLocation(this, this.levelConfig.location);
     this.storage = StorageSpace.create(gameStorage)!;
-    
+
     HintsService.getInstance().getHint().then(hint => {
       this.loadingView.setHint(hint);
     });
@@ -141,31 +145,28 @@ export class GameplayScene extends Phaser.Scene {
     this.resume();
 
     offEvent(this, Wave.Events.WaveStart.Local, this.handleWaveStart, this);
-    offEvent(this, Wave.Events.Spawn.Local, this.handleSpawnEnemy, this);
     offEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
     offEvent(this, ScoreEvents.UpdateScoreEvent, this.handleUpdateScore, this);
     offEvent(this, Game.Events.Pause.Local, this.handlePause, this);
     offEvent(this, Game.Events.Replay.Local, this.handleReplay, this);
     offEvent(this, Game.Events.Exit.Local, this.handleExit, this);
     offEvent(this, Loading.Events.LoadingComplete.Local, this.handleLoadingComplete, this);
-
-    // offEvent(this, Player.Events.Join.Remote, this.handlePlayerJoin, this);
-    // offEvent(this, Player.Events.Left.Remote, this.handlePlayerLeft, this);
-    // offEvent(this, Game.Events.State.Remote, this.handleGameState, this);
   }
-  
+
   async create(): Promise<void> {
     const playerId = this.playerService.getCurrentPlayerId();
     this.mainPlayerId = playerId;
 
     onEvent(this, Wave.Events.WaveStart.Local, this.handleWaveStart, this);
-    onEvent(this, Wave.Events.Spawn.Local, this.handleSpawnEnemy, this);
     onEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
     onEvent(this, ScoreEvents.UpdateScoreEvent, this.handleUpdateScore, this);
     onEvent(this, Game.Events.Pause.Local, this.handlePause, this);
     onEvent(this, Game.Events.Replay.Local, this.handleReplay, this);
     onEvent(this, Game.Events.Exit.Local, this.handleExit, this);
     onEvent(this, Loading.Events.LoadingComplete.Local, this.handleLoadingComplete, this);
+
+
+    this.storage.on<EnemyState>(enemyStateCollection, 'Add', this.handleSpawnEnemy.bind(this));
 
     this.location.create();
 
@@ -175,25 +176,25 @@ export class GameplayScene extends Phaser.Scene {
     this.scoreController = new ScoreController(this);
     this.bloodController = new BloodController(this);
     this.keyboardController = new KeyBoardController(this, this.players, playerId);
-    this.weaponController = new WeaponController(this, this.players);
+    this.weaponController = new WeaponController(this, this.players, this.storage);
     this.shopController = new ShopController(this, this.players, playerId, this.shop, this.levelConfig.weapons);
     this.decalController = new DecalController(this, 0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 5);
     this.projectileController = new ProjectileController(this, this.damageableObjects);
-    this.waveController = new WaveController(this, this.levelConfig.waves());
-    
+    this.waveController = new WaveController(this, this.levelConfig.waves(), this.storage);
+
     this.waveInfo = new WaveInfo(this);
     this.weaponStatus = new WeaponStatus(this);
 
-    const version = this.add.text(20, DISPLAY.HEIGHT - 30, VERSION, { fontSize: 16, color: '#ffffff' }).setDepth(10000);
+    this.add.text(20, DISPLAY.HEIGHT - 30, VERSION, { fontSize: 16, color: '#ffffff' }).setDepth(10000);
 
     this.physics.world.setBounds(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
     this.shopController.setInteractablePlayerId(playerId);
   }
 
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
-     this.multiplayerInit(this.mainPlayerId);
+    this.multiplayerInit(this.mainPlayerId);
     //  this.singlePlayerInit(this.mainPlayerId);
-     this.playTime = 0;
+    this.playTime = 0;
   }
 
   private async singlePlayerInit(playerId: string): Promise<void> {
@@ -204,11 +205,9 @@ export class GameplayScene extends Phaser.Scene {
       this.questId = quest.id;
     }
 
-    // this.spawnPlayer(playerId, PLAYER_POSITION_X, PLAYER_POSITION_Y);
     this.waveController.start();
     this.projectileController.setSimulate(false);
 
-    emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MINE, price: 0 });
     // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
   }
 
@@ -253,93 +252,58 @@ export class GameplayScene extends Phaser.Scene {
    */
   private multiplayerInit(playerId: string): void {
     this.isMultiplayer = true;
-    // onEvent(this, Game.Events.State.Remote, this.handleGameState, this);
-    // onEvent(this, Player.Events.Join.Remote, this.handlePlayerJoin, this);
-    // onEvent(this, Player.Events.Left.Remote, this.handlePlayerLeft, this);
-    // onEvent(this, Game.Events.Multiplayer.Ready.Local, this.handleMultiplayerReady, this);
-    // onEvent(this, Wave.Events.Spawn.Remote, this.handleSpawnEnemy, this);
 
     this.projectileController.setSimulate(true);
     this.pingText = this.add.text(10, 10, '', { fontSize: 16, color: '#ffffff' }).setDepth(10000);
 
-    this.storage.getCollection<Player.State>(playerStateCollection)!.subscribe('Add', (id, record, collection, from) => {
-      this.spawnPlayer(id, record);
+    this.storage.on<Player.State>(playerStateCollection, 'Add', this.spawnPlayer.bind(this));
+    this.storage.on<ConnectionState>(connectionStateCollection, 'Update', this.handleConnectionState.bind(this));
+    this.storage.on<GameState>(gameStateCollection, 'Add', () => {
+      this.multiplayerController.setReady();
+    });
+
+    this.storage.getCollection<GameState>(gameStateCollection)!.subscribe('Add', (id, record, collection, from) => {
+      console.log('is host', record.data.host === playerId);
+      this.storage.getCollection<EnemyState>(enemyStateCollection)!.setReadonly(record.data.host !== playerId);
     });
 
     this.multiplayerController = new MultiplayerController(this, this.storage);
-    this.multiplayerController.connect('GAME1', playerId).then(() => {
-      setTimeout(() => {
-          this.storage.getCollection<Player.State>(playerStateCollection)!.forEach((record, id, collection) => {
-            
-            this.spawnPlayer(id, record);
-          });
-          this.multiplayerController.setReady();
-      }, 2000);
-    });
-  }
-  
-  // private handleGameState(payload: Game.Events.State.Payload): void {
-  //   payload.connected.forEach(playerId => {
-  //     const player = payload.playersState.find(p => p.id === playerId);
-  //     if (player) {
-  //       this.spawnPlayer(
-  //         player.id, 
-  //         player.position?.x || PLAYER_POSITION_X, 
-  //         player.position?.y || PLAYER_POSITION_Y
-  //       );
-  //       this.weaponController.setWeaponById({ playerId, weaponId: player.weaponId });
-  //     }
-  //   });
-  // }
-
-  private handleMultiplayerReady(): void {
-    this.projectileController.setSimulate(false);
-    this.waveController.start();
+    this.multiplayerController.connect('GAME1', playerId).then(() => { });
   }
 
-  // private handlePlayerJoin({ playerId, playerState }: Player.Events.Join.Payload): void {
-  //   this.spawnPlayer(playerId, playerState?.position?.x!, playerState?.position?.y!);
-  //   this.weaponController.setWeaponById({ playerId, weaponId: playerState?.weaponId! });
-  // }
+  private handleConnectionState() {
+    const connections = this.storage.getCollection<ConnectionState>(connectionStateCollection)!;
+    const game = this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game');
 
-  // private handlePlayerLeft(payload: Player.Events.Left.Payload): void {
-  //   const player = this.players.get(payload.playerId);
-  //   if (player) {
-  //     player.destroy();
-  //     this.players.delete(payload.playerId);
-  //   }
-  // }
-
-
-
-
-
+    const allReady = connections.getSize() === game?.playersCount && connections.getItems().every(data => data.ready);
+    if (allReady && game?.host === this.mainPlayerId && !game.started) {
+      console.log('all ready');
+      // game.started = true;
+      this.projectileController.setSimulate(false);
+      // this.waveController.start();
+    }
+  }
 
   private handleEnemyDeath({ id }: Enemy.Events.Death.Payload): void {
     this.enemies.delete(id);
+    this.bosses.delete(id);
     this.kills++;
     this.damageableObjects.delete(id);
-    emitEvent(this, Game.Events.Enemies.Local, {
-      count: this.enemies.size
-    });
+    this.storage.getCollection<EnemyState>(enemyStateCollection)!.removeItem(id);
   }
 
-  private handleSpawnEnemy({ id, enemyType, config, boss }: Wave.Events.Spawn.Payload): void {
+  private handleSpawnEnemy(id: string, record: SyncCollectionRecord<EnemyState>, collection: SyncCollection<EnemyState>, from: string): void {
     if (this.isGameOver) {
       return;
     }
-    const enemy = createEnemy(id, enemyType, this, config);
+    const enemy = createEnemy(id, record.data.type as Enemy.Type, this, record);
     this.enemies.set(id, enemy);
     enemy.setLocationBounds(this.location.getBounds());
     this.damageableObjects.set(id, enemy);
 
-    if (boss) {
+    if (record.data.boss) {
       this.bosses.set(id, enemy);
     }
-
-    emitEvent(this, Game.Events.Enemies.Local, {
-      count: this.enemies.size
-    });
   }
 
   private handleWaveStart(payload: Wave.Events.WaveStart.Payload) {
@@ -353,7 +317,6 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   public spawnPlayer(playerId: string, stateRecord: SyncCollectionRecord<Player.State>): void {
-    console.log('spawnPlayer', playerId, stateRecord);
     this.storage.getCollection<Player.State>(playerStateCollection)!.setReadonly(playerId !== this.mainPlayerId, playerId);
 
     if (this.players.has(playerId)) {
@@ -363,6 +326,13 @@ export class GameplayScene extends Phaser.Scene {
 
     const player = new PlayerEntity(this, playerId, stateRecord);
     this.players.set(playerId, player);
+
+    if (playerId == this.mainPlayerId) {
+      const weaponId = this.storage.getCollection<PlayerWeapon>(playerWeaponCollection)!.getItem(playerId)?.weaponId;
+      if (!weaponId) {
+        emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
+      }
+    }
 
     player.setLocationBounds(this.location.getBounds());
   }
@@ -378,7 +348,7 @@ export class GameplayScene extends Phaser.Scene {
   public addShop(shop: BaseShop): void {
     this.shop = shop;
   }
-  
+
   update(time: number, delta: number): void {
     if (this.isMultiplayer) {
       this.pingText.setText(`Ping: ${this.multiplayerController.ping}ms`);
@@ -403,7 +373,7 @@ export class GameplayScene extends Phaser.Scene {
         this.weaponStatus.setAmmo(weapon.getCurrentAmmo(), weapon.getMaxAmmo());
       }
     }
-  
+
     // Обновляем всех врагов
     this.enemies.forEach((enemy) => {
       enemy.update(time, delta);
@@ -415,9 +385,8 @@ export class GameplayScene extends Phaser.Scene {
 
     // Обрабатываем попадания пуль
     this.projectileController.update(time, delta);
-    this.waveInfo.update(time, delta);  
+    this.waveInfo.update(time, delta);
 
-    this.updatePlayerState(time, delta);
     this.updateBossState(time, delta);
 
     if (!this.isPause) {
@@ -446,21 +415,6 @@ export class GameplayScene extends Phaser.Scene {
     if (currentHp <= 0) {
       this.bosses.clear();
     }
-  }
-
-  private updatePlayerState(time: number, delta: number): void {
-    const player = this.players.get(this.mainPlayerId)!;
-    if (!player) {
-      return;
-    }
-    const state = player.getPlayerState();
-    const stateHash = (state.position.x + state.position.y + state.movement.x + state.movement.y).toString();
-    if (time - this.lastSentState < 40 || stateHash === this.lastStateHash) {
-      return;
-    }
-    emitEvent(this, Player.Events.State.Local, state);
-    this.lastSentState = time;
-    this.lastStateHash = stateHash;
   }
 
   destroy(): void {

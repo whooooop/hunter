@@ -1,9 +1,10 @@
+import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 import { EnemyEntity } from "../../entities/EnemyEntity";
-import { SquireelConfig } from "./config";
 import { Enemy } from "../../types/enemyTypes";
+import { SquireelConfig } from "./config";
 
 export class SquireelEnemy extends EnemyEntity {
-  constructor(scene: Phaser.Scene, id: string, spawnConfig: Enemy.SpawnConfig) {
-    super(scene, id, spawnConfig.x, spawnConfig.y, SquireelConfig, spawnConfig);
+  constructor(scene: Phaser.Scene, id: string, state: SyncCollectionRecord<Enemy.State>) {
+    super(scene, id, SquireelConfig, state);
   }
 }

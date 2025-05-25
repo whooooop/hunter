@@ -1,15 +1,14 @@
-import * as Phaser from 'phaser';
-import { createLogger } from '../utils/logger';
-import { Location } from '../types/Location';
-import { WeaponEntity } from './WeaponEntity';
-import { ShadowEntity } from './ShadowEntity';
-import { offEvent, onEvent } from '../GameEvents';
-import { Player } from '../types';
-import { MotionController2 } from '../controllers/MotionController2';
-import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture } from '../textures/PlayerTexture';
-import JumpAudioUrl from '../assets/audio/jump.mp3';
-import { SettingsService } from '../services/SettingsService';
 import { SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
+import * as Phaser from 'phaser';
+import JumpAudioUrl from '../assets/audio/jump.mp3';
+import { MotionController2 } from '../controllers/MotionController2';
+import { SettingsService } from '../services/SettingsService';
+import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture } from '../textures/PlayerTexture';
+import { Player } from '../types';
+import { Location } from '../types/Location';
+import { createLogger } from '../utils/logger';
+import { ShadowEntity } from './ShadowEntity';
+import { WeaponEntity } from './WeaponEntity';
 
 const logger = createLogger('Player');
 const settingsService = SettingsService.getInstance();
@@ -42,7 +41,7 @@ export class PlayerEntity {
   private canChangeDirection: boolean = false;
 
   private currentWeapon!: WeaponEntity | null;
-  
+
   private direction: number = 1;
 
   private bodyHeight: number = 50;
@@ -72,7 +71,7 @@ export class PlayerEntity {
     this.scene = scene;
     this.container = scene.add.container(0, 0);
 
-    this.body = scene.physics.add.body(state.data.positionX, state.data.positionY, this.bodyWidth, this.bodyHeight);
+    this.body = scene.physics.add.body(state.data.x, state.data.y, this.bodyWidth, this.bodyHeight);
     this.shadow = new ShadowEntity(scene, this.body);
     this.playerBody = scene.add.image(0, 0, PlayerBodyTexture.key).setScale(PlayerBodyTexture.scale);
     this.frontHand = scene.add.image(0, 0, PlayerHandTexture.key).setScale(PlayerHandTexture.scale).setPosition(-6, 24);
@@ -81,7 +80,7 @@ export class PlayerEntity {
     this.rightLeg = scene.add.image(0, 0, PlayerLegRightTexture.key).setScale(PlayerLegRightTexture.scale).setOrigin(0.5, 0).setPosition(6, 28);
     this.weaponContainer = scene.add.container(0, 0);
 
-    this.container.add(this.backHand);1
+    this.container.add(this.backHand); 1
     this.container.add(this.shadow.getContainer());
     this.container.add(this.leftLeg);
     this.container.add(this.rightLeg);
@@ -93,29 +92,15 @@ export class PlayerEntity {
     this.rightLeg.setRotation(0);
 
     this.motionController = new MotionController2(scene, this.body, {
-      acceleration: 700,
-      deceleration: 500,
+      acceleration: 900,
+      deceleration: 700,
       friction: 800,
-      maxVelocityX: 200,
-      maxVelocityY: 200,
+      maxVelocityX: 300,
+      maxVelocityY: 300,
     });
+
     this.motionController.setState(state);
-    
-    // onEvent(scene, Player.Events.State.Remote, this.handlePlayerStateRemote, this);
   }
-
-  // private handlePlayerStateRemote(payload: Player.Events.State.Payload): void {
-  //   if (payload.playerId !== this.id) {
-  //     return;
-  //   }
-
-  //   this.motionController.setState({
-  //     targetX: payload.position.x,
-  //     targetY: payload.position.y,
-  //     moveX: payload.movement.x,
-  //     moveY: payload.movement.y,
-  //   });
-  // }
 
   public getId(): string {
     return this.id;
@@ -137,14 +122,14 @@ export class PlayerEntity {
   public setLocationBounds(bounds: Location.Bounds): void {
     this.motionController.setLocationBounds(bounds);
   }
-  
+
   /**
    * Возвращает текущее оружие игрока
    */
   public getWeapon(): WeaponEntity | null {
     return this.currentWeapon || null;
   }
-  
+
   public update(time: number, delta: number): void {
     this.motionController.update(time, delta);
     const position = this.motionController.getPosition();
@@ -195,7 +180,7 @@ export class PlayerEntity {
 
       // Сбрасываем фазу, когда ноги почти вернулись в 0, чтобы избежать накопления ошибки
       if (Math.abs(this.leftLeg.rotation) < Phaser.Math.DegToRad(1)) {
-           this.walkPhase = 0;
+        this.walkPhase = 0;
       }
     }
 
@@ -210,15 +195,6 @@ export class PlayerEntity {
     }
   }
 
-  public getPlayerState(): Player.Events.State.Payload {
-    const position = this.motionController.getPosition();
-    return { 
-      playerId: this.id, 
-      movement: { x: position.moveX, y: position.moveY },
-      position: { x: position.x, y: position.y } 
-    };
-  }
-  
   public setMove(moveX: number, moveY: number): void {
     // this.handleDirectionChange(-1);
     this.motionController.setMove(moveX, moveY);
@@ -235,7 +211,7 @@ export class PlayerEntity {
     this.scene.sound.play(jumpAudio.key, { volume: settingsService.getValue('audioEffectsVolume') as number });
   }
 
-  
+
   // private handleDirectionChange(direction: number): void {
   //   if (this.canChangeDirection) {
   //     this.direction = direction;

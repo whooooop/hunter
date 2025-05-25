@@ -13,6 +13,7 @@ interface Config<Session extends object = any> {
   onConnection?: (server: MultiplayerServer<Session>, clientSocket: ClientSocket<Session>, namespace: string, request: IncomingMessage) => Promise<void>;
   onJoin?: (server: MultiplayerServer<Session>, clientSocket: ClientSocket<Session>) => Promise<void>;
   onDisconnect?: (server: MultiplayerServer<Session>, clientSocket: ClientSocket<Session>) => Promise<void>;
+  onNamespaceCreated?: (server: MultiplayerServer<Session>, namespace: ServerNamespace<Session>) => Promise<void>;
   generateClientId?: () => ClientId;
   namespace: ServerNamespaceConfig;
 }
@@ -64,17 +65,30 @@ export class MultiplayerServer<Session extends object = any> {
     });
   }
 
-  public getNamespace(namespaceId: NamespaceId): ServerNamespace<Session> {
-    if (!this.namespaces.has(namespaceId)) {
-      const namespace = new ServerNamespace<Session>(this, namespaceId, this.config.namespace);
-      this.namespaces.set(namespaceId, namespace);
-      return namespace;
+  public async hasNamespace(namespaceId: NamespaceId): Promise<boolean> {
+    return this.namespaces.has(namespaceId);
+  }
+
+  public async getNamespace(namespaceId: NamespaceId): Promise<ServerNamespace<Session>> {
+    const hasNamespace = await this.hasNamespace(namespaceId);
+    
+    if (!hasNamespace) {
+      return this.createNamespace(namespaceId);
     }
     return this.namespaces.get(namespaceId)!;
   }
 
+  private async createNamespace(namespaceId: NamespaceId): Promise<ServerNamespace<Session>> {
+    const namespace = new ServerNamespace<Session>(this, namespaceId, this.config.namespace);
+    this.namespaces.set(namespaceId, namespace);
+    if (this.config.onNamespaceCreated) {
+      await this.config.onNamespaceCreated(this, namespace);
+    }
+    return namespace;
+  }
+
   private async handleConnection(request: IncomingMessage, clientSocket: ClientSocket<Session>, namespaceId: NamespaceId) {
-    const namespace = this.getNamespace(namespaceId);
+    const namespace = await this.getNamespace(namespaceId);
     
     namespace.connectClient(clientSocket);
 

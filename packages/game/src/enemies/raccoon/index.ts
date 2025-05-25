@@ -1,9 +1,10 @@
+import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 import { EnemyEntity } from "../../entities/EnemyEntity";
-import { RaccoonConfig } from "./config";
 import { Enemy } from "../../types/enemyTypes";
+import { RaccoonConfig } from "./config";
 
 export class RaccoonEnemy extends EnemyEntity {
-  constructor(scene: Phaser.Scene, id: string, spawnConfig: Enemy.SpawnConfig) {
-    super(scene, id, spawnConfig.x, spawnConfig.y, RaccoonConfig, spawnConfig);
+  constructor(scene: Phaser.Scene, id: string, state: SyncCollectionRecord<Enemy.State>) {
+    super(scene, id, RaccoonConfig, state);
   }
 }

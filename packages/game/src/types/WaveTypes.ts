@@ -9,18 +9,6 @@ export namespace Wave {
         number: number
       };
     }
-
-    export namespace Spawn {
-      export const Local = 'waveSpawnLocalEvent';
-      export const Remote = 'waveSpawnRemoteEvent';
-      export type Payload = {
-        id: string;
-        enemyType: Enemy.Type;
-        config: Enemy.SpawnConfig;
-        boss: boolean;
-      };
-    }
-
   }
 
   export interface Config {
@@ -30,8 +18,6 @@ export namespace Wave {
 
   export interface Spawn {
     delay: number;
-    enemyType: Enemy.Type;
-    config: Enemy.SpawnConfig;
-    boss?: boolean;
+    state: Pick<Enemy.State, 'type' | 'x' | 'y'> & Partial<Enemy.State>;
   }
 }

@@ -1,13 +1,14 @@
-import { EnemyEntity } from "../../entities/EnemyEntity";
-import { HareConfig } from "./config";
+import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 import { AntiAimBehavior } from "../../behaviors/AntiAimBehavior";
+import { EnemyEntity } from "../../entities/EnemyEntity";
 import { Enemy } from "../../types";
+import { HareConfig } from "./config";
 
 export class HareEnemy extends EnemyEntity {
   private antiAimBehavior: AntiAimBehavior;
-  
-  constructor(scene: Phaser.Scene, id: string, spawnConfig: Enemy.SpawnConfig) {
-    super(scene, id, spawnConfig.x, spawnConfig.y, HareConfig, spawnConfig);
+
+  constructor(scene: Phaser.Scene, id: string, state: SyncCollectionRecord<Enemy.State>) {
+    super(scene, id, HareConfig, state);
 
     this.antiAimBehavior = new AntiAimBehavior(scene, this);
   }

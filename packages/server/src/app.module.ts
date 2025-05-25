@@ -6,4 +6,4 @@ import { GameModule } from './game/game.module';
     GameModule,
   ],
 })
-export class AppModule {}  
+export class AppModule { }   

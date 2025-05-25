@@ -1,22 +1,10 @@
 // import { EventGameState } from "../proto/generated/game";
-import { Enemy } from "./enemyTypes";
 import { WeaponType } from "../weapons/WeaponTypes";
+import { Enemy } from "./enemyTypes";
 import { Projectile } from "./ProjectileTypes";
 
 export namespace Game {
   export namespace Events {
-    // export namespace State {
-    //   export const Remote = 'GameStateRemoteEvent';
-    //   export type Payload = EventGameState;
-    // }
-
-    export namespace Enemies {
-      export const Local = 'GameEnemiesLocalEvent';
-      export type Payload = {
-        count: number;
-      };
-    }
-
     export namespace Pause {
       export const Local = 'GamePauseLocalEvent';
       export type Payload = {};
@@ -35,13 +23,6 @@ export namespace Game {
     export namespace Resume {
       export const Local = 'GameResumeLocalEvent';
       export type Payload = {};
-    }
-
-    export namespace Multiplayer {
-      export namespace Ready {
-        export const Local = 'GameMultiplayerReadyLocalEvent';
-        export type Payload = {};
-      }
     }
 
     export namespace Stat {
@@ -90,11 +71,11 @@ export namespace Game {
         export const Event = 'enemyKill';
         export interface Payload {
           event: typeof Event;
-          data: {} 
-          & Record<Key.EnemyType['key'], Key.EnemyType['value']> 
+          data: {}
+          & Record<Key.EnemyType['key'], Key.EnemyType['value']>
           & Record<Key.WeaponName['key'], Key.WeaponName['value']>
-          & Record<Key.Body['key'], Key.Body['value']> 
-          & Record<Key.OneShotKill['key'], Key.OneShotKill['value']> 
+          & Record<Key.Body['key'], Key.Body['value']>
+          & Record<Key.OneShotKill['key'], Key.OneShotKill['value']>
           & Record<Key.Distance['key'], Key.Distance['value']>;
         }
       }
@@ -103,7 +84,7 @@ export namespace Game {
         export const Event = 'enemyDamage';
         export interface Payload {
           event: typeof Event;
-          data: {} 
+          data: {}
           & Record<Key.WeaponName['key'], Key.WeaponName['value']>
           & Record<Key.EnemyType['key'], Key.EnemyType['value']>
           & Record<Key.Body['key'], Key.Body['value']>
@@ -115,8 +96,8 @@ export namespace Game {
         export const Event = 'dubleKill';
         export interface Payload {
           event: typeof Event;
-          data: {} 
-          & Record<Key.WeaponName['key'], Key.WeaponName['value']>  
+          data: {}
+          & Record<Key.WeaponName['key'], Key.WeaponName['value']>
           & Record<Key.ProjectileType['key'], Key.ProjectileType['value']>
         }
       }
@@ -125,8 +106,8 @@ export namespace Game {
         export const Event = 'tripleKill';
         export interface Payload {
           event: typeof Event;
-          data: {} 
-          & Record<Key.WeaponName['key'], Key.WeaponName['value']>  
+          data: {}
+          & Record<Key.WeaponName['key'], Key.WeaponName['value']>
           & Record<Key.ProjectileType['key'], Key.ProjectileType['value']>
         }
       }
@@ -175,11 +156,11 @@ export namespace Game {
           & Record<Key.WaveNumber['key'], Key.WaveNumber['value']>
         }
       }
-      
-      export type Payload = 
-        EnemyKillEvent.Payload | 
-        EnemyDamageEvent.Payload | 
-        DubleKillEvent.Payload | 
+
+      export type Payload =
+        EnemyKillEvent.Payload |
+        EnemyDamageEvent.Payload |
+        DubleKillEvent.Payload |
         TripleKillEvent.Payload |
         ComboKillEvent.Payload |
         PurchaseWeaponEvent.Payload |

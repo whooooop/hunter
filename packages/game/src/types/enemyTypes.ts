@@ -1,3 +1,4 @@
+import { EnemyState } from "@hunter/storage-proto/dist/storage";
 import { SpriteConfig } from "../utils/sprite";
 import { WeaponType } from "../weapons/WeaponTypes";
 
@@ -15,6 +16,8 @@ export namespace Enemy {
     SQUIRREL_ANGRY = 'squirrelAngry',
     WOLF = 'wolf',
   }
+
+  export type State = EnemyState;
 
   export namespace Events {
     export namespace Death {
@@ -76,14 +79,16 @@ export namespace Enemy {
     };
   }
 
-  export interface SpawnConfig {
-    x: number;
-    y: number;
-    level?: number;
-    health?: number;
-    velocityX?: number;
-    velocityY?: number;
-  }
+  // export interface SpawnConfig {
+  //   type: Type;
+  //   x: number;
+  //   y: number;
+  //   level?: number;
+  //   health?: number;
+  //   vx?: number;
+  //   vy?: number;
+  //   boss?: boolean;
+  // }
 
   interface SpineAnimation {
     timeScale: number;

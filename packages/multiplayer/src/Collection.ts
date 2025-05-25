@@ -1,15 +1,16 @@
+import { BinaryWriter } from "@bufbuild/protobuf/dist/cjs/wire/binary-encoding";
 import { StorageSpace } from "./StorageSpace";
 import { SyncCollectionEvents } from "./sync";
-import { BinaryWriter } from "@bufbuild/protobuf/dist/cjs/wire/binary-encoding";
 
 export type CollectionId = string;
-type SyncCollectionEvent = keyof typeof SyncCollectionEvents;
-type FromUpdate = 'Server' | 'Client';
+export type SyncCollectionEvent = keyof typeof SyncCollectionEvents;
+export type FromUpdate = 'Server' | 'Client';
 
 export interface SyncCollectionConfig<T> {
-  localEvents?: boolean,
   // clearOnDisconnect?: boolean,
   // limit?: number,
+  name?: string,
+  localEvents?: boolean,
   saveData?: boolean,
   throttle?: number,
   reactive?: boolean,
@@ -26,11 +27,13 @@ export interface SyncCollectionRecord<T> {
 
 const defaultConfig: Partial<SyncCollectionConfig<object>> = {
   saveData: true,
-  throttle: 50,
+  throttle: 16,
   reactive: true,
 }
 
-export function defineCollection<T extends object>(id: string, config: SyncCollectionConfig<T>): CollectionId {
+export function defineCollection<T extends object>(name: string, config: SyncCollectionConfig<T>): CollectionId {
+  const id = generateTransferId(name);
+  config.name = name;
   SyncCollection.registry.set(id, config as unknown as SyncCollectionConfig<object>);
   return id;
 }
@@ -39,14 +42,24 @@ export class SyncCollection<T extends object> {
   static readonly registry: Map<string, SyncCollectionConfig<object>> = new Map();
 
   private collection: Map<string, SyncCollectionRecord<T>> = new Map();
-  private subscribers: Set<{event: SyncCollectionEvent, callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void}> = new Set();
+  private subscribers: Set<{ event: SyncCollectionEvent, callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void }> = new Set();
   private subscribersCount = new Map<SyncCollectionEvent, number>([
     ['Add', 0],
     ['Update', 0],
     ['Remove', 0],
   ]);
+  private readonly stat = new Map([
+    ['ClientAdd', 0],
+    ['ClientUpdate', 0],
+    ['ClientRemove', 0],
+    ['ServerAdd', 0],
+    ['ServerUpdate', 0],
+    ['ServerRemove', 0],
+    ['SendAdd', 0],
+    ['SendUpdate', 0],
+    ['SendRemove', 0],
+  ])
   private readonlyItems: Set<string> = new Set();
-
   private lastSendTime: Map<string, number> = new Map();
   private pendingUpdates: Map<string, { data: T, timer: NodeJS.Timeout }> = new Map();
   private __onSendBuffer: ((collectionId: string, event: SyncCollectionEvents, id: string, bytes: Uint8Array, excludeClientId?: string) => void) | null = null;
@@ -54,13 +67,15 @@ export class SyncCollection<T extends object> {
   constructor(
     private readonly id: CollectionId,
     private readonly storage: StorageSpace,
-    private readonly config: SyncCollectionConfig<T>
+    private readonly config: SyncCollectionConfig<T>,
+    private readonly name: string = config.name || ''
   ) {
     this.config = { ...defaultConfig, ...config };
   }
 
   static create<T extends object>(id: string, storage: StorageSpace): SyncCollection<T> | null {
     const config = SyncCollection.registry.get(id);
+
     if (!config) {
       console.error(`Collection ${id} not found`);
       return null;
@@ -71,7 +86,7 @@ export class SyncCollection<T extends object> {
   public getId(): string {
     return this.id;
   }
-  
+
   public getSize(): number {
     return this.collection.size;
   }
@@ -80,9 +95,9 @@ export class SyncCollection<T extends object> {
     return this.collection.has(id);
   }
 
-  public subscribe(event: 'Remove', callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): void 
-  public subscribe(event: 'Update', callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): void 
-  public subscribe(event: 'Add', callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): void 
+  public subscribe(event: 'Remove', callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): void
+  public subscribe(event: 'Update', callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): void
+  public subscribe(event: 'Add', callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): void
   public subscribe(event: SyncCollectionEvent, callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): void {
     this.subscribers.add({ event, callback });
     this.subscribersCount.set(event, this.subscribersCount.get(event)! + 1);
@@ -127,7 +142,17 @@ export class SyncCollection<T extends object> {
   public import(itemIds: string[], bytes: Uint8Array[]): void {
     const data = bytes.map(byte => this.config.decode(byte));
     itemIds.forEach((id, index) => {
-      this.localAdd(id, data[index]);
+      const record = this.collection.get(id);
+
+      if (record) {
+        return;
+      }
+
+      if (this.config.saveData) {
+        this.localAdd(id, data[index]);
+      }
+
+      this.sendEvent('Add', 'Server', id, this.collection.get(id)!);
     });
   }
 
@@ -169,7 +194,7 @@ export class SyncCollection<T extends object> {
 
   public encodeAll(): Uint8Array[] {
     return Array.from(this.collection.values())
-      .map(item => this.config.encode(item.data).finish()); 
+      .map(item => this.config.encode(item.data).finish());
   }
 
   private localAdd(id: string, data: T): SyncCollectionRecord<T> {
@@ -183,8 +208,9 @@ export class SyncCollection<T extends object> {
       return item;
     }
 
+    this.incrementStat('ClientAdd');
     const onChange = (key: keyof T, value: any, oldValue: any) => {
-      console.log('onChange', key, value, oldValue);
+      // console.log('onChange', key, value, oldValue);
       if (this.config.readonly || this.readonlyItems.has(id)) {
         return;
       }
@@ -213,6 +239,7 @@ export class SyncCollection<T extends object> {
   }
 
   private localUpdate(id: string, data: T): SyncCollectionRecord<T> {
+    this.incrementStat('ClientUpdate');
     const item = this.collection.get(id);
     if (item) {
       Object.keys(data).forEach((key: string) => {
@@ -225,6 +252,7 @@ export class SyncCollection<T extends object> {
   }
 
   private localRemove(id: string): void {
+    this.incrementStat('ClientRemove');
     this.collection.delete(id);
   }
 
@@ -232,7 +260,7 @@ export class SyncCollection<T extends object> {
     const throttleTime = this.config.throttle || 0;
     const now = Date.now();
     const lastSend = this.lastSendTime.get(id) || 0;
-    
+
     if (throttleTime > 0) {
       const pending = this.pendingUpdates.get(id);
       if (pending) {
@@ -247,7 +275,7 @@ export class SyncCollection<T extends object> {
           this.sendUpdateMessage(id, data);
           this.pendingUpdates.delete(id);
         }, timeToWait);
-        
+
         this.pendingUpdates.set(id, { data, timer });
       }
     } else {
@@ -259,15 +287,18 @@ export class SyncCollection<T extends object> {
     const messageBytes = this.config.encode(data).finish();
     this.sendBuffer(id, SyncCollectionEvents.Update, messageBytes);
     this.lastSendTime.set(id, Date.now());
+    this.incrementStat('SendUpdate');
   }
 
   private sendRemove(id: string): void {
     this.sendBuffer(id, SyncCollectionEvents.Remove, new Uint8Array());
+    this.incrementStat('SendRemove');
   }
 
   private sendAdd(id: string, data: T): void {
     const messageBytes = this.config.encode(data).finish();
     this.sendBuffer(id, SyncCollectionEvents.Add, messageBytes);
+    this.incrementStat('SendAdd');
   }
 
   private sendBuffer(id: string, event: SyncCollectionEvents, bytes: Uint8Array, excludeClientId?: string) {
@@ -275,6 +306,7 @@ export class SyncCollection<T extends object> {
   }
 
   public remoteUpdate(id: string, bytes: Uint8Array, broadcast: boolean = false, excludeClientId?: string): void {
+    this.incrementStat('ServerUpdate');
     if (this.config.saveData || this.subscribersCount.get('Update')! > 0) {
       const data = this.config.decode(bytes);
       const record = this.localUpdate(id, data);
@@ -284,8 +316,9 @@ export class SyncCollection<T extends object> {
       this.sendBuffer(id, SyncCollectionEvents.Update, bytes, excludeClientId);
     }
   }
-  
+
   public remoteRemove(id: string, broadcast: boolean = false, excludeClientId?: string): void {
+    this.incrementStat('ServerRemove');
     if (this.config.saveData || this.subscribersCount.get('Remove')! > 0) {
       const record = this.collection.get(id)!;
       this.localRemove(id);
@@ -297,6 +330,7 @@ export class SyncCollection<T extends object> {
   }
 
   public remoteAdd(id: string, bytes: Uint8Array, broadcast: boolean = false, excludeClientId?: string): void {
+    this.incrementStat('ServerAdd');
     if (this.config.saveData || this.subscribersCount.get('Add')! > 0) {
       const data = this.config.decode(bytes);
       const record = this.localAdd(id, data);
@@ -317,5 +351,16 @@ export class SyncCollection<T extends object> {
       }
     });
   }
+
+  private incrementStat(event: string): void {
+    this.stat.set(event, this.stat.get(event)! + 1);
+  }
 }
 
+function generateTransferId(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash += id.charCodeAt(i) * (i + 1);
+  }
+  return (hash % 100000000).toString(36);
+}

@@ -1,32 +1,33 @@
+import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 import { EnemyEntity } from "../entities/EnemyEntity";
 import { Enemy } from "../types/enemyTypes";
 import { loadSprite, loadSpriteSheet } from "../utils/sprite";
+import { BearEnemy } from "./bear";
+import { BearConfig } from "./bear/config";
+import { CapibaraEnemy } from "./capibara";
+import { CapibaraConfig } from "./capibara/config";
+import { DeerEnemy } from "./deer";
+import { DeerConfig } from "./deer/config";
+import { DeerBabyEnemy } from "./deerBaby";
+import { DeerBabyConfig } from "./deerBaby/config";
 import { HareEnemy } from "./hare";
 import { HareConfig } from "./hare/config";
+import { HedgehogEnemy } from "./hedgehog";
+import { HedgehogConfig } from "./hedgehog/config";
 import { MouseConfig } from "./mouse/config";
 import { MouseEnemy } from "./mouse/MouseEnemy";
-import { BearConfig } from "./bear/config";
-import { BearEnemy } from "./bear";
-import { CapibaraConfig } from "./capibara/config";
-import { CapibaraEnemy } from "./capibara";
-import { HedgehogConfig } from "./hedgehog/config";
-import { HedgehogEnemy } from "./hedgehog";
-import { RaccoonConfig } from "./raccoon/config";
 import { RaccoonEnemy } from "./raccoon";
-import { DeerConfig } from "./deer/config";
-import { DeerEnemy } from "./deer";
-import { DeerBabyConfig } from "./deerBaby/config";
-import { DeerBabyEnemy } from "./deerBaby";
-import { SquireelConfig } from "./squireel/config";
+import { RaccoonConfig } from "./raccoon/config";
 import { SquireelEnemy } from "./squireel";
-import { SquirrelAngryConfig } from "./squirrelAngry/config";
+import { SquireelConfig } from "./squireel/config";
 import { SquirrelAngryEnemy } from "./squirrelAngry";
-import { WolfConfig } from "./wolf/config";
+import { SquirrelAngryConfig } from "./squirrelAngry/config";
 import { WolfEnemy } from "./wolf";
+import { WolfConfig } from "./wolf/config";
 
 export const EnemyCollections: Record<Enemy.Type, {
   config: Enemy.Config,
-  enemy: new (scene: Phaser.Scene, id: string, spawnConfig: Enemy.SpawnConfig) => EnemyEntity
+  enemy: new (scene: Phaser.Scene, id: string, record: SyncCollectionRecord<Enemy.State>) => EnemyEntity
 }> = {
   [Enemy.Type.HARE]: {
     config: HareConfig,
@@ -90,6 +91,6 @@ export function preloadEnemies(scene: Phaser.Scene, enemies: Enemy.Type[]): void
   });
 }
 
-export function createEnemy(id: string, enemyType: Enemy.Type, scene: Phaser.Scene, spawnConfig: Enemy.SpawnConfig): EnemyEntity {
-  return new EnemyCollections[enemyType].enemy(scene, id, spawnConfig);
+export function createEnemy(id: string, enemyType: Enemy.Type, scene: Phaser.Scene, state: SyncCollectionRecord<Enemy.State>): EnemyEntity {
+  return new EnemyCollections[enemyType].enemy(scene, id, state);
 }

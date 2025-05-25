@@ -1,9 +1,9 @@
-import { createLogger } from "../utils/logger";
-import { forceToTargetOffset, easeOutQuart, easeOutQuint } from "../utils/ForceUtils";
+import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
+import { DEBUG, OBJECTS_DEPTH_OFFSET } from "../config";
 import { Location } from "../types/Location";
 import { hexToNumber } from "../utils/colors";
-import { DEBUG, OBJECTS_DEPTH_OFFSET } from "../config";
-import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
+import { easeOutQuart, easeOutQuint, forceToTargetOffset } from "../utils/ForceUtils";
+import { createLogger } from "../utils/logger";
 
 const logger = createLogger('MotionController');
 
@@ -21,16 +21,16 @@ interface ExternalForce {
   // Целевое смещение
   targetOffsetX: number;
   targetOffsetY: number;
-  
+
   // Текущее смещение
   currentOffsetX: number;
   currentOffsetY: number;
-  
+
   // Параметры силы
   strength: number;        // Сила воздействия (0-1)
   remainingStrength: number; // Оставшаяся сила
   decayRate: number;       // Скорость затухания (0-1)
-  
+
   // Новые параметры
   initialStrength: number; // Начальная сила для расчета затухания
   angle: number;           // Угол направления силы в радианах
@@ -73,7 +73,7 @@ export class MotionController2 {
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
   private debugRect!: Phaser.GameObjects.Rectangle;
 
-  private state: SyncCollectionRecord<{positionX: number, positionY: number, velocityX: number, velocityY: number}> | null = null;
+  private state: SyncCollectionRecord<{ x: number, y: number, vx: number, vy: number }> | null = null;
 
   constructor(scene: Phaser.Scene, body: Phaser.Physics.Arcade.Body, options: MotionControllerOptions) {
     this.scene = scene;
@@ -82,8 +82,8 @@ export class MotionController2 {
 
     // Настраиваем физические свойства тела
     if (this.body) {
-        this.body.setDrag(this.options.friction); // Используем friction как drag
-        this.body.setMaxVelocity(this.options.maxVelocityX, this.options.maxVelocityY);
+      this.body.setDrag(this.options.friction); // Используем friction как drag
+      this.body.setMaxVelocity(this.options.maxVelocityX, this.options.maxVelocityY);
     }
 
     if (DEBUG.MOTION) {
@@ -92,7 +92,7 @@ export class MotionController2 {
     }
   }
 
-  public setState(state: SyncCollectionRecord<{positionX: number, positionY: number, velocityX: number, velocityY: number}>): void {
+  public setState(state: SyncCollectionRecord<{ x: number, y: number, vx: number, vy: number }>): void {
     this.state = state;
   }
 
@@ -126,12 +126,12 @@ export class MotionController2 {
 
     // Сохраняем направление для других нужд (например, оружие)
     if (moveX < 0) {
-        this.direction = -1;
+      this.direction = -1;
     } else if (moveX > 0) {
-        this.direction = 1;
+      this.direction = 1;
     } else {
-        // Если движение по X прекратилось, сохраняем последнее направление
-        // this.direction остается прежним
+      // Если движение по X прекратилось, сохраняем последнее направление
+      // this.direction остается прежним
     }
   }
 
@@ -150,14 +150,14 @@ export class MotionController2 {
   public setRevertY(): void {
     this.setMove(this.moveX, this.moveY * -1);
   }
-  
+
   public update(time: number, delta: number): void {
-     // Интерполяция к целевой позиции
-     if (this.state?.readonly) {
+    // Интерполяция к целевой позиции
+    if (this.state?.readonly) {
       const lerpFactor = 0.15; // Коэффициент сглаживания (0-1). Меньше значение -> плавнее движение.
-      this.body.x = Phaser.Math.Interpolation.Linear([this.body.x, this.state?.data.positionX], lerpFactor);
-      this.body.y = Phaser.Math.Interpolation.Linear([this.body.y, this.state?.data.positionY], lerpFactor);
-      this.setMove(this.state?.data.velocityX, this.state?.data.velocityY);
+      this.body.x = Phaser.Math.Interpolation.Linear([this.body.x, this.state?.data.x], lerpFactor);
+      this.body.y = Phaser.Math.Interpolation.Linear([this.body.y, this.state?.data.y], lerpFactor);
+      this.setMove(this.state?.data.vx, this.state?.data.vy);
     }
 
     // Ускорение и максимальная скорость теперь обрабатываются физикой через setMove
@@ -165,7 +165,7 @@ export class MotionController2 {
 
     // Обновляем движение от внешних воздействий (отдача, ветер и т.д.) - все еще меняет позицию напрямую
     this.updateExternalForces(delta);
- 
+
     if (this.locationBounds) {
       const halfWidth = this.body.width / 2;
       const halfHeight = this.body.height / 2;
@@ -194,10 +194,10 @@ export class MotionController2 {
     }
 
     if (this.state && !this.state?.readonly) {
-      this.state.data.positionX = parseInt(this.body.x.toFixed(0), 10);
-      this.state.data.positionY = parseInt(this.body.y.toFixed(0), 10);
-      this.state.data.velocityX = this.moveX;
-      this.state.data.velocityY = this.moveY;
+      this.state.data.x = parseInt(this.body.x.toFixed(0), 10);
+      this.state.data.y = parseInt(this.body.y.toFixed(0), 10);
+      this.state.data.vx = this.moveX;
+      this.state.data.vy = this.moveY;
     }
   }
 
@@ -219,7 +219,7 @@ export class MotionController2 {
 
   public getVelocityScale(): [number, number] {
     return [
-      Math.abs(this.body.velocity.x) / this.options.maxVelocityX, 
+      Math.abs(this.body.velocity.x) / this.options.maxVelocityX,
       Math.abs(this.body.velocity.y) / this.options.maxVelocityY
     ];
   }
@@ -236,15 +236,15 @@ export class MotionController2 {
     this.jumpOffsetY = 0;
     this.jumpStartY = this.body.y;
     this.preJumpVelocityY = this.body.velocity.y;
-    
+
     // Рассчитываем смещение на основе сохраненной скорости
     const velocityFactor = Math.abs(this.preJumpVelocityY) / this.options.maxVelocityY;
     const maxOffset = this.body.height * 0.5;
     this.jumpVelocityOffset = maxOffset * velocityFactor * Math.sign(this.preJumpVelocityY);
-    
+
     // Устанавливаем целевую позицию приземления
     this.jumpTargetY = this.jumpStartY + this.jumpVelocityOffset;
-    
+
     this.jumping = true;
   }
 
@@ -253,12 +253,12 @@ export class MotionController2 {
    */
   private handleJump(time: number, delta: number): void {
     if (!this.jumping) return;
-    
+
     const jumpProgress = Math.min((time - this.startJumpTime) / this.jumpDuration, 1);
-    
+
     // Рассчитываем высоту прыжка
     this.jumpOffsetY = -1 * this.jumpHeight * Math.sin(Math.PI * jumpProgress);
-    
+
     // Рассчитываем позицию с учетом и прыжка, и смещения к целевой точке
     const baseY = this.jumpStartY + (this.jumpTargetY - this.jumpStartY) * jumpProgress;
     this.body.y = baseY + this.jumpOffsetY;
@@ -280,18 +280,18 @@ export class MotionController2 {
    * @param decayRate Скорость затухания (0-1)
    */
   public applyForce(
-    vectorX: number, 
-    vectorY: number, 
-    force: number, 
-    strength: number = this.defaultForceStrength, 
+    vectorX: number,
+    vectorY: number,
+    force: number,
+    strength: number = this.defaultForceStrength,
     decayRate: number = this.defaultDecayRate
   ): void {
     // Рассчитываем угол направления силы
     const angle = Math.atan2(vectorY, vectorX);
-    
+
     // Рассчитываем целевое смещение на основе направления и силы
     const targetOffset = forceToTargetOffset(force, angle, this.options.friction);
-    
+
     // Создаем новую силу
     const externalForce: ExternalForce = {
       targetOffsetX: targetOffset.x,
@@ -305,11 +305,11 @@ export class MotionController2 {
       angle, // Сохраняем угол
       friction: this.options.friction // Используем трение объекта
     };
-    
+
     // Добавляем силу в список активных
     this.externalForces.push(externalForce);
   }
-  
+
   /**
    * Обновляет и применяет внешние силы к объекту
    * @param delta Дельта времени
@@ -325,21 +325,21 @@ export class MotionController2 {
     // Обработка всех активных сил
     for (let i = this.externalForces.length - 1; i >= 0; i--) {
       const force = this.externalForces[i];
-      
+
       // Уменьшаем оставшуюся силу с учетом трения
       // Для больших сил затухание происходит медленнее
       const frictionFactor = 0.02 + (force.remainingStrength / force.initialStrength) * 0.08;
       force.remainingStrength -= force.initialStrength * frictionFactor * (delta / 16);
-      
+
       // Удаляем силу, если она достаточно ослабла
       if (force.remainingStrength <= this.forceThreshold * 2) {
         this.externalForces.splice(i, 1);
         continue;
       }
-      
+
       // Текущая сила относительно начальной (от 0 до 1)
       const strengthRatio = force.remainingStrength / force.initialStrength;
-      
+
       // Используем функцию затухания для более плавного ослабления в конце
       // Для более сильных воздействий используем более резкое ослабление
       let currentStrength;
@@ -348,19 +348,19 @@ export class MotionController2 {
       } else {
         currentStrength = easeOutQuint(strengthRatio);
       }
-      
+
       // Рассчитываем смещение с учетом силы и трения
       const offset = forceToTargetOffset(
         currentStrength * force.initialStrength,
         force.angle,
         force.friction
       );
-      
+
       // Накапливаем смещение
       totalOffsetX += offset.x;
       totalOffsetY += offset.y;
     }
-    
+
     // Применяем итоговое смещение к спрайту с учетом дельты времени
     // Делим на 16, чтобы нормализовать смещение относительно дельты (~16ms за фрейм при 60 FPS)
     this.body.x += totalOffsetX * (delta / 16);

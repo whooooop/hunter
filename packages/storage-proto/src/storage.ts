@@ -9,17 +9,155 @@ import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 
 export const protobufPackage = "game";
 
+export interface GameState {
+  host: string;
+  createdAt: string;
+  playersCount: number;
+  started: boolean;
+}
+
 export interface ConnectionState {
   ready: boolean;
 }
 
 export interface PlayerState {
-  positionX: number;
-  positionY: number;
-  velocityX: number;
-  velocityY: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+}
+
+export interface PlayerWeapon {
   weaponId: string;
 }
+
+export interface EnemyState {
+  type: string;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  health: number;
+  boss: boolean;
+  level: number;
+}
+
+export interface PlayerScoreState {
+  value: number;
+}
+
+export interface WeaponState {
+  playerId: string;
+  type: string;
+}
+
+function createBaseGameState(): GameState {
+  return { host: "", createdAt: "0", playersCount: 0, started: false };
+}
+
+export const GameState: MessageFns<GameState> = {
+  encode(message: GameState, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.host !== "") {
+      writer.uint32(10).string(message.host);
+    }
+    if (message.createdAt !== "0") {
+      writer.uint32(16).int64(message.createdAt);
+    }
+    if (message.playersCount !== 0) {
+      writer.uint32(24).int32(message.playersCount);
+    }
+    if (message.started !== false) {
+      writer.uint32(32).bool(message.started);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GameState {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGameState();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.host = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.createdAt = reader.int64().toString();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.playersCount = reader.int32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.started = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GameState {
+    return {
+      host: isSet(object.host) ? globalThis.String(object.host) : "",
+      createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "0",
+      playersCount: isSet(object.playersCount) ? globalThis.Number(object.playersCount) : 0,
+      started: isSet(object.started) ? globalThis.Boolean(object.started) : false,
+    };
+  },
+
+  toJSON(message: GameState): unknown {
+    const obj: any = {};
+    if (message.host !== "") {
+      obj.host = message.host;
+    }
+    if (message.createdAt !== "0") {
+      obj.createdAt = message.createdAt;
+    }
+    if (message.playersCount !== 0) {
+      obj.playersCount = Math.round(message.playersCount);
+    }
+    if (message.started !== false) {
+      obj.started = message.started;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GameState>, I>>(base?: I): GameState {
+    return GameState.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GameState>, I>>(object: I): GameState {
+    const message = createBaseGameState();
+    message.host = object.host ?? "";
+    message.createdAt = object.createdAt ?? "0";
+    message.playersCount = object.playersCount ?? 0;
+    message.started = object.started ?? false;
+    return message;
+  },
+};
 
 function createBaseConnectionState(): ConnectionState {
   return { ready: false };
@@ -80,25 +218,22 @@ export const ConnectionState: MessageFns<ConnectionState> = {
 };
 
 function createBasePlayerState(): PlayerState {
-  return { positionX: 0, positionY: 0, velocityX: 0, velocityY: 0, weaponId: "" };
+  return { x: 0, y: 0, vx: 0, vy: 0 };
 }
 
 export const PlayerState: MessageFns<PlayerState> = {
   encode(message: PlayerState, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.positionX !== 0) {
-      writer.uint32(13).float(message.positionX);
+    if (message.x !== 0) {
+      writer.uint32(13).float(message.x);
     }
-    if (message.positionY !== 0) {
-      writer.uint32(21).float(message.positionY);
+    if (message.y !== 0) {
+      writer.uint32(21).float(message.y);
     }
-    if (message.velocityX !== 0) {
-      writer.uint32(29).float(message.velocityX);
+    if (message.vx !== 0) {
+      writer.uint32(29).float(message.vx);
     }
-    if (message.velocityY !== 0) {
-      writer.uint32(37).float(message.velocityY);
-    }
-    if (message.weaponId !== "") {
-      writer.uint32(42).string(message.weaponId);
+    if (message.vy !== 0) {
+      writer.uint32(37).float(message.vy);
     }
     return writer;
   },
@@ -115,7 +250,7 @@ export const PlayerState: MessageFns<PlayerState> = {
             break;
           }
 
-          message.positionX = reader.float();
+          message.x = reader.float();
           continue;
         }
         case 2: {
@@ -123,7 +258,7 @@ export const PlayerState: MessageFns<PlayerState> = {
             break;
           }
 
-          message.positionY = reader.float();
+          message.y = reader.float();
           continue;
         }
         case 3: {
@@ -131,7 +266,7 @@ export const PlayerState: MessageFns<PlayerState> = {
             break;
           }
 
-          message.velocityX = reader.float();
+          message.vx = reader.float();
           continue;
         }
         case 4: {
@@ -139,11 +274,78 @@ export const PlayerState: MessageFns<PlayerState> = {
             break;
           }
 
-          message.velocityY = reader.float();
+          message.vy = reader.float();
           continue;
         }
-        case 5: {
-          if (tag !== 42) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PlayerState {
+    return {
+      x: isSet(object.x) ? globalThis.Number(object.x) : 0,
+      y: isSet(object.y) ? globalThis.Number(object.y) : 0,
+      vx: isSet(object.vx) ? globalThis.Number(object.vx) : 0,
+      vy: isSet(object.vy) ? globalThis.Number(object.vy) : 0,
+    };
+  },
+
+  toJSON(message: PlayerState): unknown {
+    const obj: any = {};
+    if (message.x !== 0) {
+      obj.x = message.x;
+    }
+    if (message.y !== 0) {
+      obj.y = message.y;
+    }
+    if (message.vx !== 0) {
+      obj.vx = message.vx;
+    }
+    if (message.vy !== 0) {
+      obj.vy = message.vy;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PlayerState>, I>>(base?: I): PlayerState {
+    return PlayerState.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<PlayerState>, I>>(object: I): PlayerState {
+    const message = createBasePlayerState();
+    message.x = object.x ?? 0;
+    message.y = object.y ?? 0;
+    message.vx = object.vx ?? 0;
+    message.vy = object.vy ?? 0;
+    return message;
+  },
+};
+
+function createBasePlayerWeapon(): PlayerWeapon {
+  return { weaponId: "" };
+}
+
+export const PlayerWeapon: MessageFns<PlayerWeapon> = {
+  encode(message: PlayerWeapon, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.weaponId !== "") {
+      writer.uint32(10).string(message.weaponId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PlayerWeapon {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePlayerWeapon();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
             break;
           }
 
@@ -159,46 +361,330 @@ export const PlayerState: MessageFns<PlayerState> = {
     return message;
   },
 
-  fromJSON(object: any): PlayerState {
-    return {
-      positionX: isSet(object.positionX) ? globalThis.Number(object.positionX) : 0,
-      positionY: isSet(object.positionY) ? globalThis.Number(object.positionY) : 0,
-      velocityX: isSet(object.velocityX) ? globalThis.Number(object.velocityX) : 0,
-      velocityY: isSet(object.velocityY) ? globalThis.Number(object.velocityY) : 0,
-      weaponId: isSet(object.weaponId) ? globalThis.String(object.weaponId) : "",
-    };
+  fromJSON(object: any): PlayerWeapon {
+    return { weaponId: isSet(object.weaponId) ? globalThis.String(object.weaponId) : "" };
   },
 
-  toJSON(message: PlayerState): unknown {
+  toJSON(message: PlayerWeapon): unknown {
     const obj: any = {};
-    if (message.positionX !== 0) {
-      obj.positionX = message.positionX;
-    }
-    if (message.positionY !== 0) {
-      obj.positionY = message.positionY;
-    }
-    if (message.velocityX !== 0) {
-      obj.velocityX = message.velocityX;
-    }
-    if (message.velocityY !== 0) {
-      obj.velocityY = message.velocityY;
-    }
     if (message.weaponId !== "") {
       obj.weaponId = message.weaponId;
     }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<PlayerState>, I>>(base?: I): PlayerState {
-    return PlayerState.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<PlayerWeapon>, I>>(base?: I): PlayerWeapon {
+    return PlayerWeapon.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<PlayerState>, I>>(object: I): PlayerState {
-    const message = createBasePlayerState();
-    message.positionX = object.positionX ?? 0;
-    message.positionY = object.positionY ?? 0;
-    message.velocityX = object.velocityX ?? 0;
-    message.velocityY = object.velocityY ?? 0;
+  fromPartial<I extends Exact<DeepPartial<PlayerWeapon>, I>>(object: I): PlayerWeapon {
+    const message = createBasePlayerWeapon();
     message.weaponId = object.weaponId ?? "";
+    return message;
+  },
+};
+
+function createBaseEnemyState(): EnemyState {
+  return { type: "", x: 0, y: 0, vx: 0, vy: 0, health: 0, boss: false, level: 0 };
+}
+
+export const EnemyState: MessageFns<EnemyState> = {
+  encode(message: EnemyState, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.type !== "") {
+      writer.uint32(10).string(message.type);
+    }
+    if (message.x !== 0) {
+      writer.uint32(21).float(message.x);
+    }
+    if (message.y !== 0) {
+      writer.uint32(29).float(message.y);
+    }
+    if (message.vx !== 0) {
+      writer.uint32(37).float(message.vx);
+    }
+    if (message.vy !== 0) {
+      writer.uint32(45).float(message.vy);
+    }
+    if (message.health !== 0) {
+      writer.uint32(53).float(message.health);
+    }
+    if (message.boss !== false) {
+      writer.uint32(56).bool(message.boss);
+    }
+    if (message.level !== 0) {
+      writer.uint32(64).int32(message.level);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EnemyState {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEnemyState();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.type = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 21) {
+            break;
+          }
+
+          message.x = reader.float();
+          continue;
+        }
+        case 3: {
+          if (tag !== 29) {
+            break;
+          }
+
+          message.y = reader.float();
+          continue;
+        }
+        case 4: {
+          if (tag !== 37) {
+            break;
+          }
+
+          message.vx = reader.float();
+          continue;
+        }
+        case 5: {
+          if (tag !== 45) {
+            break;
+          }
+
+          message.vy = reader.float();
+          continue;
+        }
+        case 6: {
+          if (tag !== 53) {
+            break;
+          }
+
+          message.health = reader.float();
+          continue;
+        }
+        case 7: {
+          if (tag !== 56) {
+            break;
+          }
+
+          message.boss = reader.bool();
+          continue;
+        }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.level = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EnemyState {
+    return {
+      type: isSet(object.type) ? globalThis.String(object.type) : "",
+      x: isSet(object.x) ? globalThis.Number(object.x) : 0,
+      y: isSet(object.y) ? globalThis.Number(object.y) : 0,
+      vx: isSet(object.vx) ? globalThis.Number(object.vx) : 0,
+      vy: isSet(object.vy) ? globalThis.Number(object.vy) : 0,
+      health: isSet(object.health) ? globalThis.Number(object.health) : 0,
+      boss: isSet(object.boss) ? globalThis.Boolean(object.boss) : false,
+      level: isSet(object.level) ? globalThis.Number(object.level) : 0,
+    };
+  },
+
+  toJSON(message: EnemyState): unknown {
+    const obj: any = {};
+    if (message.type !== "") {
+      obj.type = message.type;
+    }
+    if (message.x !== 0) {
+      obj.x = message.x;
+    }
+    if (message.y !== 0) {
+      obj.y = message.y;
+    }
+    if (message.vx !== 0) {
+      obj.vx = message.vx;
+    }
+    if (message.vy !== 0) {
+      obj.vy = message.vy;
+    }
+    if (message.health !== 0) {
+      obj.health = message.health;
+    }
+    if (message.boss !== false) {
+      obj.boss = message.boss;
+    }
+    if (message.level !== 0) {
+      obj.level = Math.round(message.level);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<EnemyState>, I>>(base?: I): EnemyState {
+    return EnemyState.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<EnemyState>, I>>(object: I): EnemyState {
+    const message = createBaseEnemyState();
+    message.type = object.type ?? "";
+    message.x = object.x ?? 0;
+    message.y = object.y ?? 0;
+    message.vx = object.vx ?? 0;
+    message.vy = object.vy ?? 0;
+    message.health = object.health ?? 0;
+    message.boss = object.boss ?? false;
+    message.level = object.level ?? 0;
+    return message;
+  },
+};
+
+function createBasePlayerScoreState(): PlayerScoreState {
+  return { value: 0 };
+}
+
+export const PlayerScoreState: MessageFns<PlayerScoreState> = {
+  encode(message: PlayerScoreState, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.value !== 0) {
+      writer.uint32(8).int32(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PlayerScoreState {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePlayerScoreState();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.value = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PlayerScoreState {
+    return { value: isSet(object.value) ? globalThis.Number(object.value) : 0 };
+  },
+
+  toJSON(message: PlayerScoreState): unknown {
+    const obj: any = {};
+    if (message.value !== 0) {
+      obj.value = Math.round(message.value);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PlayerScoreState>, I>>(base?: I): PlayerScoreState {
+    return PlayerScoreState.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<PlayerScoreState>, I>>(object: I): PlayerScoreState {
+    const message = createBasePlayerScoreState();
+    message.value = object.value ?? 0;
+    return message;
+  },
+};
+
+function createBaseWeaponState(): WeaponState {
+  return { playerId: "", type: "" };
+}
+
+export const WeaponState: MessageFns<WeaponState> = {
+  encode(message: WeaponState, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.playerId !== "") {
+      writer.uint32(18).string(message.playerId);
+    }
+    if (message.type !== "") {
+      writer.uint32(26).string(message.type);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WeaponState {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWeaponState();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.playerId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.type = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): WeaponState {
+    return {
+      playerId: isSet(object.playerId) ? globalThis.String(object.playerId) : "",
+      type: isSet(object.type) ? globalThis.String(object.type) : "",
+    };
+  },
+
+  toJSON(message: WeaponState): unknown {
+    const obj: any = {};
+    if (message.playerId !== "") {
+      obj.playerId = message.playerId;
+    }
+    if (message.type !== "") {
+      obj.type = message.type;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<WeaponState>, I>>(base?: I): WeaponState {
+    return WeaponState.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<WeaponState>, I>>(object: I): WeaponState {
+    const message = createBaseWeaponState();
+    message.playerId = object.playerId ?? "";
+    message.type = object.type ?? "";
     return message;
   },
 };
