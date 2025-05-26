@@ -1,20 +1,16 @@
 FROM node:20.11.1-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+COPY . /app
 WORKDIR /app
 
+FROM base AS prod-deps
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+
 FROM base AS build
-RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++
-COPY . .
-RUN ls -la
-RUN node -v
-RUN npm -v
-RUN npm ci --verbose
-RUN ls -la node_modules
-RUN ls -la src/game/fx/muzzleFlash
-RUN ls -la src/game/fx/muzzleFlash/assets
-RUN npm run build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm build
 
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
