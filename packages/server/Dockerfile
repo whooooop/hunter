@@ -23,6 +23,7 @@ COPY --from=build /app/packages/storage-proto/dist /app/packages/storage-proto/d
 COPY --from=build /app/packages/storage-proto/node_modules /app/packages/storage-proto/node_modules
 COPY --from=build /app/packages/server/dist /app/packages/server/dist
 COPY --from=build /app/packages/server/package.json /app/packages/server/package.json
+COPY --from=build /app/packages/server/node_modules /app/packages/server/node_modules
 
 WORKDIR /app/packages/server
 CMD ["pnpm", "start:prod"]
