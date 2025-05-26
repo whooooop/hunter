@@ -17,7 +17,7 @@ jobs:
           ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Build Docker image
-        run: docker build -t ${{ vars.APP_NAME }}:${{ github.sha }} .
+        run: docker build -t ${{ vars.APP_NAME }}:${{ github.sha }} -f packages/game/Dockerfile .
 
       - name: Save image to .tar
         run: docker save -o ${{ vars.APP_NAME }}.image.tar ${{ vars.APP_NAME }}:${{ github.sha }}

@@ -27,7 +27,7 @@ jobs:
       - name: Deploy Server
         if: ${{ github.event.inputs.application == 'server' || github.event.inputs.application == 'all' }}
         run: |
-          docker build -t ${{ vars.APP_NAME }}-server:${{ github.sha }} .
+          docker build -t ${{ vars.APP_NAME }}-server:${{ github.sha }} -f packages/server/Dockerfile .
           docker save -o ${{ vars.APP_NAME }}-server.image.tar ${{ vars.APP_NAME }}-server:${{ github.sha }}
           
           scp -P ${{ secrets.SSH_PORT }} ${{ vars.APP_NAME }}-server.image.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/${{ vars.APP_NAME }}-server/
@@ -51,7 +51,7 @@ jobs:
       - name: Deploy Game
         if: ${{ github.event.inputs.application == 'game' || github.event.inputs.application == 'all' }}
         run: |
-          docker build -t ${{ vars.APP_NAME }}-game:${{ github.sha }} .
+          docker build -t ${{ vars.APP_NAME }}-game:${{ github.sha }} -f packages/game/Dockerfile .
           docker save -o ${{ vars.APP_NAME }}-game.image.tar ${{ vars.APP_NAME }}-game:${{ github.sha }}
           
           scp -P ${{ secrets.SSH_PORT }} ${{ vars.APP_NAME }}-game.image.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/${{ vars.APP_NAME }}-game/
