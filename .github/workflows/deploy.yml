@@ -19,9 +19,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Add SSH known hosts
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy Server
@@ -30,9 +32,9 @@ jobs:
           docker build -t ${{ vars.APP_NAME }}-server:${{ github.sha }} -f packages/server/Dockerfile .
           docker save -o ${{ vars.APP_NAME }}-server.image.tar ${{ vars.APP_NAME }}-server:${{ github.sha }}
           
-          scp -P ${{ secrets.SSH_PORT }} ${{ vars.APP_NAME }}-server.image.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/${{ vars.APP_NAME }}-server/
+          scp -i ~/.ssh/deploy_key -P ${{ secrets.SSH_PORT }} ${{ vars.APP_NAME }}-server.image.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/${{ vars.APP_NAME }}-server/
           
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
             cd /opt/${{ vars.APP_NAME }}-server
             docker image prune -af
             docker load -i ${{ vars.APP_NAME }}-server.image.tar
@@ -54,9 +56,9 @@ jobs:
           docker build -t ${{ vars.APP_NAME }}-game:${{ github.sha }} -f packages/game/Dockerfile .
           docker save -o ${{ vars.APP_NAME }}-game.image.tar ${{ vars.APP_NAME }}-game:${{ github.sha }}
           
-          scp -P ${{ secrets.SSH_PORT }} ${{ vars.APP_NAME }}-game.image.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/${{ vars.APP_NAME }}-game/
+          scp -i ~/.ssh/deploy_key -P ${{ secrets.SSH_PORT }} ${{ vars.APP_NAME }}-game.image.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/${{ vars.APP_NAME }}-game/
           
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
             cd /opt/${{ vars.APP_NAME }}-game
             docker image prune -af
             docker load -i ${{ vars.APP_NAME }}-game.image.tar
