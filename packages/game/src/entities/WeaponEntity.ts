@@ -58,7 +58,8 @@ export class WeaponEntity {
     private readonly id: string,
     private readonly options: Weapon.Config,
     private readonly playerId: string,
-    private readonly storage: StorageSpace
+    private readonly storage: StorageSpace,
+    private readonly showSight: boolean
   ) {
     this.name = options.name;
     this.currentAmmo = this.options.magazineSize;
@@ -74,7 +75,7 @@ export class WeaponEntity {
       this.container.add(this.debugFirePoint);
     }
 
-    if (this.options.sight) {
+    if (this.options.sight && this.showSight) {
       this.createSight(this.options.sight)
     }
 

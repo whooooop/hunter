@@ -168,7 +168,7 @@ export class GameplayScene extends Phaser.Scene {
     this.scoreController = new ScoreController(this, this.storage);
     this.bloodController = new BloodController(this);
     this.keyboardController = new KeyBoardController(this, this.players, playerId, this.storage);
-    this.weaponController = new WeaponController(this, this.players, this.storage);
+    this.weaponController = new WeaponController(this, this.players, this.storage, playerId);
     this.shopController = new ShopController(this, this.players, playerId, this.shop, this.levelConfig.weapons, this.storage);
     this.decalController = new DecalController(this, 0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 5);
     this.projectileController = new ProjectileController(this, this.damageableObjects);
@@ -270,7 +270,7 @@ export class GameplayScene extends Phaser.Scene {
       // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
 
       if (!currentWeaponId) {
-        emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
+        emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.AWP, price: 0 });
       }
 
       this.multiplayerController.setReady();

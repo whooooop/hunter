@@ -21,7 +21,8 @@ export class WeaponController {
   constructor(
     private readonly scene: Phaser.Scene,
     private readonly players: Map<string, PlayerEntity>,
-    private readonly storage: StorageSpace
+    private readonly storage: StorageSpace,
+    private readonly playerId: string
   ) {
     onEvent(scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
     onEvent(scene, Player.Events.ChangeWeapon.Local, this.handleChangeWeapon, this);
@@ -49,7 +50,7 @@ export class WeaponController {
 
     const playerWeapons = this.playerWeapons.get(record.data.playerId)!;
     const weaponType = record.data.type as WeaponType;
-    const weaponEntity = createWeapon(weaponId, weaponType, this.scene, record.data.playerId, this.storage);
+    const weaponEntity = createWeapon(weaponId, weaponType, this.scene, record.data.playerId, this.storage, this.playerId === record.data.playerId);
 
     playerWeapons.set(weaponId, weaponEntity);
     this.weapons.set(weaponId, weaponEntity);

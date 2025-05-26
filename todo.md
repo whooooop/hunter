@@ -13,6 +13,7 @@
 - 2 enemies together
 - machine shoot sound 
 
+- blood
 - settings view
 - multiplayer
 - crypto storage key & data
@@ -25,3 +26,5 @@
 - config waves
 - config weapons
 - config score
+
+- server remove games

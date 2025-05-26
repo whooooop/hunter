@@ -57,7 +57,7 @@ export function getWeaponConfig(weaponType: WeaponType): Weapon.Config {
   return WeaponConfigs[weaponType];
 }
 
-export function createWeapon(id: string, weaponType: WeaponType, scene: Phaser.Scene, playerId: string, storage: StorageSpace): WeaponEntity {
+export function createWeapon(id: string, weaponType: WeaponType, scene: Phaser.Scene, playerId: string, storage: StorageSpace, showSight: boolean): WeaponEntity {
   const WeaponConfig = WeaponConfigs[weaponType];
-  return new WeaponEntity(scene, id, WeaponConfig, playerId, storage);
+  return new WeaponEntity(scene, id, WeaponConfig, playerId, storage, showSight);
 }
