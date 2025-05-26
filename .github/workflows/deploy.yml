@@ -26,6 +26,22 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Create server directories
+        if: ${{ github.event.inputs.application == 'server' || github.event.inputs.application == 'all' }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+            sudo mkdir -p /opt/${{ vars.APP_NAME }}-server
+            sudo chown ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /opt/${{ vars.APP_NAME }}-server
+          '
+
+      - name: Create game directories
+        if: ${{ github.event.inputs.application == 'game' || github.event.inputs.application == 'all' }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+            sudo mkdir -p /opt/${{ vars.APP_NAME }}-game
+            sudo chown ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /opt/${{ vars.APP_NAME }}-game
+          '
+
       - name: Deploy Server
         if: ${{ github.event.inputs.application == 'server' || github.event.inputs.application == 'all' }}
         run: |
