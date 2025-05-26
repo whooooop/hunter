@@ -21,5 +21,8 @@ COPY --from=build /app/packages/multiplayer/dist /app/packages/multiplayer/dist
 COPY --from=build /app/packages/multiplayer/node_modules /app/packages/multiplayer/node_modules 
 COPY --from=build /app/packages/storage-proto/dist /app/packages/storage-proto/dist
 COPY --from=build /app/packages/storage-proto/node_modules /app/packages/storage-proto/node_modules
+COPY --from=build /app/packages/server/dist /app/packages/server/dist
+COPY --from=build /app/packages/server/package.json /app/packages/server/package.json
 
+WORKDIR /app/packages/server
 CMD ["pnpm", "start:prod"]
