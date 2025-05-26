@@ -15,9 +15,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        timeout-minutes: 1
 
       - name: Setup SSH
         run: |
@@ -25,6 +27,7 @@ jobs:
           echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+        timeout-minutes: 1
 
       - name: Create server directories
         if: ${{ github.event.inputs.application == 'server' || github.event.inputs.application == 'all' }}
@@ -33,6 +36,7 @@ jobs:
             sudo mkdir -p /opt/${{ vars.APP_NAME }}-server
             sudo chown ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /opt/${{ vars.APP_NAME }}-server
           '
+        timeout-minutes: 1
 
       - name: Create game directories
         if: ${{ github.event.inputs.application == 'game' || github.event.inputs.application == 'all' }}
@@ -41,6 +45,7 @@ jobs:
             sudo mkdir -p /opt/${{ vars.APP_NAME }}-game
             sudo chown ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /opt/${{ vars.APP_NAME }}-game
           '
+        timeout-minutes: 1
 
       - name: Deploy Server
         if: ${{ github.event.inputs.application == 'server' || github.event.inputs.application == 'all' }}
@@ -65,6 +70,7 @@ jobs:
               --name ${{ vars.APP_NAME }}-server \
               ${{ vars.APP_NAME }}-server:${{ github.sha }}
           '
+        timeout-minutes: 5
 
       - name: Deploy Game
         if: ${{ github.event.inputs.application == 'game' || github.event.inputs.application == 'all' }}
@@ -93,4 +99,5 @@ jobs:
             docker logs ${{ vars.APP_NAME }}-game
             echo "Container status:"
             docker ps -a | grep ${{ vars.APP_NAME }}-game
-          ' 
+          '
+        timeout-minutes: 5
