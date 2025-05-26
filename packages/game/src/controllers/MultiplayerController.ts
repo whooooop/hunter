@@ -4,7 +4,7 @@ import { connectionStateCollection } from "../storage/collections/connectionStat
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('MultiplayerController');
-const SERVER_URL = 'ws://localhost:3000';
+const SERVER_URL = `ws://${location.hostname}:3434`;
 
 export class MultiplayerController {
   private playerId: string = '';
@@ -34,35 +34,6 @@ export class MultiplayerController {
     const collections = this.storage.getCollection(connectionStateCollection)!;
     collections.updateItem(this.playerId, { ready: true });
   }
-
-  // Обработчики локальных событий Phaser (отправка на сервер)
-  // private setupLocalEventHandlers(): void {
-  //   onEvent(this.scene, Wave.Events.WaveStart.Local, this.clientHandleWaveStart, this);
-  // }
-
-  private setupServerEventHandlers(): void {
-    // this.socketClient.on('WaveStart', this.serverHandleWaveStart.bind(this));
-    // this.socketClient.on('EnemyDeath', this.serverHandleEnemyDeath.bind(this));
-  }
-
-  // Обработчики локальных событий
-
-  // private clientHandleWaveStart(payload: Wave.Events.WaveStart.Payload): void {
-  //   this.socketClient.send(ProtoEventType.WaveStart, payload);
-  // }
-
-  // private clientHandleEnemyDeath(payload: Enemy.Events.Death.Payload): void {
-  //   this.socketClient.send(ProtoEventType.EnemyDeath, payload);
-  // }
-
-  // private serverHandleWaveStart(payload: EventWaveStart): void {
-  //   logger.info(`Wave ${payload.number} started.`);
-  // }
-
-  // private serverHandleEnemyDeath(payload: EventEnemyDeath): void {
-  //   logger.info(`Enemy ${payload.id} died.`);
-  // }
-
 
   public destroy(): void {
 

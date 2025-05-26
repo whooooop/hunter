@@ -61,9 +61,16 @@ jobs:
               --restart always \
               --memory 512m \
               --memory-swap 512m \
-              -p 3434:3000 \
+              -p 3434:3434 \
               --name ${{ vars.APP_NAME }}-server \
               ${{ vars.APP_NAME }}-server:${{ github.sha }}
+            
+            echo "Waiting for container to start..."
+            sleep 5
+            echo "Container logs:"
+            docker logs ${{ vars.APP_NAME }}-server
+            echo "Container status:"
+            docker ps -a | grep ${{ vars.APP_NAME }}-server
           '
 
       - name: Deploy Game
@@ -86,4 +93,11 @@ jobs:
               -p 8081:8081 \
               --name ${{ vars.APP_NAME }}-game \
               ${{ vars.APP_NAME }}-game:${{ github.sha }}
+            
+            echo "Waiting for container to start..."
+            sleep 5
+            echo "Container logs:"
+            docker logs ${{ vars.APP_NAME }}-game
+            echo "Container status:"
+            docker ps -a | grep ${{ vars.APP_NAME }}-game
           ' 
