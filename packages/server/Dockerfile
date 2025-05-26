@@ -10,6 +10,8 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-l
 
 FROM base AS build
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm build:multiplayer
+RUN pnpm build:storage-proto
 RUN pnpm build:server
 
 FROM base
