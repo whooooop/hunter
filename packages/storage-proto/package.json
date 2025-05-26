@@ -1,0 +1,18 @@
+{
+  "name": "@hunter/storage-proto",
+  "version": "0.0.1",
+  "private": true,
+  "main": "dist/storage.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "npm run build:proto && tsc",
+    "build:proto": "protoc --plugin=\"./node_modules/.bin/protoc-gen-ts_proto\" --ts_proto_out=\"./src\" --ts_proto_opt=\"esModuleInterop=true,forceLong=string,outputServices=false\" --proto_path=\"./src\" ./src/storage.proto"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "2.4.0"
+  },
+  "devDependencies": {
+    "ts-proto": "^2.7.0",
+    "typescript": "^5.7.3"
+  }
+}

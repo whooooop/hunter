@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package game;
+
+message GameState {
+  string host = 1;
+  int64 createdAt = 2;
+  int32 playersCount = 3;
+  bool started = 4;
+}
+
+message WaveState {
+  int32 waveIndex = 1;
+  int32 spawnIndex = 2;
+  int32 progress = 3;
+  bool boss = 4;
+}
+
+message ConnectionState {
+  bool ready = 1;
+}
+
+message PlayerState {
+  float x = 1;
+  float y = 2;
+  float vx = 3;
+  float vy = 4;
+}
+
+message PlayerWeapon {
+  string weaponId = 1;
+}
+
+message EnemyState {
+  string type = 1;
+  float x = 2;
+  float y = 3;
+  float vx = 4;
+  float vy = 5;
+  float health = 6;
+  bool boss = 7;
+  int32 level = 8;
+}
+
+message PlayerScoreState {
+  int32 value = 1;
+}
+
+message WeaponState {
+  string playerId = 2;
+  string type = 3;
+}
+
+message WeaponFireEvent {
+  string weaponId = 1;
+  string playerId = 2;
+  float originX = 3;
+  float originY = 4;
+  float targetX = 5;
+  float targetY = 6;
+  float angleTilt = 7;
+}
+
+message WeaponReloadEvent {
+  string weaponId = 1;
+}
+
+message PlayerJumpEvent {
+  string playerId = 1;
+}
+
+message EnemyAnimationEvent {
+  string enemyId = 1;
+  string animation = 2;
+  bool loop = 3;
+}
+
+message EnemyDeathEvent {}

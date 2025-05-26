@@ -1,40 +1,17 @@
 {
   "name": "hunter",
   "version": "1.0.0",
-  "main": "src/index.ts",
   "scripts": {
     "dev": "webpack serve --mode=development",
     "build": "webpack --mode=production",
-    "proto:generate": "mkdir -p src/game/core/proto/generated && protoc --plugin=\"./node_modules/.bin/protoc-gen-ts_proto\" --ts_proto_out=\"./src/game/core/proto/generated\" --ts_proto_opt=\"esModuleInterop=true,forceLong=string,outputServices=false\" --proto_path=\"./src/game/core/proto\" ./src/game/core/proto/game.proto",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:proto": "pnpm --filter=@hunter/storage-proto build",
+    "build:multiplayer": "pnpm --filter=@hunter/multiplayer build",
+    "dev:server": "pnpm --filter=@hunter/server dev",
+    "dev:game": "pnpm --filter=@hunter/game dev",
+    "dev:multiplayer": "pnpm --filter=@hunter/multiplayer dev"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/whooooop/hunter.git"
-  },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/whooooop/hunter/issues"
-  },
-  "homepage": "https://github.com/whooooop/hunter#readme",
   "description": "",
-  "dependencies": {
-    "@esotericsoftware/spine-phaser": "~4.1.0",
-    "phaser": "^3.60.0",
-    "phaser3-rex-plugins": "^1.80.15",
-    "socket.io-client": "^4.8.1",
-    "ts-loader": "^9.5.1",
-    "typescript": "^5.4.3",
-    "webpack": "^5.91.0",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.0.4"
-  },
-  "devDependencies": {
-    "clean-webpack-plugin": "^4.0.0",
-    "html-webpack-plugin": "^5.6.3",
-    "raw-loader": "^4.0.2",
-    "ts-proto": "^2.7.0"
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }

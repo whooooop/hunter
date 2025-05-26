@@ -1,0 +1,27 @@
+import { SceneKeys } from ".";
+import { LoadingView } from "../views/loading/LoadingView";
+import { BackgroundView } from "../views/background/BackgroundView";
+import { UiBackButton } from "../ui/BackButton";
+import { LevelId } from "../levels";
+import { MenuSceneTypes } from "./MenuScene/MenuSceneTypes";
+import { START_SCENE_GAMEPLAY } from "../config";
+
+export class BootScene extends Phaser.Scene {
+  constructor() {
+    super({ key: SceneKeys.BOOT });
+  }
+
+  preload() {
+    LoadingView.preload(this);
+    BackgroundView.preload(this);
+    UiBackButton.preload(this);
+  }
+
+  create() {
+    if (START_SCENE_GAMEPLAY) {
+      this.scene.start(SceneKeys.GAMEPLAY, { levelId: LevelId.FOREST });
+    } else {
+      this.scene.start(SceneKeys.MENU, { view: MenuSceneTypes.ViewKeys.HOME });
+    }
+  }
+}

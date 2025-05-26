@@ -1,13 +1,27 @@
 
 # Todo
 
-- pause
-- 2 enemies together
-- machine shoot sound
-- Jump inertion
+- multipleyer pause
+- multipleyer replay
+- lock changing weapon while reload
+- mobile controls
+- pause (fire/reload)
+- machine shoot sound 
+- change weapon by keys
 
-- Stat
+- blood
 - settings view
-- multiplayer
+- multipleyer view
 - crypto storage key & data
+- server remove games
+- win popup
+
+- server metrics
+- config waves
+- config weapons
+- config score
+- quests
+
 - decal indexed DB
+- playgama sdk
+- 2 enemies together
