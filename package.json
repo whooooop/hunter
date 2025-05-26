@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "webpack serve --mode=development",
-    "build": "webpack --mode=production",
+    "build:game": "pnpm --filter=@hunter/game build",
+    "build:server": "pnpm --filter=@hunter/server build",
     "build:proto": "pnpm --filter=@hunter/storage-proto build",
     "build:multiplayer": "pnpm --filter=@hunter/multiplayer build",
     "dev:server": "pnpm --filter=@hunter/server dev",
