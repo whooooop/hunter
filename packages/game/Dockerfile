@@ -17,7 +17,7 @@ RUN pnpm build:game
 
 FROM nginx:alpine
 COPY --from=build /app/packages/game/dist /usr/share/nginx/html
-COPY /app/packages/game/nginx.conf /etc/nginx/conf.d/default.conf
+COPY packages/game/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 8081
 CMD ["nginx", "-g", "daemon off;"]
