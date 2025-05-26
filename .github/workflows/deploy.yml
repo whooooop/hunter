@@ -70,7 +70,7 @@ jobs:
               --name ${{ vars.APP_NAME }}-server \
               ${{ vars.APP_NAME }}-server:${{ github.sha }}
           '
-        timeout-minutes: 5
+        timeout-minutes: 2
 
       - name: Deploy Game
         if: ${{ github.event.inputs.application == 'game' || github.event.inputs.application == 'all' }}
@@ -100,4 +100,4 @@ jobs:
             echo "Container status:"
             docker ps -a | grep ${{ vars.APP_NAME }}-game
           '
-        timeout-minutes: 5
+        timeout-minutes: 4
