@@ -1,11 +1,10 @@
-import { IncomingMessage } from "http";
-import { WebSocketServer, WebSocket } from "ws";
-import { Server as HttpServer } from 'http';
-import Stream from "stream";
+import { Server as HttpServer, IncomingMessage } from "http";
 import { parse } from "node:url";
-import { Message, MessageType } from './sync'
-import { ServerNamespace, ServerNamespaceConfig } from "./ServerNamespace";
+import Stream from "stream";
+import { WebSocket, WebSocketServer } from "ws";
 import { ClientSocket } from "./ClientSocket";
+import { ServerNamespace, ServerNamespaceConfig } from "./ServerNamespace";
+import { Message, MessageType } from './sync';
 import { ClientId, NamespaceId } from "./types";
 
 interface Config<Session extends object = any> {
@@ -26,7 +25,7 @@ export class MultiplayerServer<Session extends object = any> {
 
   constructor(
     private readonly config: Config<Session>
-  ) { 
+  ) {
     this.wss = new WebSocketServer({ noServer: true });
   }
 
@@ -34,7 +33,7 @@ export class MultiplayerServer<Session extends object = any> {
     console.log('WebSocket Server Attached to HTTP Server');
     httpServer.on('upgrade', (request: IncomingMessage, socket: Stream.Duplex, head: Buffer) => {
       this.wss.handleUpgrade(request, socket, head, async (ws: WebSocket) => {
-        const { pathname, query } = parse(request.url || '', true); 
+        const { pathname, query } = parse(request.url || '', true);
         const namespaceId = query?.namespace as string;
 
         if (!namespaceId) {
@@ -71,7 +70,7 @@ export class MultiplayerServer<Session extends object = any> {
 
   public async getNamespace(namespaceId: NamespaceId): Promise<ServerNamespace<Session>> {
     const hasNamespace = await this.hasNamespace(namespaceId);
-    
+
     if (!hasNamespace) {
       return this.createNamespace(namespaceId);
     }
@@ -89,7 +88,7 @@ export class MultiplayerServer<Session extends object = any> {
 
   private async handleConnection(request: IncomingMessage, clientSocket: ClientSocket<Session>, namespaceId: NamespaceId) {
     const namespace = await this.getNamespace(namespaceId);
-    
+
     namespace.connectClient(clientSocket);
 
     this.sockets.set(clientSocket.id, clientSocket);
@@ -102,7 +101,7 @@ export class MultiplayerServer<Session extends object = any> {
     });
   }
 
-  private handleMessage(clientId: ClientId, messageBytes: Buffer) { 
+  private handleMessage(clientId: ClientId, messageBytes: Buffer) {
     if (messageBytes.length < 1) {
       console.warn(`Received empty message from ${clientId}. Ignoring.`);
       return;
@@ -130,15 +129,18 @@ export class MultiplayerServer<Session extends object = any> {
     if (this.config.onDisconnect) {
       try {
         await this.config.onDisconnect(this, clientSocket);
-      } catch (error) {}
+      } catch (error) { }
     }
 
     const namespaceId = this.clientNamespaceMap.get(clientId)!;
     const namespace = this.namespaces.get(namespaceId)!;
 
-    namespace.disconnectClient(clientId);
-    this.clientNamespaceMap.delete(clientId);
-    this.sockets.delete(clientId);
+    if (namespace) {
+      console.log('disconnect', namespace);
+      namespace.disconnectClient(clientId);
+      this.clientNamespaceMap.delete(clientId);
+      this.sockets.delete(clientId);
+    }
 
     try {
       clientSocket.ws.close();

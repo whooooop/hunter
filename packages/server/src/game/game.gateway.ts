@@ -10,6 +10,7 @@ import { gameStateCollection } from './collections/gameState.collection';
 import { playerScoreStateCollection } from './collections/playerScoreState.collection';
 import { playerStateCollection } from './collections/playerState.collection';
 import { playerWeaponCollection } from './collections/playerWeapon.collection';
+import { waveStateCollection } from './collections/waveState.collection';
 import { weaponStateCollection } from './collections/weaponState.collection';
 import { gameStorage } from './game.storage';
 
@@ -64,7 +65,7 @@ export class GameGateway {
 
     if (namespace.getConnectionsSize() === 0) {
       const gameState = namespace.getCollection<GameState>(gameStateCollection)!;
-      gameState.addItem('game', {
+      gameState.updateItem('game', {
         host: playerId,
         playersCount: 2,
         started: false,
@@ -96,6 +97,7 @@ export class GameGateway {
       playerStateCollection,
       playerScoreStateCollection,
       playerWeaponCollection,
+      waveStateCollection,
       gameStateCollection,
     ]);
   }

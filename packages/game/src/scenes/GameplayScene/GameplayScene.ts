@@ -22,7 +22,6 @@ import { gameStateCollection } from '../../storage/collections/gameState.collect
 import { playerStateCollection } from '../../storage/collections/playerState.collection';
 import { playerWeaponCollection } from '../../storage/collections/playerWeapon.collection';
 import { Damageable, Enemy, Game, Level, Loading, Location, Player, ScoreEvents, ShopEvents } from '../../types/';
-import { Wave } from '../../types/WaveTypes';
 import { WaveInfo, WeaponStatus } from '../../ui';
 import { createLogger } from '../../utils/logger';
 import { GameOverView } from '../../views/gameover';
@@ -50,7 +49,6 @@ export class GameplayScene extends Phaser.Scene {
 
   private shop!: BaseShop;
   private enemies: Map<string, Damageable.Entity> = new Map();
-  private bosses: Map<string, Damageable.Entity> = new Map();
   private damageableObjects: Map<string, Damageable.Entity> = new Map();
 
   private levelConfig!: Level.Config;
@@ -74,8 +72,6 @@ export class GameplayScene extends Phaser.Scene {
   private gameOverView!: GameOverView;
   private mainPlayerId!: string;
   private players: Map<string, PlayerEntity> = new Map();
-  private lastSentState: number = 0;
-  private lastStateHash: string = ''
 
   private attempt: number = 1;
   private playTime: number = 0;
@@ -144,7 +140,6 @@ export class GameplayScene extends Phaser.Scene {
 
     this.resume();
 
-    offEvent(this, Wave.Events.WaveStart.Local, this.handleWaveStart, this);
     offEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
     offEvent(this, Game.Events.Pause.Local, this.handlePause, this);
     offEvent(this, Game.Events.Replay.Local, this.handleReplay, this);
@@ -156,7 +151,6 @@ export class GameplayScene extends Phaser.Scene {
     const playerId = this.playerService.getCurrentPlayerId();
     this.mainPlayerId = playerId;
 
-    onEvent(this, Wave.Events.WaveStart.Local, this.handleWaveStart, this);
     onEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
     onEvent(this, Game.Events.Pause.Local, this.handlePause, this);
     onEvent(this, Game.Events.Replay.Local, this.handleReplay, this);
@@ -180,7 +174,7 @@ export class GameplayScene extends Phaser.Scene {
     this.projectileController = new ProjectileController(this, this.damageableObjects);
     this.waveController = new WaveController(this, this.levelConfig.waves(), this.storage);
 
-    this.waveInfo = new WaveInfo(this);
+    this.waveInfo = new WaveInfo(this, this.storage);
     this.weaponStatus = new WeaponStatus(this, this.storage, playerId);
 
     this.add.text(20, DISPLAY.HEIGHT - 30, VERSION, { fontSize: 16, color: '#ffffff' }).setDepth(10000);
@@ -209,6 +203,12 @@ export class GameplayScene extends Phaser.Scene {
       this.questId = quest.id;
     }
 
+    this.storage.getCollection<GameState>(gameStateCollection)!.updateItem('game', {
+      host: playerId,
+      playersCount: 2,
+      started: false,
+      createdAt: Date.now().toString(),
+    });
     this.storage.getCollection<Player.State>(playerStateCollection)!.addItem(playerId, { x: 0, y: 0, vx: 0, vy: 0 });
     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
 
@@ -290,9 +290,8 @@ export class GameplayScene extends Phaser.Scene {
     const game = this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game');
 
     const allReady = connections.getSize() === game?.playersCount && connections.getItems().every(data => data.ready);
-    if (allReady && game?.host === this.mainPlayerId && !game.started) {
+    if (allReady && game?.host === this.mainPlayerId) {
       console.log('all ready');
-      // game.started = true;
       this.projectileController.setSimulate(false);
       this.waveController.start();
     }
@@ -300,7 +299,6 @@ export class GameplayScene extends Phaser.Scene {
 
   private handleEnemyDeath({ id }: Enemy.Events.Death.Payload): void {
     this.enemies.delete(id);
-    this.bosses.delete(id);
     this.kills++;
     this.damageableObjects.delete(id);
     this.storage.getCollection<EnemyState>(enemyStateCollection)!.removeItem(id);
@@ -314,14 +312,6 @@ export class GameplayScene extends Phaser.Scene {
     this.enemies.set(id, enemy);
     enemy.setLocationBounds(this.location.getBounds());
     this.damageableObjects.set(id, enemy);
-
-    if (record.data.boss) {
-      this.bosses.set(id, enemy);
-    }
-  }
-
-  private handleWaveStart(payload: Wave.Events.WaveStart.Payload) {
-    this.waveInfo.start(payload)
   }
 
   public spawnPlayer(playerId: string, stateRecord: SyncCollectionRecord<Player.State>): void {
@@ -334,14 +324,6 @@ export class GameplayScene extends Phaser.Scene {
 
     const player = new PlayerEntity(this, playerId, stateRecord, this.storage);
     this.players.set(playerId, player);
-
-    // if (playerId == this.mainPlayerId) {
-    //   const weaponId = this.storage.getCollection<PlayerWeapon>(playerWeaponCollection)!.getItem(playerId)?.weaponId;
-    //   if (!weaponId) {
-    //     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
-    //   } else {
-    //   }
-    // }
 
     player.setLocationBounds(this.location.getBounds());
   }
@@ -386,9 +368,19 @@ export class GameplayScene extends Phaser.Scene {
     // Обновляем всех врагов
     this.enemies.forEach((enemy) => {
       enemy.update(time, delta);
-      if (GAMEOVER && enemy instanceof EnemyEntity && enemy.getPosition().x < 0) {
-        this.isGameOver = true;
-        this.gameOverView.open({ attempt: this.attempt, time: this.playTime, kills: this.kills });
+      if (enemy instanceof EnemyEntity && enemy.getPosition().x < 0) {
+        if (GAMEOVER) {
+          this.isGameOver = true;
+          this.gameOverView.open({ attempt: this.attempt, time: this.playTime, kills: this.kills });
+          this.waveController.stop();
+        }
+
+        const enemyEntity = this.enemies.get(enemy.id);
+        if (enemyEntity) {
+          // @ts-ignore
+          enemyEntity.destroy();
+        }
+        this.handleEnemyDeath({ id: enemy.id });
       }
     });
 
@@ -396,33 +388,8 @@ export class GameplayScene extends Phaser.Scene {
     this.projectileController.update(time, delta);
     this.waveInfo.update(time, delta);
 
-    this.updateBossState(time, delta);
-
     if (!this.isPause) {
       this.playTime += delta;
-    }
-  }
-
-  private updateBossState(time: number, delta: number): void {
-    if (!this.bosses.size) {
-      this.waveInfo.showBossProgress(false);
-      return;
-    }
-
-    let currentHp = 0
-    let maxHp = 0
-
-    this.bosses.forEach(boss => {
-      const { current, max } = boss.getHealth();
-      currentHp += current;
-      maxHp += max;
-    });
-
-    this.waveInfo.showBossProgress(true);
-    this.waveInfo.updateBossProgress(currentHp / maxHp);
-
-    if (currentHp <= 0) {
-      this.bosses.clear();
     }
   }
 

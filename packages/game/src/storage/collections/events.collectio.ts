@@ -1,5 +1,5 @@
 import { defineCollection } from "@hunter/multiplayer/dist/client";
-import { EnemyDeathEvent, PlayerJumpEvent, WeaponFireEvent, WeaponReloadEvent } from "@hunter/storage-proto/dist/storage";
+import { EnemyAnimationEvent, EnemyDeathEvent, PlayerJumpEvent, WeaponFireEvent, WeaponReloadEvent } from "@hunter/storage-proto/dist/storage";
 
 export const fireEventCollection = defineCollection<WeaponFireEvent>('fireEvent', {
   encode: WeaponFireEvent.encode,
@@ -22,5 +22,11 @@ export const jumpEventCollection = defineCollection<PlayerJumpEvent>('jumpEvent'
 export const enemyDeathEventCollection = defineCollection<EnemyDeathEvent>('enemyDeathEvent', {
   encode: EnemyDeathEvent.encode,
   decode: EnemyDeathEvent.decode,
+  saveData: false,
+});
+
+export const enemyAnimationEvent = defineCollection<EnemyAnimationEvent>('enemyAnimationEvent', {
+  encode: EnemyAnimationEvent.encode,
+  decode: EnemyAnimationEvent.decode,
   saveData: false,
 });

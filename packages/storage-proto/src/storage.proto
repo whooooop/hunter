@@ -9,6 +9,13 @@ message GameState {
   bool started = 4;
 }
 
+message WaveState {
+  int32 waveIndex = 1;
+  int32 spawnIndex = 2;
+  int32 progress = 3;
+  bool boss = 4;
+}
+
 message ConnectionState {
   bool ready = 1;
 }
@@ -60,6 +67,12 @@ message WeaponReloadEvent {
 
 message PlayerJumpEvent {
   string playerId = 1;
+}
+
+message EnemyAnimationEvent {
+  string enemyId = 1;
+  string animation = 2;
+  bool loop = 3;
 }
 
 message EnemyDeathEvent {}

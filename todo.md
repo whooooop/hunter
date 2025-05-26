@@ -1,17 +1,27 @@
 
 # Todo
 
-- take demage
-- current weapon 
 - server metrics
-- wave state
-- decor state
+- multipleyer pause
+
+- lock changing weapon while reload
+- change weapon by keys
+
+- mobile controls
 
 - pause (fire/reload)
 - 2 enemies together
-- machine shoot sound
+- machine shoot sound 
 
 - settings view
 - multiplayer
 - crypto storage key & data
 - decal indexed DB
+
+- playgama sdk
+
+- win popup
+
+- config waves
+- config weapons
+- config score

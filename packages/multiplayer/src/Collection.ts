@@ -211,7 +211,8 @@ export class SyncCollection<T extends object> {
     this.incrementStat('ClientAdd');
     const onChange = (key: keyof T, value: any, oldValue: any) => {
       // console.log('onChange', key, value, oldValue);
-
+      const record = this.collection.get(id)!;
+      this.sendEvent('Update', 'Client', id, record);
       this.sendUpdate(id, data);
     };
 

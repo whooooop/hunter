@@ -1,15 +1,16 @@
 import { SpineGameObject, TrackEntry } from "@esotericsoftware/spine-phaser";
 import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
-import { EnemyDeathEvent } from "@hunter/storage-proto/dist/storage";
+import { EnemyAnimationEvent, EnemyDeathEvent } from "@hunter/storage-proto/dist/storage";
 import { DEBUG } from "../config";
 import { createSimpleBloodConfig } from "../controllers/BloodController";
 import { DamageableController } from "../controllers/DamageableController";
 import { MotionController2 } from "../controllers/MotionController2";
 import { emitEvent } from "../GameEvents";
-import { enemyDeathEventCollection } from "../storage/collections/events.collectio";
+import { enemyAnimationEvent, enemyDeathEventCollection } from "../storage/collections/events.collectio";
 import { Blood, Damageable, Decals, Enemy, Game, Location, ScoreEvents } from "../types/";
 import { hexToNumber } from "../utils/colors";
 import { Logger } from "../utils/logger";
+import { generateId } from "../utils/stringGenerator";
 
 const logger = new Logger('EnemyEntity');
 
@@ -37,10 +38,11 @@ export class EnemyEntity implements Damageable.Entity {
   private graphics!: Phaser.GameObjects.Graphics;
 
   private _handleEnemyDeath: (enemyId: string) => void;
+  private _handleEnemyAnimation: (eventId: string, record: SyncCollectionRecord<EnemyAnimationEvent>) => void;
 
   constructor(
     private readonly scene: Phaser.Scene,
-    private readonly id: string,
+    public readonly id: string,
     private readonly config: Enemy.Config,
     private readonly state: SyncCollectionRecord<Enemy.State>,
     private readonly storage: StorageSpace
@@ -61,6 +63,7 @@ export class EnemyEntity implements Damageable.Entity {
     this.body = scene.physics.add.body(this.state.data.x, this.state.data.y, this.config.baunds.body.width, this.config.baunds.body.height);
 
     this.damageableController = new DamageableController({ health: this.state.data.health, permeability: 0 });
+    this.damageableController.setState(this.state);
     this.motionController = new MotionController2(scene, this.body, motionConfig);
     this.motionController.setState(this.state);
     this.setAnimation(Enemy.Animation.WALK);
@@ -78,7 +81,9 @@ export class EnemyEntity implements Damageable.Entity {
     scene.add.existing(this.container);
 
     this._handleEnemyDeath = this.handleEnemyDeath.bind(this);
+    this._handleEnemyAnimation = this.handleEnemyAnimation.bind(this);
     this.storage.on<EnemyDeathEvent>(enemyDeathEventCollection, 'Add', this._handleEnemyDeath);
+    this.storage.on<EnemyAnimationEvent>(enemyAnimationEvent, 'Add', this._handleEnemyAnimation);
 
     // const deathAnimation = this.config.animations.find(animation => animation.name === 'walk')!.key;
 
@@ -105,6 +110,12 @@ export class EnemyEntity implements Damageable.Entity {
   private handleEnemyDeath(enemyId: string): void {
     if (enemyId === this.id) {
       this.onDeath();
+    }
+  }
+
+  private handleEnemyAnimation(eventId: string, record: SyncCollectionRecord<EnemyAnimationEvent>): void {
+    if (record.data.enemyId === this.id) {
+      this.playAnimation(record.data.animation as Enemy.Animation, record.data.loop);
     }
   }
 
@@ -209,6 +220,15 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   protected setAnimation(animation: Enemy.Animation, loop: boolean = true): void {
+    this.storage.getCollection<EnemyAnimationEvent>(enemyAnimationEvent)!.addItem(generateId(), {
+      enemyId: this.id,
+      animation,
+      loop,
+    });
+    this.playAnimation(animation, loop);
+  }
+
+  protected playAnimation(animation: Enemy.Animation, loop: boolean = true): void {
     if (this.config.spine?.animations[animation]) {
       this.trackEntry = this.spineObject.animationState.setAnimation(0, animation, loop);
     } else {
@@ -228,7 +248,6 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   protected async onDeath(): Promise<void> {
-    console.log('onDeath', this.id);
     await this.onDeathAnimation();
     emitEvent(this.scene, Enemy.Events.Death.Local, {
       id: this.id,
@@ -393,6 +412,7 @@ export class EnemyEntity implements Damageable.Entity {
     this.spineObject?.destroy();
     this.body.destroy();
     this.motionController.destroy();
+    this.container.destroy();
     this.destroyed = true;
 
     if (DEBUG.ENEMIES) {

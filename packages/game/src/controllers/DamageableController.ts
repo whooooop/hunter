@@ -1,3 +1,4 @@
+import { SyncCollectionRecord } from "@hunter/multiplayer/dist/Collection";
 import { Damageable } from "../types/damageableTypes";
 import { Enemy } from "../types/enemyTypes";
 
@@ -6,6 +7,7 @@ export class DamageableController {
   protected permeability: number;
   protected health: number;
   protected initialHealth: number;
+  protected state: SyncCollectionRecord<{ health: number }> | null = null;
   protected damages: { damage: Damageable.Damage, result: Damageable.DamageResult }[] = [];
 
   constructor(config: Damageable.Config) {
@@ -14,12 +16,25 @@ export class DamageableController {
     this.initialHealth = config.health;
   }
 
+  public setState(state: SyncCollectionRecord<{ health: number }>) {
+    this.state = state;
+    this.health = state.data.health;
+    this.initialHealth = state.data.health;
+  }
+
   public getHealth(): number {
-    return this.health;
+    return this.state?.data.health || this.health;
+  }
+
+  private setHealth(health: number) {
+    this.health = health;
+    if (this.state) {
+      this.state.data.health = health;
+    }
   }
 
   public getHealthPercent(): number {
-    return this.health / this.initialHealth;
+    return this.getHealth() / this.initialHealth;
   }
 
   public getLastDamage(): { damage: Damageable.Damage, result: Damageable.DamageResult } | null {
@@ -33,7 +48,7 @@ export class DamageableController {
   public takeDamage(damage: Damageable.Damage, target: Enemy.Body): Damageable.DamageResult | null {
     if (this.isDead) return null;
 
-    const health = Math.max(0, this.health - damage.value);
+    const health = Math.max(0, this.getHealth() - damage.value);
     const isDead = health === 0;
     const result = {
       health,
@@ -45,7 +60,7 @@ export class DamageableController {
     }
 
     if (!damage.simulate) {
-      this.health = health;
+      this.setHealth(health);
       this.isDead = isDead;
       this.damages.push({ damage, result });
     }

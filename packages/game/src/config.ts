@@ -13,15 +13,15 @@ export const FONT_FAMILY = {
 };
 
 export const DEBUG = {
-  PHYSICS: true,
+  PHYSICS: false,
   ENEMIES: false,
-  MOTION: true,
-  LOCATION: true,
-  SHOP: true,
-  PROJECTILES: true,
+  MOTION: false,
+  LOCATION: false,
+  SHOP: false,
+  PROJECTILES: false,
 };
 
-export const GAMEOVER = false;
+export const GAMEOVER = true;
 export const START_SCENE_GAMEPLAY = true;
 
 export const VERSION = '0.0.3 Alpha'; 

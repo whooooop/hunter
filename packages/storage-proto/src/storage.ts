@@ -16,6 +16,13 @@ export interface GameState {
   started: boolean;
 }
 
+export interface WaveState {
+  waveIndex: number;
+  spawnIndex: number;
+  progress: number;
+  boss: boolean;
+}
+
 export interface ConnectionState {
   ready: boolean;
 }
@@ -67,6 +74,12 @@ export interface WeaponReloadEvent {
 
 export interface PlayerJumpEvent {
   playerId: string;
+}
+
+export interface EnemyAnimationEvent {
+  enemyId: string;
+  animation: string;
+  loop: boolean;
 }
 
 export interface EnemyDeathEvent {
@@ -176,6 +189,114 @@ export const GameState: MessageFns<GameState> = {
     message.createdAt = object.createdAt ?? "0";
     message.playersCount = object.playersCount ?? 0;
     message.started = object.started ?? false;
+    return message;
+  },
+};
+
+function createBaseWaveState(): WaveState {
+  return { waveIndex: 0, spawnIndex: 0, progress: 0, boss: false };
+}
+
+export const WaveState: MessageFns<WaveState> = {
+  encode(message: WaveState, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.waveIndex !== 0) {
+      writer.uint32(8).int32(message.waveIndex);
+    }
+    if (message.spawnIndex !== 0) {
+      writer.uint32(16).int32(message.spawnIndex);
+    }
+    if (message.progress !== 0) {
+      writer.uint32(24).int32(message.progress);
+    }
+    if (message.boss !== false) {
+      writer.uint32(32).bool(message.boss);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WaveState {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWaveState();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.waveIndex = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.spawnIndex = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.progress = reader.int32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.boss = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): WaveState {
+    return {
+      waveIndex: isSet(object.waveIndex) ? globalThis.Number(object.waveIndex) : 0,
+      spawnIndex: isSet(object.spawnIndex) ? globalThis.Number(object.spawnIndex) : 0,
+      progress: isSet(object.progress) ? globalThis.Number(object.progress) : 0,
+      boss: isSet(object.boss) ? globalThis.Boolean(object.boss) : false,
+    };
+  },
+
+  toJSON(message: WaveState): unknown {
+    const obj: any = {};
+    if (message.waveIndex !== 0) {
+      obj.waveIndex = Math.round(message.waveIndex);
+    }
+    if (message.spawnIndex !== 0) {
+      obj.spawnIndex = Math.round(message.spawnIndex);
+    }
+    if (message.progress !== 0) {
+      obj.progress = Math.round(message.progress);
+    }
+    if (message.boss !== false) {
+      obj.boss = message.boss;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<WaveState>, I>>(base?: I): WaveState {
+    return WaveState.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<WaveState>, I>>(object: I): WaveState {
+    const message = createBaseWaveState();
+    message.waveIndex = object.waveIndex ?? 0;
+    message.spawnIndex = object.spawnIndex ?? 0;
+    message.progress = object.progress ?? 0;
+    message.boss = object.boss ?? false;
     return message;
   },
 };
@@ -978,6 +1099,98 @@ export const PlayerJumpEvent: MessageFns<PlayerJumpEvent> = {
   fromPartial<I extends Exact<DeepPartial<PlayerJumpEvent>, I>>(object: I): PlayerJumpEvent {
     const message = createBasePlayerJumpEvent();
     message.playerId = object.playerId ?? "";
+    return message;
+  },
+};
+
+function createBaseEnemyAnimationEvent(): EnemyAnimationEvent {
+  return { enemyId: "", animation: "", loop: false };
+}
+
+export const EnemyAnimationEvent: MessageFns<EnemyAnimationEvent> = {
+  encode(message: EnemyAnimationEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.enemyId !== "") {
+      writer.uint32(10).string(message.enemyId);
+    }
+    if (message.animation !== "") {
+      writer.uint32(18).string(message.animation);
+    }
+    if (message.loop !== false) {
+      writer.uint32(24).bool(message.loop);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EnemyAnimationEvent {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEnemyAnimationEvent();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.enemyId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.animation = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.loop = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EnemyAnimationEvent {
+    return {
+      enemyId: isSet(object.enemyId) ? globalThis.String(object.enemyId) : "",
+      animation: isSet(object.animation) ? globalThis.String(object.animation) : "",
+      loop: isSet(object.loop) ? globalThis.Boolean(object.loop) : false,
+    };
+  },
+
+  toJSON(message: EnemyAnimationEvent): unknown {
+    const obj: any = {};
+    if (message.enemyId !== "") {
+      obj.enemyId = message.enemyId;
+    }
+    if (message.animation !== "") {
+      obj.animation = message.animation;
+    }
+    if (message.loop !== false) {
+      obj.loop = message.loop;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<EnemyAnimationEvent>, I>>(base?: I): EnemyAnimationEvent {
+    return EnemyAnimationEvent.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<EnemyAnimationEvent>, I>>(object: I): EnemyAnimationEvent {
+    const message = createBaseEnemyAnimationEvent();
+    message.enemyId = object.enemyId ?? "";
+    message.animation = object.animation ?? "";
+    message.loop = object.loop ?? false;
     return message;
   },
 };

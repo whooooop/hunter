@@ -1,12 +1,15 @@
 import { SyncCollectionRecord } from '@hunter/multiplayer/dist/Collection';
 import { StorageSpace } from '@hunter/multiplayer/dist/StorageSpace';
-import { PlayerScoreState } from '@hunter/storage-proto/dist/storage';
+import { PlayerScoreState, PlayerWeapon, WeaponState } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import { COLORS } from '../Constants';
 import { FONT_FAMILY } from '../config';
 import { playerScoreStateCollection } from '../storage/collections/playerScoreState.collection';
+import { playerWeaponCollection } from '../storage/collections/playerWeapon.collection';
+import { weaponStateCollection } from '../storage/collections/weaponState.collection';
 import { hexToNumber } from '../utils/colors';
 import { createLogger } from '../utils/logger';
+import { getWeaponConfig } from '../weapons';
 import { WeaponType } from '../weapons/WeaponTypes';
 
 const logger = createLogger('WeaponStatus');
@@ -48,6 +51,8 @@ export class WeaponStatus {
 
     this.storage.on<PlayerScoreState>(playerScoreStateCollection, 'Add', this.updateCoins.bind(this));
     this.storage.on<PlayerScoreState>(playerScoreStateCollection, 'Update', this.updateCoins.bind(this));
+    this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Add', this.updateWeapon.bind(this));
+    this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Update', this.updateWeapon.bind(this));
   }
 
   private create(): void {
@@ -258,29 +263,35 @@ export class WeaponStatus {
     }
   }
 
-  // public setWeapon(payload: Player.Events.SetWeapon.Payload): void {
-  //     this.currentWeapon = payload.weaponType as WeaponType;
-  //     const config = getWeaponConfig(this.currentWeapon);
-  //     if (!config || !this.weaponIcon) {
-  //         this.weaponIcon?.setVisible(false);
-  //         this.ammoIcons.forEach(icon => icon.destroy());
-  //         this.ammoIcons = [];
-  //         return;
-  //     }
+  private updateWeapon(playerId: string, record: SyncCollectionRecord<PlayerWeapon>): void {
+    if (playerId !== this.playerId) return;
+    const weaponState = this.storage.getCollection<WeaponState>(weaponStateCollection)!.getItem(record.data.weaponId);
 
-  //     try {
-  //         this.weaponIcon.setTexture(config.texture.key);
-  //         this.weaponIcon.setVisible(true);
+    if (!weaponState) return;
+    const weaponType = weaponState.type as WeaponType;
+    const config = getWeaponConfig(weaponType);
 
-  //         const iconScale = (this.radius * 2 * 0.4) / Math.max(this.weaponIcon.height || 1);
-  //         this.weaponIcon.setScale(iconScale);
-  //     } catch (error) {
-  //         this.weaponIcon.setVisible(false);
-  //     }
+    if (!config || !this.weaponIcon) {
+      this.weaponIcon?.setVisible(false);
+      this.ammoIcons.forEach(icon => icon.destroy());
+      this.ammoIcons = [];
+      return;
+    }
 
-  //     this.createAmmoIcons(); 
-  //     this.coinsText.setText(this.coins.toString());
-  // }
+    try {
+      this.weaponIcon.setTexture(config.texture.key);
+      this.weaponIcon.setVisible(true);
+
+      const iconScale = (this.radius * 2 * 0.4) / Math.max(this.weaponIcon.height || 1);
+      this.weaponIcon.setScale(iconScale);
+    } catch (error) {
+      this.weaponIcon.setVisible(false);
+    }
+
+    this.createAmmoIcons();
+    this.coinsText.setText(this.coins.toString());
+  }
+
 
   public setAmmo(current: number, max: number): void {
     if (this.currentAmmo === current && this.maxAmmo === max) {

@@ -1,8 +1,8 @@
 import { OBJECTS_DEPTH_OFFSET } from "../config";
-import { hexToNumber } from "../utils/colors";
 import { DamageableController } from "../controllers/DamageableController";
 import { Damageable } from "../types/damageableTypes";
 import { Decor } from "../types/decorTypes";
+import { hexToNumber } from "../utils/colors";
 
 export class DecorEntity implements Damageable.Entity {
   protected id: string;
@@ -16,7 +16,7 @@ export class DecorEntity implements Damageable.Entity {
     this.gameObject = gameObject;
     this.id = id;
     this.config = config;
-    
+
     this.damageableController = new DamageableController({
       health: config.health,
       permeability: typeof config.permeability === 'number' ? config.permeability : 1
@@ -39,6 +39,7 @@ export class DecorEntity implements Damageable.Entity {
   }
 
   public takeDamage(damage: Damageable.Damage): Damageable.DamageResult | null {
+    damage.simulate = false;
     return this.damageableController.takeDamage(damage, 'body');
   }
 
@@ -53,7 +54,7 @@ export class DecorEntity implements Damageable.Entity {
     };
   }
 
-  public update(time: number, delta: number): void {}
+  public update(time: number, delta: number): void { }
 
   public getBodyBounds(): Damageable.Body {
     const width = this.gameObject.width * this.gameObject.scale;
