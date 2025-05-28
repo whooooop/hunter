@@ -5,7 +5,7 @@ import { collectDefaultMetrics, register } from 'prom-client';
 @Controller('metrics')
 export class MetricsController {
   constructor() {
-    collectDefaultMetrics({ register });
+    collectDefaultMetrics({ register, prefix: 'hunter_server_' });
   }
 
   @Get()
