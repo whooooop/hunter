@@ -67,7 +67,7 @@ jobs:
               --memory 512m \
               --memory-swap 512m \
               --cpus=2 \
-              -e METRICS_ACCESS_TOKEN=${{ secrets.METRICS_ACCESS_TOKEN }} \
+              -e METRICS_ACCESS_TOKEN="${{ secrets.METRICS_ACCESS_TOKEN }}" \
               -p 3434:3434 \
               --name ${{ vars.APP_NAME }}-server \
               ${{ vars.APP_NAME }}-server:${{ github.sha }}
