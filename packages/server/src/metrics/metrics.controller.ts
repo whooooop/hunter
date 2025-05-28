@@ -5,7 +5,7 @@ import { collectDefaultMetrics, register } from 'prom-client';
 @Controller('metrics')
 export class MetricsController {
   constructor() {
-    collectDefaultMetrics({ register, prefix: 'hunter_server_' });
+    collectDefaultMetrics({ register });
   }
 
   @Get()
@@ -13,8 +13,6 @@ export class MetricsController {
   async getMetrics(
     @Headers('x-metrics-access') accessToken: string,
   ): Promise<string> {
-    console.log('accessToken', accessToken);
-    console.log('process.env.METRICS_ACCESS_TOKEN', process.env.METRICS_ACCESS_TOKEN);
     if (accessToken !== process.env.METRICS_ACCESS_TOKEN) {
       throw new UnauthorizedException('Forbidden');
     }
