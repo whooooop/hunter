@@ -4,9 +4,11 @@ package game;
 
 message GameState {
   string host = 1;
-  int64 createdAt = 2;
-  int32 playersCount = 3;
-  bool started = 4;
+  string levelId = 2;
+  int64 createdAt = 3;
+  int32 playersCount = 4;
+  bool paused = 5;
+  bool started = 6;
 }
 
 message WaveState {

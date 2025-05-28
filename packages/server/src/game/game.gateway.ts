@@ -45,6 +45,10 @@ export class GameGateway {
     const playerId = query?.playerId as string;
     const gameId = namespaceId;
 
+    if (gameId.length > 10) {
+      throw new Error(`Upgrade request rejected for game ${gameId}: Game id is too long.`);
+    }
+
     if (!playerId) {
       throw new Error(`Upgrade request rejected for game ${gameId}: Missing or invalid playerId query parameter.`);
     }
@@ -67,7 +71,9 @@ export class GameGateway {
       const gameState = namespace.getCollection<GameState>(gameStateCollection)!;
       gameState.updateItem('game', {
         host: playerId,
+        levelId: 'forest',
         playersCount: 2,
+        paused: false,
         started: false,
         createdAt: Date.now().toString(),
       });

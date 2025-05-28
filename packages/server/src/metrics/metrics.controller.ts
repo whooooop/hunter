@@ -1,4 +1,4 @@
-import { registry } from "@hunter/multiplayer/dist/metrics";
+import { registry } from "@hunter/multiplayer/dist/server";
 import { Controller, Get, Header, Headers, UnauthorizedException } from "@nestjs/common";
 import { collectDefaultMetrics, register } from 'prom-client';
 

@@ -1,5 +1,5 @@
 import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
-import { ConnectionState, EnemyState, GameState, PlayerWeapon } from '@hunter/storage-proto/dist/storage';
+import { ConnectionState, EnemyState, GameState } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import { BaseShop } from '../BaseShop';
 import { DISPLAY, GAMEOVER, VERSION } from '../config';
@@ -20,7 +20,6 @@ import { connectionStateCollection } from '../storage/collections/connectionStat
 import { enemyStateCollection } from '../storage/collections/enemyState.collection';
 import { gameStateCollection } from '../storage/collections/gameState.collection';
 import { playerStateCollection } from '../storage/collections/playerState.collection';
-import { playerWeaponCollection } from '../storage/collections/playerWeapon.collection';
 import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../types';
 import { WaveInfo, WeaponStatus } from '../ui';
 import { createLogger } from '../utils/logger';
@@ -161,6 +160,7 @@ export class GameplayScene extends Phaser.Scene {
 
     this.storage.on<Player.State>(playerStateCollection, 'Add', this.spawnPlayer.bind(this));
     this.storage.on<EnemyState>(enemyStateCollection, 'Add', this.handleSpawnEnemy.bind(this));
+    this.storage.on<GameState>(gameStateCollection, 'Update', this.handleGameStateUpdate.bind(this));
 
     this.location.create();
 
@@ -197,6 +197,14 @@ export class GameplayScene extends Phaser.Scene {
     this.playTime = 0;
   }
 
+  private handleGameStateUpdate(id: string, record: SyncCollectionRecord<GameState>, collection: SyncCollection<GameState>, from: string): void {
+    if (record.data.paused) {
+      this.pause();
+    } else {
+      this.resume();
+    }
+  }
+
   private async singlePlayerInit(playerId: string): Promise<void> {
     const quest = await this.questService.getCurrentQuest(this.levelId);
 
@@ -207,8 +215,10 @@ export class GameplayScene extends Phaser.Scene {
 
     this.storage.getCollection<GameState>(gameStateCollection)!.updateItem('game', {
       host: playerId,
-      playersCount: 2,
+      levelId: this.levelId,
+      playersCount: 1,
       started: false,
+      paused: false,
       createdAt: Date.now().toString(),
     });
     this.storage.getCollection<Player.State>(playerStateCollection)!.addItem(playerId, { x: 0, y: 0, vx: 0, vy: 0 });
@@ -221,13 +231,8 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private handlePause(payload: Game.Events.Pause.Payload): void {
-    this.isPause = !this.isPause;
-
-    if (this.isPause) {
-      this.pause();
-    } else {
-      this.resume();
-    }
+    const gameState = this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game')!;
+    gameState.paused = !gameState.paused;
   }
 
   private pause() {
@@ -268,7 +273,6 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.on<ConnectionState>(connectionStateCollection, 'Update', this.handleConnectionState.bind(this));
     this.storage.on<GameState>(gameStateCollection, 'Add', () => {
       const currentWeaponId = this.weaponController.getCurrentWeapon(playerId);
-      const currentWeapon = this.storage.getCollection<PlayerWeapon>(playerWeaponCollection)!.getItem(playerId);
       // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
 
       if (!currentWeaponId) {
@@ -284,7 +288,7 @@ export class GameplayScene extends Phaser.Scene {
     });
 
     this.multiplayerController = new MultiplayerController(this, this.storage);
-    this.multiplayerController.connect(gameId, playerId).then(() => { });
+    this.multiplayerController.connect(gameId, playerId);
   }
 
   private handleConnectionState() {
@@ -363,7 +367,10 @@ export class GameplayScene extends Phaser.Scene {
       // Обновляем состояние оружия в интерфейсе
       const weapon = mainPlayer.getWeapon();
       if (weapon) {
-        this.weaponStatus.setAmmo(weapon.getCurrentAmmo(), weapon.getMaxAmmo());
+        this.weaponStatus.setAmmo(
+          weapon.getCurrentAmmo(),
+          weapon.getMaxAmmo()
+        );
       }
     }
 

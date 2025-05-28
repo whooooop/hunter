@@ -11,8 +11,10 @@ export const protobufPackage = "game";
 
 export interface GameState {
   host: string;
+  levelId: string;
   createdAt: string;
   playersCount: number;
+  paused: boolean;
   started: boolean;
 }
 
@@ -86,7 +88,7 @@ export interface EnemyDeathEvent {
 }
 
 function createBaseGameState(): GameState {
-  return { host: "", createdAt: "0", playersCount: 0, started: false };
+  return { host: "", levelId: "", createdAt: "0", playersCount: 0, paused: false, started: false };
 }
 
 export const GameState: MessageFns<GameState> = {
@@ -94,14 +96,20 @@ export const GameState: MessageFns<GameState> = {
     if (message.host !== "") {
       writer.uint32(10).string(message.host);
     }
+    if (message.levelId !== "") {
+      writer.uint32(18).string(message.levelId);
+    }
     if (message.createdAt !== "0") {
-      writer.uint32(16).int64(message.createdAt);
+      writer.uint32(24).int64(message.createdAt);
     }
     if (message.playersCount !== 0) {
-      writer.uint32(24).int32(message.playersCount);
+      writer.uint32(32).int32(message.playersCount);
+    }
+    if (message.paused !== false) {
+      writer.uint32(40).bool(message.paused);
     }
     if (message.started !== false) {
-      writer.uint32(32).bool(message.started);
+      writer.uint32(48).bool(message.started);
     }
     return writer;
   },
@@ -122,11 +130,11 @@ export const GameState: MessageFns<GameState> = {
           continue;
         }
         case 2: {
-          if (tag !== 16) {
+          if (tag !== 18) {
             break;
           }
 
-          message.createdAt = reader.int64().toString();
+          message.levelId = reader.string();
           continue;
         }
         case 3: {
@@ -134,11 +142,27 @@ export const GameState: MessageFns<GameState> = {
             break;
           }
 
-          message.playersCount = reader.int32();
+          message.createdAt = reader.int64().toString();
           continue;
         }
         case 4: {
           if (tag !== 32) {
+            break;
+          }
+
+          message.playersCount = reader.int32();
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.paused = reader.bool();
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
             break;
           }
 
@@ -157,8 +181,10 @@ export const GameState: MessageFns<GameState> = {
   fromJSON(object: any): GameState {
     return {
       host: isSet(object.host) ? globalThis.String(object.host) : "",
+      levelId: isSet(object.levelId) ? globalThis.String(object.levelId) : "",
       createdAt: isSet(object.createdAt) ? globalThis.String(object.createdAt) : "0",
       playersCount: isSet(object.playersCount) ? globalThis.Number(object.playersCount) : 0,
+      paused: isSet(object.paused) ? globalThis.Boolean(object.paused) : false,
       started: isSet(object.started) ? globalThis.Boolean(object.started) : false,
     };
   },
@@ -168,11 +194,17 @@ export const GameState: MessageFns<GameState> = {
     if (message.host !== "") {
       obj.host = message.host;
     }
+    if (message.levelId !== "") {
+      obj.levelId = message.levelId;
+    }
     if (message.createdAt !== "0") {
       obj.createdAt = message.createdAt;
     }
     if (message.playersCount !== 0) {
       obj.playersCount = Math.round(message.playersCount);
+    }
+    if (message.paused !== false) {
+      obj.paused = message.paused;
     }
     if (message.started !== false) {
       obj.started = message.started;
@@ -186,8 +218,10 @@ export const GameState: MessageFns<GameState> = {
   fromPartial<I extends Exact<DeepPartial<GameState>, I>>(object: I): GameState {
     const message = createBaseGameState();
     message.host = object.host ?? "";
+    message.levelId = object.levelId ?? "";
     message.createdAt = object.createdAt ?? "0";
     message.playersCount = object.playersCount ?? 0;
+    message.paused = object.paused ?? false;
     message.started = object.started ?? false;
     return message;
   },

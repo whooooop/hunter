@@ -1,7 +1,6 @@
 
 # Todo
 
-- multipleyer pause
 - multipleyer replay
 - multipleyer player color
 - lock changing weapon while reload
@@ -9,6 +8,7 @@
 - pause (fire/reload)
 - machine shoot sound
 - buy weapon by keys
+- screen resize
 
 - blood
 - settings view
@@ -22,6 +22,7 @@
 - config score
 - quests
 
-- decal indexed DB
 - playgama sdk
+
+- decal indexed DB
 - 2 enemies together

@@ -1,16 +1,15 @@
+import { DISPLAY, FONT_FAMILY } from "../../config";
 import { emitEvent } from "../../GameEvents";
+import { LevelId } from "../../levels";
 import { BankService } from "../../services/BankService";
 import { QuestService } from "../../services/QuestService";
-import { UiStars, UiReplayButton, UiMenuButton, UiPlayButton } from "../../ui";
+import { Bank, Game, Quest } from "../../types";
+import { UiMenuButton, UiPlayButton, UiReplayButton, UiStars } from "../../ui";
 import { PauseTask } from "./PauseTask";
 import { BlockTexture, BlockTitleTexture } from "./textures";
 import { pauseText } from "./translates";
-import { LevelId } from "../../levels";
-import { Game, Quest, Bank } from "../../types";
-import { DISPLAY, FONT_FAMILY } from "../../config";
 
 export class PauseView {
-  private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
   private bankService: BankService;
   private questService: QuestService;
@@ -30,8 +29,9 @@ export class PauseView {
     scene.load.image(BlockTitleTexture.key, BlockTitleTexture.url);
   }
 
-  constructor(scene: Phaser.Scene) {
-    this.scene = scene;
+  constructor(
+    private readonly scene: Phaser.Scene,
+  ) {
     this.container = this.scene.add.container(0, 0).setDepth(this.depth + 1);
     this.overlay = this.scene.add.rectangle(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 0x000000, 0.5).setAlpha(0).setOrigin(0).setDepth(this.depth);
     this.bankService = BankService.getInstance();
@@ -94,7 +94,7 @@ export class PauseView {
       .setScale(0.5)
       .setAlpha(0)
       .setDepth(this.depth);
-    
+
     const block = this.scene.add.image(0, 0, BlockTexture.key).setScale(BlockTexture.scale);
     const blockTitle = this.scene.add.image(-200, -240, BlockTitleTexture.key).setScale(BlockTitleTexture.scale);
     const text = this.scene.add.text(-200, -240, pauseText.translate.toUpperCase(), { fontSize: 40, color: '#fff', fontFamily: FONT_FAMILY.BOLD }).setOrigin(0.5).setRotation(-0.05);
