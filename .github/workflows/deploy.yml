@@ -64,6 +64,7 @@ jobs:
             docker run \
               -d \
               --restart always \
+              --network postgress_my_network \
               --memory 512m \
               --memory-swap 512m \
               --cpus=2 \
