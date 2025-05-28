@@ -1,5 +1,5 @@
-
 export { BaseNamespace } from './BaseNamespace';
+export { ClientSocket } from './ClientSocket';
 export { defineCollection, SyncCollection } from './Collection';
 export type {
   CollectionId,

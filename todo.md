@@ -8,7 +8,7 @@
 - mobile controls
 - pause (fire/reload)
 - machine shoot sound
-- change weapon by keys
+- buy weapon by keys
 
 - blood
 - settings view
@@ -17,7 +17,6 @@
 - server remove games
 - win popup
 
-- server metrics
 - config waves
 - config weapons
 - config score
