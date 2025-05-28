@@ -72,7 +72,7 @@ jobs:
               --name ${{ vars.APP_NAME }}-server \
               ${{ vars.APP_NAME }}-server:${{ github.sha }}
           '
-        timeout-minutes: 2
+        timeout-minutes: 3
 
       - name: Deploy Game
         if: ${{ github.event.inputs.application == 'game' || github.event.inputs.application == 'all' }}

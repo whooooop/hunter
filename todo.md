@@ -3,6 +3,7 @@
 
 - multipleyer pause
 - multipleyer replay
+- multipleyer player color
 - lock changing weapon while reload
 - mobile controls
 - pause (fire/reload)
