@@ -1,10 +1,17 @@
 {
   "name": "@hunter/multiplayer",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "main": "dist/server.js",
+  "browser": "dist/client.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "protoc --plugin=\"./node_modules/.bin/protoc-gen-ts_proto\" --ts_proto_out=\"./src\" --ts_proto_opt=\"esModuleInterop=true,forceLong=string,outputServices=false\" --proto_path=\"./src\" ./src/sync.proto && tsc"
+    "build:proto": "protoc --plugin=\"./node_modules/.bin/protoc-gen-ts_proto\" --ts_proto_out=\"./src\" --ts_proto_opt=\"esModuleInterop=true,forceLong=string,outputServices=false\" --proto_path=\"./src\" ./src/sync.proto",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:webpack": "webpack --mode=production",
+    "build": "npm run build:proto && npm run build:types && npm run build:webpack",
+    "dev": "webpack --mode=development --watch",
+    "dev:client": "webpack --config-name client --mode=development --watch",
+    "dev:server": "webpack --config-name server --mode=development --watch"
   },
   "license": "ISC",
   "dependencies": {
@@ -16,6 +23,9 @@
   "devDependencies": {
     "@types/node": "^22.15.21",
     "ts-proto": "^2.7.0",
-    "typescript": "^5.4.3"
+    "typescript": "^5.4.3",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4",
+    "ts-loader": "^9.5.1"
   }
 }

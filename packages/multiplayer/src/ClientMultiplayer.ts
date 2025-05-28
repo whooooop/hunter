@@ -1,5 +1,5 @@
 import { ClientNamespace } from "./ClientNamespace";
-import { messageCounter, registry } from "./metrics";
+import { messageCounter } from "./metrics";
 import { StorageSpace } from "./StorageSpace";
 import { BatchMessage, Message, MessageType } from "./sync";
 import { NamespaceId } from "./types";
@@ -23,8 +23,6 @@ export class ClientMultiplayer {
   public ping: number = 0;
 
   private namespace!: ClientNamespace;
-
-  public readonly metricsRegistry = registry;
 
   constructor(
     protected readonly config: ClientMultiplayerConfig

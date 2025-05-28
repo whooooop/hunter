@@ -1,27 +1,27 @@
+import { SpinePlugin } from "@esotericsoftware/spine-phaser";
 import * as Phaser from 'phaser';
-import { GameplayScene } from './scenes/GameplayScene/GameplayScene';
-import { logger } from './utils/logger';
+import { introFontBold, introFontRegular } from './assets/fonts/intro';
+import { DEBUG, DISPLAY } from './config';
 import { SceneKeys } from './scenes';
 import { BootScene } from './scenes/BootScene';
-import { isSupportedLocale, setDefaultLocale } from './utils/i18n';
+import { GameplayScene } from './scenes/GameplayScene';
 import { MenuScene } from './scenes/MenuScene/MenuScene';
-import { PlayerService } from './services/PlayerService';
-import { introFontRegular, introFontBold } from './assets/fonts/intro';
-import { FontLoader } from './utils/font';
-import { DISPLAY, DEBUG } from './config';
-import { SettingsService } from './services/SettingsService';
-import { SpinePlugin } from "@esotericsoftware/spine-phaser"
 import { ReloadScene } from './scenes/ReloadScene';
+import { PlayerService } from './services/PlayerService';
+import { SettingsService } from './services/SettingsService';
+import { FontLoader } from './utils/font';
+import { isSupportedLocale, setDefaultLocale } from './utils/i18n';
+import { logger } from './utils/logger';
 
 const originalLog = console.log;
-console.log = function(msg: any) {
-    if (
-        typeof msg === 'string' &&
-        msg.includes('Phaser v3.88')
-    ) {
-        return;
-    }
-    originalLog.call(console, ...arguments);
+console.log = function (msg: any) {
+  if (
+    typeof msg === 'string' &&
+    msg.includes('Phaser v3.88')
+  ) {
+    return;
+  }
+  originalLog.call(console, ...arguments);
 };
 
 const config: Phaser.Types.Core.GameConfig = {

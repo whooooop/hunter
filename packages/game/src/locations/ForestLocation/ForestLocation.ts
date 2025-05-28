@@ -1,17 +1,17 @@
 import * as Phaser from 'phaser';
+import { GameplayScene } from '../../scenes/GameplayScene';
 import { Location } from '../../types/Location';
-import { FOREST_COLORS, INTERACTIVE_OBJECTS, CLOUDS } from './ForestLocationConfig';
 import { createLogger } from '../../utils/logger';
-import { GameplayScene } from '../../scenes/GameplayScene/GameplayScene';
 import { ForestShop } from './components/ForestShop';
 import { SpruceTree } from './components/SpruceTree';
+import { CLOUDS, FOREST_COLORS, INTERACTIVE_OBJECTS } from './ForestLocationConfig';
 
-import { Clouds } from '../../ui/Clouds';
-import { BirchTree } from './components/BirchTree';
-import { TREE_COLLECTIONS, TreeType } from './components';
 import { DEBUG } from '../../config';
-import { hexToNumber } from '../../utils/colors';
 import { preloadImage } from '../../preload';
+import { Clouds } from '../../ui/Clouds';
+import { hexToNumber } from '../../utils/colors';
+import { TREE_COLLECTIONS } from './components';
+import { BirchTree } from './components/BirchTree';
 import { GroundTexture, RockTexture, RockTexture2, SkyTexture } from './textures';
 
 const logger = createLogger('ForestLocation');
@@ -30,11 +30,11 @@ export class ForestLocation implements Location.BaseClass {
   };
 
   private clouds!: Clouds;
-  
+
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
-  
+
   public preload(): void {
     preloadImage(this.scene, SkyTexture);
     preloadImage(this.scene, GroundTexture);
@@ -46,24 +46,24 @@ export class ForestLocation implements Location.BaseClass {
     SpruceTree.preload(this.scene);
     BirchTree.preload(this.scene);
   }
-  
+
   public getBounds(): Location.Bounds {
     return this.bounds;
   }
-  
+
   public create(): void {
     this.width = this.scene.cameras.main.width;
     this.height = this.scene.cameras.main.height;
     this.skyHeight = 188;
-    
+
     this.setupLocationBounds();
-    
+
     this.createBackground();
 
     this.clouds = new Clouds(this.scene, CLOUDS, this.scene.add.container(0, 0));
 
     this.createShop();
-    
+
     this.createTrees();
 
     if (DEBUG.LOCATION) {
@@ -84,7 +84,7 @@ export class ForestLocation implements Location.BaseClass {
   private createBackground(): void {
     // Создаем небо (на всю ширину экрана)
     const sky = this.scene.add.image(this.width / 2, this.skyHeight, SkyTexture.key);
-    
+
     sky.setOrigin(0.5);
     sky.setDepth(0);
 
@@ -93,7 +93,7 @@ export class ForestLocation implements Location.BaseClass {
     ground.setDisplaySize(this.width, this.skyHeight);
     ground.setOrigin(0.5);
     ground.setDepth(5); // Выше неба, но ниже игровых объектов
-    
+
     // Создаем статичный цветной фон под шейдером для участков, где нет травы
     const background = this.scene.add.graphics();
     background.fillStyle(FOREST_COLORS.grassColor, 1);
@@ -111,24 +111,24 @@ export class ForestLocation implements Location.BaseClass {
     rockTexture2.setDepth(2);
     rockTexture2.setOrigin(0.5, 0.5);
     rockTexture2.setDisplaySize(this.width, this.skyHeight);
-    
+
   }
-  
+
   public update(time: number, delta: number = 16): void {
     this.clouds.update(time, delta);
   }
-  
-  public destroy(): void {}
+
+  public destroy(): void { }
 
   private createTrees(): void {
-    INTERACTIVE_OBJECTS.forEach(({ id, type, position, scale, health }) => {   
+    INTERACTIVE_OBJECTS.forEach(({ id, type, position, scale, health }) => {
       const TreeClass = TREE_COLLECTIONS[type];
 
       const object = new TreeClass(this.scene, id, position[0], position[1], {
         scale,
         health
       });
-      
+
       if (this.scene instanceof GameplayScene) {
         const gameScene = this.scene as GameplayScene;
         gameScene.addDamageableObject(id, object);
@@ -139,7 +139,7 @@ export class ForestLocation implements Location.BaseClass {
   private createShop(): void {
     const shopX = 50;
     const shopY = this.skyHeight - 20;
-    
+
     const shop = new ForestShop(this.scene, shopX, shopY);
     if (this.scene instanceof GameplayScene) {
       const gameScene = this.scene as GameplayScene;

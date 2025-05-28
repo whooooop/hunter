@@ -2,7 +2,6 @@
   "name": "hunter",
   "version": "1.0.0",
   "scripts": {
-    "dev": "webpack serve --mode=development",
     "build:game": "pnpm --filter=@hunter/game build",
     "build:server": "pnpm --filter=@hunter/server build",
     "build:proto": "pnpm --filter=@hunter/storage-proto build",

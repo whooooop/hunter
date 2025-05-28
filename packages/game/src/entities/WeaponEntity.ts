@@ -4,7 +4,7 @@ import { WeaponFireEvent, WeaponReloadEvent } from '@hunter/storage-proto/dist/s
 import * as Phaser from 'phaser';
 import { MuzzleFlash } from '../fx/muzzleFlash/muzzleFlashFx';
 import { emitEvent } from "../GameEvents";
-import { GameplayScene } from "../scenes/GameplayScene/GameplayScene";
+import { GameplayScene } from "../scenes/GameplayScene";
 import { SettingsService } from '../services/SettingsService';
 import { fireEventCollection, reloadEventCollection } from '../storage/collections/events.collectio';
 import { AudioAssets, FireParams, Weapon } from "../types";

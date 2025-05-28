@@ -1,36 +1,36 @@
-import { StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
+import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
 import { ConnectionState, EnemyState, GameState, PlayerWeapon } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
-import { BaseShop } from '../../BaseShop';
-import { DISPLAY, GAMEOVER, VERSION } from '../../config';
-import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../../controllers';
-import { createEnemy } from '../../enemies';
-import { EnemyEntity } from '../../entities/EnemyEntity';
-import { PlayerEntity } from '../../entities/PlayerEntity';
-import { preloadFx } from '../../fx';
-import { emitEvent, offEvent, onEvent } from '../../GameEvents';
-import { getLevel, LevelId } from '../../levels';
-import { getLocation } from '../../locations';
-import { preloadProjectiles } from '../../projectiles';
-import { HintsService } from '../../services/HintsService';
-import { PlayerService } from '../../services/PlayerService';
-import { QuestService } from '../../services/QuestService';
-import { gameStorage } from '../../storage';
-import { connectionStateCollection } from '../../storage/collections/connectionState.collection';
-import { enemyStateCollection } from '../../storage/collections/enemyState.collection';
-import { gameStateCollection } from '../../storage/collections/gameState.collection';
-import { playerStateCollection } from '../../storage/collections/playerState.collection';
-import { playerWeaponCollection } from '../../storage/collections/playerWeapon.collection';
-import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../../types/';
-import { WaveInfo, WeaponStatus } from '../../ui';
-import { createLogger } from '../../utils/logger';
-import { GameOverView } from '../../views/gameover';
-import { LoadingView } from '../../views/loading/LoadingView';
-import { PauseView } from '../../views/pause';
-import { preloadWeapons } from '../../weapons';
-import { WeaponType } from '../../weapons/WeaponTypes';
-import { SceneKeys } from '../index';
-import { MenuSceneTypes } from '../MenuScene/MenuSceneTypes';
+import { BaseShop } from '../BaseShop';
+import { DISPLAY, GAMEOVER, VERSION } from '../config';
+import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../controllers';
+import { createEnemy } from '../enemies';
+import { EnemyEntity } from '../entities/EnemyEntity';
+import { PlayerEntity } from '../entities/PlayerEntity';
+import { preloadFx } from '../fx';
+import { emitEvent, offEvent, onEvent } from '../GameEvents';
+import { getLevel, LevelId } from '../levels';
+import { getLocation } from '../locations';
+import { preloadProjectiles } from '../projectiles';
+import { HintsService } from '../services/HintsService';
+import { PlayerService } from '../services/PlayerService';
+import { QuestService } from '../services/QuestService';
+import { gameStorage } from '../storage';
+import { connectionStateCollection } from '../storage/collections/connectionState.collection';
+import { enemyStateCollection } from '../storage/collections/enemyState.collection';
+import { gameStateCollection } from '../storage/collections/gameState.collection';
+import { playerStateCollection } from '../storage/collections/playerState.collection';
+import { playerWeaponCollection } from '../storage/collections/playerWeapon.collection';
+import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../types';
+import { WaveInfo, WeaponStatus } from '../ui';
+import { createLogger } from '../utils/logger';
+import { GameOverView } from '../views/gameover';
+import { LoadingView } from '../views/loading/LoadingView';
+import { PauseView } from '../views/pause';
+import { preloadWeapons } from '../weapons';
+import { WeaponType } from '../weapons/WeaponTypes';
+import { SceneKeys } from './index';
+import { MenuSceneTypes } from './MenuScene/MenuSceneTypes';
 
 const logger = createLogger('GameplayScene');
 
@@ -89,6 +89,8 @@ export class GameplayScene extends Phaser.Scene {
     });
     this.playerService = PlayerService.getInstance();
     this.questService = QuestService.getInstance();
+
+    (window as any)._r = registry;
   }
 
   init({ levelId }: GameplaySceneData) {
