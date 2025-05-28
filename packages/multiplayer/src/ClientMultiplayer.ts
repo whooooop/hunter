@@ -1,7 +1,7 @@
 import { ClientNamespace } from "./ClientNamespace";
-import { SyncCollection } from "./Collection";
+import { messageCounter, registry } from "./metrics";
 import { StorageSpace } from "./StorageSpace";
-import { BatchMessage, Message, MessageType, SyncCollectionEvents, SyncCollectionMessage } from "./sync";
+import { BatchMessage, Message, MessageType } from "./sync";
 import { NamespaceId } from "./types";
 
 interface ClientMultiplayerConfig {
@@ -10,7 +10,6 @@ interface ClientMultiplayerConfig {
 }
 
 export class ClientMultiplayer {
-  private collections: Map<string, SyncCollection<any>> = new Map();
   private websocket: WebSocket | null = null;
   private isConnected: boolean = false;
   private connectionPromise: Promise<void> | null = null;
@@ -24,6 +23,8 @@ export class ClientMultiplayer {
   public ping: number = 0;
 
   private namespace!: ClientNamespace;
+
+  public readonly metricsRegistry = registry;
 
   constructor(
     protected readonly config: ClientMultiplayerConfig
@@ -107,6 +108,8 @@ export class ClientMultiplayer {
         };
 
         this.websocket.onmessage = (event: MessageEvent) => {
+          messageCounter.inc({ direction: 'receive' });
+
           if (!(event.data instanceof ArrayBuffer)) {
             console.warn('Received non-ArrayBuffer message, ignoring:', event.data);
             return;
@@ -198,31 +201,10 @@ export class ClientMultiplayer {
     this.connectionPromise = null;
   }
 
-  private handleSyncCollectionMessage(payloadBytes: Uint8Array): void {
-    try {
-      const message = SyncCollectionMessage.decode(payloadBytes);
-      const collection = this.collections.get(message.collectionId);
-
-      if (!collection) {
-        console.error(`Received message for unknown collection: ${message.collectionId}`);
-        return;
-      }
-
-      if (message.event === SyncCollectionEvents.Add) {
-        collection.remoteAdd(message.itemId, message.payload);
-      } else if (message.event === SyncCollectionEvents.Update) {
-        collection.remoteUpdate(message.itemId, message.payload);
-      } else if (message.event === SyncCollectionEvents.Remove) {
-        collection.remoteRemove(message.itemId);
-      }
-    } catch (error) {
-      console.error(`Failed to decode sync collection message:`, error);
-    }
-  }
-
   public send(messageBytes: Uint8Array): void {
     if (this.websocket) {
       this.websocket.send(messageBytes);
+      messageCounter.inc({ direction: 'send' });
     } else {
       console.error('WebSocket is not connected');
     }

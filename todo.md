@@ -6,7 +6,7 @@
 - lock changing weapon while reload
 - mobile controls
 - pause (fire/reload)
-- machine shoot sound 
+- machine shoot sound
 - change weapon by keys
 
 - blood

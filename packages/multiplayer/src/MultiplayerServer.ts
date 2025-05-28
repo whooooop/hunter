@@ -3,6 +3,7 @@ import { parse } from "node:url";
 import Stream from "stream";
 import { WebSocket, WebSocketServer } from "ws";
 import { ClientSocket } from "./ClientSocket";
+import { connectionsGauge, messageCounter, namespaceGauge, registry } from "./metrics";
 import { ServerNamespace, ServerNamespaceConfig } from "./ServerNamespace";
 import { Message, MessageType } from './sync';
 import { ClientId, NamespaceId } from "./types";
@@ -22,6 +23,8 @@ export class MultiplayerServer<Session extends object = any> {
   private sockets = new Map<ClientId, ClientSocket<Session>>();
   private clientNamespaceMap = new Map<ClientId, NamespaceId>();
   private namespaces = new Map<NamespaceId, ServerNamespace<Session>>();
+
+  public readonly metricsRegistry = registry;
 
   constructor(
     private readonly config: Config<Session>
@@ -83,6 +86,7 @@ export class MultiplayerServer<Session extends object = any> {
     if (this.config.onNamespaceCreated) {
       await this.config.onNamespaceCreated(this, namespace);
     }
+    namespaceGauge.set(this.namespaces.size);
     return namespace;
   }
 
@@ -94,6 +98,9 @@ export class MultiplayerServer<Session extends object = any> {
     this.sockets.set(clientSocket.id, clientSocket);
     this.clientNamespaceMap.set(clientSocket.id, namespaceId);
 
+    connectionsGauge.set(this.sockets.size);
+    namespaceGauge.set(this.namespaces.size);
+
     clientSocket.ws.on('message', (message: Buffer) => this.handleMessage(clientSocket.id, message));
     clientSocket.ws.on('close', (code, reason) => this.disconnect(clientSocket.id));
     clientSocket.ws.on('error', (error) => {
@@ -102,6 +109,8 @@ export class MultiplayerServer<Session extends object = any> {
   }
 
   private handleMessage(clientId: ClientId, messageBytes: Buffer) {
+    messageCounter.inc({ direction: 'receive' });
+
     if (messageBytes.length < 1) {
       console.warn(`Received empty message from ${clientId}. Ignoring.`);
       return;
@@ -123,6 +132,7 @@ export class MultiplayerServer<Session extends object = any> {
   }
 
   public async disconnect(clientId: ClientId) {
+    connectionsGauge.set(this.sockets.size);
     console.log(`Client ${clientId} disconnected.`);
     const clientSocket = this.sockets.get(clientId)!;
 
@@ -152,6 +162,7 @@ export class MultiplayerServer<Session extends object = any> {
   public send(clientId: string, bytes: Uint8Array) {
     const clientSocket = this.sockets.get(clientId);
     if (clientSocket && clientSocket.ws.readyState === WebSocket.OPEN) {
+      messageCounter.inc({ direction: 'send' });
       clientSocket.ws.send(bytes);
     }
   }
