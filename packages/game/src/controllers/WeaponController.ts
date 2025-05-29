@@ -2,10 +2,11 @@ import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer/dist/cli
 import { PlayerWeapon, WeaponState } from "@hunter/storage-proto/dist/storage";
 import { PlayerEntity } from "../entities/PlayerEntity";
 import { WeaponEntity } from "../entities/WeaponEntity";
-import { onEvent } from "../GameEvents";
+import { offEvent, onEvent } from "../GameEvents";
 import { playerWeaponCollection } from "../storage/collections/playerWeapon.collection";
 import { weaponStateCollection } from "../storage/collections/weaponState.collection";
-import { Player, ShopEvents, WeaponPurchasedPayload } from "../types";
+import { ShopEvents, WeaponPurchasedPayload } from "../types";
+import { Controls } from "../types/ControlsTypes";
 import { createLogger } from "../utils/logger";
 import { generateId } from "../utils/stringGenerator";
 import { createWeapon } from "../weapons";
@@ -25,8 +26,8 @@ export class WeaponController {
     private readonly playerId: string
   ) {
     onEvent(scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
-    onEvent(scene, Player.Events.ChangeWeapon.Local, this.handleChangeWeapon, this);
-
+    onEvent(scene, Controls.Events.NextWeapon.Event, this.handleNextWeapon, this);
+    onEvent(scene, Controls.Events.PrevWeapon.Event, this.handlePrevWeapon, this);
     this.storage.on<WeaponState>(weaponStateCollection, 'Add', this.addPlayerWeapon.bind(this));
     this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Add', this.updatePlayerCurrentWeapon.bind(this));
     this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Update', this.updatePlayerCurrentWeapon.bind(this));
@@ -56,7 +57,19 @@ export class WeaponController {
     this.weapons.set(weaponId, weaponEntity);
   }
 
-  private handleChangeWeapon({ playerId, direction }: Player.Events.ChangeWeapon.Payload): void {
+  private handleNextWeapon({ playerId }: Controls.Events.NextWeapon.Payload): void {
+    const currentWeaponId = this.getCurrentWeapon(playerId);
+    if (!currentWeaponId) return;
+    this.changeWeapon(playerId, 1);
+  }
+
+  private handlePrevWeapon({ playerId }: Controls.Events.PrevWeapon.Payload): void {
+    const currentWeaponId = this.getCurrentWeapon(playerId);
+    if (!currentWeaponId) return;
+    this.changeWeapon(playerId, -1);
+  }
+
+  private changeWeapon(playerId: string, direction: number): void {
     const currentWeaponId = this.getCurrentWeapon(playerId);
     const playerWeapons = Array.from(this.playerWeapons.get(playerId)?.keys() || []);
 
@@ -75,10 +88,6 @@ export class WeaponController {
     this.storage.getCollection<PlayerWeapon>(playerWeaponCollection)!.updateItem(playerId, {
       weaponId: nextWeapon
     });
-  }
-
-  private getPlayerWeapon(playerId: string, weaponType: WeaponType): WeaponEntity | undefined {
-    return this.playerWeapons.get(playerId)?.get(weaponType);
   }
 
   public getWeapon(weaponId: string): WeaponEntity {
@@ -121,7 +130,8 @@ export class WeaponController {
   }
 
   public destroy(): void {
-    // offEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
-    // offEvent(this.scene, Player.Events.ChangeWeapon.Local, this.handleChangeWeapon, this);
+    offEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
+    offEvent(this.scene, Controls.Events.NextWeapon.Event, this.handleNextWeapon, this);
+    offEvent(this.scene, Controls.Events.PrevWeapon.Event, this.handlePrevWeapon, this);
   }
 }

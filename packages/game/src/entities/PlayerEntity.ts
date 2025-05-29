@@ -3,10 +3,12 @@ import { PlayerJumpEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import JumpAudioUrl from '../assets/audio/jump.mp3';
 import { MotionController2 } from '../controllers/MotionController2';
+import { offEvent, onEvent } from '../GameEvents';
 import { SettingsService } from '../services/SettingsService';
 import { jumpEventCollection } from '../storage/collections/events.collectio';
 import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture } from '../textures/PlayerTexture';
 import { Player } from '../types';
+import { Controls } from '../types/ControlsTypes';
 import { Location } from '../types/Location';
 import { createLogger } from '../utils/logger';
 import { generateId } from '../utils/stringGenerator';
@@ -110,6 +112,11 @@ export class PlayerEntity {
         this.jumpAction();
       }
     });
+
+    onEvent(this.scene, Controls.Events.Fire.Event, this.handleFire, this);
+    onEvent(this.scene, Controls.Events.Reload.Event, this.handleReload, this);
+    onEvent(this.scene, Controls.Events.Jump.Event, this.handleJump, this);
+    onEvent(this.scene, Controls.Events.Move.Event, this.handleMove, this);
   }
 
   public getId(): string {
@@ -118,6 +125,38 @@ export class PlayerEntity {
 
   public getPosition(): [number, number] {
     return [this.body.x, this.body.y];
+  }
+
+  private handleMove(payload: Controls.Events.Move.Payload): void {
+    if (payload.playerId !== this.id) {
+      return;
+    }
+    this.setMove(payload.moveX, payload.moveY);
+  }
+
+  private handleFire(payload: Controls.Events.Fire.Payload): void {
+    if (payload.playerId !== this.id) {
+      return;
+    }
+    if (payload.active) {
+      this.fireOn();
+    } else {
+      this.fireOff();
+    }
+  }
+
+  private handleReload(payload: Controls.Events.Reload.Payload): void {
+    if (payload.playerId !== this.id) {
+      return;
+    }
+    this.reload();
+  }
+
+  private handleJump(payload: Controls.Events.Jump.Payload): void {
+    if (payload.playerId !== this.id) {
+      return;
+    }
+    this.jump();
   }
 
   public setWeapon(weapon: WeaponEntity): void {
@@ -276,6 +315,10 @@ export class PlayerEntity {
     this.container.destroy();
     this.body.destroy();
     this.motionController.destroy();
-    // offEvent(this.scene, Player.Events.State.Remote, this.handlePlayerStateRemote, this);
+
+    offEvent(this.scene, Controls.Events.Fire.Event, this.handleFire, this);
+    offEvent(this.scene, Controls.Events.Reload.Event, this.handleReload, this);
+    offEvent(this.scene, Controls.Events.Jump.Event, this.handleJump, this);
+    offEvent(this.scene, Controls.Events.Move.Event, this.handleMove, this);
   }
 } 

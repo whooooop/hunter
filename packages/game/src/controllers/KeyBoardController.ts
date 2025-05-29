@@ -1,7 +1,10 @@
 import { StorageSpace } from "@hunter/multiplayer/dist/StorageSpace";
-import { PlayerEntity } from "../entities/PlayerEntity";
+import VirtualJoystick from 'phaser3-rex-plugins/plugins/virtualjoystick.js';
+import { DISPLAY } from "../config";
 import { emitEvent } from "../GameEvents";
-import { Game, Player } from "../types/";
+import { Game } from "../types/";
+import { Controls } from "../types/ControlsTypes";
+import { hexToNumber } from "../utils/colors";
 
 export class KeyBoardController {
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -11,13 +14,17 @@ export class KeyBoardController {
   private nextWeaponKey: Phaser.Input.Keyboard.Key;
   private prevWeaponKey: Phaser.Input.Keyboard.Key;
   private pauseKey: Phaser.Input.Keyboard.Key;
+  private joystick!: VirtualJoystick;
+  private joystickRadius: number = 100;
 
   private changeWeaponKeyDisabled: boolean = false;
   private pauseKeyDisabled: boolean = false;
+  private jumpAreaDisabled: boolean = false;
+
+  private isMobile: boolean = true;
 
   constructor(
     private readonly scene: Phaser.Scene,
-    private readonly players: Map<string, PlayerEntity>,
     private readonly playerId: string,
     private readonly storage: StorageSpace
   ) {
@@ -28,6 +35,99 @@ export class KeyBoardController {
     this.prevWeaponKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     this.jumpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.pauseKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+
+    if (this.isMobile) {
+      this.createMobileControls();
+    }
+  }
+
+  private createMobileControls(): void {
+    // joystick
+
+    // fire
+    // reload
+    // jump
+    // next weapon
+    // prev weapon
+    // pause
+    // shop
+
+
+
+
+
+    // fire area rectangle
+    const fireAreaOffsetY = DISPLAY.HEIGHT / 2;
+    const fireAreaOffsetX = DISPLAY.WIDTH / 1.5;
+    const fireArea = this.scene.add.rectangle(fireAreaOffsetX, fireAreaOffsetY, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - fireAreaOffsetY, hexToNumber('#343434'), 0.4).setOrigin(0, 0);
+    fireArea.setDepth(1000);
+    fireArea.setInteractive();
+    fireArea.on('pointerdown', () => {
+      emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: true });
+    });
+    fireArea.on('pointerup', () => {
+      emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: false });
+    });
+
+
+    // reload area rectangle
+    // const reloadAreaOffsetY = DISPLAY.HEIGHT / 2;
+    // const reloadAreaOffsetX = DISPLAY.WIDTH / 1.5;
+    // const reloadArea = this.scene.add.rectangle(reloadAreaOffsetX, reloadAreaOffsetY, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - reloadAreaOffsetY, hexToNumber('#343434'), 0.4).setOrigin(0, 0);
+    // reloadArea.setDepth(1000);
+    // reloadArea.setInteractive();
+    // reloadArea.on('pointerdown', () => {
+    //   console.log('reload area clicked');
+    // });
+
+
+    // jump area rectangle
+    // const jumpAreaOffsetY = DISPLAY.HEIGHT / 2;
+    // const jumpAreaOffsetX = DISPLAY.WIDTH / 1.5;
+    // const jumpArea = this.scene.add.rectangle(jumpAreaOffsetX, jumpAreaOffsetY, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - jumpAreaOffsetY, hexToNumber('#343434'), 0.4).setOrigin(0, 0);
+    // jumpArea.setDepth(1000);
+    // jumpArea.setInteractive();
+    // jumpArea.on('pointerdown', () => {
+    //   console.log('jump area clicked');
+    // });
+
+
+    // next weapon area rectangle
+
+    // right area rectangle
+    // const rightArea = this.scene.add.rectangle(0, 0, 100, 100, 0x000000, 1);
+    // rightArea.setDepth(1000);
+
+    // left area rectangle
+    const moveAreaOffsetY = 250;
+    const moveArea = this.scene.add.rectangle(0, moveAreaOffsetY, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - moveAreaOffsetY, 0x000000, 0.3).setOrigin(0, 0);
+    moveArea.setDepth(1000);
+    moveArea.setInteractive();
+    moveArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      this.joystick.visible = true;
+      this.joystick.setPosition(pointer.x, pointer.y);
+    });
+    moveArea.on('pointerup', () => {
+      this.joystick.visible = false;
+    });
+
+    this.joystick = new VirtualJoystick(this.scene, {
+      x: 200,
+      y: 500,
+      radius: this.joystickRadius,
+      forceMin: 0.1,
+    });
+    this.joystick.visible = false;
+
+    this.joystick.on('pointerup', () => {
+      this.joystick.visible = false;
+    });
+
+    // @ts-ignore
+    this.joystick.base.depth = 1000;
+    // @ts-ignore
+    this.joystick.thumb.depth = 1000;
+    console.log(this.joystick);
   }
 
   public destroy(): void {
@@ -37,12 +137,10 @@ export class KeyBoardController {
     this.nextWeaponKey.destroy();
     this.prevWeaponKey.destroy();
     this.pauseKey.destroy();
+    this.joystick.destroy();
   }
 
   public update(time: number, delta: number): void {
-    if (!this.getPlayer()) {
-      // return;
-    }
     this.handleMovement(time, delta);
     this.handleJump(time, delta);
     this.handleFire(time, delta);
@@ -54,19 +152,24 @@ export class KeyBoardController {
   private handleMovement(time: number, delta: number): void {
     const move = { x: 0, y: 0 };
 
-    if (this.cursors.left.isDown) {
-      move.x = -1;
-    } else if (this.cursors.right.isDown) {
-      move.x = 1;
+    if (this.isMobile) {
+      move.x = Math.sign(this.joystick.forceX) * Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius;
+      move.y = Math.sign(this.joystick.forceY) * Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius;
+    } else {
+      if (this.cursors.left.isDown) {
+        move.x = -1;
+      } else if (this.cursors.right.isDown) {
+        move.x = 1;
+      }
+
+      if (this.cursors.up.isDown) {
+        move.y = -1;
+      } else if (this.cursors.down.isDown) {
+        move.y = 1;
+      }
     }
 
-    if (this.cursors.up.isDown) {
-      move.y = -1;
-    } else if (this.cursors.down.isDown) {
-      move.y = 1;
-    }
-
-    this.getPlayer()?.setMove(move.x, move.y);
+    emitEvent(this.scene, Controls.Events.Move.Event, { playerId: this.playerId, moveX: move.x, moveY: move.y });
   }
 
   private handlePause(time: number, delta: number): void {
@@ -83,10 +186,12 @@ export class KeyBoardController {
       if (this.changeWeaponKeyDisabled) {
         return;
       }
-      emitEvent(this.scene, Player.Events.ChangeWeapon.Local, {
-        playerId: this.playerId,
-        direction: this.nextWeaponKey.isDown ? 1 : -1
-      });
+      const direction = this.nextWeaponKey.isDown ? 1 : -1;
+      if (direction === 1) {
+        emitEvent(this.scene, Controls.Events.NextWeapon.Event, { playerId: this.playerId });
+      } else {
+        emitEvent(this.scene, Controls.Events.PrevWeapon.Event, { playerId: this.playerId });
+      }
       this.changeWeaponKeyDisabled = true;
     } else {
       this.changeWeaponKeyDisabled = false;
@@ -94,27 +199,25 @@ export class KeyBoardController {
   }
 
   private handleJump(time: number, delta: number): void {
-    if (this.jumpKey.isDown) {
-      this.getPlayer()?.jump();
+    if (this.jumpKey.isDown && !this.jumpAreaDisabled) {
+      emitEvent(this.scene, Controls.Events.Jump.Event, { playerId: this.playerId });
+      this.jumpAreaDisabled = true;
+    } else if (!this.jumpKey.isDown) {
+      this.jumpAreaDisabled = false;
     }
   }
 
   private handleFire(time: number, delta: number): void {
     if (this.fireKey.isDown) {
-      this.getPlayer()?.fireOn();
+      emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: true });
     } else {
-      this.getPlayer()?.fireOff();
+      emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: false });
     }
   }
 
   private handleReload(time: number, delta: number): void {
     if (this.reloadKey.isDown) {
-      this.getPlayer()?.reload();
+      emitEvent(this.scene, Controls.Events.Reload.Event, { playerId: this.playerId });
     }
   }
-
-  private getPlayer(): PlayerEntity | null {
-    return this.players.get(this.playerId) || null;
-  }
-
 }

@@ -17,6 +17,8 @@
 - server remove games
 - win popup
 
+- sound death
+
 - config waves
 - config weapons
 - config score
