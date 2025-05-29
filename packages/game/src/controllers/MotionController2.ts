@@ -92,6 +92,12 @@ export class MotionController2 {
     }
   }
 
+  public decreaseSpeed(percent: number): void {
+    this.moveX *= 1 - percent;
+    this.moveY *= 1 - percent;
+    this.updateVelocity();
+  }
+
   public setState(state: SyncCollectionRecord<{ x: number, y: number, vx: number, vy: number }>): void {
     this.state = state;
   }
@@ -112,22 +118,25 @@ export class MotionController2 {
   public setMove(moveX: number, moveY: number): void {
     this.moveX = moveX;
     this.moveY = moveY;
+    this.updateVelocity();
+  }
 
+  private updateVelocity(): void {
     if (!this.body) return;
 
     // Нормализуем вектор направления, чтобы диагональное движение не было быстрее
-    const moveVector = new Phaser.Math.Vector2(moveX, moveY).normalize();
+    const moveVector = new Phaser.Math.Vector2(this.moveX, this.moveY).normalize();
     // Устанавливаем ускорение на физическое тело
     // Если moveX/moveY = 0, ускорение будет 0, и drag замедлит объект
-    this.targetMaxVelocityX = Math.abs(moveX) * this.options.maxVelocityX;
-    this.targetMaxVelocityY = Math.abs(moveY) * this.options.maxVelocityY;
+    this.targetMaxVelocityX = Math.abs(this.moveX) * this.options.maxVelocityX;
+    this.targetMaxVelocityY = Math.abs(this.moveY) * this.options.maxVelocityY;
 
     this.body.setAcceleration(moveVector.x * this.options.acceleration, moveVector.y * this.options.acceleration);
 
     // Сохраняем направление для других нужд (например, оружие)
-    if (moveX < 0) {
+    if (this.moveX < 0) {
       this.direction = -1;
-    } else if (moveX > 0) {
+    } else if (this.moveX > 0) {
       this.direction = 1;
     } else {
       // Если движение по X прекратилось, сохраняем последнее направление

@@ -30,6 +30,7 @@ export class EnemyEntity implements Damageable.Entity {
   private timeScaleTarget: number = 1;
 
   private bounds: Location.Bounds | null = null;
+  protected wounded: boolean = false;
 
   private trackEntry: TrackEntry | null = null;
   private damageableController: DamageableController;
@@ -142,6 +143,12 @@ export class EnemyEntity implements Damageable.Entity {
       const score = this.calculateScore(damage, result);
       this.addScore(score, damage.playerId);
 
+      if (this.damageableController.getHealthPercent() < 0.3 && !this.wounded) {
+        this.wounded = true;
+        this.motionController.decreaseSpeed(0.3);
+        this.setAnimation(Enemy.Animation.WOUNDED);
+      }
+
       emitEvent(this.scene, Game.Events.Stat.Local, {
         event: Game.Events.Stat.EnemyDamageEvent.Event,
         data: {
@@ -220,20 +227,18 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   protected setAnimation(animation: Enemy.Animation, loop: boolean = true): void {
-    this.storage.getCollection<EnemyAnimationEvent>(enemyAnimationEvent)!.addItem(generateId(), {
-      enemyId: this.id,
-      animation,
-      loop,
-    });
-    this.playAnimation(animation, loop);
+    if (this.config.spine?.animations[animation] && this.trackEntry?.animation?.name !== animation) {
+      this.storage.getCollection<EnemyAnimationEvent>(enemyAnimationEvent)!.addItem(generateId(), {
+        enemyId: this.id,
+        animation,
+        loop,
+      });
+      this.playAnimation(animation, loop);
+    }
   }
 
-  protected playAnimation(animation: Enemy.Animation, loop: boolean = true): void {
-    if (this.config.spine?.animations[animation]) {
-      this.trackEntry = this.spineObject.animationState.setAnimation(0, animation, loop);
-    } else {
-      logger.warn('Animation not found', animation);
-    }
+  private playAnimation(animation: Enemy.Animation, loop: boolean = true): void {
+    this.trackEntry = this.spineObject.animationState.setAnimation(0, animation, loop);
   }
 
   setAnimationSpeedScale(scale: number): void {
@@ -248,6 +253,13 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   protected async onDeath(): Promise<void> {
+    // Создаем эффект разлетающихся частей через BloodController
+    const position = this.motionController.getPosition();
+    emitEvent(this.scene, Blood.Events.DeathFountain.Local, {
+      x: position.x,
+      y: position.y
+    });
+
     await this.onDeathAnimation();
     emitEvent(this.scene, Enemy.Events.Death.Local, {
       id: this.id,

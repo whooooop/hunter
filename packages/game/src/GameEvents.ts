@@ -20,6 +20,7 @@ interface EventPayloadMap {
   // Blood
   [Blood.Events.BloodSplash.Local]: Blood.Events.BloodSplash.Payload;
   [Blood.Events.ScreenBloodSplash.Local]: Blood.Events.ScreenBloodSplash.Payload;
+  [Blood.Events.DeathFountain.Local]: Blood.Events.DeathFountain.Payload;
 
   // Shop
   [ShopEvents.WeaponPurchasedEvent]: WeaponPurchasedPayload;

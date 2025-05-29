@@ -76,7 +76,6 @@ export class GameplayScene extends Phaser.Scene {
   private playTime: number = 0;
   private kills: number = 0;
 
-  private isPause: boolean = false;
   private isGameOver: boolean = false;
   private isMultiplayer: boolean = false;
 
@@ -119,7 +118,6 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   clear(): void {
-    this.isPause = false;
     this.isGameOver = false;
     this.kills = 0;
     this.location.destroy();
@@ -397,7 +395,7 @@ export class GameplayScene extends Phaser.Scene {
     this.projectileController.update(time, delta);
     this.waveInfo.update(time, delta);
 
-    if (!this.isPause) {
+    if (!this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game')?.paused) {
       this.playTime += delta;
     }
   }
