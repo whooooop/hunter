@@ -71,11 +71,13 @@ export class KeyBoardController {
     fireArea.setInteractive();
     fireArea.on('pointerdown', () => {
       emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: true });
+      if (window.navigator.vibrate) {
+        window.navigator.vibrate(100);
+      }
     });
     fireArea.on('pointerup', () => {
       emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: false });
     });
-
 
     // reload area rectangle
     // const reloadAreaOffsetY = DISPLAY.HEIGHT / 2;
