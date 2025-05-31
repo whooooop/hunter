@@ -2,6 +2,7 @@ import { StorageSpace } from "@hunter/multiplayer/dist/StorageSpace";
 import VirtualJoystick from 'phaser3-rex-plugins/plugins/virtualjoystick.js';
 import { DISPLAY } from "../config";
 import { emitEvent } from "../GameEvents";
+import { JoystickBaseTexture, JoystickThumbTexture, preloadJoystickTextures } from "../textures/joystick";
 import { Game } from "../types/";
 import { Controls } from "../types/ControlsTypes";
 import { hexToNumber } from "../utils/colors";
@@ -22,6 +23,11 @@ export class KeyBoardController {
   private jumpAreaDisabled: boolean = false;
 
   private isMobile: boolean = true;
+
+
+  public static preload(scene: Phaser.Scene): void {
+    preloadJoystickTextures(scene);
+  }
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -100,7 +106,7 @@ export class KeyBoardController {
 
     // left area rectangle
     const moveAreaOffsetY = 250;
-    const moveArea = this.scene.add.rectangle(0, moveAreaOffsetY, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - moveAreaOffsetY, 0x000000, 0.3).setOrigin(0, 0);
+    const moveArea = this.scene.add.rectangle(0, moveAreaOffsetY, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - moveAreaOffsetY, 0x000000, 0).setOrigin(0, 0);
     moveArea.setDepth(1000);
     moveArea.setInteractive();
     moveArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -111,23 +117,21 @@ export class KeyBoardController {
       this.joystick.visible = false;
     });
 
+    const joystickBase = this.scene.add.image(0, 0, JoystickBaseTexture.key).setScale(0.7).setAlpha(0.5).setDepth(1000);
+    const joystickThumb = this.scene.add.image(0, 0, JoystickThumbTexture.key).setScale(0.7).setAlpha(0.5).setDepth(1000);
+
     this.joystick = new VirtualJoystick(this.scene, {
       x: 200,
       y: 500,
       radius: this.joystickRadius,
+      base: joystickBase,
+      thumb: joystickThumb,
       forceMin: 0.1,
     });
-    this.joystick.visible = false;
 
     this.joystick.on('pointerup', () => {
       this.joystick.visible = false;
     });
-
-    // @ts-ignore
-    this.joystick.base.depth = 1000;
-    // @ts-ignore
-    this.joystick.thumb.depth = 1000;
-    console.log(this.joystick);
   }
 
   public destroy(): void {
@@ -152,7 +156,7 @@ export class KeyBoardController {
   private handleMovement(time: number, delta: number): void {
     const move = { x: 0, y: 0 };
 
-    if (this.isMobile) {
+    if (this.joystick.visible) {
       move.x = Math.sign(this.joystick.forceX) * Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius;
       move.y = Math.sign(this.joystick.forceY) * Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius;
     } else {

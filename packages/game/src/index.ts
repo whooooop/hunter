@@ -37,6 +37,9 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: DEBUG.PHYSICS
     }
   },
+  input: {
+    activePointers: 2,
+  },
   plugins: {
     scene: [{
       key: "spine.SpinePlugin",

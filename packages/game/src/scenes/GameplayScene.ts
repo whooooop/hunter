@@ -108,6 +108,7 @@ export class GameplayScene extends Phaser.Scene {
 
     PlayerEntity.preload(this);
     BloodController.preload(this);
+    KeyBoardController.preload(this);
     WaveController.preloadEnemies(this, this.levelConfig.waves());
     PauseView.preload(this);
     GameOverView.preload(this);
