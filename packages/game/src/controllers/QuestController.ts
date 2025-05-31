@@ -1,10 +1,11 @@
 import * as Phaser from 'phaser';
-import { createLogger, LogLevel } from '../utils/logger';
+import { DEBUG } from '../config';
 import { offEvent, onEvent } from '../GameEvents';
-import { Quest, Bank, Game } from '../types';
+import { LevelId } from '../levels';
 import { BankService } from '../services/BankService';
 import { QuestService } from '../services/QuestService';
-import { LevelId } from '../levels';
+import { Bank, Game, Quest } from '../types';
+import { createLogger, LogLevel } from '../utils/logger';
 
 const logger = createLogger('QuestController', {
   minLevel: LogLevel.DEBUG,
@@ -25,7 +26,7 @@ export class QuestController {
     this.bankService = BankService.getInstance();
     this.questService = QuestService.getInstance();
     this.levelId = levelId;
-    
+
     onEvent(scene, Game.Events.Stat.Local, this.handleGameEvent, this);
 
     this.init(levelId, questId);
@@ -33,7 +34,7 @@ export class QuestController {
 
   private async init(levelId: LevelId, questId: string) {
     const result = await this.questService.getQuestWithTasksState(levelId, questId);
-    if (result) { 
+    if (result) {
       this.setActiveQuest(result.quest, result.tasks);
     }
   }
@@ -43,7 +44,9 @@ export class QuestController {
    * @param questConfig Конфигурация квеста или null для сброса.
    */
   private setActiveQuest(questConfig: Quest.Config | null, tasksState: Record<string, Quest.TaskState>): void {
-    logger.info(`Setting active quest: ${questConfig?.id ?? 'None'}`);
+    if (DEBUG.QIEST) {
+      logger.info(`Setting active quest: ${questConfig?.id ?? 'None'}`);
+    }
     this.activeQuest = questConfig;
     this.taskProgress.clear();
     this.completedTasks.clear();
@@ -64,7 +67,9 @@ export class QuestController {
    * @param eventData
    */
   private handleGameEvent({ event, data }: Game.Events.Stat.Payload): void {
-    logger.debug(`Handling game event: ${event}`, data);
+    if (DEBUG.QIEST) {
+      logger.debug(`Handling game event: ${event}`, data);
+    }
 
     if (!this.activeQuest) {
       return;
@@ -91,7 +96,9 @@ export class QuestController {
             if (typeof eventValue === 'number') {
               newProgress += eventValue;
               targetValue = task.value; // Цель - накопить task.value
-              logger.debug(`Task '${task.id}' accumulating value by ${eventValue}. Progress: ${newProgress}/${targetValue}`);
+              if (DEBUG.QIEST) {
+                logger.debug(`Task '${task.id}' accumulating value by ${eventValue}. Progress: ${newProgress}/${targetValue}`);
+              }
             } else {
               logger.warn(`Task '${task.id}' requires numeric value for key '${task.valueKey}', but got:`, eventValue);
               continue; // Пропускаем обновление, если значение некорректно
@@ -100,7 +107,9 @@ export class QuestController {
             // Случай 2: Подсчет событий
             newProgress += 1;
             targetValue = task.count; // Цель - достичь task.count
-            logger.debug(`Task '${task.id}' incrementing count. Progress: ${newProgress}/${targetValue}`);
+            if (DEBUG.QIEST) {
+              logger.debug(`Task '${task.id}' incrementing count. Progress: ${newProgress}/${targetValue}`);
+            }
           } else {
             // Некорректная конфигурация задачи (например, count 0 или -1 без value/valueKey)
             logger.warn(`Task '${task.id}' has invalid configuration (count: ${task.count}, value: ${task.value}, valueKey: ${task.valueKey}). Skipping progress update.`);
@@ -155,7 +164,7 @@ export class QuestController {
           case '<': if (!(eventValue < value)) return false; break;
           case '>=': if (!(eventValue >= value)) return false; break;
           case '<=': if (!(eventValue <= value)) return false; break;
-          default: 
+          default:
             logger.warn(`Unknown operator '${numericCondition.operator}' for condition key '${condition.key}'`);
             return false; // Неизвестный оператор
         }
@@ -167,7 +176,9 @@ export class QuestController {
       }
     }
     // Если все условия прошли проверку
-    logger.debug('All conditions met for event', eventData);
+    if (DEBUG.QIEST) {
+      logger.debug('All conditions met for event', eventData);
+    }
     return true;
   }
 
@@ -179,7 +190,9 @@ export class QuestController {
     if (this.completedTasks.has(task.id)) return;
 
     this.completedTasks.add(task.id);
-    logger.info(`Task '${task.id}' completed!`);
+    if (DEBUG.QIEST) {
+      logger.info(`Task '${task.id}' completed!`);
+    }
 
 
     if (task.reward.currency === Bank.Currency.Star) {
@@ -194,7 +207,9 @@ export class QuestController {
    * @param quest Завершенный квест.
    */
   private handleQuestCompletion(quest: Quest.Config): void {
-    logger.info(`Quest '${quest.id}' completed! All tasks finished.`);
+    if (DEBUG.QIEST) {
+      logger.info(`Quest '${quest.id}' completed! All tasks finished.`);
+    }
     this.questService.setQuestCompleted(this.levelId, quest.id);
   }
 

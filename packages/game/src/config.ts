@@ -19,6 +19,7 @@ export const DEBUG = {
   LOCATION: false,
   SHOP: false,
   PROJECTILES: false,
+  QIEST: false,
 };
 
 export const GAMEOVER = true;

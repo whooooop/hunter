@@ -271,8 +271,6 @@ export class EnemyEntity implements Damageable.Entity {
     // min Damage = 100
 
     const particleCount = Math.max(0, Math.min(200, Math.floor(Math.max(damage - 100, 0) / 100 * 200)));
-    console.log('particleCount', particleCount);
-    console.log('damage', damage);
 
     emitEvent(this.scene, Blood.Events.DeathFountain.Local, {
       x: position.x,

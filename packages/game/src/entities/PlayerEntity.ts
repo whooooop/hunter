@@ -98,8 +98,8 @@ export class PlayerEntity {
     this.rightLeg.setRotation(0);
 
     this.motionController = new MotionController2(scene, this.body, {
-      acceleration: 800,
-      deceleration: 900,
+      acceleration: 850,
+      deceleration: 950,
       friction: 800,
       maxVelocityX: 250,
       maxVelocityY: 220,
