@@ -1,8 +1,7 @@
 import * as Phaser from 'phaser';
 import { emitEvent, onEvent } from '../GameEvents';
 import { SettingsService } from '../services/SettingsService';
-import { Blood } from '../types/BloodTypes';
-import { Decals } from '../types/decals';
+import { Blood, Decals, Location } from '../types';
 import { createLogger } from '../utils/logger';
 
 const settingsService = SettingsService.getInstance();
@@ -66,12 +65,13 @@ const defaultScreenBloodOptions: Blood.ScreenBloodSplashConfig = {
 };
 
 export class BloodController {
-  private scene: Phaser.Scene;
   private bloodParticles: Phaser.GameObjects.Sprite[] = [];
   private bloodPools: Phaser.GameObjects.Container[] = [];
 
-  constructor(scene: Phaser.Scene) {
-    this.scene = scene;
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly bounds: Location.Bounds
+  ) {
 
     // setTimeout(() => {
     //   this.createBloodPool(300, 300, 50);
@@ -398,7 +398,7 @@ export class BloodController {
       // Частицы летящие вниз по экрану приземляются "ближе" (ниже по Y)
       const baseGroundLevel = y; // Уровень земли врага
       const directionY = Math.sin(angle); // -1 (вверх) до +1 (вниз)
-      const landingY = baseGroundLevel + (directionY * settings.groundVariation!) + Phaser.Math.FloatBetween(-settings.randomness!.y, settings.randomness!.y);
+      const landingY = Math.max(baseGroundLevel + (directionY * settings.groundVariation!) + Phaser.Math.FloatBetween(-settings.randomness!.y, settings.randomness!.y), this.bounds.top);
 
       // УБИРАЕМ искусственное ограничение дистанции - пусть частицы летят естественно
       const finalLandingX = landingX;

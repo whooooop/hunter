@@ -77,4 +77,7 @@ message EnemyAnimationEvent {
   bool loop = 3;
 }
 
-message EnemyDeathEvent {}
+message EnemyDeathEvent {
+  int32 damage = 1;
+  string target = 2;
+}

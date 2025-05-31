@@ -85,6 +85,8 @@ export interface EnemyAnimationEvent {
 }
 
 export interface EnemyDeathEvent {
+  damage: number;
+  target: string;
 }
 
 function createBaseGameState(): GameState {
@@ -1230,11 +1232,17 @@ export const EnemyAnimationEvent: MessageFns<EnemyAnimationEvent> = {
 };
 
 function createBaseEnemyDeathEvent(): EnemyDeathEvent {
-  return {};
+  return { damage: 0, target: "" };
 }
 
 export const EnemyDeathEvent: MessageFns<EnemyDeathEvent> = {
-  encode(_: EnemyDeathEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(message: EnemyDeathEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.damage !== 0) {
+      writer.uint32(8).int32(message.damage);
+    }
+    if (message.target !== "") {
+      writer.uint32(18).string(message.target);
+    }
     return writer;
   },
 
@@ -1245,6 +1253,22 @@ export const EnemyDeathEvent: MessageFns<EnemyDeathEvent> = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.damage = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.target = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1254,20 +1278,31 @@ export const EnemyDeathEvent: MessageFns<EnemyDeathEvent> = {
     return message;
   },
 
-  fromJSON(_: any): EnemyDeathEvent {
-    return {};
+  fromJSON(object: any): EnemyDeathEvent {
+    return {
+      damage: isSet(object.damage) ? globalThis.Number(object.damage) : 0,
+      target: isSet(object.target) ? globalThis.String(object.target) : "",
+    };
   },
 
-  toJSON(_: EnemyDeathEvent): unknown {
+  toJSON(message: EnemyDeathEvent): unknown {
     const obj: any = {};
+    if (message.damage !== 0) {
+      obj.damage = Math.round(message.damage);
+    }
+    if (message.target !== "") {
+      obj.target = message.target;
+    }
     return obj;
   },
 
   create<I extends Exact<DeepPartial<EnemyDeathEvent>, I>>(base?: I): EnemyDeathEvent {
     return EnemyDeathEvent.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<EnemyDeathEvent>, I>>(_: I): EnemyDeathEvent {
+  fromPartial<I extends Exact<DeepPartial<EnemyDeathEvent>, I>>(object: I): EnemyDeathEvent {
     const message = createBaseEnemyDeathEvent();
+    message.damage = object.damage ?? 0;
+    message.target = object.target ?? "";
     return message;
   },
 };

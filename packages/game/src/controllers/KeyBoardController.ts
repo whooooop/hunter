@@ -23,6 +23,7 @@ export class KeyBoardController {
   private jumpAreaDisabled: boolean = false;
 
   private isMobile: boolean = true;
+  private isJoystickActive: boolean = false;
 
 
   public static preload(scene: Phaser.Scene): void {
@@ -111,14 +112,16 @@ export class KeyBoardController {
     moveArea.setInteractive();
     moveArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       this.joystick.visible = true;
+      this.isJoystickActive = true;
       this.joystick.setPosition(pointer.x, pointer.y);
     });
     moveArea.on('pointerup', () => {
       this.joystick.visible = false;
+      this.isJoystickActive = false;
     });
 
-    const joystickBase = this.scene.add.image(0, 0, JoystickBaseTexture.key).setScale(0.7).setAlpha(0.5).setDepth(1000);
-    const joystickThumb = this.scene.add.image(0, 0, JoystickThumbTexture.key).setScale(0.7).setAlpha(0.5).setDepth(1000);
+    const joystickBase = this.scene.add.image(0, 0, JoystickBaseTexture.key).setScale(0.7).setAlpha(0.8).setDepth(1000);
+    const joystickThumb = this.scene.add.image(0, 0, JoystickThumbTexture.key).setScale(0.7).setAlpha(0.8).setDepth(1000);
 
     this.joystick = new VirtualJoystick(this.scene, {
       x: 200,
@@ -131,6 +134,7 @@ export class KeyBoardController {
 
     this.joystick.on('pointerup', () => {
       this.joystick.visible = false;
+      this.isJoystickActive = false;
     });
   }
 
@@ -156,9 +160,9 @@ export class KeyBoardController {
   private handleMovement(time: number, delta: number): void {
     const move = { x: 0, y: 0 };
 
-    if (this.joystick.visible) {
-      move.x = Math.sign(this.joystick.forceX) * Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius;
-      move.y = Math.sign(this.joystick.forceY) * Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius;
+    if (this.isJoystickActive) {
+      move.x = Math.sign(this.joystick.forceX) * Math.pow(Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius, 1.7);
+      move.y = Math.sign(this.joystick.forceY) * Math.pow(Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius, 1.7);
     } else {
       if (this.cursors.left.isDown) {
         move.x = -1;

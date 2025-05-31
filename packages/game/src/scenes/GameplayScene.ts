@@ -167,7 +167,7 @@ export class GameplayScene extends Phaser.Scene {
     this.gameOverView = new GameOverView(this);
 
     this.scoreController = new ScoreController(this, this.storage);
-    this.bloodController = new BloodController(this);
+    this.bloodController = new BloodController(this, this.location.getBounds());
     this.keyboardController = new KeyBoardController(this, playerId, this.storage);
     this.weaponController = new WeaponController(this, this.players, this.storage, playerId);
     this.shopController = new ShopController(this, this.players, playerId, this.shop, this.levelConfig.weapons, this.storage);

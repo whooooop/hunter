@@ -38,7 +38,7 @@ export class EnemyEntity implements Damageable.Entity {
 
   private graphics!: Phaser.GameObjects.Graphics;
 
-  private _handleEnemyDeath: (enemyId: string) => void;
+  private _handleEnemyDeath: (enemyId: string, record: SyncCollectionRecord<EnemyDeathEvent>) => void;
   private _handleEnemyAnimation: (eventId: string, record: SyncCollectionRecord<EnemyAnimationEvent>) => void;
 
   constructor(
@@ -108,9 +108,12 @@ export class EnemyEntity implements Damageable.Entity {
     // }, 4000);
   }
 
-  private handleEnemyDeath(enemyId: string): void {
+  private handleEnemyDeath(enemyId: string, record: SyncCollectionRecord<EnemyDeathEvent>): void {
     if (enemyId === this.id) {
-      this.onDeath();
+      this.onDeath({
+        damage: record.data.damage,
+        target: record.data.target as Enemy.Body,
+      });
     }
   }
 
@@ -171,8 +174,14 @@ export class EnemyEntity implements Damageable.Entity {
           });
         }
         this.motionController.setMove(0, 0);
-        this.onDeath();
-        this.storage.getCollection<EnemyDeathEvent>(enemyDeathEventCollection)!.addItem(this.id, {});
+        this.onDeath({
+          damage: damage.value,
+          target: target,
+        });
+        this.storage.getCollection<EnemyDeathEvent>(enemyDeathEventCollection)!.addItem(this.id, {
+          damage: damage.value,
+          target: target,
+        });
       }
 
       if (result.isDead) {
@@ -252,12 +261,29 @@ export class EnemyEntity implements Damageable.Entity {
     }
   }
 
-  protected async onDeath(): Promise<void> {
+  protected async onDeath({ damage, target }: { damage: number, target: Enemy.Body }): Promise<void> {
     // Создаем эффект разлетающихся частей через BloodController
     const position = this.motionController.getPosition();
+    // particleCount зависчит от наносимого урона damage.value 
+    // maxParticleCount = 200
+    // minParticleCount = 0
+    // max Damage = 400
+    // min Damage = 100
+
+    const particleCount = Math.max(0, Math.min(200, Math.floor(Math.max(damage - 100, 0) / 100 * 200)));
+    console.log('particleCount', particleCount);
+    console.log('damage', damage);
+
     emitEvent(this.scene, Blood.Events.DeathFountain.Local, {
       x: position.x,
-      y: position.y
+      y: position.y,
+      config: {
+        particleCount: particleCount,
+        fountainRatio: 0.75,
+        scale: { min: 0.1, max: 0.35 },
+        groundVariation: 40,
+        randomness: { x: 8, y: 60 },
+      }
     });
 
     await this.onDeathAnimation();
