@@ -2,15 +2,21 @@ import { SyncCollectionRecord } from '@hunter/multiplayer/dist/Collection';
 import { StorageSpace } from '@hunter/multiplayer/dist/StorageSpace';
 import { PlayerScoreState, PlayerWeapon, WeaponState } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
-import { COLORS } from '../Constants';
-import { FONT_FAMILY } from '../config';
-import { playerScoreStateCollection } from '../storage/collections/playerScoreState.collection';
-import { playerWeaponCollection } from '../storage/collections/playerWeapon.collection';
-import { weaponStateCollection } from '../storage/collections/weaponState.collection';
-import { hexToNumber } from '../utils/colors';
-import { createLogger } from '../utils/logger';
-import { getWeaponConfig } from '../weapons';
-import { WeaponType } from '../weapons/WeaponTypes';
+import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin';
+import { FONT_FAMILY } from '../../config';
+import { COLORS } from '../../Constants';
+import { emitEvent, offEvent, onEvent } from '../../GameEvents';
+import { playerScoreStateCollection } from '../../storage/collections/playerScoreState.collection';
+import { playerWeaponCollection } from '../../storage/collections/playerWeapon.collection';
+import { weaponStateCollection } from '../../storage/collections/weaponState.collection';
+import { BulletTexture, preloadBulletTextures } from '../../textures/bullet';
+import { CoinsTexture, preloadCoinsTextures } from '../../textures/coins';
+import { Controls, Weapon } from '../../types';
+import { hexToNumber } from '../../utils/colors';
+import { createLogger } from '../../utils/logger';
+import { getWeaponConfig } from '../../weapons';
+import { WeaponType } from '../../weapons/WeaponTypes';
+import { reloadText } from './translates';
 
 const logger = createLogger('WeaponStatus');
 
@@ -19,8 +25,15 @@ export class WeaponStatus {
   private background!: Phaser.GameObjects.Graphics;
   private weaponCircle!: Phaser.GameObjects.Graphics;
   private coinsText!: Phaser.GameObjects.Text;
-  private ammoIcons: Phaser.GameObjects.Graphics[] = [];
+  private coinsIcon!: Phaser.GameObjects.Image;
+  private ammoIcons: Phaser.GameObjects.Sprite[] = [];
   private weaponIcon!: Phaser.GameObjects.Image;
+  private reloadOverlay!: Phaser.GameObjects.Graphics;
+  private reloadText!: Phaser.GameObjects.Text;
+  private reloadContainer!: Phaser.GameObjects.Container;
+  private reloadProgressRing!: Phaser.GameObjects.Graphics;
+  private isReloadOverlayVisible: boolean = false;
+  private reloadProgress: number = 0; // Прогресс перезарядки от 0 до 1
 
   private width: number = 380;
   private height: number = 58;
@@ -33,14 +46,22 @@ export class WeaponStatus {
   private readonly BG_COLOR = hexToNumber(COLORS.INTERFACE_BLOCK_BACKGROUND);
   private readonly WEAPON_CIRCLE_COLOR = hexToNumber(COLORS.INTERACTIVE_BUTTON_BACKGROUND);
   private readonly TEXT_COLOR = COLORS.INTERFACE_BLOCK_TEXT;
-  private readonly AMMO_COLOR = hexToNumber('#ffd700');
-  private readonly AMMO_COLOR_INACTIVE = hexToNumber('#ffd700'); // Оставляем тот же цвет, но с альфой
 
   // Данные
   private coins: number = 0;
   private maxAmmo: number = 0; // Инициализируем нулем
   private currentAmmo: number = 0; // Инициализируем нулем
   private currentWeapon: WeaponType | null = null;
+
+  private readonly AMMO_ICON_ALPHA_ACTIVE = 0.8;
+  private readonly AMMO_ICON_ALPHA_INACTIVE = 0.3;
+
+  private readonly OVERLAY_ALPHA = 0.8;
+
+  static preload(scene: Phaser.Scene): void {
+    preloadBulletTextures(scene);
+    preloadCoinsTextures(scene);
+  }
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -53,31 +74,33 @@ export class WeaponStatus {
     this.storage.on<PlayerScoreState>(playerScoreStateCollection, 'Update', this.updateCoins.bind(this));
     this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Add', this.updateWeapon.bind(this));
     this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Update', this.updateWeapon.bind(this));
+
+    onEvent(this.scene, Weapon.Events.Reloading.Local, this.updateReloadProgress, this);
   }
 
   private create(): void {
-    // Создаем контейнер для всех элементов
     this.container = this.scene.add.container(
       this.scene.cameras.main.width - this.width / 2 - this.offsetX,
       this.height / 2 + this.offsetY
     );
     this.container.setDepth(1000);
 
-    // Создаем элементы UI с помощью отдельных методов
     this.createBackground();
     this.createWeaponCircle();
     this.createCoinsText();
+    this.createCoinsIcon();
     this.createWeaponIcon();
+    this.createReloadOverlay();
+    this.setupWeaponCircleInteractivity();
 
-    // Устанавливаем правильный порядок слоев в контейнере
     this.container.add([
       this.background,
       this.weaponCircle,
       this.weaponIcon,
+      this.reloadContainer,
+      this.coinsIcon,
       this.coinsText,
     ]);
-
-    // onEvent(this.scene, Player.Events.SetWeapon.Local, this.setWeapon, this);
   }
 
   private createBackground(): void {
@@ -91,7 +114,7 @@ export class WeaponStatus {
   }
 
   private createCoinsText(): void {
-    this.coinsText = this.scene.add.text(-this.width / 2 + 40, 0, this.coins.toString(), {
+    this.coinsText = this.scene.add.text(-this.width / 2 + 50, 0, this.coins.toString(), {
       fontFamily: FONT_FAMILY.BOLD,
       fontSize: '24px',
       color: this.TEXT_COLOR.toString(),
@@ -100,11 +123,71 @@ export class WeaponStatus {
     this.coinsText.setOrigin(0, 0.5);
   }
 
+  private createCoinsIcon(): void {
+    this.coinsIcon = this.scene.add.image(-this.width / 2 + 30, 0, CoinsTexture.key);
+    this.coinsIcon.setVisible(true);
+    this.coinsIcon.setOrigin(0.5);
+    this.coinsIcon.setDepth(1);
+    this.coinsIcon.setScale(CoinsTexture.scale * 0.8);
+    this.coinsIcon.setAlpha(0.9);
+  }
+
   private createWeaponIcon(): void {
     this.weaponIcon = this.scene.add.image(0, 0, '__DEFAULT');
     this.weaponIcon.setVisible(false);
     this.weaponIcon.setOrigin(0.5);
     this.weaponIcon.setDepth(1);
+  }
+
+  private createReloadOverlay(): void {
+    // Создаем контейнер для reload overlay
+    this.reloadContainer = this.scene.add.container(0, 0);
+
+    // Черный круг с прозрачностью 0.6 поверх желтого круга
+    this.reloadOverlay = this.scene.add.graphics();
+    this.reloadOverlay.fillStyle(0x000000, this.OVERLAY_ALPHA);
+    this.reloadOverlay.fillCircle(0, 0, this.radius);
+
+    // Прогресс-обводка вокруг черного круга
+    this.reloadProgressRing = this.scene.add.graphics();
+    this.drawReloadProgress();
+
+    // Текст RELOAD в центре круга
+    this.reloadText = this.scene.add.text(0, 0, reloadText.translate.toUpperCase(), {
+      fontFamily: FONT_FAMILY.BOLD,
+      fontSize: '14px',
+      color: '#FFFFFF'
+    });
+    this.reloadText.setOrigin(0.5);
+
+    // Добавляем элементы в контейнер
+    this.reloadContainer.add([this.reloadOverlay, this.reloadProgressRing, this.reloadText]);
+
+    // По умолчанию скрыт
+    this.reloadContainer.setVisible(false);
+  }
+
+  private updateReloadProgress(payload: Weapon.Events.Reloading.Payload): void {
+    if (payload.playerId !== this.playerId) return;
+
+    this.setReloadProgress(payload.progress);
+
+    if (payload.progress !== 1) {
+      this.showReloadOverlay();
+    }
+  }
+
+  private setupWeaponCircleInteractivity(): void {
+    // Создаем невидимую интерактивную область поверх желтого круга
+    const hitArea = this.scene.add.circle(0, 0, this.radius, 0x000000, 0);
+    hitArea.setInteractive();
+
+    hitArea.on('pointerdown', () => {
+      // Вызываем событие перезарядки
+      emitEvent(this.scene, Controls.Events.Reload.Event, { playerId: this.playerId });
+    });
+
+    this.container.add(hitArea);
   }
 
   private drawBackground(): void {
@@ -131,6 +214,34 @@ export class WeaponStatus {
     this.weaponCircle.fillCircle(0, 0, this.radius);
   }
 
+  private drawReloadProgress(): void {
+    this.reloadProgressRing.clear();
+
+    if (this.reloadProgress > 0) {
+      // Радиус для обводки (на 2 пикселя больше основного круга)
+      const progressRadius = this.radius - 1;
+
+      // Рассчитываем угол для дуги (начинаем с верхней точки, -90 градусов)
+      const startAngle = -Math.PI / 2; // -90 градусов в радианах (верхняя точка)
+      const endAngle = startAngle + (this.reloadProgress * 2 * Math.PI); // Прогресс по окружности
+
+      // Рисуем обводку прогресса
+      this.reloadProgressRing.lineStyle(2, 0xFFFFFF, 1); // Белая обводка 2 пикселя
+      this.reloadProgressRing.beginPath();
+      this.reloadProgressRing.arc(0, 0, progressRadius, startAngle, endAngle, false);
+      this.reloadProgressRing.strokePath();
+    }
+  }
+
+  public setReloadProgress(progress: number): void {
+    this.reloadProgress = Math.max(0, Math.min(1, progress));
+    this.drawReloadProgress();
+
+    if (progress === 1) {
+      this.hideReloadOverlay();
+    }
+  }
+
   private createAmmoIcons(): void {
     this.ammoIcons.forEach(icon => icon.destroy());
     this.ammoIcons = [];
@@ -138,8 +249,8 @@ export class WeaponStatus {
     if (this.maxAmmo <= 0) return; // Нечего рисовать
 
     // Параметры
-    const baseIconWidth = 10;
-    const baseIconHeight = 18; // Чуть меньше по высоте
+    const baseIconWidth = 13;
+    const baseIconHeight = 29;
     const basePaddingX = 5;
     const basePaddingY = 3; // Добавили вертикальный отступ
 
@@ -241,11 +352,16 @@ export class WeaponStatus {
         const iconX = startX + horizontalOffset + c * (scaledIconWidth + scaledPaddingX);
         const iconY = adjustedStartY + r * (scaledIconHeight + scaledPaddingY);
 
-        const ammoIcon = this.scene.add.graphics();
+        const ammoIcon = this.scene.add.sprite(iconX, iconY, BulletTexture.key);
         // Используем iconCounter для определения альфы
-        ammoIcon.fillStyle(this.AMMO_COLOR, iconCounter < this.currentAmmo ? 1 : 0.3);
-        ammoIcon.fillRect(0, 0, scaledIconWidth, scaledIconHeight);
-        ammoIcon.setPosition(iconX, iconY);
+        ammoIcon.setAlpha(iconCounter < this.currentAmmo ? this.AMMO_ICON_ALPHA_ACTIVE : this.AMMO_ICON_ALPHA_INACTIVE);
+        ammoIcon.setOrigin(0, 0); // Левый верхний угол как у прямоугольника
+
+        // Рассчитываем масштаб с сохранением пропорций
+        const scaleX = scaledIconWidth / ammoIcon.width;
+        const scaleY = scaledIconHeight / ammoIcon.height;
+        const scale = Math.min(scaleX, scaleY); // Берем меньший масштаб для сохранения пропорций
+        ammoIcon.setScale(scale);
 
         this.container.add(ammoIcon);
         this.ammoIcons.push(ammoIcon);
@@ -258,7 +374,7 @@ export class WeaponStatus {
   private updateAmmoIcons(): void {
     for (let i = 0; i < this.ammoIcons.length; i++) {
       if (i < this.maxAmmo) {
-        this.ammoIcons[i].setAlpha(i < this.currentAmmo ? 1 : 0.3);
+        this.ammoIcons[i].setAlpha(i < this.currentAmmo ? this.AMMO_ICON_ALPHA_ACTIVE : this.AMMO_ICON_ALPHA_INACTIVE);
       }
     }
   }
@@ -268,10 +384,10 @@ export class WeaponStatus {
     const weaponState = this.storage.getCollection<WeaponState>(weaponStateCollection)!.getItem(record.data.weaponId);
 
     if (!weaponState) return;
-    const weaponType = weaponState.type as WeaponType;
-    const config = getWeaponConfig(weaponType);
+    this.currentWeapon = weaponState.type as WeaponType;
+    const currentWeaponConfig = getWeaponConfig(this.currentWeapon);
 
-    if (!config || !this.weaponIcon) {
+    if (!currentWeaponConfig || !this.weaponIcon) {
       this.weaponIcon?.setVisible(false);
       this.ammoIcons.forEach(icon => icon.destroy());
       this.ammoIcons = [];
@@ -279,17 +395,20 @@ export class WeaponStatus {
     }
 
     try {
-      this.weaponIcon.setTexture(config.texture.key);
+      const postFxPlugin = this.scene.plugins.get('rexOutlinePipeline') as OutlinePipelinePlugin;
+      this.weaponIcon.setTexture(currentWeaponConfig.texture.key);
       this.weaponIcon.setVisible(true);
-
+      postFxPlugin.remove(this.weaponIcon);
+      postFxPlugin.add(this.weaponIcon, {
+        thickness: 3,
+        outlineColor: 0xFFFFFF
+      });
       const iconScale = (this.radius * 2 * 0.4) / Math.max(this.weaponIcon.height || 1);
-      this.weaponIcon.setScale(iconScale);
+      this.weaponIcon.setScale(iconScale).setRotation(-0.1);
     } catch (error) {
+      console.error(error);
       this.weaponIcon.setVisible(false);
     }
-
-    this.createAmmoIcons();
-    this.coinsText.setText(this.coins.toString());
   }
 
 
@@ -307,6 +426,8 @@ export class WeaponStatus {
     } else {
       this.updateAmmoIcons();
     }
+
+    this.checkAmmoAndShowReload();
   }
 
   private updateCoins(playerId: string, record: SyncCollectionRecord<PlayerScoreState>): void {
@@ -316,7 +437,51 @@ export class WeaponStatus {
     }
   }
 
+  public showReloadOverlay(): void {
+    this.reloadContainer.setVisible(true);
+    this.isReloadOverlayVisible = true;
+    this.startBlinkingAnimation();
+    this.drawReloadProgress();
+  }
+
+  public hideReloadOverlay(): void {
+    this.reloadContainer.setVisible(false);
+    this.isReloadOverlayVisible = false;
+    this.stopBlinkingAnimation();
+    this.drawReloadProgress();
+  }
+
+  private checkAmmoAndShowReload(): void {
+    if (this.currentAmmo === 0 && !this.isReloadOverlayVisible) {
+      this.showReloadOverlay();
+    }
+  }
+
+  private startBlinkingAnimation(): void {
+    // Останавливаем предыдущие анимации
+    this.scene.tweens.killTweensOf(this.reloadText);
+
+    // Создаем мерцающую анимацию
+    this.scene.tweens.add({
+      targets: this.reloadText,
+      alpha: 0.3,
+      duration: 500,
+      yoyo: true,
+      repeat: -1, // Бесконечное повторение
+      ease: 'Sine.easeInOut'
+    });
+  }
+
+  private stopBlinkingAnimation(): void {
+    // Останавливаем анимацию мерцания
+    this.scene.tweens.killTweensOf(this.reloadText);
+    // Возвращаем нормальную прозрачность
+    this.reloadText.setAlpha(1);
+  }
+
   public destroy(): void {
+    this.stopBlinkingAnimation();
     this.container.destroy();
+    offEvent(this.scene, Weapon.Events.Reloading.Local, this.updateReloadProgress, this);
   }
 } 

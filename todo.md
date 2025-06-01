@@ -3,14 +3,11 @@
 
 - multipleyer replay
 - multipleyer player color
-- lock changing weapon while reload
 - mobile controls
-- pause (fire/reload)
 - machine shoot sound
 - buy weapon by keys
 - screen resize
 
-- blood
 - settings view
 - multipleyer view
 - crypto storage key & data

@@ -1,5 +1,6 @@
 import { SpinePlugin } from "@esotericsoftware/spine-phaser";
 import * as Phaser from 'phaser';
+import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin.js';
 import { introFontBold, introFontRegular } from './assets/fonts/intro';
 import { DEBUG, DISPLAY } from './config';
 import { SceneKeys } from './scenes';
@@ -45,6 +46,11 @@ const config: Phaser.Types.Core.GameConfig = {
       key: "spine.SpinePlugin",
       plugin: SpinePlugin,
       mapping: "spine"
+    }],
+    global: [{
+      key: "rexOutlinePipeline",
+      plugin: OutlinePipelinePlugin,
+      mapping: "rexOutlinePipeline"
     }]
   },
   scene: [

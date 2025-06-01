@@ -1,8 +1,11 @@
 export * from './BackButton';
+export * from './CustomPauseButton';
 export * from './MenuButton';
 export * from './PlayButton';
 export * from './ReplayButton';
+export * from './ShopButton';
 export * from './Star';
 export * from './Stars';
 export * from './WaveInfo';
 export * from './WeaponStatus';
+

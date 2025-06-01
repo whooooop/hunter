@@ -27,7 +27,6 @@ export class WeaponEntity {
   protected lastFired: number = 0;
   protected lastEmptySoundTime: number = 0;
 
-  protected isReloading: boolean = false;
   protected isBolt: boolean = false;
 
   protected currentAmmo: number = 0;
@@ -38,7 +37,10 @@ export class WeaponEntity {
   private debugFirePoint!: Phaser.GameObjects.Ellipse;
   private muzzleFlash: MuzzleFlash | null = null;
 
-  private debug: boolean = false;
+  protected isReloading: boolean = false;
+  protected reloadProgress: number = 0;
+  protected reloadTime: number = 0;
+  protected reloadTimeLeft: number = 0;
 
   protected x: number = 0;
   protected y: number = 0;
@@ -69,11 +71,6 @@ export class WeaponEntity {
     this.container = scene.add.container(0, 0);
     this.container.add(this.gameObject);
     this.scene.add.existing(this.container);
-
-    if (this.debug) {
-      this.debugFirePoint = this.scene.add.ellipse(0, 0, 10, 10, 0x0000ff);
-      this.container.add(this.debugFirePoint);
-    }
 
     if (this.options.sight && this.showSight) {
       this.createSight(this.options.sight)
@@ -141,6 +138,10 @@ export class WeaponEntity {
     return this.active;
   }
 
+  public getIsReloading(): boolean {
+    return this.isReloading;
+  }
+
   public getCurrentAmmo(): number {
     return this.currentAmmo;
   }
@@ -182,11 +183,20 @@ export class WeaponEntity {
   private async reloadAction(): Promise<void> {
     this.isReloading = true;
 
+    if (this.options.reloadByOne) {
+      this.reloadTime = this.options.reloadTime + (this.options.magazineSize - this.currentAmmo) * (this.options.reloadItemTime || 200);
+    } else {
+      this.reloadTime = this.options.reloadTime;
+    }
+
+    this.reloadTimeLeft = this.reloadTime;
+
     this.playReloadSound();
 
     if (this.options.hideWhileReload) {
       this.gameObject.setVisible(false);
     }
+
     this.updateSightState();
     // Устанавливаем таймер на перезарядку
     this.scene.time.delayedCall(this.options.reloadTime, async () => {
@@ -198,12 +208,15 @@ export class WeaponEntity {
           await sleep(this.options.reloadItemTime || 200);
         }
       }
-      this.currentAmmo = this.options.magazineSize;
-      this.isReloading = false;
-      this.gameObject.setVisible(true);
-      this.updateSightState();
-      this.belt();
     });
+  }
+
+  private endReload(): void {
+    this.currentAmmo = this.options.magazineSize;
+    this.isReloading = false;
+    this.gameObject.setVisible(true);
+    this.updateSightState();
+    this.belt();
   }
 
   public getFirePoint(): { innerX: number, innerY: number, worldX: number, worldY: number } {
@@ -441,8 +454,19 @@ export class WeaponEntity {
       targetPoint: { x: worldX, y: worldY }
     });
 
-    if (this.debugFirePoint) {
-      this.debugFirePoint.setDepth(1000).setPosition(worldX, worldY);
+    if (this.isReloading) {
+      this.reloadTimeLeft -= delta * this.scene.time.timeScale;
+      this.reloadProgress = Math.min(1, 1 - (this.reloadTimeLeft / this.reloadTime));
+
+      emitEvent(this.scene, Weapon.Events.Reloading.Local, {
+        playerId: this.playerId,
+        weaponId: this.id,
+        progress: this.reloadProgress
+      });
+
+      if (this.reloadProgress === 1) {
+        this.endReload();
+      }
     }
   }
 

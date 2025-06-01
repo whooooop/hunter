@@ -1,12 +1,12 @@
 import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
 import { ConnectionState, EnemyState, GameState } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
-import { BaseShop } from '../BaseShop';
 import { DISPLAY, GAMEOVER, VERSION } from '../config';
 import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../controllers';
 import { createEnemy } from '../enemies';
 import { EnemyEntity } from '../entities/EnemyEntity';
 import { PlayerEntity } from '../entities/PlayerEntity';
+import { ShopEntity } from '../entities/ShopEntity';
 import { preloadFx } from '../fx';
 import { emitEvent, offEvent, onEvent } from '../GameEvents';
 import { getLevel, LevelId } from '../levels';
@@ -20,7 +20,7 @@ import { connectionStateCollection } from '../storage/collections/connectionStat
 import { enemyStateCollection } from '../storage/collections/enemyState.collection';
 import { gameStateCollection } from '../storage/collections/gameState.collection';
 import { playerStateCollection } from '../storage/collections/playerState.collection';
-import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../types';
+import { Damageable, Enemy, Game, Level, Loading, Location, Player, ScoreEvents, ShopEvents } from '../types';
 import { WaveInfo, WeaponStatus } from '../ui';
 import { createLogger } from '../utils/logger';
 import { GameOverView } from '../views/gameover';
@@ -46,7 +46,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private pingText!: Phaser.GameObjects.Text;
 
-  private shop!: BaseShop;
+  private shop!: ShopEntity;
   private enemies: Map<string, Damageable.Entity> = new Map();
   private damageableObjects: Map<string, Damageable.Entity> = new Map();
 
@@ -112,6 +112,8 @@ export class GameplayScene extends Phaser.Scene {
     WaveController.preloadEnemies(this, this.levelConfig.waves());
     PauseView.preload(this);
     GameOverView.preload(this);
+    WeaponStatus.preload(this);
+    ShopController.preload(this);
 
     preloadWeapons(this);
     preloadProjectiles(this);
@@ -222,11 +224,14 @@ export class GameplayScene extends Phaser.Scene {
     });
     this.storage.getCollection<Player.State>(playerStateCollection)!.addItem(playerId, { x: 0, y: 0, vx: 0, vy: 0 });
     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
-
+    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.REVOLVER, price: 0 });
+    emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.SAWED, price: 0 });
+    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
+    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MACHINE, price: 0 });
     this.waveController.start();
     this.projectileController.setSimulate(false);
 
-    // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
+    emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
   }
 
   private handlePause(payload: Game.Events.Pause.Payload): void {
@@ -341,7 +346,7 @@ export class GameplayScene extends Phaser.Scene {
     this.damageableObjects.set(id, object);
   }
 
-  public addShop(shop: BaseShop): void {
+  public addShop(shop: ShopEntity): void {
     this.shop = shop;
   }
 

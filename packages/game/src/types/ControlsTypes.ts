@@ -39,5 +39,11 @@ export namespace Controls {
         playerId: string;
       }
     }
+    export namespace Shop {
+      export const Event = 'controls.shop';
+      export type Payload = {
+        playerId: string;
+      }
+    }
   }
 }

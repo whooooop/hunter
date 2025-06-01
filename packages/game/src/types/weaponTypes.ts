@@ -30,6 +30,15 @@ export namespace Weapon {
         targetPoint: { x: number, y: number };
       }
     }
+
+    export namespace Reloading {
+      export const Local = 'WeaponReloadingLocalEvent';
+      export interface Payload {
+        playerId: string;
+        weaponId: string;
+        progress: number;
+      }
+    }
   }
 
   export interface Config {

@@ -75,6 +75,11 @@ export class WeaponController {
 
     if (!currentWeaponId) return;
 
+    const currentWeapon = this.getWeapon(currentWeaponId);
+    if (currentWeapon.getIsReloading()) {
+      return;
+    }
+
     const currentWeaponIndex = playerWeapons.indexOf(currentWeaponId);
     let nextWeapon = playerWeapons[currentWeaponIndex + direction];
     if (!nextWeapon) {

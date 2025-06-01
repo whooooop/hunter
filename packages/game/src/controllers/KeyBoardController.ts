@@ -15,12 +15,14 @@ export class KeyBoardController {
   private nextWeaponKey: Phaser.Input.Keyboard.Key;
   private prevWeaponKey: Phaser.Input.Keyboard.Key;
   private pauseKey: Phaser.Input.Keyboard.Key;
+  private shopKey: Phaser.Input.Keyboard.Key;
   private joystick!: VirtualJoystick;
   private joystickRadius: number = 100;
 
   private changeWeaponKeyDisabled: boolean = false;
   private pauseKeyDisabled: boolean = false;
   private jumpAreaDisabled: boolean = false;
+  private shopKeyDisabled: boolean = false;
 
   private isMobile: boolean = true;
   private isJoystickActive: boolean = false;
@@ -40,6 +42,7 @@ export class KeyBoardController {
     this.reloadKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
     this.nextWeaponKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.C);
     this.prevWeaponKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+    this.shopKey = this.scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
     this.jumpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.pauseKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
@@ -49,18 +52,10 @@ export class KeyBoardController {
   }
 
   private createMobileControls(): void {
-    // joystick
-
     // fire
-    // reload
     // jump
     // next weapon
     // prev weapon
-    // pause
-    // shop
-
-
-
 
 
     // fire area rectangle
@@ -157,6 +152,7 @@ export class KeyBoardController {
     this.handleReload(time, delta);
     this.handleChangeWeapon(time, delta);
     this.handlePause(time, delta);
+    this.handleShop(time, delta);
   }
 
   private handleMovement(time: number, delta: number): void {
@@ -228,6 +224,15 @@ export class KeyBoardController {
   private handleReload(time: number, delta: number): void {
     if (this.reloadKey.isDown) {
       emitEvent(this.scene, Controls.Events.Reload.Event, { playerId: this.playerId });
+    }
+  }
+
+  private handleShop(time: number, delta: number): void {
+    if (this.shopKey.isDown && !this.shopKeyDisabled) {
+      emitEvent(this.scene, Controls.Events.Shop.Event, { playerId: this.playerId });
+      this.shopKeyDisabled = true;
+    } else if (!this.shopKey.isDown) {
+      this.shopKeyDisabled = false;
     }
   }
 }

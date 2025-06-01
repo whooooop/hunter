@@ -5,12 +5,14 @@ import { FONT_FAMILY } from '../../config';
 import { COLORS } from '../../Constants';
 import { waveStateCollection } from '../../storage/collections/waveState.collection';
 import { hexToNumber } from '../../utils/colors';
+import { CustomPauseButton } from '../CustomPauseButton';
 import { bossText, waveText } from './translate';
 
 export class WaveInfo {
   private container!: Phaser.GameObjects.Container;
   private progressBar!: Phaser.GameObjects.Graphics;
   private waveText!: Phaser.GameObjects.Text;
+  private pauseButton!: CustomPauseButton;
   private progress: number = 0;
   private progressTarget: number = 0;
   private waveNumber: number = 1;
@@ -77,6 +79,9 @@ export class WaveInfo {
     // Добавляем графические объекты в контейнер фона
     bgContainer.add([bg, this.progressBar]);
 
+    // Создаем кнопку паузы
+    this.pauseButton = new CustomPauseButton(this.scene, -this.width / 2 + 36, 0);
+
     // Создаем основной контейнер
     this.container = this.scene.add.container(
       this.scene.cameras.main.width / 2,
@@ -84,7 +89,7 @@ export class WaveInfo {
     );
 
     // Добавляем все в основной контейнер
-    this.container.add([bgContainer, this.waveText]);
+    this.container.add([bgContainer, this.waveText, this.pauseButton]);
     this.container.setDepth(1000);
 
     // Применяем наклон к фоновой графике
@@ -170,6 +175,7 @@ export class WaveInfo {
   }
 
   public destroy(): void {
+    this.pauseButton?.destroy(); // Очищаем кнопку паузы
     this.container.destroy();
   }
 } 

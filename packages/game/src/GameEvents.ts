@@ -7,6 +7,7 @@ interface EventPayloadMap {
   // Weapons
   [Weapon.Events.CreateProjectile.Local]: Weapon.Events.CreateProjectile.Payload;
   [Weapon.Events.AimPoint.Local]: Weapon.Events.AimPoint.Payload;
+  [Weapon.Events.Reloading.Local]: Weapon.Events.Reloading.Payload;
 
   // Enemies
   [Enemy.Events.Death.Local]: Enemy.Events.Death.Payload;
@@ -37,6 +38,7 @@ interface EventPayloadMap {
   [Controls.Events.Jump.Event]: Controls.Events.Jump.Payload;
   [Controls.Events.NextWeapon.Event]: Controls.Events.NextWeapon.Payload;
   [Controls.Events.PrevWeapon.Event]: Controls.Events.PrevWeapon.Payload;
+  [Controls.Events.Shop.Event]: Controls.Events.Shop.Payload;
 
   // Game
   [Game.Events.Pause.Local]: Game.Events.Pause.Payload;

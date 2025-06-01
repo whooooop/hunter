@@ -1,10 +1,10 @@
-import { hexToNumber } from '../utils/colors';
 import { WeaponSightType } from '../entities/SightEntity';
-import { WeaponType } from './WeaponTypes';
 import { ProjectileName } from '../projectiles/ProjectileName';
-import { Weapon, WeaponTexture } from "../types/weaponTypes";
 import { AWPImageTexture_0 } from '../textures/AWPTexture';
+import { Weapon, WeaponTexture } from "../types/weaponTypes";
+import { hexToNumber } from '../utils/colors';
 import awpFireAudio from './assets/audio/awp_shoot_audio_0.mp3';
+import { WeaponType } from './WeaponTypes';
 
 const WeaponAWPTexture_0: WeaponTexture = {
   ...AWPImageTexture_0,

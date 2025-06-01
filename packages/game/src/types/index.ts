@@ -1,5 +1,6 @@
 export * from './BaskTypes';
 export * from './BloodTypes';
+export * from './ControlsTypes';
 export * from './damageableTypes';
 export * from './decals';
 export * from './decorTypes';
@@ -18,3 +19,4 @@ export * from './shopTypes';
 export * from './texture';
 export * from './WaveTypes';
 export * from './weaponTypes';
+

@@ -11,12 +11,12 @@ export interface WeaponPurchasedPayload {
 }
 
 export interface ShopWeapon {
-    type: WeaponType;
-    price: number;
+  type: WeaponType;
+  price: number;
 }
 
 export interface ShopSlotElement {
-  background: Phaser.GameObjects.Graphics;
+  background: Phaser.GameObjects.Shape;
   icon?: Phaser.GameObjects.Sprite;
   priceText?: Phaser.GameObjects.Text;
   weaponData: ShopWeapon; // Храним данные об оружии для легкого доступа

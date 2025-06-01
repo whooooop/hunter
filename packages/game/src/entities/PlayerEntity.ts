@@ -6,7 +6,7 @@ import { MotionController2 } from '../controllers/MotionController2';
 import { offEvent, onEvent } from '../GameEvents';
 import { SettingsService } from '../services/SettingsService';
 import { jumpEventCollection } from '../storage/collections/events.collectio';
-import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture } from '../textures/PlayerTexture';
+import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture, preloadPlayerTextures } from '../textures/player';
 import { Player } from '../types';
 import { Controls } from '../types/ControlsTypes';
 import { Location } from '../types/Location';
@@ -60,10 +60,7 @@ export class PlayerEntity {
   private shadow!: ShadowEntity;
 
   static preload(scene: Phaser.Scene): void {
-    scene.load.image(PlayerBodyTexture.key, PlayerBodyTexture.url);
-    scene.load.image(PlayerHandTexture.key, PlayerHandTexture.url);
-    scene.load.image(PlayerLegLeftTexture.key, PlayerLegLeftTexture.url);
-    scene.load.image(PlayerLegRightTexture.key, PlayerLegRightTexture.url);
+    preloadPlayerTextures(scene);
     scene.load.audio(jumpAudio.key, jumpAudio.url);
   }
 
@@ -85,6 +82,9 @@ export class PlayerEntity {
     this.leftLeg = scene.add.image(0, 0, PlayerLegLeftTexture.key).setScale(PlayerLegLeftTexture.scale).setOrigin(0.5, 0).setPosition(-10, 30);
     this.rightLeg = scene.add.image(0, 0, PlayerLegRightTexture.key).setScale(PlayerLegRightTexture.scale).setOrigin(0.5, 0).setPosition(6, 28);
     this.weaponContainer = scene.add.container(0, 0);
+
+    // нужно неного изменить цвет 
+    // this.playerBody.setTint(hexToNumber('#76A4FF'));
 
     this.container.add(this.backHand); 1
     this.container.add(this.shadow.getContainer());

@@ -1,11 +1,12 @@
-import { COLORS } from "./Constants";
-import { emitEvent } from "./GameEvents";
-import { FONT_FAMILY, OBJECTS_DEPTH_OFFSET } from "./config";
-import { hexToNumber } from "./utils/colors";
-import { getWeaponConfig } from "./weapons";
-import { WeaponType } from "./weapons/WeaponTypes";
+import { COLORS } from '../Constants';
+import { emitEvent } from '../GameEvents';
+import { FONT_FAMILY, OBJECTS_DEPTH_OFFSET } from '../config';
+import { hexToNumber } from '../utils/colors';
+import { getWeaponConfig } from '../weapons';
+import { WeaponType } from '../weapons/WeaponTypes';
 
-import { Game, ScoreEvents, ShopEvents, ShopSlotElement, ShopWeapon, Weapon } from "./types";
+import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin';
+import { Game, ScoreEvents, ShopEvents, ShopSlotElement, ShopWeapon, Weapon } from '../types';
 
 // --- Константы --- 
 const INTERACTIVE_BLOCK_COLOR = hexToNumber(COLORS.INTERACTIVE_BUTTON_BACKGROUND);
@@ -47,7 +48,7 @@ interface ShopOptions {
   depthOffset?: number;
 }
 
-export class BaseShop extends Phaser.GameObjects.Sprite {
+export class ShopEntity extends Phaser.GameObjects.Sprite {
   protected options: ShopOptions;
   protected interactionZone!: Phaser.GameObjects.Zone;
   protected interactionIcon!: Phaser.GameObjects.Sprite;
@@ -57,6 +58,8 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
   protected nearbyPlayerId: string | null = null;
   protected isShopOpen: boolean = false;
   protected weapons: ShopWeapon[] = [];
+
+  protected isAnimating: boolean = false;
 
   // Состояние для открытого магазина
   protected currentPlayerId: string | null = null;
@@ -78,12 +81,12 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
 
     // Создаем зону взаимодействия
     this.createInteractionZone();
-
-    // Создаем иконку взаимодействия (пока скрыта)
-    this.createInteractionIcon();
   }
 
-  static preload(scene: Phaser.Scene): void {
+  static preload(scene: Phaser.Scene): void { }
+
+  public getIsShopOpen(): boolean {
+    return this.isShopOpen;
   }
 
   /**
@@ -110,28 +113,13 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
     }
   }
 
-  /**
-   * Создает иконку взаимодействия над магазином
-   */
-  protected createInteractionIcon(): void { }
-
   public setNearbyPlayer(isNearby: boolean): void {
     if (isNearby) {
-      this.showInteractionPrompt();
     } else {
-      this.hideInteractionPrompt();
       if (this.isShopOpen) {
         this.closeShop();
       }
     }
-  }
-
-  /**
-   * Показывает подсказку для взаимодействия
-   */
-  public showInteractionPrompt(): void {
-    if (!this.interactionText || !this.scene) return;
-    this.interactionText.setVisible(true);
   }
 
   public getInteractionRadius(): number {
@@ -139,23 +127,14 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
   }
 
   /**
-   * Скрывает подсказку для взаимодействия
-   */
-  public hideInteractionPrompt(): void {
-    if (!this.interactionText || !this.scene) return;
-
-    this.interactionText.setVisible(false);
-    this.scene.tweens.killTweensOf(this.interactionText);
-  }
-
-  /**
    * Открывает интерфейс магазина для конкретного игрока
    * @param playerId ID игрока
    */
   public openShop(playerId: string, playerBalance: number, playerPurchasedWeapons: Set<WeaponType>, weapons: ShopWeapon[]): void {
-    if (this.isShopOpen) return; // Не открывать, если уже открыт
+    if (this.isShopOpen || this.isAnimating) return; // Не открывать, если уже открыт
 
     this.isShopOpen = true;
+    this.isAnimating = true;
     this.currentPlayerId = playerId;
     this.currentPlayerBalance = playerBalance
     this.purchasedWeaponTypes = playerPurchasedWeapons;
@@ -224,6 +203,7 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
    * @returns Контейнер круга для возможности анимаций
    */
   private drawCircleWithSlots(options: CircleConfig): Phaser.GameObjects.Container {
+    const postFxPlugin = this.scene.plugins.get('rexOutlinePipeline') as OutlinePipelinePlugin;
     const circleContainer = this.scene.add.container(options.position.x, options.position.y);
     circleContainer.setDepth(options.zIndexBase);
 
@@ -277,18 +257,21 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
       const weaponData = options.assignedWeapons[i];
 
       // Рисуем круг-фон слота
-      const slotBackground = this.scene.add.graphics({ x: x, y: y });
-      slotBackground.fillStyle(INTERACTIVE_BLOCK_COLOR, 1);
-      slotBackground.fillCircle(0, 0, slotRadius);
-      slotBackground.setDepth(options.zIndexBase + 1);
+      const slotBackground = this.scene.add.circle(x, y, slotRadius, INTERACTIVE_BLOCK_COLOR);
 
       if (weaponData) {
         const config: Weapon.Config | undefined = getWeaponConfig(weaponData.type);
         // Рисуем иконку оружия
-        const weaponIcon = this.scene.add.sprite(x, y, config.texture.key);
-        const iconScale = (slotSize * 0.38) / (weaponIcon.height || 1);
+        const weaponIcon = this.scene.add.sprite(x, y - 10, config.texture.key);
+        const iconScale = (slotSize * 0.36) / (weaponIcon.height || 1);
         weaponIcon.setScale(iconScale);
-        weaponIcon.setDepth(options.zIndexBase + 20); // Иконка над фоном
+
+        postFxPlugin.add(weaponIcon, {
+          thickness: 3,
+          outlineColor: 0xFFFFFF
+        });
+
+        weaponIcon.setRotation(-0.1);
 
         // Рисуем цену под иконкой
         const priceText = this.scene.add.text(x, y + slotRadius * 0.7, weaponData.price.toString(), {
@@ -311,8 +294,8 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
         });
 
         // Обработчик клика для покупки
-        weaponIcon.setInteractive();
-        weaponIcon.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+        slotBackground.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+          console.log('pointerdown', weaponData.type);
           pointer.event.stopPropagation(); // Останавливаем всплытие
 
           if (!this.currentPlayerId) return;
@@ -342,9 +325,6 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
         circleContainer.add(slotBackground);
       }
     }
-
-    // Добавляем контейнер круга в основной контейнер
-    circleContainer.add(circleGraphics);
 
     return circleContainer;
   }
@@ -376,10 +356,11 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
   /**
    * Закрывает интерфейс магазина
    */
-  private closeShop(): void {
-    if (!this.isShopOpen) return;
+  public closeShop(): void {
+    if (!this.isShopOpen || this.isAnimating) return;
 
     this.isShopOpen = false;
+    this.isAnimating = true;
     const shopUIToClose = this.currentShopUI; // Сохраняем ссылку для анимации
 
     if (shopUIToClose) {
@@ -400,6 +381,7 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
       ease: 'Power2',
       onComplete: () => {
         // Откладываем уничтожение и сброс состояния
+        this.isAnimating = false;
         this.scene.time.delayedCall(destroyDelay - animationDuration, () => {
           if (!shopUI.scene) return; // Проверка, что объект еще существует и принадлежит сцене
           shopUI.setVisible(false);
@@ -434,6 +416,7 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
    */
   private updateSlotsAvailability(): void {
     if (!this.isShopOpen) return;
+    console.log('updateSlotsAvailability', this.isShopOpen);
 
     this.currentSlotElements.forEach((elements, weaponType) => {
       const weaponData = elements.weaponData;
@@ -454,9 +437,9 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
         elements.icon.setAlpha(iconAlpha);
         elements.icon.setTint(iconTint);
         if (isAvailable) {
-          elements.icon.setInteractive(); // Включаем интерактивность
+          elements.background.setInteractive(); // Включаем интерактивность
         } else {
-          elements.icon.disableInteractive(); // Выключаем интерактивность
+          elements.background.disableInteractive(); // Выключаем интерактивность
         }
       }
 
@@ -490,7 +473,10 @@ export class BaseShop extends Phaser.GameObjects.Sprite {
       scale: 1,
       duration: 200,
       ease: 'Back.out',
-      delay: 20
+      delay: 20,
+      onComplete: () => {
+        this.isAnimating = false;
+      }
     });
   }
 
