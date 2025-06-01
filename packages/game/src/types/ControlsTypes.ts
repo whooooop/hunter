@@ -45,5 +45,30 @@ export namespace Controls {
         playerId: string;
       }
     }
+
+    export namespace KeyUp {
+      export const Event = 'controls.keyUp';
+      export type Payload = {
+        playerId: string;
+      }
+    }
+    export namespace KeyDown {
+      export const Event = 'controls.keyDown';
+      export type Payload = {
+        playerId: string;
+      }
+    }
+    export namespace KeyLeft {
+      export const Event = 'controls.keyLeft';
+      export type Payload = {
+        playerId: string;
+      }
+    }
+    export namespace KeyRight {
+      export const Event = 'controls.keyRight';
+      export type Payload = {
+        playerId: string;
+      }
+    }
   }
 }

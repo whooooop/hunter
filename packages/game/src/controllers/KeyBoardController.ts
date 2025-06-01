@@ -23,6 +23,11 @@ export class KeyBoardController {
   private pauseKeyDisabled: boolean = false;
   private jumpAreaDisabled: boolean = false;
   private shopKeyDisabled: boolean = false;
+  private keyUpDisabled: boolean = false;
+  private keyDownDisabled: boolean = false;
+  private keyLeftDisabled: boolean = false;
+  private keyRightDisabled: boolean = false;
+  private fireKeyPressed: boolean = false;
 
   private isMobile: boolean = true;
   private isJoystickActive: boolean = false;
@@ -64,26 +69,24 @@ export class KeyBoardController {
     const fireArea = this.scene.add.rectangle(fireAreaOffsetX, fireAreaOffsetY, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - fireAreaOffsetY, hexToNumber('#343434'), 0.4).setOrigin(0, 0);
     fireArea.setDepth(1000);
     fireArea.setInteractive();
-    fireArea.on('pointerdown', () => {
+
+    // hold
+    // fireArea.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+    //   console.log('pointermove', pointer.x, pointer.y);
+    // });
+
+    fireArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      this.createButtonGhost(pointer.x, pointer.y, 100);
+      console.log('pointerdown', pointer.x, pointer.y);
       emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: true });
       if (window.navigator.vibrate) {
         window.navigator.vibrate(100);
       }
     });
     fireArea.on('pointerup', () => {
+      console.log('pointerup');
       emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: false });
     });
-
-    // reload area rectangle
-    // const reloadAreaOffsetY = DISPLAY.HEIGHT / 2;
-    // const reloadAreaOffsetX = DISPLAY.WIDTH / 1.5;
-    // const reloadArea = this.scene.add.rectangle(reloadAreaOffsetX, reloadAreaOffsetY, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - reloadAreaOffsetY, hexToNumber('#343434'), 0.4).setOrigin(0, 0);
-    // reloadArea.setDepth(1000);
-    // reloadArea.setInteractive();
-    // reloadArea.on('pointerdown', () => {
-    //   console.log('reload area clicked');
-    // });
-
 
     // jump area rectangle
     // const jumpAreaOffsetY = DISPLAY.HEIGHT / 2;
@@ -102,7 +105,16 @@ export class KeyBoardController {
     // const rightArea = this.scene.add.rectangle(0, 0, 100, 100, 0x000000, 1);
     // rightArea.setDepth(1000);
 
-    // left area rectangle
+    this.createJoystick();
+  }
+
+  private createButtonGhost(x: number, y: number, radius: number): Phaser.GameObjects.Arc {
+    const buttonGhost = this.scene.add.circle(x, y, radius, 0x000000);
+    buttonGhost.setDepth(1000);
+    return buttonGhost;
+  }
+
+  private createJoystick(): void {
     const moveAreaOffsetY = 250;
     const moveArea = this.scene.add.rectangle(0, moveAreaOffsetY, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - moveAreaOffsetY, 0x000000, 0).setOrigin(0, 0);
     moveArea.setDepth(1000);
@@ -133,6 +145,10 @@ export class KeyBoardController {
       this.joystick.visible = false;
       this.isJoystickActive = false;
     });
+    this.joystick.on('pointerdown', () => {
+      this.joystick.visible = true;
+      this.isJoystickActive = true;
+    });
   }
 
   public destroy(): void {
@@ -153,6 +169,7 @@ export class KeyBoardController {
     this.handleChangeWeapon(time, delta);
     this.handlePause(time, delta);
     this.handleShop(time, delta);
+    this.handleCursorKeys(time, delta);
   }
 
   private handleMovement(time: number, delta: number): void {
@@ -176,6 +193,36 @@ export class KeyBoardController {
     }
 
     emitEvent(this.scene, Controls.Events.Move.Event, { playerId: this.playerId, moveX: move.x, moveY: move.y });
+  }
+
+  private handleCursorKeys(time: number, delta: number): void {
+    if (this.cursors.up.isDown && !this.keyUpDisabled) {
+      emitEvent(this.scene, Controls.Events.KeyUp.Event, { playerId: this.playerId });
+      this.keyUpDisabled = true;
+    } else if (!this.cursors.up.isDown) {
+      this.keyUpDisabled = false;
+    }
+
+    if (this.cursors.down.isDown && !this.keyDownDisabled) {
+      emitEvent(this.scene, Controls.Events.KeyDown.Event, { playerId: this.playerId });
+      this.keyDownDisabled = true;
+    } else if (!this.cursors.down.isDown) {
+      this.keyDownDisabled = false;
+    }
+
+    if (this.cursors.left.isDown && !this.keyLeftDisabled) {
+      emitEvent(this.scene, Controls.Events.KeyLeft.Event, { playerId: this.playerId });
+      this.keyLeftDisabled = true;
+    } else if (!this.cursors.left.isDown) {
+      this.keyLeftDisabled = false;
+    }
+
+    if (this.cursors.right.isDown && !this.keyRightDisabled) {
+      emitEvent(this.scene, Controls.Events.KeyRight.Event, { playerId: this.playerId });
+      this.keyRightDisabled = true;
+    } else if (!this.cursors.right.isDown) {
+      this.keyRightDisabled = false;
+    }
   }
 
   private handlePause(time: number, delta: number): void {
@@ -215,9 +262,11 @@ export class KeyBoardController {
 
   private handleFire(time: number, delta: number): void {
     if (this.fireKey.isDown) {
+      this.fireKeyPressed = true;
       emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: true });
-    } else {
+    } else if (this.fireKeyPressed) {
       emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: false });
+      this.fireKeyPressed = false;
     }
   }
 

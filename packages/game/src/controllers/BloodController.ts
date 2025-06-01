@@ -398,7 +398,11 @@ export class BloodController {
       // Частицы летящие вниз по экрану приземляются "ближе" (ниже по Y)
       const baseGroundLevel = y; // Уровень земли врага
       const directionY = Math.sin(angle); // -1 (вверх) до +1 (вниз)
-      const landingY = Math.max(baseGroundLevel + (directionY * settings.groundVariation!) + Phaser.Math.FloatBetween(-settings.randomness!.y, settings.randomness!.y), this.bounds.top);
+      let landingY = baseGroundLevel + (directionY * settings.groundVariation!) + Phaser.Math.FloatBetween(-settings.randomness!.y, settings.randomness!.y);
+
+      if (landingY < this.bounds.top) {
+        landingY = this.bounds.top + (this.bounds.top - landingY);
+      }
 
       // УБИРАЕМ искусственное ограничение дистанции - пусть частицы летят естественно
       const finalLandingX = landingX;

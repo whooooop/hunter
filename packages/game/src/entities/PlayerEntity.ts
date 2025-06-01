@@ -7,7 +7,7 @@ import { offEvent, onEvent } from '../GameEvents';
 import { SettingsService } from '../services/SettingsService';
 import { jumpEventCollection } from '../storage/collections/events.collectio';
 import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture, preloadPlayerTextures } from '../textures/player';
-import { Player } from '../types';
+import { Player, Shop } from '../types';
 import { Controls } from '../types/ControlsTypes';
 import { Location } from '../types/Location';
 import { createLogger } from '../utils/logger';
@@ -44,6 +44,7 @@ export class PlayerEntity {
 
   private motionController: MotionController2;
   private canChangeDirection: boolean = false;
+  private lockedControls: boolean = false;
 
   private currentWeapon!: WeaponEntity | null;
 
@@ -117,6 +118,7 @@ export class PlayerEntity {
     onEvent(this.scene, Controls.Events.Reload.Event, this.handleReload, this);
     onEvent(this.scene, Controls.Events.Jump.Event, this.handleJump, this);
     onEvent(this.scene, Controls.Events.Move.Event, this.handleMove, this);
+    onEvent(this.scene, Shop.Events.Opened.Event, this.handleShopOpened, this);
   }
 
   public getId(): string {
@@ -127,14 +129,28 @@ export class PlayerEntity {
     return [this.body.x, this.body.y];
   }
 
+  private handleShopOpened(payload: Shop.Events.Opened.Payload): void {
+    if (payload.playerId !== this.id) {
+      return;
+    }
+    this.lockedControls = payload.opened;
+  }
+
   private handleMove(payload: Controls.Events.Move.Payload): void {
     if (payload.playerId !== this.id) {
+      return;
+    }
+    if (this.lockedControls) {
+      this.setMove(0, 0);
       return;
     }
     this.setMove(payload.moveX, payload.moveY);
   }
 
   private handleFire(payload: Controls.Events.Fire.Payload): void {
+    if (this.lockedControls) {
+      return;
+    }
     if (payload.playerId !== this.id) {
       return;
     }
@@ -320,5 +336,6 @@ export class PlayerEntity {
     offEvent(this.scene, Controls.Events.Reload.Event, this.handleReload, this);
     offEvent(this.scene, Controls.Events.Jump.Event, this.handleJump, this);
     offEvent(this.scene, Controls.Events.Move.Event, this.handleMove, this);
+    offEvent(this.scene, Shop.Events.Opened.Event, this.handleShopOpened, this);
   }
 } 

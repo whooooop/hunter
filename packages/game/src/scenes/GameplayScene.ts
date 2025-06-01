@@ -20,7 +20,7 @@ import { connectionStateCollection } from '../storage/collections/connectionStat
 import { enemyStateCollection } from '../storage/collections/enemyState.collection';
 import { gameStateCollection } from '../storage/collections/gameState.collection';
 import { playerStateCollection } from '../storage/collections/playerState.collection';
-import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../types';
+import { Damageable, Enemy, Game, Level, Loading, Location, Player, ScoreEvents, ShopEvents } from '../types';
 import { WaveInfo, WeaponStatus } from '../ui';
 import { createLogger } from '../utils/logger';
 import { GameOverView } from '../views/gameover';
@@ -228,7 +228,7 @@ export class GameplayScene extends Phaser.Scene {
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.SAWED, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MACHINE, price: 0 });
-    // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
+    emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
     this.waveController.start();
     this.projectileController.setSimulate(false);
 

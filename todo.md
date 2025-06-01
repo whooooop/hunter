@@ -5,7 +5,6 @@
 - multipleyer player color
 - mobile controls
 - machine shoot sound
-- buy weapon by keys
 - screen resize
 
 - settings view

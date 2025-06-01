@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { MenuSceneTypes } from './scenes/MenuScene/MenuSceneTypes';
-import { Blood, Decals, DecreaseScoreEventPayload, Enemy, Game, IncreaseScoreEventPayload, Loading, ScoreEvents, ShopEvents, Weapon, WeaponPurchasedPayload } from './types';
+import { Blood, Decals, DecreaseScoreEventPayload, Enemy, Game, IncreaseScoreEventPayload, Loading, ScoreEvents, Shop, ShopEvents, Weapon, WeaponPurchasedPayload } from './types';
 import { Controls } from './types/ControlsTypes';
 
 interface EventPayloadMap {
@@ -22,6 +22,7 @@ interface EventPayloadMap {
   [Blood.Events.DeathFountain.Local]: Blood.Events.DeathFountain.Payload;
 
   // Shop
+  [Shop.Events.Opened.Event]: Shop.Events.Opened.Payload;
   [ShopEvents.WeaponPurchasedEvent]: WeaponPurchasedPayload;
 
   // Decals
@@ -39,6 +40,10 @@ interface EventPayloadMap {
   [Controls.Events.NextWeapon.Event]: Controls.Events.NextWeapon.Payload;
   [Controls.Events.PrevWeapon.Event]: Controls.Events.PrevWeapon.Payload;
   [Controls.Events.Shop.Event]: Controls.Events.Shop.Payload;
+  [Controls.Events.KeyUp.Event]: Controls.Events.KeyUp.Payload;
+  [Controls.Events.KeyDown.Event]: Controls.Events.KeyDown.Payload;
+  [Controls.Events.KeyLeft.Event]: Controls.Events.KeyLeft.Payload;
+  [Controls.Events.KeyRight.Event]: Controls.Events.KeyRight.Payload;
 
   // Game
   [Game.Events.Pause.Local]: Game.Events.Pause.Payload;

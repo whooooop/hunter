@@ -21,3 +21,15 @@ export interface ShopSlotElement {
   priceText?: Phaser.GameObjects.Text;
   weaponData: ShopWeapon; // Храним данные об оружии для легкого доступа
 }
+
+export namespace Shop {
+  export namespace Events {
+    export namespace Opened {
+      export const Event = 'shopOpenedEvent';
+      export interface Payload {
+        playerId: string;
+        opened: boolean;
+      }
+    }
+  }
+}

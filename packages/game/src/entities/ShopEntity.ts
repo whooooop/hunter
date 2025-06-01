@@ -6,18 +6,20 @@ import { getWeaponConfig } from '../weapons';
 import { WeaponType } from '../weapons/WeaponTypes';
 
 import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin';
-import { Game, ScoreEvents, ShopEvents, ShopSlotElement, ShopWeapon, Weapon } from '../types';
+import { offEvent, onEvent } from '../GameEvents';
+import { Game, ScoreEvents, Shop, ShopEvents, ShopSlotElement, ShopWeapon, Weapon } from '../types';
+import { Controls } from '../types/ControlsTypes';
 
 // --- Константы --- 
 const INTERACTIVE_BLOCK_COLOR = hexToNumber(COLORS.INTERACTIVE_BUTTON_BACKGROUND);
 const INTERACTIVE_BLOCK_BORDER_COLOR = hexToNumber(COLORS.INTERACTIVE_BUTTON_BORDER);
-const INTERACTIVE_BUTTON_TEXT_COLOR = hexToNumber(COLORS.INTERACTIVE_BUTTON_TEXT);
 const INNER_CIRCLE_GRADIENT_COLOR = hexToNumber('#e6892e'); // Внутренняя тень круга
-const PURCHASED_ITEM_ALPHA = 0.6;
-const UNAFFORDABLE_ITEM_ALPHA = 0.4;
+const PURCHASED_ITEM_ALPHA = 0.7;
+const UNAFFORDABLE_ITEM_ALPHA = 0.7;
 const AVAILABLE_ITEM_ALPHA = 1.0;
 const PURCHASED_ITEM_TINT = 0xaaaaaa;
 const DEFAULT_ITEM_TINT = 0xffffff;
+const ACTIVE_ITEM_COLOR = hexToNumber('#324A4B'); // Цвет активного элемента
 
 // Настройки для кругов магазина по умолчанию (можно переопределить при вызове)
 const DEFAULT_SLOT_SIZE = 126;
@@ -68,11 +70,17 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
   protected currentShopUI: Phaser.GameObjects.Container | null = null;
   protected currentSlotElements: Map<WeaponType, ShopSlotElement> = new Map();
 
+  // Навигация по магазину
+  protected navigationElements: WeaponType[] = []; // Порядок элементов для навигации
+  protected activeElementIndex: number = 0; // Индекс активного элемента
+
   constructor(scene: Phaser.Scene, x: number, y: number, options: ShopOptions) {
     super(scene, x, y, options.texture, 0);
     this.options = {
       ...options
     };
+
+
 
     this.setScale(this.options.scale);
 
@@ -132,6 +140,13 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
    */
   public openShop(playerId: string, playerBalance: number, playerPurchasedWeapons: Set<WeaponType>, weapons: ShopWeapon[]): void {
     if (this.isShopOpen || this.isAnimating) return; // Не открывать, если уже открыт
+
+    emitEvent(this.scene, Shop.Events.Opened.Event, {
+      playerId: playerId,
+      opened: true
+    });
+
+    this.subscribeToNavigationEvents();
 
     this.isShopOpen = true;
     this.isAnimating = true;
@@ -193,6 +208,7 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
     shopUI.add([innerCircle, outerCircle]);
 
     this.updateSlotsAvailability();
+    this.updateNavigationElements();
     this.animateShopOpen(shopUI, innerCircle, outerCircle);
   }
 
@@ -359,6 +375,8 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
   public closeShop(): void {
     if (!this.isShopOpen || this.isAnimating) return;
 
+    this.unsubscribeFromNavigationEvents();
+
     this.isShopOpen = false;
     this.isAnimating = true;
     const shopUIToClose = this.currentShopUI; // Сохраняем ссылку для анимации
@@ -387,11 +405,19 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
           shopUI.setVisible(false);
           shopUI.destroy();
 
+          emitEvent(this.scene, Shop.Events.Opened.Event, {
+            playerId: this.currentPlayerId!,
+            opened: false
+          });
+
           // Сбрасываем состояние здесь
           this.currentShopUI = null;
           this.currentPlayerId = null;
           this.currentPlayerBalance = 0;
           this.currentSlotElements.clear();
+
+          // Сбрасываем навигацию
+          this.navigationElements = [];
         });
       }
     });
@@ -416,7 +442,6 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
    */
   private updateSlotsAvailability(): void {
     if (!this.isShopOpen) return;
-    console.log('updateSlotsAvailability', this.isShopOpen);
 
     this.currentSlotElements.forEach((elements, weaponType) => {
       const weaponData = elements.weaponData;
@@ -478,6 +503,118 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
         this.isAnimating = false;
       }
     });
+  }
+
+  /**
+   * Обновляет список элементов для навигации
+   */
+  private updateNavigationElements(): void {
+    // Сортируем в том же порядке, что и в weapons массиве
+    this.navigationElements = this.weapons
+      .map(weapon => weapon.type)
+      .filter(weaponType => this.currentSlotElements.has(weaponType));
+    this.updateActiveElementVisual();
+  }
+
+  /**
+   * Обновляет визуальное выделение активного элемента
+   */
+  private updateActiveElementVisual(): void {
+    this.currentSlotElements.forEach((elements, weaponType) => {
+      const isActive = weaponType === this.navigationElements[this.activeElementIndex];
+      const currentColor = isActive ? ACTIVE_ITEM_COLOR : INTERACTIVE_BLOCK_COLOR;
+      elements.background.setFillStyle(currentColor);
+    });
+  }
+
+  /**
+   * Перемещение к следующему элементу
+   */
+  private navigateNext(): void {
+    if (this.navigationElements.length > 0) {
+      this.activeElementIndex = (this.activeElementIndex + 1) % this.navigationElements.length;
+      this.updateActiveElementVisual();
+    }
+  }
+
+  /**
+   * Перемещение к предыдущему элементу
+   */
+  private navigatePrevious(): void {
+    if (this.navigationElements.length > 0) {
+      this.activeElementIndex = this.activeElementIndex === 0
+        ? this.navigationElements.length - 1
+        : this.activeElementIndex - 1;
+      this.updateActiveElementVisual();
+    }
+  }
+
+  /**
+   * Покупка активного элемента
+   */
+  private purchaseActiveElement(): void {
+    if (this.navigationElements.length > 0) {
+      const activeWeaponType = this.navigationElements[this.activeElementIndex];
+      const weaponData = this.weapons.find(w => w.type === activeWeaponType);
+
+      if (weaponData) {
+        const canAfford = weaponData.price <= this.currentPlayerBalance;
+        const isPurchased = this.purchasedWeaponTypes.has(weaponData.type);
+
+        if (canAfford && !isPurchased) {
+          this.purchasedWeapon(weaponData.type);
+          this.closeShop();
+        }
+      }
+    }
+  }
+
+  /**
+   * Обработчики событий навигации
+   */
+  private onKeyRight = () => {
+    if (this.isShopOpen) this.navigateNext();
+  };
+
+  private onKeyLeft = () => {
+    if (this.isShopOpen) this.navigatePrevious();
+  };
+
+  private onFire = ({ active }: { active: boolean }) => {
+    if (!this.isShopOpen || !active) return;
+
+    if (this.navigationElements.length > 0) {
+      const activeWeaponType = this.navigationElements[this.activeElementIndex];
+      const weaponData = this.weapons.find(w => w.type === activeWeaponType);
+
+      if (weaponData) {
+        const canAfford = weaponData.price <= this.currentPlayerBalance;
+        const isPurchased = this.purchasedWeaponTypes.has(weaponData.type);
+
+        if (canAfford && !isPurchased) {
+          this.purchasedWeapon(weaponData.type);
+          this.closeShop();
+        }
+      }
+    }
+  };
+
+  /**
+   * Подписка на события навигации
+   */
+  private subscribeToNavigationEvents(): void {
+    onEvent(this.scene, Controls.Events.KeyRight.Event, this.onKeyRight, this);
+    onEvent(this.scene, Controls.Events.KeyLeft.Event, this.onKeyLeft, this);
+    onEvent(this.scene, Controls.Events.Fire.Event, this.onFire, this);
+  }
+
+  /**
+   * Отписка от событий навигации
+   */
+  private unsubscribeFromNavigationEvents(): void {
+    offEvent(this.scene, Controls.Events.KeyRight.Event, this.onKeyRight, this);
+    offEvent(this.scene, Controls.Events.KeyLeft.Event, this.onKeyLeft, this);
+    offEvent(this.scene, Controls.Events.Fire.Event, this.onFire, this);
   }
 
   /**
