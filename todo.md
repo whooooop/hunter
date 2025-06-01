@@ -1,10 +1,9 @@
 - multipleyer player color
 - multipleyer view
 - mobile controls
-- machine shoot sound
+- sounds: death / machine shoot / weapons
 - settings view
 - win popup
-- sound death
 - config waves
 - config weapons
 - config score
