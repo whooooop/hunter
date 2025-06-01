@@ -53,6 +53,10 @@ const config: Phaser.Types.Core.GameConfig = {
       mapping: "rexOutlinePipeline"
     }]
   },
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
   scene: [
     BootScene,
     GameplayScene,

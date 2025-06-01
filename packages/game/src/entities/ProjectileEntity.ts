@@ -1,8 +1,8 @@
+import { OBJECTS_DEPTH_OFFSET } from "../config";
 import { ExplosionFx } from "../fx/explosion/ExplosionFx";
+import { SettingsService } from "../services/SettingsService";
 import { Projectile } from "../types";
 import { WeaponType } from "../weapons/WeaponTypes";
-import { OBJECTS_DEPTH_OFFSET } from "../config";
-import { SettingsService } from "../services/SettingsService";
 
 const settingsService = SettingsService.getInstance();
 
@@ -20,14 +20,14 @@ export class ProjectileEntity {
 
   protected destroyed: boolean = false;
   protected activated: boolean = false;
-  
+
   protected options: Projectile.Config;
   protected damage: number = 1;
   protected speed: number[] = [100, 0];
-  
+
   protected playerId!: string;
   protected weaponName!: WeaponType;
-  
+
   // Точки, определяющие вектор
   protected startPoint: number[] = [0, 0];
   protected forcePoint: number[] = [0, 0];
@@ -46,17 +46,14 @@ export class ProjectileEntity {
 
     if (this.options.texture) {
       this.gameObject = new Phaser.GameObjects.Sprite(this.scene, x, y, this.options.texture.key);
-
-      // this.gameObject.setOrigin(0, 0);
-
-      // this.scene.add.existing(
-      //   this.scene.add.ellipse(x, y, 4, 4, 0x0000ff).setDepth(1000)
-      // );
+      if (this.options.rotation) {
+        this.gameObject.setRotation(this.options.rotation);
+      }
 
       if (this.options.texture.scale) {
         this.gameObject.setScale(this.options.texture.scale);
       }
-      
+
       this.scene.add.existing(this.gameObject);
     }
   }
@@ -84,7 +81,7 @@ export class ProjectileEntity {
     this.damage = damage; // Сохраняем значение урона
     this.speed = speed;
     this.forcePoint = [forceX, forceY];
-    
+
     if (this.options.type === Projectile.Type.BULLET) {
       this.setRayForce(forceX, forceY);
       this.activate();
@@ -105,7 +102,7 @@ export class ProjectileEntity {
 
   protected setRayForce(forceX: number, forceY: number): void {
     if (!this.gameObject) return;
-    
+
     // Вычисляем вектор направления
     const dx = forceX - this.gameObject.x;
     const dy = forceY - this.gameObject.y;
@@ -128,7 +125,7 @@ export class ProjectileEntity {
     const body = this.gameObject.body as Phaser.Physics.Arcade.Body;
     // Устанавливаем скорость
     body
-      .setAllowGravity(false)  
+      .setAllowGravity(false)
       .setVelocity(velocityX, velocityY);
   }
 
@@ -140,51 +137,51 @@ export class ProjectileEntity {
    */
   public setThrowForce(targetX: number, targetY: number): this {
     if (!this.gameObject || !this.scene) return this;
-    
+
     // Устанавливаем floorY равным начальной Y-координате гранаты
     this.floorY = this.gameObject.y;
-    
+
     // Вычисляем направление
     const dx = targetX + this.speed[0];
     let dirX = 1;
-    
+
     if (dx !== 0) {
       dirX = dx > 0 ? 1 : -1;
     }
-    
+
     // Инициализируем физику
     this.scene.physics.world.enable(this.gameObject);
     const body = this.gameObject.body as Phaser.Physics.Arcade.Body;
-    
+
     // Задаем начальную скорость
     body.setVelocity(this.speed[0], this.speed[1] * -1);
-    
+
     if (this.options.gravity) {
       body.setAllowGravity(true);
       body.setGravityY(this.options.gravity);
     }
-    
+
     if (this.options.drag) {
       body.setDragX(this.options.drag);
     }
-    
+
     if (this.options.bounce) {
       body.setBounce(this.options.bounce * 0.2);
     }
-    
+
     return this;
   }
-  
+
   public activate(): void {
     if (this.activated) return;
-    
+
     this.activated = true;
     // console.log('activate', this.options.type);
     this.playActivateAudio();
     if (this.options.type === Projectile.Type.GRENADE || this.options.type === Projectile.Type.MINE) {
       this.activateExplosion();
       this.gameObject.setAlpha(0);
-      this.scene.time.delayedCall(1000, () => { 
+      this.scene.time.delayedCall(1000, () => {
         this.destroy();
       });
     }
@@ -196,8 +193,8 @@ export class ProjectileEntity {
 
   protected playActivateAudio(): void {
     if (this.options.activateAudio) {
-      this.scene.sound.play(this.options.activateAudio.key, { 
-        volume: settingsService.getValue('audioWeaponVolume') as number 
+      this.scene.sound.play(this.options.activateAudio.key, {
+        volume: settingsService.getValue('audioWeaponVolume') as number
       });
     }
   }
@@ -245,9 +242,9 @@ export class ProjectileEntity {
     return this.damage;
   }
 
-  public destroy () {
+  public destroy() {
     this.destroyed = true;
-    
+
     if (this.gameObject) {
       this.gameObject.destroy();
     }
@@ -255,7 +252,7 @@ export class ProjectileEntity {
 
   public update(time: number, delta: number): void {
     if (this.destroyed) return;
-    
+
     this.gameObject.setDepth(this.gameObject.y + OBJECTS_DEPTH_OFFSET);
 
     // Для гранат выполняем дополнительные проверки
@@ -266,10 +263,10 @@ export class ProjectileEntity {
     // Проверяем, не вышла ли пуля за границы мира
     const body = this.gameObject.body as Phaser.Physics.Arcade.Body;
     if (body && (
-        this.gameObject.x < 0 || 
-        this.gameObject.y < 0 || 
-        this.gameObject.x > this.scene.physics.world.bounds.width || 
-        this.gameObject.y > this.scene.physics.world.bounds.height
+      this.gameObject.x < 0 ||
+      this.gameObject.y < 0 ||
+      this.gameObject.x > this.scene.physics.world.bounds.width ||
+      this.gameObject.y > this.scene.physics.world.bounds.height
     )) {
       this.destroy();
     }
@@ -278,12 +275,12 @@ export class ProjectileEntity {
   protected updateThrow(time: number, delta: number): void {
     const body = this.gameObject.body as Phaser.Physics.Arcade.Body;
     if (!body) return;
-    
+
     // Проверяем, достигла ли граната уровня пола
     if (body.y >= this.floorY && body.velocity.y > 0) {
       // Не позволяем гранате опуститься ниже начальной Y-координаты
       body.y = this.floorY;
-      
+
       // Меняем направление движения вверх с небольшим затуханием
       if (Math.abs(body.velocity.y) < 30) {
         // Если скорость уже очень мала, останавливаем гранату
@@ -295,13 +292,13 @@ export class ProjectileEntity {
         body.setVelocityY(-body.velocity.y * 0.6);
       }
     }
-    
+
     // Проверяем полную остановку гранаты
     const velocityMagnitude = Math.sqrt(body.velocity.x * body.velocity.x + body.velocity.y * body.velocity.y);
-    
+
     // Поворачиваем спрайт в направлении движения
     if (velocityMagnitude > 10 && this.options.type === Projectile.Type.GRENADE) {
-      const angle = Math.atan2(body.velocity.y, body.velocity.x);
+      const angle = Math.atan2(body.velocity.y, body.velocity.x) + (this.options.rotation || 0);
       this.gameObject.setRotation(angle);
     }
   }

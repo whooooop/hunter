@@ -68,6 +68,7 @@ export class KeyBoardController {
     const fireAreaOffsetX = DISPLAY.WIDTH / 1.5;
     const fireArea = this.scene.add.rectangle(fireAreaOffsetX, fireAreaOffsetY, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - fireAreaOffsetY, hexToNumber('#343434'), 0.4).setOrigin(0, 0);
     fireArea.setDepth(1000);
+    fireArea.setAlpha(0.1);
     fireArea.setInteractive();
 
     // hold
@@ -176,8 +177,8 @@ export class KeyBoardController {
     const move = { x: 0, y: 0 };
 
     if (this.isJoystickActive) {
-      move.x = Math.sign(this.joystick.forceX) * Math.pow(Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius, 1.7);
-      move.y = Math.sign(this.joystick.forceY) * Math.pow(Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius, 1.7);
+      move.x = Math.sign(this.joystick.forceX) * Math.pow(Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius, 1.3);
+      move.y = Math.sign(this.joystick.forceY) * Math.pow(Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius, 1.3);
     } else {
       if (this.cursors.left.isDown) {
         move.x = -1;

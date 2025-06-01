@@ -237,15 +237,15 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
     const centerY = options.circleRadius + centerOffsetY;
 
     // Градиентная тень круга
-    // for (let i = 0; i < gradientSize; i++) {
-    //   const alpha = gradientAlphaStart - (i / gradientSize * gradientAlphaStart);
-    //   const radius = options.circleRadius - i;
-    //   if (radius <= 0) break;
-    //   circleGraphics.lineStyle(1, gradientColor, alpha);
-    //   circleGraphics.beginPath();
-    //   circleGraphics.arc(centerX, centerY, radius, 0, Math.PI * 2);
-    //   circleGraphics.strokePath();
-    // }
+    for (let i = 0; i < gradientSize; i++) {
+      const alpha = gradientAlphaStart - (i / gradientSize * gradientAlphaStart);
+      const radius = options.circleRadius - i;
+      if (radius <= 0) break;
+      circleGraphics.lineStyle(1, gradientColor, alpha);
+      circleGraphics.beginPath();
+      circleGraphics.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      circleGraphics.strokePath();
+    }
 
     // Добавляем круг в контейнер
     circleContainer.add(circleGraphics);

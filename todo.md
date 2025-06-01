@@ -2,7 +2,6 @@
 - multipleyer player color
 - mobile controls
 - machine shoot sound
-- screen resize
 - settings view
 - multipleyer view
 - crypto storage key & data
@@ -14,5 +13,3 @@
 - config score
 - config quests
 - playgama sdk
-- decal indexed DB
-- 2 enemies together

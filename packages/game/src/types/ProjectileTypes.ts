@@ -16,14 +16,15 @@ export namespace Projectile {
 
     count?: number;
     spreadAngle?: number;
-  
+
     radius?: number;
+    rotation?: number;
     useRadiusDamage?: boolean;
     activateDelay?: number;
     activateRadius?: number;
 
     activateAudio?: Weapon.Audio.Asset;
-  
+
     force?: number;
     bounce?: number;
     drag?: number;
