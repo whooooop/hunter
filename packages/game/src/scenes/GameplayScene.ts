@@ -20,7 +20,7 @@ import { connectionStateCollection } from '../storage/collections/connectionStat
 import { enemyStateCollection } from '../storage/collections/enemyState.collection';
 import { gameStateCollection } from '../storage/collections/gameState.collection';
 import { playerStateCollection } from '../storage/collections/playerState.collection';
-import { Damageable, Enemy, Game, Level, Loading, Location, Player, ScoreEvents, ShopEvents } from '../types';
+import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../types';
 import { WaveInfo, WeaponStatus } from '../ui';
 import { createLogger } from '../utils/logger';
 import { GameOverView } from '../views/gameover';
@@ -225,13 +225,13 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.getCollection<Player.State>(playerStateCollection)!.addItem(playerId, { x: 0, y: 0, vx: 0, vy: 0 });
     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.REVOLVER, price: 0 });
-    emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.SAWED, price: 0 });
+    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.SAWED, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MACHINE, price: 0 });
+    // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
     this.waveController.start();
     this.projectileController.setSimulate(false);
 
-    emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
   }
 
   private handlePause(payload: Game.Events.Pause.Payload): void {
