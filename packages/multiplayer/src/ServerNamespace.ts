@@ -27,6 +27,10 @@ export class ServerNamespace<SessionData extends object> extends BaseNamespace {
     super(id, storage, config);
   }
 
+  public isTimeouted(): boolean {
+    return this.config.timeout ? Date.now() - this.createdAt > this.config.timeout : false;
+  }
+
   public connectClient(clientSocket: ClientSocket<SessionData>) {
     this.sockets.set(clientSocket.id, clientSocket);
     clientSocket.namespace = this;
@@ -39,7 +43,6 @@ export class ServerNamespace<SessionData extends object> extends BaseNamespace {
       clientSocket.namespace = null;
     }
     this.sockets.delete(clientId);
-    this.lastMessageTime = Date.now();
   }
 
   public getConnectionsSize(): number {
@@ -79,6 +82,12 @@ export class ServerNamespace<SessionData extends object> extends BaseNamespace {
       if (!excludeClientId || clientSocket.id !== excludeClientId) {
         this.server.send(clientSocket.id, messageBytes);
       }
+    });
+  }
+
+  public disconnectAllClients() {
+    this.sockets.forEach((clientSocket) => {
+      clientSocket.disconnect();
     });
   }
 }

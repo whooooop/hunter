@@ -30,6 +30,7 @@ export class MultiplayerServer<Session extends object = any> {
     private readonly config: Config<Session>
   ) {
     this.wss = new WebSocketServer({ noServer: true });
+    setInterval(() => this.cleanupNamespaces(), 60000);
   }
 
   initializeWebSocketServer(httpServer: HttpServer) {
@@ -64,6 +65,15 @@ export class MultiplayerServer<Session extends object = any> {
           ws.close(1008, 'Connection error');
         }
       });
+    });
+  }
+
+  private cleanupNamespaces() {
+    this.namespaces.forEach((namespace, namespaceId) => {
+      if (namespace.isTimeouted()) {
+        namespace.disconnectAllClients();
+        this.namespaces.delete(namespaceId);
+      }
     });
   }
 
@@ -146,7 +156,6 @@ export class MultiplayerServer<Session extends object = any> {
     const namespace = this.namespaces.get(namespaceId)!;
 
     if (namespace) {
-      console.log('disconnect', namespace);
       namespace.disconnectClient(clientId);
       this.clientNamespaceMap.delete(clientId);
       this.sockets.delete(clientId);

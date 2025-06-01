@@ -1,6 +1,5 @@
 - multipleyer player color
 - multipleyer view
-- server remove games
 - mobile controls
 - machine shoot sound
 - settings view

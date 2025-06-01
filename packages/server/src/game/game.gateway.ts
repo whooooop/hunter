@@ -3,6 +3,7 @@ import { ConnectionState, PlayerState } from '@hunter/storage-proto';
 import { GameState } from '@hunter/storage-proto/dist/storage';
 import { Injectable, Logger } from '@nestjs/common';
 import { Server as HttpServer, IncomingMessage } from 'http';
+import * as ms from 'ms';
 import { parse } from 'url';
 import { connectionStateCollection } from './collections/connectionState.collection';
 import { enemyStateCollection } from './collections/enemyState.collection';
@@ -30,7 +31,7 @@ export class GameGateway {
       onJoin: this.onJoin,
       onDisconnect: this.onDisconnect,
       namespace: {
-        timeout: 60000,
+        timeout: ms('30m'),
         storageId: gameStorage
       }
     });
