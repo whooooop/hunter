@@ -1,5 +1,5 @@
 import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
-import { ConnectionState, EnemyState, GameState } from '@hunter/storage-proto/dist/storage';
+import { ConnectionState, EnemyState, GameState, ReplayEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import { DISPLAY, GAMEOVER, VERSION } from '../config';
 import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../controllers';
@@ -18,11 +18,13 @@ import { QuestService } from '../services/QuestService';
 import { gameStorage } from '../storage';
 import { connectionStateCollection } from '../storage/collections/connectionState.collection';
 import { enemyStateCollection } from '../storage/collections/enemyState.collection';
+import { replayEventCollection } from '../storage/collections/events.collectio';
 import { gameStateCollection } from '../storage/collections/gameState.collection';
 import { playerStateCollection } from '../storage/collections/playerState.collection';
 import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../types';
 import { WaveInfo, WeaponStatus } from '../ui';
 import { createLogger } from '../utils/logger';
+import { generateId } from '../utils/stringGenerator';
 import { GameOverView } from '../views/gameover';
 import { LoadingView } from '../views/loading/LoadingView';
 import { PauseView } from '../views/pause';
@@ -35,6 +37,7 @@ const logger = createLogger('GameplayScene');
 
 interface GameplaySceneData {
   levelId: LevelId;
+  gameId?: string;
 }
 
 export class GameplayScene extends Phaser.Scene {
@@ -72,12 +75,15 @@ export class GameplayScene extends Phaser.Scene {
   private mainPlayerId!: string;
   private players: Map<string, PlayerEntity> = new Map();
 
+  private isHost: boolean = false;
   private attempt: number = 1;
   private playTime: number = 0;
   private kills: number = 0;
 
+  private gameId?: string;
   private isGameOver: boolean = false;
   private isMultiplayer: boolean = false;
+  private sceneLoaded: boolean = false;
 
   private storage!: StorageSpace;
 
@@ -91,10 +97,11 @@ export class GameplayScene extends Phaser.Scene {
     (window as any)._r = registry;
   }
 
-  init({ levelId }: GameplaySceneData) {
+  init({ levelId, gameId }: GameplaySceneData) {
     this.loadingView = new LoadingView(this, { minLoadingTime: 2000 });
     this.levelConfig = getLevel(levelId);
     this.levelId = levelId;
+    this.gameId = gameId;
     this.location = getLocation(this, this.levelConfig.location);
     this.storage = StorageSpace.create(gameStorage)!;
 
@@ -122,6 +129,11 @@ export class GameplayScene extends Phaser.Scene {
 
   clear(): void {
     this.isGameOver = false;
+    this.sceneLoaded = false;
+    this.isMultiplayer = false;
+    this.gameId = undefined;
+    this.isHost = false;
+    this.playTime = 0;
     this.kills = 0;
     this.location.destroy();
     this.waveController.destroy();
@@ -137,7 +149,7 @@ export class GameplayScene extends Phaser.Scene {
     this.enemies.clear();
     this.damageableObjects.clear();
     this.pauseView.close();
-    // this.multiplayerController?.destroy();
+    this.multiplayerController?.destroy();
     this.keyboardController.destroy();
 
     this.resume();
@@ -189,9 +201,10 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
-    const gameId = new URLSearchParams(window.location.search).get('game');
-    if (gameId) {
-      this.multiplayerInit(this.mainPlayerId, gameId);
+    this.sceneLoaded = true;
+
+    if (this.gameId) {
+      this.multiplayerInit(this.mainPlayerId, this.gameId);
     } else {
       this.singlePlayerInit(this.mainPlayerId);
     }
@@ -208,6 +221,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private async singlePlayerInit(playerId: string): Promise<void> {
     const quest = await this.questService.getCurrentQuest(this.levelId);
+    this.isHost = true;
 
     if (quest) {
       this.questController = new QuestController(this, this.levelId, quest.id);
@@ -220,11 +234,12 @@ export class GameplayScene extends Phaser.Scene {
       playersCount: 1,
       started: false,
       paused: false,
+      finished: false,
       createdAt: Date.now().toString(),
     });
     this.storage.getCollection<Player.State>(playerStateCollection)!.addItem(playerId, { x: 0, y: 0, vx: 0, vy: 0 });
     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
-    emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.LAUNCHER, price: 0 });
+    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.LAUNCHER, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.SAWED, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MACHINE, price: 0 });
@@ -242,7 +257,8 @@ export class GameplayScene extends Phaser.Scene {
   private pause() {
     this.pauseView.open({
       levelId: this.levelId,
-      questId: this.questId
+      questId: this.questId,
+      showReplay: this.isHost
     });
     this.time.timeScale = 0;
     this.physics.world.pause();
@@ -255,9 +271,27 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private handleReplay(payload: Game.Events.Replay.Payload): void {
+    const gameId = this.isMultiplayer ? generateId() : undefined;
+
+    if (this.isMultiplayer && gameId) {
+      this.storage.getCollection<ReplayEvent>(replayEventCollection)!.addItem(gameId, {
+        gameId
+      });
+    }
+
+    this.replay(gameId);
+  }
+
+  private replay(gameId?: string): void {
     this.attempt++;
     this.clear();
-    this.scene.start(SceneKeys.RELOAD, { sceneKey: SceneKeys.GAMEPLAY, payload: { levelId: this.levelId } });
+    this.scene.start(SceneKeys.RELOAD, {
+      sceneKey: SceneKeys.GAMEPLAY,
+      payload: {
+        levelId: this.levelId,
+        gameId
+      }
+    });
   }
 
   private handleExit(payload: Game.Events.Exit.Payload): void {
@@ -287,8 +321,14 @@ export class GameplayScene extends Phaser.Scene {
     });
 
     this.storage.getCollection<GameState>(gameStateCollection)!.subscribe('Add', (id, record, collection, from) => {
-      console.log('is host', record.data.host === playerId);
-      this.storage.getCollection<EnemyState>(enemyStateCollection)!.setReadonly(record.data.host !== playerId);
+      this.isHost = record.data.host === playerId;
+      this.storage.getCollection<EnemyState>(enemyStateCollection)!.setReadonly(!this.isHost);
+    });
+
+    this.storage.getCollection<ReplayEvent>(replayEventCollection)!.subscribe('Add', (id, record, collection, from) => {
+      setTimeout(() => {
+        this.replay(record.data.gameId);
+      }, 2000);
     });
 
     this.multiplayerController = new MultiplayerController(this, this.storage);
@@ -300,8 +340,7 @@ export class GameplayScene extends Phaser.Scene {
     const game = this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game');
 
     const allReady = connections.getSize() === game?.playersCount && connections.getItems().every(data => data.ready);
-    if (allReady && game?.host === this.mainPlayerId) {
-      console.log('all ready');
+    if (allReady && game?.host === this.mainPlayerId && !game?.finished) {
       this.projectileController.setSimulate(false);
       this.waveController.start();
     }
@@ -351,7 +390,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number): void {
-    if (this.isMultiplayer) {
+    if (this.isMultiplayer && this.pingText) {
       this.pingText.setText(`Ping: ${this.multiplayerController.ping}ms`);
     }
 
@@ -382,10 +421,18 @@ export class GameplayScene extends Phaser.Scene {
     this.enemies.forEach((enemy) => {
       enemy.update(time, delta);
       if (enemy instanceof EnemyEntity && enemy.getPosition().x < 0) {
-        if (GAMEOVER) {
+        if (GAMEOVER && !this.isGameOver) {
           this.isGameOver = true;
-          this.gameOverView.open({ attempt: this.attempt, time: this.playTime, kills: this.kills });
-          this.waveController.stop();
+          this.gameOverView.open({
+            attempt: this.attempt,
+            time: this.playTime,
+            kills: this.kills,
+            showReplay: this.isHost
+          });
+          if (this.isHost) {
+            this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game')!.finished = true;
+            this.waveController.stop();
+          }
         }
 
         const enemyEntity = this.enemies.get(enemy.id);

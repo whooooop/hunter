@@ -53,6 +53,7 @@ export class PlayerEntity {
   private bodyHeight: number = 50;
   private bodyWidth: number = 50;
   private containerOffsetY: number = 20;
+  private jumpHeight: number = 140;
 
   // Анимация ног
   private walkPhase: number = 0; // Текущая фаза анимации ходьбы
@@ -100,10 +101,10 @@ export class PlayerEntity {
 
     this.motionController = new MotionController2(scene, this.body, {
       acceleration: 850,
-      deceleration: 950,
-      friction: 800,
-      maxVelocityX: 250,
-      maxVelocityY: 220,
+      deceleration: 3400,
+      friction: 2400,
+      maxVelocityX: 320,
+      maxVelocityY: 280,
     });
 
     this.motionController.setState(state);
@@ -279,7 +280,7 @@ export class PlayerEntity {
   }
 
   private jumpAction(): void {
-    this.motionController.jump();
+    this.motionController.jump(this.jumpHeight);
     this.scene.sound.play(jumpAudio.key, { volume: settingsService.getValue('audioEffectsVolume') as number });
   }
 

@@ -1,15 +1,14 @@
-- multipleyer replay
 - multipleyer player color
+- multipleyer view
+- server remove games
 - mobile controls
 - machine shoot sound
 - settings view
-- multipleyer view
-- crypto storage key & data
-- server remove games
 - win popup
 - sound death
 - config waves
 - config weapons
 - config score
 - config quests
+- crypto storage key & data
 - playgama sdk

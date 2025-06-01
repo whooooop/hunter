@@ -38,10 +38,10 @@ export class PauseView {
     this.questService = QuestService.getInstance();
   }
 
-  open({ levelId, questId }: { levelId: LevelId, questId: string }) {
+  open({ levelId, questId, showReplay }: { levelId: LevelId, questId: string, showReplay: boolean }) {
     if (this.isOpen) return;
     this.isOpen = true;
-    this.render();
+    this.render(showReplay);
 
     this.bankService.getPlayerBalance(Bank.Currency.Star).then((balance) => {
       this.renderStars(balance);
@@ -89,7 +89,7 @@ export class PauseView {
     });
   }
 
-  render() {
+  render(showReplay: boolean) {
     this.container = this.scene.add.container(this.scene.cameras.main.width / 2, this.scene.cameras.main.height / 2)
       .setScale(0.5)
       .setAlpha(0)
@@ -99,31 +99,32 @@ export class PauseView {
     const blockTitle = this.scene.add.image(-200, -240, BlockTitleTexture.key).setScale(BlockTitleTexture.scale);
     const text = this.scene.add.text(-200, -240, pauseText.translate.toUpperCase(), { fontSize: 40, color: '#fff', fontFamily: FONT_FAMILY.BOLD }).setOrigin(0.5).setRotation(-0.05);
 
-    const playButton = new UiPlayButton(this.scene, -250, -100);
-    const replayButton = new UiReplayButton(this.scene, -250, 30);
-    const menuButton = new UiMenuButton(this.scene, -250, 160);
+    this.container.add(block);
+    this.container.add(blockTitle);
+    this.container.add(text);
 
+    const playButton = new UiPlayButton(this.scene, -250, -100);
+    this.container.add(playButton);
     playButton.on('pointerdown', () => {
       emitEvent(this.scene, Game.Events.Pause.Local, {});
       this.close();
     });
 
-    replayButton.on('pointerdown', () => {
-      emitEvent(this.scene, Game.Events.Replay.Local, {});
-      this.close();
-    });
+    if (showReplay) {
+      const replayButton = new UiReplayButton(this.scene, -250, 30);
+      this.container.add(replayButton);
+      replayButton.on('pointerdown', () => {
+        emitEvent(this.scene, Game.Events.Replay.Local, {});
+        this.close();
+      });
+    }
 
+    const menuButton = new UiMenuButton(this.scene, -250, 160);
+    this.container.add(menuButton);
     menuButton.on('pointerdown', () => {
       emitEvent(this.scene, Game.Events.Exit.Local, {});
       this.close();
     });
-
-    this.container.add(block);
-    this.container.add(blockTitle);
-    this.container.add(text);
-    this.container.add(playButton);
-    this.container.add(replayButton);
-    this.container.add(menuButton);
   }
 
   renderStars(balance: number = 0) {

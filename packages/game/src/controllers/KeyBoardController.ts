@@ -51,7 +51,7 @@ export class KeyBoardController {
     this.jumpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.pauseKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
-    if (this.isMobile) {
+    if (!this.scene.sys.game.device.os.desktop) {
       this.createMobileControls();
     }
   }
@@ -159,7 +159,7 @@ export class KeyBoardController {
     this.nextWeaponKey.destroy();
     this.prevWeaponKey.destroy();
     this.pauseKey.destroy();
-    this.joystick.destroy();
+    this.joystick?.destroy();
   }
 
   public update(time: number, delta: number): void {

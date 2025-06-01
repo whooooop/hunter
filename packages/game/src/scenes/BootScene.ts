@@ -1,10 +1,10 @@
 import { SceneKeys } from ".";
-import { LoadingView } from "../views/loading/LoadingView";
-import { BackgroundView } from "../views/background/BackgroundView";
-import { UiBackButton } from "../ui/BackButton";
-import { LevelId } from "../levels";
-import { MenuSceneTypes } from "./MenuScene/MenuSceneTypes";
 import { START_SCENE_GAMEPLAY } from "../config";
+import { LevelId } from "../levels";
+import { UiBackButton } from "../ui/BackButton";
+import { BackgroundView } from "../views/background/BackgroundView";
+import { LoadingView } from "../views/loading/LoadingView";
+import { MenuSceneTypes } from "./MenuScene/MenuSceneTypes";
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -19,7 +19,11 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     if (START_SCENE_GAMEPLAY) {
-      this.scene.start(SceneKeys.GAMEPLAY, { levelId: LevelId.FOREST });
+      const gameId = new URLSearchParams(window.location.search).get('game')
+      this.scene.start(SceneKeys.GAMEPLAY, {
+        levelId: LevelId.FOREST,
+        gameId
+      });
     } else {
       this.scene.start(SceneKeys.MENU, { view: MenuSceneTypes.ViewKeys.HOME });
     }

@@ -16,6 +16,7 @@ export interface GameState {
   playersCount: number;
   paused: boolean;
   started: boolean;
+  finished: boolean;
 }
 
 export interface WaveState {
@@ -89,8 +90,12 @@ export interface EnemyDeathEvent {
   target: string;
 }
 
+export interface ReplayEvent {
+  gameId: string;
+}
+
 function createBaseGameState(): GameState {
-  return { host: "", levelId: "", createdAt: "0", playersCount: 0, paused: false, started: false };
+  return { host: "", levelId: "", createdAt: "0", playersCount: 0, paused: false, started: false, finished: false };
 }
 
 export const GameState: MessageFns<GameState> = {
@@ -112,6 +117,9 @@ export const GameState: MessageFns<GameState> = {
     }
     if (message.started !== false) {
       writer.uint32(48).bool(message.started);
+    }
+    if (message.finished !== false) {
+      writer.uint32(56).bool(message.finished);
     }
     return writer;
   },
@@ -171,6 +179,14 @@ export const GameState: MessageFns<GameState> = {
           message.started = reader.bool();
           continue;
         }
+        case 7: {
+          if (tag !== 56) {
+            break;
+          }
+
+          message.finished = reader.bool();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -188,6 +204,7 @@ export const GameState: MessageFns<GameState> = {
       playersCount: isSet(object.playersCount) ? globalThis.Number(object.playersCount) : 0,
       paused: isSet(object.paused) ? globalThis.Boolean(object.paused) : false,
       started: isSet(object.started) ? globalThis.Boolean(object.started) : false,
+      finished: isSet(object.finished) ? globalThis.Boolean(object.finished) : false,
     };
   },
 
@@ -211,6 +228,9 @@ export const GameState: MessageFns<GameState> = {
     if (message.started !== false) {
       obj.started = message.started;
     }
+    if (message.finished !== false) {
+      obj.finished = message.finished;
+    }
     return obj;
   },
 
@@ -225,6 +245,7 @@ export const GameState: MessageFns<GameState> = {
     message.playersCount = object.playersCount ?? 0;
     message.paused = object.paused ?? false;
     message.started = object.started ?? false;
+    message.finished = object.finished ?? false;
     return message;
   },
 };
@@ -1303,6 +1324,64 @@ export const EnemyDeathEvent: MessageFns<EnemyDeathEvent> = {
     const message = createBaseEnemyDeathEvent();
     message.damage = object.damage ?? 0;
     message.target = object.target ?? "";
+    return message;
+  },
+};
+
+function createBaseReplayEvent(): ReplayEvent {
+  return { gameId: "" };
+}
+
+export const ReplayEvent: MessageFns<ReplayEvent> = {
+  encode(message: ReplayEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.gameId !== "") {
+      writer.uint32(10).string(message.gameId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ReplayEvent {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseReplayEvent();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.gameId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ReplayEvent {
+    return { gameId: isSet(object.gameId) ? globalThis.String(object.gameId) : "" };
+  },
+
+  toJSON(message: ReplayEvent): unknown {
+    const obj: any = {};
+    if (message.gameId !== "") {
+      obj.gameId = message.gameId;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ReplayEvent>, I>>(base?: I): ReplayEvent {
+    return ReplayEvent.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ReplayEvent>, I>>(object: I): ReplayEvent {
+    const message = createBaseReplayEvent();
+    message.gameId = object.gameId ?? "";
     return message;
   },
 };

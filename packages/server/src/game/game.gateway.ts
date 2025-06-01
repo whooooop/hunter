@@ -75,6 +75,7 @@ export class GameGateway {
         playersCount: 2,
         paused: false,
         started: false,
+        finished: false,
         createdAt: Date.now().toString(),
       });
     }

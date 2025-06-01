@@ -2,12 +2,11 @@ import { DISPLAY, FONT_FAMILY } from "../../config";
 import { UiReplayButton } from "../../ui/ReplayButton";
 import { GameOverTexture3, TextTexture } from "./textures";
 
-import { BackgroundTexture, GameOverTexture2, TitleTexture } from "./textures";
-import { GameOverTexture1 } from "./textures";
-import { exitText1, exitText2, exitText3, gameOverText, killsText, timeText, tryAgainText1, tryAgainText2, tryAgainText3 } from "./translates";
 import { emitEvent } from "../../GameEvents";
 import { Game } from "../../types";
 import { clickAudio } from "../../ui/Button";
+import { BackgroundTexture, GameOverTexture1, GameOverTexture2, TitleTexture } from "./textures";
+import { exitText1, exitText2, exitText3, gameOverText, killsText, timeText, tryAgainText1, tryAgainText2, tryAgainText3 } from "./translates";
 
 const variants = [
   {
@@ -52,13 +51,13 @@ export class GameOverView {
     // this.open({ attempt: 1, time: 0, kills: 0 });
   }
 
-  open({ attempt = 1, time = 0, kills = 0 }: { attempt: number, time: number, kills: number }) {
+  open({ attempt = 1, time = 0, kills = 0, showReplay = false }: { attempt: number, time: number, kills: number, showReplay: boolean }) {
     if (this.isOpen) return;
     this.isOpen = true;
     this.container.setScale(0).setAlpha(0);
     this.overlay.setAlpha(0);
 
-    this.render(attempt, time, kills);
+    this.render(attempt, time, kills, showReplay);
 
     this.scene.tweens.add({
       ease: Phaser.Math.Easing.Bounce.Out,
@@ -75,9 +74,9 @@ export class GameOverView {
       duration: 500,
     });
   }
-  
 
-  render(attempt: number, time: number, kills: number) {
+
+  render(attempt: number, time: number, kills: number, showReplay: boolean) {
     const variant = variants[Math.max(attempt - 1, 0) % variants.length];
 
     const background = this.scene.add.image(0, 0, BackgroundTexture.key).setOrigin(0.5).setScale(BackgroundTexture.scale);
@@ -94,15 +93,17 @@ export class GameOverView {
     this.container.add(attemptImage);
 
 
-    const replayContainer = this.scene.add.container(50, 100);
-    const replayText = this.scene.add.text(-100, 0, variant.replayText.translate, { fontSize: 20, fontFamily: FONT_FAMILY.REGULAR, color: '#000'}).setOrigin(0, 0.5);
-    const replayBackground = this.scene.add.image(0, 0, TextTexture.key).setOrigin(0.5).setScale(TextTexture.scale);
-    const replayButton = new UiReplayButton(this.scene, -170, 0);
-    replayButton.on('pointerdown', () => emitEvent(this.scene, Game.Events.Replay.Local, {}));
-    replayContainer.add(replayBackground);
-    replayContainer.add(replayText);
-    replayContainer.add(replayButton);
-    this.container.add(replayContainer);
+    if (showReplay) {
+      const replayContainer = this.scene.add.container(50, 100);
+      const replayText = this.scene.add.text(-100, 0, variant.replayText.translate, { fontSize: 20, fontFamily: FONT_FAMILY.REGULAR, color: '#000' }).setOrigin(0, 0.5);
+      const replayBackground = this.scene.add.image(0, 0, TextTexture.key).setOrigin(0.5).setScale(TextTexture.scale);
+      const replayButton = new UiReplayButton(this.scene, -170, 0);
+      replayButton.on('pointerdown', () => emitEvent(this.scene, Game.Events.Replay.Local, {}));
+      replayContainer.add(replayBackground);
+      replayContainer.add(replayText);
+      replayContainer.add(replayButton);
+      this.container.add(replayContainer);
+    }
 
     const exitContainer = this.scene.add.container(110, 170);
     const exitText = this.scene.add.text(0, 0, variant.exitText.translate.toUpperCase(), { fontSize: 12, fontFamily: FONT_FAMILY.REGULAR, color: '#000' }).setOrigin(0.5);
@@ -118,7 +119,7 @@ export class GameOverView {
     exitContainer.add(exitText);
     this.container.add(exitContainer);
 
-    const minutes = Math.floor(time / 1000 / 60).toString().padStart(2, '0') ;
+    const minutes = Math.floor(time / 1000 / 60).toString().padStart(2, '0');
     const seconds = Math.floor(time / 1000 % 60).toString().padStart(2, '0');
     const timeTextElement = this.scene.add.text(-100, -56, timeText.translate.toUpperCase() + ' ' + minutes + ':' + seconds, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#fff' }).setOrigin(0, 0.5);
     const killsTextElement = this.scene.add.text(-100, 0, killsText.translate.toUpperCase() + ' ' + kills, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#fff' }).setOrigin(0, 0.5);

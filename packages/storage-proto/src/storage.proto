@@ -9,6 +9,7 @@ message GameState {
   int32 playersCount = 4;
   bool paused = 5;
   bool started = 6;
+  bool finished = 7;
 }
 
 message WaveState {
@@ -80,4 +81,8 @@ message EnemyAnimationEvent {
 message EnemyDeathEvent {
   int32 damage = 1;
   string target = 2;
+}
+
+message ReplayEvent {
+  string gameId  = 1;
 }
