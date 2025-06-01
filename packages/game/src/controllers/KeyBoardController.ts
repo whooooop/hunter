@@ -76,7 +76,7 @@ export class KeyBoardController {
     // });
 
     fireArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      this.createButtonGhost(pointer.x, pointer.y, 100);
+      // this.createButtonGhost(pointer.x, pointer.y, 100);
       console.log('pointerdown', pointer.x, pointer.y);
       emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: true });
       if (window.navigator.vibrate) {
