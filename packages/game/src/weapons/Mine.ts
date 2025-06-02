@@ -1,7 +1,7 @@
-import { WeaponType } from './WeaponTypes';
 import { ProjectileName } from "../projectiles/ProjectileName";
-import { Weapon, WeaponTexture } from "../types/weaponTypes";
 import { MineImageTexture_0 } from "../textures/mineTexture";
+import { Weapon, WeaponTexture } from "../types/weaponTypes";
+import { WeaponType } from './WeaponTypes';
 
 const WeaponMineTexture_0: WeaponTexture = {
   ...MineImageTexture_0,
@@ -16,7 +16,7 @@ export const MineConfig: Weapon.Config = {
   texture: WeaponMineTexture_0,
   reloadTime: 1600,    // Скорость перезарядки в мс
   magazineSize: 1,     // Размер магазина
-  damage: 5000,         // Урон от одного выстрела
+  damage: 300,         // Урон от одного выстрела
   speed: [200, 0],   // Скорость пули
   fireRate: 500,       // Задержка между выстрелами в мс
   spreadAngle: 0,      // Угол разброса при выстреле в градусах

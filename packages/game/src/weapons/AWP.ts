@@ -17,8 +17,8 @@ const WeaponAWPTexture_0: WeaponTexture = {
 export const AWPConfig: Weapon.Config = {
   name: WeaponType.AWP,
   texture: WeaponAWPTexture_0,
-  reloadTime: 2000,      // Скорость перезарядки в мс
-  magazineSize: 8,      // Размер магазина
+  reloadTime: 3000,      // Скорость перезарядки в мс
+  magazineSize: 6,      // Размер магазина
   damage: 1000,         // Урон от одного выстрела
   speed: [8000, 4000],  // Скорость пули
   fireRate: 400,       // Задержка между выстрелами в мс

@@ -1,12 +1,12 @@
 import { Enemy } from '../../types/enemyTypes';
 
 import atlasUrl from './assets/capibara.atlas';
-import jsonUrl from './assets/capibara.json';
 import textureUrl from './assets/capibara.atlas.png';
+import jsonUrl from './assets/capibara.json';
 
 export const CapibaraConfig: Enemy.Config = {
   type: Enemy.Type.CAPIBARA,
-  health: 47,
+  health: 300,
   scale: .11,
   offset: { x: 6, y: 24 },
   baunds: {
@@ -14,7 +14,7 @@ export const CapibaraConfig: Enemy.Config = {
     body: { x: 0, y: 0, width: 50, height: 46 },
   },
   score: [
-    { death: true, value: 50 },
+    { death: true, value: 80 },
   ],
   damageMultiplier: {},
   killCombo: [],

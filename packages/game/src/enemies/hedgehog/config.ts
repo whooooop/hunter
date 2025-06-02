@@ -1,11 +1,11 @@
 import { Enemy } from '../../types/enemyTypes';
 import atlasUrl from './assets/hedgehog.atlas';
-import jsonUrl from './assets/hedgehog.json';
 import textureUrl from './assets/hedgehog.atlas.png';
+import jsonUrl from './assets/hedgehog.json';
 
 export const HedgehogConfig: Enemy.Config = {
   type: Enemy.Type.HEDGEHOG,
-  health: 47,
+  health: 90,
   scale: 0.1,
   offset: { x: 0, y: 18 },
   baunds: {
@@ -13,7 +13,7 @@ export const HedgehogConfig: Enemy.Config = {
     head: { x: 0, y: 18, width: 42, height: 12 },
   },
   score: [
-    { death: true, value: 50 },
+    { death: true, value: 90 },
   ],
   damageMultiplier: {},
   killCombo: [],

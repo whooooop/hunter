@@ -1,11 +1,11 @@
 import { Enemy } from '../../types/enemyTypes';
+import atlasUrl from './assets/squirrelAngry.atlas';
 import squirrelAngryAtlasUrl from './assets/squirrelAngry.atlas.png';
 import jsonUrl from './assets/squirrelAngry.json';
-import atlasUrl from './assets/squirrelAngry.atlas';
 
 export const SquirrelAngryConfig: Enemy.Config = {
   type: Enemy.Type.SQUIRREL_ANGRY,
-  health: 47,
+  health: 120,
   scale: 0.1,
   offset: { x: 0, y: 20 },
   baunds: {
@@ -13,7 +13,7 @@ export const SquirrelAngryConfig: Enemy.Config = {
     head: { x: 0, y: 0, width: 15, height: 18 },
   },
   score: [
-    { death: true, value: 50 },
+    { death: true, value: 100 },
   ],
   damageMultiplier: {},
   killCombo: [],

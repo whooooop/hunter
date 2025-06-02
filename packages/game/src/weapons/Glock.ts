@@ -1,6 +1,6 @@
-import { WeaponType } from "./WeaponTypes";
 import { ProjectileName } from '../projectiles/ProjectileName';
 import { Weapon } from '../types/weaponTypes';
+import { WeaponType } from "./WeaponTypes";
 
 import { BaseBoltAudio, BaseEmptyAudio } from "./assets/baseAudio";
 
@@ -27,17 +27,17 @@ export const GlockConfig: Weapon.Config = {
   // Патроны
   damage: 18,             // Урон от одного выстрела
   speed: [4000, 4000],    // Скорость пули
-  magazineSize: 12,       // Размер магазина
+  magazineSize: 15,       // Размер магазина
 
   firePointOffset: [0, -7],
 
   // Перезарядка
-  reloadTime: 400,        // Скорость перезарядки в мс
-  boltTime: 600,          // Время взвода затвора
+  reloadTime: 900,        // Скорость перезарядки в мс
+  boltTime: 400,          // Время взвода затвора
 
   // Параметры стрельбы
-  fireRate: 300,          // Задержка между выстрелами в мс
-  aimingTime: 250,        // Время прицеливания в мс
+  fireRate: 180,          // Задержка между выстрелами в мс
+  aimingTime: 200,        // Время прицеливания в мс
   spreadAngle: 5,        // Угол разброса при выстреле в градусах
   automatic: true,        // Пистолет автоматический
   autoreload: false,      // Автоматическая перезарядка
@@ -47,7 +47,7 @@ export const GlockConfig: Weapon.Config = {
   // Параметры отдачи
   recoilForce: 0,      // Сила отдачи
   recoilRecovery: 0,   // Скорость восстановления от отдачи
-  
+
   sight: true,
   shellCasings: true,
 

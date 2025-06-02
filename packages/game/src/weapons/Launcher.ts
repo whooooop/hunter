@@ -1,16 +1,16 @@
-import { WeaponType } from "./WeaponTypes";
 import { ProjectileName } from '../projectiles/ProjectileName';
 import { Weapon } from '../types/weaponTypes';
+import { WeaponType } from "./WeaponTypes";
 
+import LauncherShootAudioUrl from './assets/audio/launcher_shoot_audio_0.mp3';
 import { BaseBoltAudio, BaseEmptyAudio } from "./assets/baseAudio";
 import LauncherTextureUrl from './assets/textures/launcher_texture_0.png';
-import LauncherShootAudioUrl from './assets/audio/launcher_shoot_audio_0.mp3';
 
 export const LauncherConfig: Weapon.Config = {
   name: WeaponType.LAUNCHER,
   texture: {
     key: 'launcher_texture_0',
-    url: LauncherTextureUrl, 
+    url: LauncherTextureUrl,
     scale: 0.5,
     offset: {
       x: 22,
@@ -23,13 +23,13 @@ export const LauncherConfig: Weapon.Config = {
   damage: 250,           // Урон от одного выстрела
   speed: [1200, 100],     // Скорость пули
   magazineSize: 6,      // Размер магазина
-  
+
   // Перезарядка
   reloadTime: 1000,     // Скорость перезарядки
-  boltTime: 200,        // Время взвода затвора
+  boltTime: 250,        // Время взвода затвора
   reloadByOne: true,    // Перезарядка по одной пуле
-  reloadItemTime: 400,  // Скорость перезарядки одной еденицы в мс
-  
+  reloadItemTime: 350,  // Скорость перезарядки одной еденицы в мс
+
   // Параметры стрельбы
   fireRate: 200,       // Задержка между выстрелами в мс
   aimingTime: 250,      // Время прицеливания в мс
@@ -50,6 +50,6 @@ export const LauncherConfig: Weapon.Config = {
   sight: true,
   shellCasings: true,
   triggerRelease: true, // Освобождение триггера после каждого выстрела
-  
+
   projectile: ProjectileName.PROJECTILE
 }

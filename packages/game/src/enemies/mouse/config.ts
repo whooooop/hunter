@@ -1,11 +1,11 @@
 import { Enemy } from '../../types/enemyTypes';
+import atlasUrl from './assets/mouse.atlas';
 import mouseWalkTextureUrl from './assets/mouse.atlas.png';
 import jsonUrl from './assets/mouse.json';
-import atlasUrl from './assets/mouse.atlas';
 
 export const MouseConfig: Enemy.Config = {
   type: Enemy.Type.MOUSE,
-  health: 47,
+  health: 70,
   scale: 0.1,
   offset: { x: 0, y: 12 },
   baunds: {

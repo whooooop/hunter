@@ -1,11 +1,11 @@
 import { Enemy } from '../../types/enemyTypes';
 import atlasUrl from './assets/deer.atlas';
-import jsonUrl from './assets/deer.json';
 import textureUrl from './assets/deer.atlas.png';
+import jsonUrl from './assets/deer.json';
 
 export const DeerConfig: Enemy.Config = {
   type: Enemy.Type.DEER,
-  health: 400,
+  health: 1250,
   scale: 0.1,
   offset: { x: 0, y: 44 },
   baunds: {

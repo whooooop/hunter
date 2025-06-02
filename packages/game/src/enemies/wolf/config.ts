@@ -1,11 +1,11 @@
 import { Enemy } from '../../types/enemyTypes';
+import atlasUrl from './assets/wolf.atlas';
 import wolfAtlasUrl from './assets/wolf.atlas.png';
 import jsonUrl from './assets/wolf.json';
-import atlasUrl from './assets/wolf.atlas';
 
 export const WolfConfig: Enemy.Config = {
   type: Enemy.Type.WOLF,
-  health: 47,
+  health: 300,
   scale: 0.1,
   offset: { x: 0, y: 28 },
   baunds: {
@@ -13,7 +13,7 @@ export const WolfConfig: Enemy.Config = {
     head: { x: 0, y: 0, width: 25, height: 25 },
   },
   score: [
-    { death: true, value: 50 },
+    { death: true, value: 80 },
   ],
   damageMultiplier: {},
   killCombo: [],

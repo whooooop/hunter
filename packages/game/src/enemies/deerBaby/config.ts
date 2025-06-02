@@ -1,11 +1,11 @@
 import { Enemy } from '../../types/enemyTypes';
+import atlasUrl from './assets/deerBaby.atlas';
 import deerBabyWalkTextureUrl from './assets/deerBaby.atlas.png';
 import jsonUrl from './assets/deerBaby.json';
-import atlasUrl from './assets/deerBaby.atlas';
 
 export const DeerBabyConfig: Enemy.Config = {
   type: Enemy.Type.DEER_BABY,
-  health: 47,
+  health: 150,
   scale: 0.1,
   offset: { x: 3, y: 29 },
   baunds: {
@@ -13,7 +13,7 @@ export const DeerBabyConfig: Enemy.Config = {
     head: { x: 0, y: 0, width: 20, height: 20 },
   },
   score: [
-    { death: true, value: 50 },
+    { death: true, value: 60 },
   ],
   damageMultiplier: {},
   killCombo: [],

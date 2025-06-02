@@ -1,11 +1,11 @@
 import { Enemy } from '../../types/enemyTypes';
 import atlasUrl from './assets/bear.atlas';
-import jsonUrl from './assets/bear.json';
 import textureUrl from './assets/bear.atlas.png';
+import jsonUrl from './assets/bear.json';
 
 export const BearConfig: Enemy.Config = {
   type: Enemy.Type.BEAR,
-  health: 1200,
+  health: 5000,
   scale: 0.1,
   offset: { x: -5, y: 50 },
   baunds: {
@@ -13,7 +13,7 @@ export const BearConfig: Enemy.Config = {
     head: { x: 0, y: 0, width: 60, height: 50 },
   },
   score: [
-    { death: true, value: 50 },
+    { death: true, value: 2000 },
   ],
   damageMultiplier: {},
   killCombo: [],
