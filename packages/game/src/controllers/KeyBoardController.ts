@@ -50,8 +50,9 @@ export class KeyBoardController {
   private firePointerPressed: boolean = false;
 
   private isJoystickActive: boolean = false;
+  private isJoystickPow: number = 1.1;
 
-  private dashedTimeout: number = 4000;
+  private dashedTimeout: number = 7000;
 
   public static preload(scene: Phaser.Scene): void {
     preloadJoystickTextures(scene);
@@ -113,7 +114,7 @@ export class KeyBoardController {
 
   private createJoystick(): void {
     const x = 0;
-    const y = DISPLAY.HEIGHT / 2.4;
+    const y = DISPLAY.HEIGHT / 3.4;
     const width = DISPLAY.WIDTH / 2;
     const height = DISPLAY.HEIGHT - y;
     const offset = 20;
@@ -310,8 +311,8 @@ export class KeyBoardController {
     const move = { x: 0, y: 0 };
 
     if (this.isJoystickActive) {
-      move.x = Math.sign(this.joystick.forceX) * Math.pow(Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius, 1.3);
-      move.y = Math.sign(this.joystick.forceY) * Math.pow(Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius, 1.3);
+      move.x = Math.sign(this.joystick.forceX) * Math.pow(Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius, this.isJoystickPow);
+      move.y = Math.sign(this.joystick.forceY) * Math.pow(Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius, this.isJoystickPow);
     } else {
       if (this.cursors.left.isDown) {
         move.x = -1;
