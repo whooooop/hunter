@@ -22,7 +22,7 @@ export const DEBUG = {
   QIEST: false,
 };
 
-export const GAMEOVER = false;
+export const GAMEOVER = true;
 export const START_SCENE_GAMEPLAY = true;
 
 export const VERSION = '0.2.2 Alpha'; 

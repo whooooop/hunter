@@ -1,4 +1,5 @@
 import { SceneKeys } from ".";
+import { preloadMenuAudio } from "../audio/menu";
 import { START_SCENE_GAMEPLAY } from "../config";
 import { LevelId } from "../levels";
 import { UiBackButton } from "../ui/BackButton";
@@ -15,6 +16,7 @@ export class BootScene extends Phaser.Scene {
     LoadingView.preload(this);
     BackgroundView.preload(this);
     UiBackButton.preload(this);
+    preloadMenuAudio(this);
   }
 
   create() {

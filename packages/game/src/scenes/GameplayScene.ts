@@ -1,7 +1,8 @@
 import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
 import { ConnectionState, EnemyState, GameState, ReplayEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
-import { DISPLAY, GAMEOVER, VERSION } from '../config';
+import { MenuAudio } from '../audio/menu';
+import { DISPLAY, FONT_FAMILY, GAMEOVER, VERSION } from '../config';
 import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../controllers';
 import { createEnemy } from '../enemies';
 import { EnemyEntity } from '../entities/EnemyEntity';
@@ -192,12 +193,14 @@ export class GameplayScene extends Phaser.Scene {
     this.waveInfo = new WaveInfo(this, this.storage);
     this.weaponStatus = new WeaponStatus(this, this.storage, playerId);
 
-    this.add.text(20, DISPLAY.HEIGHT - 30, VERSION, { fontSize: 16, color: '#ffffff' }).setDepth(10000);
-
     this.physics.world.setBounds(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
     this.shopController.setInteractablePlayerId(playerId);
 
     (window as any)['_s'] = this.storage;
+
+    this.add.text(20, DISPLAY.HEIGHT - 30, VERSION.toUpperCase(), { fontSize: 16, color: '#ffffff', fontFamily: FONT_FAMILY.REGULAR })
+      .setDepth(10000)
+      .setOrigin(0, 1);
   }
 
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
@@ -209,6 +212,16 @@ export class GameplayScene extends Phaser.Scene {
       this.singlePlayerInit(this.mainPlayerId);
     }
     this.playTime = 0;
+
+    const music = this.sound.get(MenuAudio.key);
+    if (music) {
+      this.tweens.add({
+        targets: music,
+        volume: 0,
+        duration: 5000,
+        ease: 'linear',
+      });
+    }
   }
 
   private handleGameStateUpdate(id: string, record: SyncCollectionRecord<GameState>, collection: SyncCollection<GameState>, from: string): void {

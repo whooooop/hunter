@@ -1,13 +1,16 @@
-import { HomeView } from "./views/Home";
-import { SceneKeys } from "../index";
-import { LoadingView } from "../../views/loading/LoadingView";
-import { BackgroundView } from "../../views/background/BackgroundView";
-import { MenuSceneTypes } from "./MenuSceneTypes";
-import { MultipleerView } from "./views/Multipleer";
+import { MenuAudio } from "../../audio/menu";
+import { DISPLAY, FONT_FAMILY, VERSION } from "../../config";
 import { offEvent, onEvent } from "../../GameEvents";
+import { SettingsService } from "../../services/SettingsService";
+import { BackgroundView } from "../../views/background/BackgroundView";
+import { LoadingView } from "../../views/loading/LoadingView";
+import { SceneKeys } from "../index";
+import { MenuSceneTypes } from "./MenuSceneTypes";
+import { HomeView } from "./views/Home";
+import { MultipleerView } from "./views/Multipleer";
+import { SelectLevelView } from "./views/SelectLevel";
 import { SettingsView } from "./views/Settings";
 import { ShopView } from "./views/Shop";
-import { SelectLevelView } from "./views/SelectLevel";
 
 export class MenuScene extends Phaser.Scene {
   private backgroundView!: BackgroundView;
@@ -36,6 +39,7 @@ export class MenuScene extends Phaser.Scene {
   preload(): void {
     HomeView.preload(this);
     SelectLevelView.preload(this);
+    SettingsView.preload(this);
   }
 
   create(): void {
@@ -47,6 +51,13 @@ export class MenuScene extends Phaser.Scene {
     this.container.add(this.backgroundView.getContainer());
 
     this.renderView(this.initialViewKey);
+
+    const settingsService = SettingsService.getInstance();
+    this.sound.play(MenuAudio.key, { loop: true, volume: settingsService.getValue('audioMusicVolume') as number });
+
+    this.add.text(DISPLAY.WIDTH - 20, DISPLAY.HEIGHT - 30, VERSION.toUpperCase(), { fontSize: 16, color: '#ffffff', fontFamily: FONT_FAMILY.REGULAR })
+      .setDepth(10000)
+      .setOrigin(1, 1);
   }
 
   playHandler(payload: MenuSceneTypes.Events.Play.Payload): void {
@@ -57,8 +68,8 @@ export class MenuScene extends Phaser.Scene {
   goToViewHandler(payload: MenuSceneTypes.Events.GoToView.Payload): void {
     this.renderView(payload.viewKey);
   }
-  
-  async renderView(viewName: MenuSceneTypes.ViewKeys): Promise<void>  {
+
+  async renderView(viewName: MenuSceneTypes.ViewKeys): Promise<void> {
     const View = this.views.get(viewName);
     if (View) {
       const leaveView = this.currentView;
@@ -83,7 +94,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   clear(): void {
-    console.log('clear MenuScene');
+    // console.log('clear MenuScene');
     offEvent(this, MenuSceneTypes.Events.Play.Name, this.playHandler, this);
     offEvent(this, MenuSceneTypes.Events.GoToView.Name, this.goToViewHandler, this);
   }
