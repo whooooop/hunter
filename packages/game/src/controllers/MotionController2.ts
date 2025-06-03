@@ -92,6 +92,12 @@ export class MotionController2 {
     }
   }
 
+  public increaseSpeed(percent: number): void {
+    this.options.maxVelocityX *= 1 + percent;
+    this.options.maxVelocityY *= 1 + percent;
+    this.updateVelocity();
+  }
+
   public decreaseSpeed(percent: number): void {
     this.moveX *= 1 - percent;
     this.moveY *= 1 - percent;

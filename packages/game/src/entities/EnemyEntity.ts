@@ -42,11 +42,11 @@ export class EnemyEntity implements Damageable.Entity {
   private _handleEnemyAnimation: (eventId: string, record: SyncCollectionRecord<EnemyAnimationEvent>) => void;
 
   constructor(
-    private readonly scene: Phaser.Scene,
+    protected readonly scene: Phaser.Scene,
     public readonly id: string,
-    private readonly config: Enemy.Config,
-    private readonly state: SyncCollectionRecord<Enemy.State>,
-    private readonly storage: StorageSpace
+    protected readonly config: Enemy.Config,
+    protected readonly state: SyncCollectionRecord<Enemy.State>,
+    protected readonly storage: StorageSpace
   ) {
     // this.config = { ...config, ...state.data };
 
@@ -236,7 +236,7 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   protected setAnimation(animation: Enemy.Animation, loop: boolean = true): void {
-    if (this.config.spine?.animations[animation] && this.trackEntry?.animation?.name !== animation) {
+    if (!this.state.readonly && this.config.spine?.animations[animation] && this.trackEntry?.animation?.name !== animation) {
       this.storage.getCollection<EnemyAnimationEvent>(enemyAnimationEvent)!.addItem(generateId(), {
         enemyId: this.id,
         animation,
@@ -406,6 +406,10 @@ export class EnemyEntity implements Damageable.Entity {
 
   public applyForce(vectorX: number, vectorY: number, force: number, strength?: number, decayRate?: number): void {
     this.motionController.applyForce(vectorX, vectorY, force, strength, decayRate);
+  }
+
+  public getHealthPercent(): number {
+    return this.damageableController.getHealthPercent();
   }
 
   public getHealth(): { current: number, max: number } {

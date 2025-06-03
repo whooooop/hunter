@@ -17,7 +17,7 @@ export class AntiAimBehavior {
     this.enemy = enemy;
     onEvent(scene, Weapon.Events.AimPoint.Local, this.setAimPoint, this)
   }
-  
+
   private setAimPoint(payload: Weapon.Events.AimPoint.Payload): void {
     this.aimPoints.set(payload.playerId, payload.targetPoint);
   }
@@ -29,10 +29,10 @@ export class AntiAimBehavior {
     this.aimPoints.forEach((aimPoint, playerId) => {
       const halfHeight = bodyBounds.height / 2;
       if (aimPoint.y < position.y + halfHeight && aimPoint.y > position.y - halfHeight) {
-        
+
         if (time - this.lastJumpTime > this.jumpDelay) {
           this.enemy.jump(this.jumpHeight, this.jumpDuration);
-          this.enemy.applyForce(aimPoint.x * -1, aimPoint.y - 10, 10, 11, 0.01);
+          // this.enemy.applyForce(aimPoint.x * -1, aimPoint.y - 10, 10, 11, 0.01);
           this.lastJumpTime = time;
         }
       }

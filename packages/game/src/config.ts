@@ -7,6 +7,8 @@ export const DISPLAY = {
 
 export const OBJECTS_DEPTH_OFFSET = 1;
 
+export const LOADING_EXTRA_DURATION = 1000;
+
 export const FONT_FAMILY = {
   REGULAR: introFontRegular.name,
   BOLD: introFontBold.name,
@@ -22,7 +24,7 @@ export const DEBUG = {
   QIEST: false,
 };
 
-export const GAMEOVER = true;
+export const GAMEOVER = false;
 export const START_SCENE_GAMEPLAY = true;
 
-export const VERSION = '0.2.3 Alpha'; 
+export const VERSION = '0.2.4 Alpha'; 

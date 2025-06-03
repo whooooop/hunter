@@ -15,7 +15,9 @@ export class HareEnemy extends EnemyEntity {
 
   public update(time: number, delta: number): void {
     super.update(time, delta);
-    // this.antiAimBehavior.update(time, delta);
+    if (this.state.data.level >= 1) {
+      this.antiAimBehavior.update(time, delta);
+    }
   }
 
   public destroy(): void {

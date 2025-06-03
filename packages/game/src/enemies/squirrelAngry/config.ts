@@ -5,7 +5,7 @@ import jsonUrl from './assets/squirrelAngry.json';
 
 export const SquirrelAngryConfig: Enemy.Config = {
   type: Enemy.Type.SQUIRREL_ANGRY,
-  health: 120,
+  health: 400,
   scale: 0.1,
   offset: { x: 0, y: 20 },
   baunds: {
