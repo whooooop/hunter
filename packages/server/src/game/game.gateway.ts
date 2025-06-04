@@ -39,6 +39,23 @@ export class GameGateway {
     this.multiplayerServer.initializeWebSocketServer(httpServer);
   }
 
+  async hasGame(namespaceId: string): Promise<boolean> {
+    return this.multiplayerServer.hasNamespace(namespaceId);
+  }
+
+  async createGame(): Promise<string> {
+    const namespaceId = Math.random().toString(36).substring(2, 10);
+    const hasGame = await this.hasGame(namespaceId);
+
+    if (hasGame) {
+      return this.createGame();
+    }
+
+    await this.multiplayerServer.createNamespace(namespaceId);
+
+    return namespaceId;
+  }
+
   async onConnection(server: MultiplayerServer, socket: ClientSocket<SessionData>, namespaceId: string, request: IncomingMessage) {
     const { pathname, query } = parse(request.url || '', true);
     const playerId = query?.playerId as string;

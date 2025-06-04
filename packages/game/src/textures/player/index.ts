@@ -39,31 +39,31 @@ export const PlayerBodyTexture: ImageTexture = {
 export const PlayerBody2Texture: ImageTexture = {
   key: 'player_body2_texture',
   url: PlayerBody2TextureUrl,
-  scale: 0.25,
+  scale: 0.23,
 }
 
 export const PlayerBody3Texture: ImageTexture = {
   key: 'player_body3_texture',
   url: PlayerBody3TextureUrl,
-  scale: 0.25,
+  scale: 0.24,
 }
 
 export const PlayerBody4Texture: ImageTexture = {
   key: 'player_body4_texture',
   url: PlayerBody4TextureUrl,
-  scale: 0.25,
+  scale: 0.23,
 }
 
 export const PlayerBody5Texture: ImageTexture = {
   key: 'player_body5_texture',
   url: PlayerBody5TextureUrl,
-  scale: 0.25,
+  scale: 0.23,
 }
 
 export const PlayerBody6Texture: ImageTexture = {
   key: 'player_body6_texture',
   url: PlayerBody6TextureUrl,
-  scale: 0.25,
+  scale: 0.23,
 }
 
 export const preloadPlayerTextures = (scene: Phaser.Scene) => {

@@ -20,3 +20,13 @@ export const JoinGameText = I18n({
   en: 'Join game',
   ru: 'Присоединиться'
 });
+
+export const JoinGameErrorText = I18n({
+  en: 'Game not found',
+  ru: 'Игра не найдена'
+});
+
+export const EnterCodeErrorText = I18n({
+  en: 'Enter the code first',
+  ru: 'Сперва введите код'
+});

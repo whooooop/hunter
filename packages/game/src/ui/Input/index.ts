@@ -1,4 +1,3 @@
-import { FONT_FAMILY } from "../../config";
 import { preloadImage } from "../../preload";
 import copyUrl from './assets/copy.png';
 import inputBackgroundUrl from './assets/input_background.png';
@@ -57,6 +56,7 @@ export class UiInput extends Phaser.GameObjects.Container {
     this.options = { ...defaultOptions, ...options };
 
     const fontSize = 40;
+    const fontFamily = 'Arial';
     this.background = scene.add.image(0, 0, inputBackgroundTexture.key)
       .setScale(inputBackgroundTexture.scale)
       .setInteractive();
@@ -65,7 +65,7 @@ export class UiInput extends Phaser.GameObjects.Container {
     this.text = scene.add.text(0, 0, this.options.value, {
       fontSize,
       color: '#fff',
-      fontFamily: FONT_FAMILY.REGULAR,
+      fontFamily,
       fixedWidth: this.background.width / 1.4 * this.background.scaleX,
       align: 'center',
     }).setOrigin(0.5);
@@ -76,14 +76,25 @@ export class UiInput extends Phaser.GameObjects.Container {
         .setScale(copyTexture.scale)
         .setInteractive();
       this.copy.on('pointerdown', () => {
-        try {
-          navigator.clipboard.writeText(this.text.text);
+        const textArea = document.createElement('textarea');
+        textArea.value = this.text.text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        const success = document.execCommand('copy');
+        if (success) {
           this.options.onCopy(this.text.text);
           this.copy!.setTexture(copySuccessTexture.key);
           this.scene.time.delayedCall(1000, () => {
             this.copy!.setTexture(copyTexture.key);
           });
-        } catch (error) { }
+        }
+
+        document.body.removeChild(textArea);
       });
       this.add(this.copy);
     }
@@ -95,7 +106,7 @@ export class UiInput extends Phaser.GameObjects.Container {
           inputStyle: {
             color: '#fff',
             textAlign: 'center',
-            fontFamily: FONT_FAMILY.REGULAR,
+            fontFamily,
             fontSize,
             padding: '0',
             margin: '0',

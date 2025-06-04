@@ -90,7 +90,7 @@ export class MultiplayerServer<Session extends object = any> {
     return this.namespaces.get(namespaceId)!;
   }
 
-  private async createNamespace(namespaceId: NamespaceId): Promise<ServerNamespace<Session>> {
+  public async createNamespace(namespaceId: NamespaceId): Promise<ServerNamespace<Session>> {
     const namespace = new ServerNamespace<Session>(this, namespaceId, this.config.namespace);
     this.namespaces.set(namespaceId, namespace);
     if (this.config.onNamespaceCreated) {

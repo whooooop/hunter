@@ -4,7 +4,7 @@ import { connectionStateCollection } from "../storage/collections/connectionStat
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('MultiplayerController');
-const SERVER_URL = `ws://${location.hostname}:3434`;
+const SERVER_URL = `ws://${window.SERVER_HOST}`;
 
 export class MultiplayerController {
   private playerId: string = '';

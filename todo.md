@@ -1,4 +1,3 @@
-- multipleyer view
 - sounds: death / machine shoot / weapons
 - settings view
 - win popup

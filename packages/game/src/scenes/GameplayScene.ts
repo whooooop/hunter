@@ -261,7 +261,6 @@ export class GameplayScene extends Phaser.Scene {
     // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
     this.waveController.start();
     this.projectileController.setSimulate(false);
-
   }
 
   private handlePause(payload: Game.Events.Pause.Payload): void {
