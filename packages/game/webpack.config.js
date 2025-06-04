@@ -5,7 +5,7 @@ const webpack = require('webpack');
 
 module.exports = (env) => {
   const isProduction = env.production;
-  const SERVER_HOST = isProduction ? '162.244.31.93:3434' : 'localhost:3434';
+  const SERVER_HOST = isProduction ? 'second-survival.hzberg.com' : 'localhost:3434';
 
   return {
     mode: isProduction ? 'production' : 'development',

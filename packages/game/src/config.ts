@@ -27,4 +27,4 @@ export const DEBUG = {
 export const GAMEOVER = true;
 export const START_SCENE_GAMEPLAY = false;
 
-export const VERSION = '0.3.1 Alpha'; 
+export const VERSION = '1.0.0 Alpha'; 
