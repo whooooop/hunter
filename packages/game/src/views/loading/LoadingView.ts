@@ -78,6 +78,8 @@ export class LoadingView {
   }
 
   private loadCommonAssets(): void {
+    window.bridge.platform.sendMessage("in_game_loading_started");
+
     const progressBarWidth = 608;
     const center = {
       x: DISPLAY.WIDTH / 2,
@@ -105,6 +107,7 @@ export class LoadingView {
       this.progressBar.setScale(this.maxProgressScale * progress, loadingProgress.scale);
       if (progress === 1) {
         this.rightProgress.setVisible(true);
+        window.bridge.platform.sendMessage("in_game_loading_stopped");
         this.finishLoading();
       }
     });

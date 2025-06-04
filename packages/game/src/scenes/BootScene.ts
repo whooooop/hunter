@@ -20,6 +20,8 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
+    window.bridge.platform.sendMessage("game_ready");
+
     if (START_SCENE_GAMEPLAY) {
       const gameId = new URLSearchParams(window.location.search).get('game')
       this.scene.start(SceneKeys.GAMEPLAY, {

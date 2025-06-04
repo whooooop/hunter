@@ -206,6 +206,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
     this.sceneLoaded = true;
+    window.bridge.platform.sendMessage("gameplay_started");
 
     if (this.gameId) {
       this.multiplayerInit(this.mainPlayerId, this.gameId);
@@ -269,6 +270,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private pause() {
+    window.bridge.platform.sendMessage("gameplay_stopped");
     this.pauseView.open({
       levelId: this.levelId,
       questId: this.questId,
@@ -279,6 +281,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private resume() {
+    window.bridge.platform.sendMessage("gameplay_started");
     this.pauseView.close();
     this.time.timeScale = 1;
     this.physics.world.resume();
@@ -438,6 +441,7 @@ export class GameplayScene extends Phaser.Scene {
       if (enemy instanceof EnemyEntity && enemy.getPosition().x < 0) {
         if (GAMEOVER && !this.isGameOver) {
           this.isGameOver = true;
+          window.bridge.platform.sendMessage("gameplay_stopped");
           this.gameOverView.open({
             attempt: this.attempt,
             time: this.playTime,

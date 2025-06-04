@@ -9,7 +9,10 @@ module.exports = (env) => {
 
   return {
     mode: isProduction ? 'production' : 'development',
-    entry: './src/index.ts',
+    entry: {
+      main: './src/index.ts',
+      bridge: './src/libs/playgama-bridge.js'
+    },
     module: {
       rules: [
         {
@@ -63,6 +66,14 @@ module.exports = (env) => {
           generator: {
             filename: 'assets/json/[hash][ext]'
           }
+        },
+        {
+          test: /playgama-bridge\.js$/,
+          type: 'asset/resource',
+          generator: {
+            filename: '[name][ext]'
+          },
+          include: path.resolve(__dirname, 'libs')
         }
       ]
     },
@@ -76,7 +87,9 @@ module.exports = (env) => {
     plugins: [
       new CleanWebpackPlugin(),
       new HtmlWebpackPlugin({
-        template: './src/index.html'
+        template: './src/index.html',
+        chunks: ['bridge', 'main'],
+        chunksSortMode: 'manual'
       }),
       new webpack.DefinePlugin({
         'window.SERVER_HOST': JSON.stringify(SERVER_HOST)

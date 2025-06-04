@@ -5,6 +5,7 @@ import RexUI from 'phaser3-rex-plugins/templates/ui/ui-plugin.js';
 
 import { introFontBold, introFontRegular } from './assets/fonts/intro';
 import { DEBUG, DISPLAY } from './config';
+import playgamaBridgeConfigUrl from './playgama-bridge-config.json';
 import { SceneKeys } from './scenes';
 import { BootScene } from './scenes/BootScene';
 import { GameplayScene } from './scenes/GameplayScene';
@@ -64,7 +65,7 @@ const config: Phaser.Types.Core.GameConfig = {
   },
   scale: {
     mode: Phaser.Scale.FIT,
-    zoom: 1 / window.devicePixelRatio
+    // zoom: 1 / window.devicePixelRatio
   },
   scene: [
     BootScene,
@@ -74,14 +75,27 @@ const config: Phaser.Types.Core.GameConfig = {
   ]
 };
 
+async function initBridge() {
+  window.bridge.initialize({
+    configFilePath: playgamaBridgeConfigUrl
+  })
+    .then(() => {
+      const lang = window.location.search.split('locale=')[1] || window.bridge.platform.language;
+
+      if (isSupportedLocale(lang)) {
+        setDefaultLocale(lang);
+      } else {
+        setDefaultLocale('en');
+      }
+    })
+    .catch((error: any) => {
+      console.error('Playgama SDK failed to initialize:', error);
+    });
+}
+
 async function initGame() {
   try {
-    const locale = window.location.search.split('locale=')[1];
-    if (isSupportedLocale(locale)) {
-      setDefaultLocale(locale);
-    } else {
-      setDefaultLocale('en');
-    }
+
     const playerService = PlayerService.getInstance();
     const settingsService = SettingsService.getInstance();
 
@@ -99,6 +113,7 @@ async function initGame() {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  initGame();
+window.addEventListener('DOMContentLoaded', async () => {
+  await initBridge();
+  await initGame();
 }); 

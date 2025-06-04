@@ -3,8 +3,10 @@ import { GameplayScene } from '../scenes/GameplayScene';
 import { connectionStateCollection } from "../storage/collections/connectionState.collection";
 import { createLogger } from '../utils/logger';
 
+const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+const SERVER_URL = `${protocol}://${location.host}/multiplayer`;
+
 const logger = createLogger('MultiplayerController');
-const SERVER_URL = `ws://${window.SERVER_HOST}`;
 
 export class MultiplayerController {
   private playerId: string = '';

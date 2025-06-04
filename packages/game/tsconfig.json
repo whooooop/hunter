@@ -36,6 +36,6 @@
     "packages/game/src/libs",
     "packages/game/src/utils",
     "packages/game/src/assets.types.d.ts",
-    "network",
+    "network", "src/libs/playgama-bridge.js",
   ]
 }
