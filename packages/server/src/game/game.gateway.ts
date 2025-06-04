@@ -1,6 +1,6 @@
 import { ClientSocket, MultiplayerServer } from '@hunter/multiplayer/dist/server';
 import { ConnectionState, PlayerState } from '@hunter/storage-proto';
-import { GameState } from '@hunter/storage-proto/dist/storage';
+import { GameState, PlayerSkin } from '@hunter/storage-proto/dist/storage';
 import { Injectable, Logger } from '@nestjs/common';
 import { Server as HttpServer, IncomingMessage } from 'http';
 import * as ms from 'ms';
@@ -8,9 +8,7 @@ import { parse } from 'url';
 import { connectionStateCollection } from './collections/connectionState.collection';
 import { enemyStateCollection } from './collections/enemyState.collection';
 import { gameStateCollection } from './collections/gameState.collection';
-import { playerScoreStateCollection } from './collections/playerScoreState.collection';
-import { playerStateCollection } from './collections/playerState.collection';
-import { playerWeaponCollection } from './collections/playerWeapon.collection';
+import { playerScoreStateCollection, playerSkinCollection, playerStateCollection, playerWeaponCollection } from './collections/player.collections';
 import { waveStateCollection } from './collections/waveState.collection';
 import { weaponStateCollection } from './collections/weaponState.collection';
 import { gameStorage } from './game.storage';
@@ -84,13 +82,21 @@ export class GameGateway {
 
   private async onJoin(server: MultiplayerServer, clientSocket: ClientSocket<SessionData>) {
     const connections = clientSocket.getCollection<ConnectionState>(connectionStateCollection)!;
-    const players = clientSocket.getCollection<PlayerState>(playerStateCollection)!;
-    const player = players.getItem(clientSocket.session.playerId);
+    const playersState = clientSocket.getCollection<PlayerState>(playerStateCollection)!;
+    const playersSkin = clientSocket.getCollection<PlayerSkin>(playerSkinCollection)!;
+    const player = playersState.getItem(clientSocket.session.playerId);
+    const availableBodySkins = new Set<string>(['b1', 'b2', 'b3', 'b4', 'b5', 'b6']);
+
+    playersSkin.forEach((record) => availableBodySkins.delete(record.data.body));
 
     connections.addItem(clientSocket.session.playerId, { ready: false });
 
     if (!player) {
-      players.addItem(clientSocket.session.playerId, {
+
+      playersSkin.addItem(clientSocket.session.playerId, {
+        body: Array.from(availableBodySkins)[Math.floor(Math.random() * availableBodySkins.size)],
+      });
+      playersState.addItem(clientSocket.session.playerId, {
         x: 0,
         y: 0,
         vx: 0,
@@ -102,6 +108,7 @@ export class GameGateway {
       connectionStateCollection,
       weaponStateCollection,
       enemyStateCollection,
+      playerSkinCollection,
       playerStateCollection,
       playerScoreStateCollection,
       playerWeaponCollection,

@@ -282,10 +282,10 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
         const iconScale = (slotSize * 0.36) / (weaponIcon.height || 1);
         weaponIcon.setScale(iconScale);
 
-        postFxPlugin.add(weaponIcon, {
-          thickness: 3,
-          outlineColor: 0xFFFFFF
-        });
+        // postFxPlugin.add(weaponIcon, {
+        //   thickness: 3,
+        //   outlineColor: 0xFFFFFF
+        // });
 
         weaponIcon.setRotation(-0.1);
 

@@ -1,6 +1,4 @@
-- multipleyer player color
 - multipleyer view
-- mobile controls
 - sounds: death / machine shoot / weapons
 - settings view
 - win popup

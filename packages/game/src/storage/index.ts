@@ -4,6 +4,7 @@ import { enemyStateCollection } from "./collections/enemyState.collection";
 import { enemyAnimationEvent, enemyDeathEventCollection, fireEventCollection, jumpEventCollection, reloadEventCollection, replayEventCollection } from "./collections/events.collectio";
 import { gameStateCollection } from "./collections/gameState.collection";
 import { playerScoreStateCollection } from "./collections/playerScoreState.collection";
+import { playerSkinCollection } from "./collections/playerSkin.collection";
 import { playerStateCollection } from "./collections/playerState.collection";
 import { playerWeaponCollection } from "./collections/playerWeapon.collection";
 import { waveStateCollection } from "./collections/waveState.collection";
@@ -14,6 +15,7 @@ export const gameStorage = defineStorageSpace('game', {
     connectionStateCollection,
     playerStateCollection,
     playerWeaponCollection,
+    playerSkinCollection,
     gameStateCollection,
     enemyStateCollection,
     weaponStateCollection,

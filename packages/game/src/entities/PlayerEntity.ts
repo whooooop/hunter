@@ -1,12 +1,12 @@
 import { StorageSpace, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
-import { PlayerJumpEvent } from '@hunter/storage-proto/dist/storage';
+import { PlayerJumpEvent, PlayerSkin } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import JumpAudioUrl from '../assets/audio/jump.mp3';
 import { MotionController2 } from '../controllers/MotionController2';
 import { offEvent, onEvent } from '../GameEvents';
 import { SettingsService } from '../services/SettingsService';
 import { jumpEventCollection } from '../storage/collections/events.collectio';
-import { PlayerBodyTexture, PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture, preloadPlayerTextures } from '../textures/player';
+import { PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture, PlayerSkins, preloadPlayerTextures } from '../textures/player';
 import { Player, Shop } from '../types';
 import { Controls } from '../types/ControlsTypes';
 import { Location } from '../types/Location';
@@ -70,6 +70,7 @@ export class PlayerEntity {
     private readonly scene: Phaser.Scene,
     private readonly id: string,
     private readonly state: SyncCollectionRecord<Player.State>,
+    private readonly skin: SyncCollectionRecord<PlayerSkin>,
     private readonly storage: StorageSpace
   ) {
     this.id = id;
@@ -78,7 +79,11 @@ export class PlayerEntity {
 
     this.body = scene.physics.add.body(state.data.x, state.data.y, this.bodyWidth, this.bodyHeight);
     this.shadow = new ShadowEntity(scene, this.body);
-    this.playerBody = scene.add.image(0, 0, PlayerBodyTexture.key).setScale(PlayerBodyTexture.scale);
+
+    const bodySkin = skin ? skin.data.body as keyof typeof PlayerSkins.body : 'b1';
+    const bodyTexture = PlayerSkins.body[bodySkin];
+
+    this.playerBody = scene.add.image(0, 0, bodyTexture.key).setScale(bodyTexture.scale);
     this.frontHand = scene.add.image(0, 0, PlayerHandTexture.key).setScale(PlayerHandTexture.scale).setPosition(-6, 24);
     this.backHand = scene.add.image(0, 0, PlayerHandTexture.key).setScale(PlayerHandTexture.scale).setPosition(14, 16);
     this.leftLeg = scene.add.image(0, 0, PlayerLegLeftTexture.key).setScale(PlayerLegLeftTexture.scale).setOrigin(0.5, 0).setPosition(-10, 30);

@@ -34,6 +34,10 @@ message PlayerWeapon {
   string weaponId = 1;
 }
 
+message PlayerSkin {
+  string body = 1;
+}
+
 message EnemyState {
   string type = 1;
   float x = 2;

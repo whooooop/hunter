@@ -41,6 +41,10 @@ export interface PlayerWeapon {
   weaponId: string;
 }
 
+export interface PlayerSkin {
+  body: string;
+}
+
 export interface EnemyState {
   type: string;
   x: number;
@@ -578,6 +582,64 @@ export const PlayerWeapon: MessageFns<PlayerWeapon> = {
   fromPartial<I extends Exact<DeepPartial<PlayerWeapon>, I>>(object: I): PlayerWeapon {
     const message = createBasePlayerWeapon();
     message.weaponId = object.weaponId ?? "";
+    return message;
+  },
+};
+
+function createBasePlayerSkin(): PlayerSkin {
+  return { body: "" };
+}
+
+export const PlayerSkin: MessageFns<PlayerSkin> = {
+  encode(message: PlayerSkin, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.body !== "") {
+      writer.uint32(10).string(message.body);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PlayerSkin {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePlayerSkin();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.body = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PlayerSkin {
+    return { body: isSet(object.body) ? globalThis.String(object.body) : "" };
+  },
+
+  toJSON(message: PlayerSkin): unknown {
+    const obj: any = {};
+    if (message.body !== "") {
+      obj.body = message.body;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PlayerSkin>, I>>(base?: I): PlayerSkin {
+    return PlayerSkin.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<PlayerSkin>, I>>(object: I): PlayerSkin {
+    const message = createBasePlayerSkin();
+    message.body = object.body ?? "";
     return message;
   },
 };

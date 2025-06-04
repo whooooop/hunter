@@ -1,5 +1,5 @@
 import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
-import { ConnectionState, EnemyState, GameState, ReplayEvent } from '@hunter/storage-proto/dist/storage';
+import { ConnectionState, EnemyState, GameState, PlayerSkin, ReplayEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import { MenuAudio } from '../audio/menu';
 import { DISPLAY, FONT_FAMILY, GAMEOVER, VERSION } from '../config';
@@ -21,6 +21,7 @@ import { connectionStateCollection } from '../storage/collections/connectionStat
 import { enemyStateCollection } from '../storage/collections/enemyState.collection';
 import { replayEventCollection } from '../storage/collections/events.collectio';
 import { gameStateCollection } from '../storage/collections/gameState.collection';
+import { playerSkinCollection } from '../storage/collections/playerSkin.collection';
 import { playerStateCollection } from '../storage/collections/playerState.collection';
 import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../types';
 import { WaveInfo, WeaponStatus } from '../ui';
@@ -250,6 +251,7 @@ export class GameplayScene extends Phaser.Scene {
       finished: false,
       createdAt: Date.now().toString(),
     });
+    this.storage.getCollection<PlayerSkin>(playerSkinCollection)!.addItem(playerId, { body: 'b1' });
     this.storage.getCollection<Player.State>(playerStateCollection)!.addItem(playerId, { x: 0, y: 0, vx: 0, vy: 0 });
     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.LAUNCHER, price: 0 });
@@ -384,7 +386,8 @@ export class GameplayScene extends Phaser.Scene {
       return;
     }
 
-    const player = new PlayerEntity(this, playerId, stateRecord, this.storage);
+    const skin = this.storage.getCollection<PlayerSkin>(playerSkinCollection)!.getItemRecord(playerId)!;
+    const player = new PlayerEntity(this, playerId, stateRecord, skin, this.storage);
     this.players.set(playerId, player);
 
     player.setLocationBounds(this.location.getBounds());

@@ -17,7 +17,6 @@ export enum CollectionTransferDirection {
 }
 
 export interface SyncCollectionConfig<T> {
-  // clearOnDisconnect?: boolean,
   // limit?: number,
   name?: string,
   localEvents?: boolean,
@@ -167,6 +166,10 @@ export class SyncCollection<T extends object> {
 
   public getItem(id: string): T | undefined {
     return this.collection.get(id)?.data;
+  }
+
+  public getItemRecord(id: string): SyncCollectionRecord<T> | undefined {
+    return this.collection.get(id);
   }
 
   public getItems(): T[] {
