@@ -64,6 +64,7 @@ const config: Phaser.Types.Core.GameConfig = {
   },
   scale: {
     mode: Phaser.Scale.FIT,
+    zoom: 1 / window.devicePixelRatio
   },
   scene: [
     BootScene,

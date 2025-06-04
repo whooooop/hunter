@@ -5,9 +5,15 @@ export const MultiplayerText = I18n({
   ru: 'Мультиплеер'
 });
 
-export const CreateGameText = I18n({
-  en: 'Create game',
-  ru: 'Создать игру'
+export const MultiplayerCodeText = I18n({
+  en: 'Enter the code',
+  ru: 'Введите код сервера'
+});
+
+
+export const MultiplayerInstructionsText = I18n({
+  en: 'Enter the code to join the game',
+  ru: 'Введите код, чтобы присоединиться к игре'
 });
 
 export const JoinGameText = I18n({

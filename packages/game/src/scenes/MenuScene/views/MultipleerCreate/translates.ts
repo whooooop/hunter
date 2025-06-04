@@ -10,9 +10,9 @@ export const MultiplayerCodeText = I18n({
   ru: 'Код твоего сервера'
 });
 
-export const CreateGameText = I18n({
-  en: 'Create game',
-  ru: 'Создать'
+export const EnterGameText = I18n({
+  en: 'Enter the game',
+  ru: 'Войти в игру'
 });
 
 export const MultiplayerInstructionsText = I18n({

@@ -5,7 +5,7 @@ import { UiButtonText } from "../../../../ui/ButtonText";
 import { UiContainer } from "../../../../ui/Container";
 import { UiInput } from "../../../../ui/Input";
 import { MenuSceneTypes } from "../../MenuSceneTypes";
-import { CreateGameText, MultiplayerCodeText, MultiplayerText } from "./translates";
+import { EnterGameText, MultiplayerCodeText, MultiplayerInstructionsText, MultiplayerText } from "./translates";
 
 export class MultipleerCreateView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
@@ -32,13 +32,22 @@ export class MultipleerCreateView implements MenuSceneTypes.View {
   }
 
   renderView(): void {
-    const title = this.scene.add.text(DISPLAY.WIDTH / 2 - 200, DISPLAY.HEIGHT / 2 - 150, MultiplayerCodeText.translate.toUpperCase() + ':', { fontSize: 30, fontFamily: FONT_FAMILY.REGULAR, color: '#ffffff' }).setOrigin(0);
+    const title = this.scene.add.text(DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 - 150, MultiplayerCodeText.translate.toUpperCase() + ':', { fontSize: 30, fontFamily: FONT_FAMILY.REGULAR, color: '#ffffff', align: 'center' }).setOrigin(0.5);
     this.container.add(title);
 
-    const input = new UiInput(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 - 100, '', false);
+    const input = new UiInput(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 - 50, {
+      value: 'asdsad',
+      readonly: true,
+      copy: true,
+    });
     this.container.add(input);
 
-    const createGameButton = new UiButtonText(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 + 200, CreateGameText.translate).on('pointerdown', () => {
+    const instructions = this.scene.add.text(DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 + 70, MultiplayerInstructionsText.translate, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#ffffff', align: 'center' })
+      .setOrigin(0.5)
+      .setWordWrapWidth(DISPLAY.WIDTH / 3);
+    this.container.add(instructions);
+
+    const createGameButton = new UiButtonText(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 + 200, EnterGameText.translate).on('pointerdown', () => {
       emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.MULTIPLAYER_CREATE });
     });
 
