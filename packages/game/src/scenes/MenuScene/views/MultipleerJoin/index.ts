@@ -4,9 +4,9 @@ import { UiBackButton } from "../../../../ui/BackButton";
 import { UiButtonText } from "../../../../ui/ButtonText";
 import { UiContainer } from "../../../../ui/Container";
 import { MenuSceneTypes } from "../../MenuSceneTypes";
-import { CreateGameText, JoinGameText, MultiplayerText } from "./translates";
+import { JoinGameText, MultiplayerText } from "./translates";
 
-export class MultipleerView implements MenuSceneTypes.View {
+export class MultipleerJoinView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
   protected container: Phaser.GameObjects.Container;
   private backButton: UiBackButton;
@@ -26,18 +26,14 @@ export class MultipleerView implements MenuSceneTypes.View {
     const container = new UiContainer(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2, MultiplayerText.translate);
     this.container.add(container);
 
-    const createGameButton = new UiButtonText(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 - 40, CreateGameText.translate).onClick(() => {
-      emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.MULTIPLAYER_CREATE });
-    });
     const joinGameButton = new UiButtonText(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 + 80, JoinGameText.translate).onClick(() => {
       emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.MULTIPLAYER_JOIN });
     });
 
-    this.container.add(createGameButton);
     this.container.add(joinGameButton);
 
     this.backButton.on('pointerdown', () => {
-      emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.HOME });
+      emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.MULTIPLAYER });
     });
   }
 

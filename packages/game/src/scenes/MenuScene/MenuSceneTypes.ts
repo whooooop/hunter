@@ -3,6 +3,8 @@ export namespace MenuSceneTypes {
     HOME = 'HomeView',
     SELECT_LEVEL = 'SelectLevelView',
     MULTIPLAYER = 'MultiplayerView',
+    MULTIPLAYER_CREATE = 'MultiplayerCreateView',
+    MULTIPLAYER_JOIN = 'MultiplayerJoinView',
     SETTINGS = 'SettingsView',
     SHOP = 'ShopView',
   }

@@ -40,6 +40,9 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: DEBUG.PHYSICS
     }
   },
+  dom: {
+    createContainer: true
+  },
   input: {
     activePointers: 2,
   },

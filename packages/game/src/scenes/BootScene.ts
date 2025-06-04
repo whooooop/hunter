@@ -27,7 +27,7 @@ export class BootScene extends Phaser.Scene {
         gameId
       });
     } else {
-      this.scene.start(SceneKeys.MENU, { view: MenuSceneTypes.ViewKeys.HOME });
+      this.scene.start(SceneKeys.MENU, { view: MenuSceneTypes.ViewKeys.MULTIPLAYER_CREATE });
     }
   }
 }

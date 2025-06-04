@@ -1,13 +1,13 @@
-import { MenuAudio } from "../../audio/menu";
 import { DISPLAY, FONT_FAMILY, VERSION } from "../../config";
 import { offEvent, onEvent } from "../../GameEvents";
-import { SettingsService } from "../../services/SettingsService";
 import { BackgroundView } from "../../views/background/BackgroundView";
 import { LoadingView } from "../../views/loading/LoadingView";
 import { SceneKeys } from "../index";
 import { MenuSceneTypes } from "./MenuSceneTypes";
 import { HomeView } from "./views/Home";
 import { MultipleerView } from "./views/Multipleer";
+import { MultipleerCreateView } from "./views/MultipleerCreate";
+import { MultipleerJoinView } from "./views/MultipleerJoin";
 import { SelectLevelView } from "./views/SelectLevel";
 import { SettingsView } from "./views/Settings";
 import { ShopView } from "./views/Shop";
@@ -23,6 +23,8 @@ export class MenuScene extends Phaser.Scene {
     [MenuSceneTypes.ViewKeys.HOME, HomeView],
     [MenuSceneTypes.ViewKeys.SELECT_LEVEL, SelectLevelView],
     [MenuSceneTypes.ViewKeys.MULTIPLAYER, MultipleerView],
+    [MenuSceneTypes.ViewKeys.MULTIPLAYER_CREATE, MultipleerCreateView],
+    [MenuSceneTypes.ViewKeys.MULTIPLAYER_JOIN, MultipleerJoinView],
     [MenuSceneTypes.ViewKeys.SETTINGS, SettingsView],
     [MenuSceneTypes.ViewKeys.SHOP, ShopView],
   ] as [MenuSceneTypes.ViewKeys, new (scene: Phaser.Scene) => MenuSceneTypes.View][]);
@@ -40,6 +42,9 @@ export class MenuScene extends Phaser.Scene {
     HomeView.preload(this);
     SelectLevelView.preload(this);
     SettingsView.preload(this);
+    MultipleerView.preload(this);
+    MultipleerCreateView.preload(this);
+    MultipleerJoinView.preload(this);
   }
 
   create(): void {
@@ -52,8 +57,8 @@ export class MenuScene extends Phaser.Scene {
 
     this.renderView(this.initialViewKey);
 
-    const settingsService = SettingsService.getInstance();
-    this.sound.play(MenuAudio.key, { loop: true, volume: settingsService.getValue('audioMusicVolume') as number });
+    // const settingsService = SettingsService.getInstance();
+    // this.sound.play(MenuAudio.key, { loop: true, volume: settingsService.getValue('audioMusicVolume') as number });
 
     this.add.text(DISPLAY.WIDTH - 20, DISPLAY.HEIGHT - 30, VERSION.toUpperCase(), { fontSize: 16, color: '#ffffff', fontFamily: FONT_FAMILY.REGULAR })
       .setDepth(10000)
