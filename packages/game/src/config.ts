@@ -16,7 +16,7 @@ export const FONT_FAMILY = {
 
 export const DEBUG = {
   PHYSICS: false,
-  ENEMIES: true,
+  ENEMIES: false,
   MOTION: false,
   LOCATION: false,
   SHOP: false,
@@ -27,4 +27,4 @@ export const DEBUG = {
 export const GAMEOVER = true;
 export const START_SCENE_GAMEPLAY = false;
 
-export const VERSION = '1.0.1  Alpha'; 
+export const VERSION = '1.1.0  Alpha'; 
