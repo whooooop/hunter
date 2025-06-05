@@ -3,7 +3,7 @@ import { StorageSpace } from '@hunter/multiplayer/dist/StorageSpace';
 import { PlayerScoreState, PlayerWeapon, WeaponState } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin';
-import { FONT_FAMILY } from '../../config';
+import { DISPLAY, FONT_FAMILY } from '../../config';
 import { COLORS } from '../../Constants';
 import { emitEvent, offEvent, onEvent } from '../../GameEvents';
 import { playerScoreStateCollection } from '../../storage/collections/playerScoreState.collection';
@@ -38,7 +38,7 @@ export class WeaponStatus {
   private width: number = 380;
   private height: number = 58;
   private offsetY: number = 45;
-  private offsetX: number = 60;
+  private offsetX: number = 160;
   private skewX: number = -0.2;
   private radius: number = 55;
 
@@ -80,7 +80,7 @@ export class WeaponStatus {
 
   private create(): void {
     this.container = this.scene.add.container(
-      this.scene.cameras.main.width - this.width / 2 - this.offsetX,
+      DISPLAY.WIDTH - this.width / 2 - this.offsetX,
       this.height / 2 + this.offsetY
     );
     this.container.setDepth(1000);

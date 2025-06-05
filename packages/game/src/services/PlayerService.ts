@@ -20,7 +20,6 @@ export class PlayerService {
   }
 
   private constructor() {
-    console.log('PlayerService constructor');
     this.storage = new GameStorage();
   }
 

@@ -1,7 +1,7 @@
 import { StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
 import { WaveState } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
-import { FONT_FAMILY } from '../../config';
+import { DISPLAY, FONT_FAMILY } from '../../config';
 import { COLORS } from '../../Constants';
 import { waveStateCollection } from '../../storage/collections/waveState.collection';
 import { hexToNumber } from '../../utils/colors';
@@ -84,7 +84,7 @@ export class WaveInfo {
 
     // Создаем основной контейнер
     this.container = this.scene.add.container(
-      this.scene.cameras.main.width / 2,
+      DISPLAY.WIDTH / 2 - 100,
       this.height / 2 + this.offsetY
     );
 

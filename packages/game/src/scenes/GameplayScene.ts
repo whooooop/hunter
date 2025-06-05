@@ -2,7 +2,6 @@ import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@h
 import { ConnectionState, EnemyState, GameState, PlayerSkin, ReplayEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import { playGameoverAudio, preloadGameoverAudio } from '../audio/gameover';
-import { MenuAudio } from '../audio/menu';
 import { DISPLAY, FONT_FAMILY, GAMEOVER, VERSION } from '../config';
 import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../controllers';
 import { createEnemy } from '../enemies';
@@ -14,6 +13,7 @@ import { emitEvent, offEvent, onEvent } from '../GameEvents';
 import { getLevel, LevelId } from '../levels';
 import { getLocation } from '../locations';
 import { preloadProjectiles } from '../projectiles';
+import { AudioService } from '../services/AudioService';
 import { HintsService } from '../services/HintsService';
 import { PlayerService } from '../services/PlayerService';
 import { QuestService } from '../services/QuestService';
@@ -25,7 +25,7 @@ import { gameStateCollection } from '../storage/collections/gameState.collection
 import { playerSkinCollection } from '../storage/collections/playerSkin.collection';
 import { playerStateCollection } from '../storage/collections/playerState.collection';
 import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../types';
-import { WaveInfo, WeaponStatus } from '../ui';
+import { UiMute, WaveInfo, WeaponStatus } from '../ui';
 import { createLogger } from '../utils/logger';
 import { generateId } from '../utils/stringGenerator';
 import { GameOverView } from '../views/gameover';
@@ -62,6 +62,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private waveInfo!: WaveInfo;
   private weaponStatus!: WeaponStatus;
+  private uiMute!: UiMute;
   private decalController!: DecalController;
   private projectileController!: ProjectileController;
   private questController!: QuestController;
@@ -141,6 +142,8 @@ export class GameplayScene extends Phaser.Scene {
     preloadProjectiles(this);
     preloadFx(this);
     preloadGameoverAudio(this);
+
+    UiMute.preload(this);
   }
 
   clear(): void {
@@ -153,6 +156,7 @@ export class GameplayScene extends Phaser.Scene {
     this.projectileController.destroy();
     this.waveInfo.destroy();
     this.weaponStatus.destroy();
+    this.uiMute.destroy();
     this.players.forEach(player => player.destroy());
     this.pauseView.close();
     this.multiplayerController?.destroy();
@@ -194,6 +198,8 @@ export class GameplayScene extends Phaser.Scene {
 
     this.waveInfo = new WaveInfo(this, this.storage);
     this.weaponStatus = new WeaponStatus(this, this.storage, this.mainPlayerId);
+    this.uiMute = new UiMute(this, DISPLAY.WIDTH - 80, 70).setDepth(600);
+    this.add.existing(this.uiMute);
 
     this.physics.world.setBounds(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
     this.shopController.setInteractablePlayerId(this.mainPlayerId);
@@ -216,15 +222,7 @@ export class GameplayScene extends Phaser.Scene {
     }
     this.playTime = 0;
 
-    const music = this.sound.get(MenuAudio.key);
-    if (music) {
-      this.tweens.add({
-        targets: music,
-        volume: 0,
-        duration: 5000,
-        ease: 'linear',
-      });
-    }
+    AudioService.stopAllMusic(this, 5000);
   }
 
   private handleGameStateUpdate(id: string, record: SyncCollectionRecord<GameState>, collection: SyncCollection<GameState>, from: string): void {

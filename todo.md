@@ -1,5 +1,4 @@
 - sounds: death / machine shoot / weapons
-- settings view
 - win popup
 - config waves
 - config weapons

@@ -7,7 +7,7 @@ import { BaseBoltAudio, BaseEmptyAudio } from "./assets/baseAudio";
 import GlockShootAudioUrl from './assets/audio/glock_shoot_audio_0.mp3';
 import GlockTextureUrl from './assets/textures/glock_texture_0.png';
 
-const GlockShootAudio: Audio.Asset = {
+export const GlockShootAudio: Audio.Asset = {
   key: WeaponType.GLOCK + '_shoot_0',
   url: GlockShootAudioUrl,
   type: Audio.Type.Effect,

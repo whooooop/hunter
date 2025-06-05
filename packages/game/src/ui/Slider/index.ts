@@ -1,3 +1,4 @@
+import { Slider } from 'phaser3-rex-plugins/templates/ui/ui-components.js';
 import { hexToNumber } from "../../utils/colors";
 
 interface UiSliderOptions {
@@ -14,41 +15,58 @@ const defaultOptions: UiSliderOptions = {
   height: 40,
   min: 0,
   max: 1,
-  gap: 0.05,
+  gap: 0.01,
   onChange: (value: number): void => { },
 };
 
-export class UiSlider extends Phaser.GameObjects.Container {
+export class UiSlider {
   private options: UiSliderOptions;
+  public element: Slider;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, options: Partial<UiSliderOptions> = defaultOptions) {
-    super(scene, x, y);
-
+  constructor(scene: Phaser.Scene, x: number = 0, y: number = 0, options: Partial<UiSliderOptions> = defaultOptions) {
     this.options = { ...defaultOptions, ...options };
 
     const rexUI = (scene as any).rexUI;
     const range = this.options.max - this.options.min
 
-    const print0 = scene.add.text(0, 0, '');
-    rexUI.add.slider({
-      x: x,
-      y: y,
+    this.element = new Slider(scene, {
+      x,
+      y,
       width: this.options.width,
       height: this.options.height,
-      orientation: 'x',
+      orientation: 0,
 
-      track: rexUI.add.roundRectangle(0, 0, 0, 0, 15, 0xffffff),
-      thumb: rexUI.add.roundRectangle(0, 0, 0, 0, 15, hexToNumber('#343e47')),
+      background: {
+        width: this.options.width,
+        height: this.options.height,
+        radius: this.options.height / 2,
+        color: hexToNumber('#343e47'),
+        alpha: 1,
+        strokeColor: hexToNumber('#1c2d30'),
+        strokeWidth: 4,
+      },
+      indicator: {
+        color: hexToNumber('#ebb639'),
+        height: this.options.height - 8,
+        radius: this.options.height / 2,
+      },
+      thumb: {
+        radius: this.options.height / 2,
+        color: hexToNumber('#19282b'),
+        alpha: 1
+      },
 
       valuechangeCallback: this.options.onChange,
       gap: this.options.gap / range,
-
+      enable: true,
       space: {
-        top: 4,
-        bottom: 4
+        top: 2,
+        bottom: 2,
+        left: 0,
+        right: 0,
       },
-      input: 'drag', // 'drag'|'click'
-    })
-      .layout();
+      input: 'drag',
+      // draggable: true,
+    }).layout();
   }
 }

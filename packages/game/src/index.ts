@@ -83,7 +83,6 @@ async function initBridge() {
   })
     .then(() => {
       const lang = window.location.search.split('locale=')[1] || window.bridge.platform.language;
-      console.log('SDK initialized');
       if (isSupportedLocale(lang)) {
         setDefaultLocale(lang);
       } else {
