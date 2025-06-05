@@ -1,5 +1,5 @@
 import { ProjectileName } from '../projectiles/ProjectileName';
-import { Weapon } from '../types/weaponTypes';
+import { Audio, Weapon } from '../types';
 import { WeaponType } from "./WeaponTypes";
 
 import { BaseEmptyAudio } from "./assets/baseAudio";
@@ -53,11 +53,15 @@ export const RevolverConfig: Weapon.Config = {
   fireAudio: {
     key: WeaponType.REVOLVER + '_shoot_0',
     url: RevolverShootAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
   emptyAudio: BaseEmptyAudio,
   boltAudio: {
     key: WeaponType.REVOLVER + '_bolt_0',
     url: RevolverBoltAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
 
   projectile: ProjectileName.BULLET

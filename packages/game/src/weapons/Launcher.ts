@@ -1,5 +1,5 @@
 import { ProjectileName } from '../projectiles/ProjectileName';
-import { Weapon } from '../types/weaponTypes';
+import { Audio, Weapon } from '../types';
 import { WeaponType } from "./WeaponTypes";
 
 import LauncherShootAudioUrl from './assets/audio/launcher_shoot_audio_0.mp3';
@@ -43,6 +43,8 @@ export const LauncherConfig: Weapon.Config = {
   fireAudio: {
     key: WeaponType.LAUNCHER + '_shoot_0',
     url: LauncherShootAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
   emptyAudio: BaseEmptyAudio,
   boltAudio: BaseBoltAudio,

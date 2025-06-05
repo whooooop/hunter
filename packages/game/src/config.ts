@@ -16,7 +16,7 @@ export const FONT_FAMILY = {
 
 export const DEBUG = {
   PHYSICS: false,
-  ENEMIES: false,
+  ENEMIES: true,
   MOTION: false,
   LOCATION: false,
   SHOP: false,

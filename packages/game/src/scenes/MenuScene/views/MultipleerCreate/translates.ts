@@ -19,3 +19,8 @@ export const MultiplayerInstructionsText = I18n({
   en: 'Share the code with your friend to join the game',
   ru: 'Передай код другу, чтобы присоединиться к игре'
 });
+
+export const CreateGameErrorText = I18n({
+  en: 'Failed to create game',
+  ru: 'Не удалось создать игру'
+});

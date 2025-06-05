@@ -1,5 +1,5 @@
 import { BulletTexture } from "../textures/bullet";
-import { Projectile } from "../types/ProjectileTypes";
+import { Audio, Projectile } from "../types";
 import ProjectileActivateAudioUrl from '../weapons/assets/audio/explosion_audio_0.mp3';
 
 export const ProjectileProjectileConfig: Projectile.Config = {
@@ -8,6 +8,8 @@ export const ProjectileProjectileConfig: Projectile.Config = {
   activateAudio: {
     key: 'explosion_activate_audio_0',
     url: ProjectileActivateAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
   rotation: -4.81,
   drag: 1600,

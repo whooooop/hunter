@@ -11,7 +11,6 @@ import { pauseText } from "./translates";
 
 export class PauseView {
   private container: Phaser.GameObjects.Container;
-  private bankService: BankService;
   private questService: QuestService;
   private overlay: Phaser.GameObjects.Rectangle;
 
@@ -34,7 +33,6 @@ export class PauseView {
   ) {
     this.container = this.scene.add.container(0, 0).setDepth(this.depth + 1);
     this.overlay = this.scene.add.rectangle(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 0x000000, 0.5).setAlpha(0).setOrigin(0).setDepth(this.depth);
-    this.bankService = BankService.getInstance();
     this.questService = QuestService.getInstance();
   }
 
@@ -43,7 +41,7 @@ export class PauseView {
     this.isOpen = true;
     this.render(showReplay);
 
-    this.bankService.getPlayerBalance(Bank.Currency.Star).then((balance) => {
+    BankService.getPlayerBalance(Bank.Currency.Star).then((balance) => {
       this.renderStars(balance);
     });
 

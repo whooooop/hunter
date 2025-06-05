@@ -1,5 +1,5 @@
-import { Projectile } from "../types/ProjectileTypes";
 import { MineImageTexture_0 } from "../textures/mineTexture";
+import { Audio, Projectile } from "../types";
 import ProjectileActivateAudioUrl from '../weapons/assets/audio/explosion_audio_0.mp3';
 
 export const ProjectileMineConfig: Projectile.Config = {
@@ -12,5 +12,7 @@ export const ProjectileMineConfig: Projectile.Config = {
   activateAudio: {
     key: 'explosion_activate_audio_0',
     url: ProjectileActivateAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
 }

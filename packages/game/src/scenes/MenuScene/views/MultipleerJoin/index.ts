@@ -15,6 +15,8 @@ export class MultipleerJoinView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
   protected container: Phaser.GameObjects.Container;
   private backButton: UiBackButton;
+  private content: Phaser.GameObjects.Container;
+  private errorText: Phaser.GameObjects.Text;
 
   static preload(scene: Phaser.Scene): void {
     UiBackButton.preload(scene);
@@ -30,63 +32,75 @@ export class MultipleerJoinView implements MenuSceneTypes.View {
     this.container.add(this.backButton);
 
     const container = new UiContainer(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2, MultiplayerText.translate);
+    container.setScale(0.9);
     this.container.add(container);
 
-    const content = this.scene.add.container(0, 0);
-    this.container.add(content);
+    this.content = this.scene.add.container(0, 0);
+    container.add(this.content);
 
-    const title = this.scene.add.text(DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 - 150, MultiplayerCodeText.translate.toUpperCase() + ':', { fontSize: 30, fontFamily: FONT_FAMILY.REGULAR, color: '#ffffff', align: 'center' }).setOrigin(0.5);
-    content.add(title);
+    const title = this.scene.add.text(0, -150, MultiplayerCodeText.translate.toUpperCase() + ':', { fontSize: 30, fontFamily: FONT_FAMILY.REGULAR, color: '#ffffff', align: 'center' }).setOrigin(0.5);
+    this.content.add(title);
 
-    const input = new UiInput(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 - 50, {
+    const input = new UiInput(this.scene, 0, -50, {
       value: '',
       readonly: false,
       copy: false,
       onChange: () => { },
     });
-    content.add(input);
+    this.content.add(input);
 
-    const instructions = this.scene.add.text(DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 + 60, MultiplayerInstructionsText.translate, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#ffffff', align: 'center' })
+    const instructions = this.scene.add.text(0, 60, MultiplayerInstructionsText.translate, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#ffffff', align: 'center' })
       .setOrigin(0.5)
       .setWordWrapWidth(DISPLAY.WIDTH / 3);
-    content.add(instructions);
+    this.content.add(instructions);
 
-    const errorText = this.scene.add.text(DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 + 250, '', { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#f5093a', align: 'center' })
+    this.errorText = this.scene.add.text(0, 250, '', { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#f5093a', align: 'center' })
       .setOrigin(0.5)
       .setWordWrapWidth(DISPLAY.WIDTH / 3);
-    content.add(errorText);
+    this.content.add(this.errorText);
 
-    const joinGameButton = new UiButtonText(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 + 170, JoinGameText.translate).onClick(() => {
+    const joinGameButton = new UiButtonText(this.scene, 0, 170, JoinGameText.translate).onClick(() => {
       const code = input.getValue();
       if (code.length === 0) {
-        errorText.text = EnterCodeErrorText.translate;
+        this.handleError(EnterCodeErrorText.translate);
         return;
       }
 
-      content.visible = false;
-      const spinner = new UiSpinner(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2);
+      this.content.visible = false;
+      const spinner = new UiSpinner(this.scene, 0, 0);
+      container.add(spinner);
 
       this.scene.time.delayedCall(5000, async () => {
-        const { result } = await checkGame(code);
-        spinner.destroy();
-        if (!result) {
-          errorText.text = JoinGameErrorText.translate;
-          content.visible = true;
-        } else {
-          errorText.text = '';
-          this.scene.scene.start(SceneKeys.GAMEPLAY, {
-            levelId: LevelId.FOREST,
-            gameId: code
-          });
+        try {
+          const { result } = await checkGame(code);
+          spinner.destroy();
+          if (!result) {
+            this.handleError(JoinGameErrorText.translate);
+          } else {
+            this.handleError('');
+            this.scene.scene.start(SceneKeys.GAMEPLAY, {
+              levelId: LevelId.FOREST,
+              gameId: code
+            });
+          }
+        } catch (error) {
+          this.handleError(JoinGameErrorText.translate);
+        } finally {
+          spinner.destroy();
         }
       });
     });
 
-    content.add(joinGameButton);
+    this.content.add(joinGameButton);
 
     this.backButton.on('pointerdown', () => {
       emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.MULTIPLAYER });
     });
+  }
+
+  handleError(text: string): void {
+    this.errorText.text = text;
+    this.content.visible = true;
   }
 
   update(time: number, delta: number): void { }

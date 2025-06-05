@@ -38,7 +38,7 @@ export class UiContainer extends Phaser.GameObjects.Container {
   }
 
   private createTitle(titleText: string): void {
-    const titleContainer = this.scene.add.container(150, -270);
+    const titleContainer = this.scene.add.container(120, -270);
     this.title = this.scene.add.image(0, 0, titleTexture.key).setScale(titleTexture.scale);
     this.text = this.scene.add.text(0, 0, titleText.toUpperCase(), { fontSize: 70, fontFamily: FONT_FAMILY.BOLD, color: '#ffffff' }).setScale(titleTexture.scale).setOrigin(0.5);
     titleContainer.add(this.title);

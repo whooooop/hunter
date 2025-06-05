@@ -15,7 +15,9 @@ export const HedgehogConfig: Enemy.Config = {
   score: [
     { death: true, value: 90 },
   ],
-  damageMultiplier: {},
+  damageMultiplier: {
+    head: 2,
+  },
   killCombo: [],
   spine: {
     key: Enemy.Type.HEDGEHOG,

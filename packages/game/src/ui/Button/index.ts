@@ -1,10 +1,5 @@
-import { preloadAudio } from '../../preload';
-import ClickAudio from './click.mp3';
-
-export const clickAudio = {
-  key: 'buttonClick',
-  url: ClickAudio,
-}
+import { ClickSound, preloadClickSound } from '../../audio/click';
+import { AudioService } from '../../services/AudioService';
 
 interface Texture {
   key: string;
@@ -13,7 +8,7 @@ interface Texture {
 
 export class UiButton extends Phaser.GameObjects.Image {
   static preload(scene: Phaser.Scene): void {
-    preloadAudio(scene, clickAudio.key, clickAudio.url);
+    preloadClickSound(scene);
   }
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture: Texture) {
@@ -27,7 +22,7 @@ export class UiButton extends Phaser.GameObjects.Image {
 
     this.on('pointerdown', () => {
       this.setScale(texture.scale * 1);
-      scene.sound.play(clickAudio.key);
+      AudioService.playAudio(scene, ClickSound);
     });
     this.on('pointerup', () => {
       this.setScale(texture.scale * 1.1);

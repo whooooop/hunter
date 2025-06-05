@@ -1,7 +1,7 @@
 import { WeaponSightType } from '../entities/SightEntity';
 import { ProjectileName } from '../projectiles/ProjectileName';
 import { AWPImageTexture_0 } from '../textures/AWPTexture';
-import { Weapon, WeaponTexture } from "../types/weaponTypes";
+import { Audio, Weapon, WeaponTexture } from "../types";
 import { hexToNumber } from '../utils/colors';
 import awpFireAudio from './assets/audio/awp_shoot_audio_0.mp3';
 import { WeaponType } from './WeaponTypes';
@@ -39,7 +39,9 @@ export const AWPConfig: Weapon.Config = {
   },
   fireAudio: {
     key: 'awp_fire_audio_0',
-    url: awpFireAudio
+    url: awpFireAudio,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
   muzzleFlash: {
     scale: 1,

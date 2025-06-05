@@ -16,7 +16,9 @@ export const CapibaraConfig: Enemy.Config = {
   score: [
     { death: true, value: 80 },
   ],
-  damageMultiplier: {},
+  damageMultiplier: {
+    head: 2,
+  },
   killCombo: [],
   spine: {
     key: Enemy.Type.CAPIBARA,

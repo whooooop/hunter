@@ -5,6 +5,7 @@ import * as Phaser from 'phaser';
 import { MuzzleFlash } from '../fx/muzzleFlash/muzzleFlashFx';
 import { emitEvent } from "../GameEvents";
 import { GameplayScene } from "../scenes/GameplayScene";
+import { AudioService } from '../services/AudioService';
 import { SettingsService } from '../services/SettingsService';
 import { fireEventCollection, reloadEventCollection } from '../storage/collections/events.collectio';
 import { AudioAssets, FireParams, Weapon } from "../types";
@@ -17,12 +18,12 @@ import { ShellCasingEntity } from "./ShellCasingEntity";
 import { SightEntity, SightEntityOptions } from "./SightEntity";
 
 const logger = createLogger('WeaponEntity');
-const settingsService = SettingsService.getInstance();
 
 export class WeaponEntity {
   private name: WeaponType;
   private active: boolean = false;
   private gameObject: Phaser.GameObjects.Sprite;
+  private settingsService: SettingsService;
 
   protected lastFired: number = 0;
   protected lastEmptySoundTime: number = 0;
@@ -65,7 +66,7 @@ export class WeaponEntity {
   ) {
     this.name = options.name;
     this.currentAmmo = this.options.magazineSize;
-
+    this.settingsService = SettingsService.getInstance();
     this.gameObject = this.scene.add.sprite(0, 0, this.options.texture.key);
     this.gameObject.setScale(this.options.texture.scale);
     this.container = scene.add.container(0, 0);
@@ -403,44 +404,34 @@ export class WeaponEntity {
   // Звук пустого магазина
   protected playEmptySound(): void {
     if (this.options.emptyAudio) {
-      this.scene.sound.play(this.options.emptyAudio.key, {
-        volume: settingsService.getValue('audioWeaponVolume') as number
-      });
+      AudioService.playAudio(this.scene, this.options.emptyAudio);
     }
   }
 
   // Звук перезарядки
   protected playReloadSound(): void {
     if (this.options.reloadAudio) {
-      this.scene.sound.play(this.options.reloadAudio.key, {
-        volume: settingsService.getValue('audioWeaponVolume') as number
-      });
+      AudioService.playAudio(this.scene, this.options.reloadAudio);
     }
   }
 
   protected playReloadItemSound(): void {
     if (this.options.reloadItemAudio) {
-      this.scene.sound.play(this.options.reloadItemAudio.key, {
-        volume: settingsService.getValue('audioWeaponVolume') as number
-      });
+      AudioService.playAudio(this.scene, this.options.reloadItemAudio);
     }
   }
 
   // Звук выстрела
   protected playFireSound(): void {
     if (this.options.fireAudio) {
-      this.scene.sound.play(this.options.fireAudio.key, {
-        volume: settingsService.getValue('audioWeaponVolume') as number
-      });
+      AudioService.playAudio(this.scene, this.options.fireAudio);
     }
   }
 
   // Звук затвора (взводной механизм)
   protected playBoltSound(): void {
     if (this.options.boltAudio) {
-      this.scene.sound.play(this.options.boltAudio.key, {
-        volume: settingsService.getValue('audioWeaponVolume') as number
-      });
+      AudioService.playAudio(this.scene, this.options.boltAudio);
     }
   }
 
@@ -540,7 +531,7 @@ export class WeaponEntity {
    * @param direction Направление выстрела (1 вправо, -1 влево)
    */
   protected ejectShellCasing(x: number, y: number, direction: number): void {
-    if (!settingsService.getValue('shellCasingsEnabled')) {
+    if (!this.settingsService.getValue('shellCasingsEnabled')) {
       return;
     }
     const matrix = this.gameObject.getWorldTransformMatrix();

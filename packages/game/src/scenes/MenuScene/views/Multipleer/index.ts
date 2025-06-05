@@ -24,17 +24,19 @@ export class MultipleerView implements MenuSceneTypes.View {
     this.container.add(this.backButton);
 
     const container = new UiContainer(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2, MultiplayerText.translate);
+    container.setScale(0.9);
+
     this.container.add(container);
 
-    const createGameButton = new UiButtonText(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 - 40, CreateGameText.translate).onClick(() => {
+    const createGameButton = new UiButtonText(this.scene, 0, -40, CreateGameText.translate).onClick(() => {
       emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.MULTIPLAYER_CREATE });
     });
-    const joinGameButton = new UiButtonText(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 + 80, JoinGameText.translate).onClick(() => {
+    const joinGameButton = new UiButtonText(this.scene, 0, 80, JoinGameText.translate).onClick(() => {
       emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.MULTIPLAYER_JOIN });
     });
 
-    this.container.add(createGameButton);
-    this.container.add(joinGameButton);
+    container.add(createGameButton);
+    container.add(joinGameButton);
 
     this.backButton.on('pointerdown', () => {
       emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.HOME });

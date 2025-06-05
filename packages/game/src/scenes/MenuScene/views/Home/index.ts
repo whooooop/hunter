@@ -1,11 +1,12 @@
-import { MenuSceneTypes } from "../../MenuSceneTypes";
-import { MenuButton } from "./types";
-import { shopButtonTexture, settingsButtonTexture, multiplayerButtonTexture, playButtonTexture } from "./textures";
-import { ShopText, SettingsText, MultiplayerText, PlayText } from "./translates";
 import { emitEvent } from "../../../../GameEvents";
+import { ClickSound, preloadClickSound } from "../../../../audio/click";
 import { DISPLAY, FONT_FAMILY } from "../../../../config";
 import { preloadImage } from "../../../../preload";
-import { clickAudio } from "../../../../ui/Button";
+import { AudioService } from "../../../../services/AudioService";
+import { MenuSceneTypes } from "../../MenuSceneTypes";
+import { multiplayerButtonTexture, playButtonTexture, settingsButtonTexture, shopButtonTexture } from "./textures";
+import { MultiplayerText, PlayText, SettingsText, ShopText } from "./translates";
+import { MenuButton } from "./types";
 
 export class HomeView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
@@ -69,7 +70,7 @@ export class HomeView implements MenuSceneTypes.View {
       viewKey: MenuSceneTypes.ViewKeys.MULTIPLAYER
     }
   ]);
-  
+
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     this.container = this.scene.add.container(0, 0);
@@ -85,9 +86,10 @@ export class HomeView implements MenuSceneTypes.View {
     preloadImage(scene, shopButtonTexture);
     preloadImage(scene, settingsButtonTexture);
     preloadImage(scene, multiplayerButtonTexture);
+    preloadClickSound(scene);
   }
 
-  public update(time: number, delta: number): void {}
+  public update(time: number, delta: number): void { }
 
   public getContainer(): Phaser.GameObjects.Container {
     return this.container;
@@ -103,7 +105,7 @@ export class HomeView implements MenuSceneTypes.View {
     button.setInteractive();
     button.on('pointerdown', () => {
       this.goToScene(MenuSceneTypes.ViewKeys.SELECT_LEVEL);
-      this.scene.sound.play(clickAudio.key);
+      AudioService.playAudio(this.scene, ClickSound);
     });
     button.on('pointerover', () => {
       this.scene.tweens.add({
@@ -133,7 +135,7 @@ export class HomeView implements MenuSceneTypes.View {
     button.setInteractive();
     button.on('pointerdown', () => {
       this.goToScene(data.viewKey);
-      this.scene.sound.play(clickAudio.key);
+      AudioService.playAudio(this.scene, ClickSound);
     });
     container.add(button);
     container.add(textObject);
@@ -207,17 +209,17 @@ export class HomeView implements MenuSceneTypes.View {
       });
       this.scene.tweens.add({
         targets: this.playButton,
-        scale: 0.8, 
+        scale: 0.8,
         alpha: 0,
         duration: 500,
         delay: 500,
         ease: 'Back.out',
-          onComplete: () => {
-            resolve();
-          }
-        });
+        onComplete: () => {
+          resolve();
+        }
       });
-  } 
+    });
+  }
 
   destroy(): void {
     this.container.destroy();

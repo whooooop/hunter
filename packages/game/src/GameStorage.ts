@@ -1,34 +1,56 @@
-// export enum StorageStrategy {
-//   Local = 'local',
-//   Remote = 'remote',
-// }
+export enum StorageStrategy {
+  Local = 'local_storage',
+  Remote = 'platform_internal',
+}
+import { decrypt, encrypt } from "./utils/crypto";
 
 export class GameStorage {
-  // private storage: Map<string, any> = new Map();
-  // private strategy: StorageStrategy = StorageStrategy.Local;
+  constructor(
+    private readonly strategy: StorageStrategy = StorageStrategy.Local,
+    private readonly prefix: string = 'h_',
+    private readonly salt: string = 'huntsman',
+  ) { }
 
   public async get<T>(key: string): Promise<T | null> {
-    const value = window.localStorage.getItem(key);
+    const encryptedKey = await this.getEncryptedKey(key);
+    const value = await window.bridge.storage.get(encryptedKey, this.strategy);
+
     if (!value) {
       return null;
     }
     try {
-      return JSON.parse(value);
+      const decryptedValue = await decrypt(value, this.salt);
+      try {
+        return JSON.parse(decryptedValue);
+      } catch (error) {
+        return decryptedValue as T;
+      }
     } catch (error) {
-      return value as T;
+      return null;
     }
   }
 
   public async set<T>(key: string, value: T): Promise<void> {
+    let data: string;
+
     if (typeof value === 'object') {
-      window.localStorage.setItem(key, JSON.stringify(value));
+      data = JSON.stringify(value);
     } else {
       // @ts-ignore
-      window.localStorage.setItem(key, value.toString());
+      data = value.toString();
     }
+
+    const encryptedKey = await this.getEncryptedKey(key);
+    const encryptedData = await encrypt(data, this.salt);
+    await window.bridge.storage.set(encryptedKey, encryptedData, this.strategy);
   }
 
   public async delete(key: string): Promise<void> {
-    window.localStorage.removeItem(key);
-  } 
+    const encryptedKey = await this.getEncryptedKey(key);
+    await window.bridge.storage.delete(encryptedKey, this.strategy);
+  }
+
+  private async getEncryptedKey(key: string): Promise<string> {
+    return encrypt(this.prefix + key, this.salt + key);
+  }
 }

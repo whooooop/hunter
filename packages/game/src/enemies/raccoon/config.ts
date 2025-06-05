@@ -15,7 +15,9 @@ export const RaccoonConfig: Enemy.Config = {
   score: [
     { death: true, value: 50 },
   ],
-  damageMultiplier: {},
+  damageMultiplier: {
+    head: 2,
+  },
   killCombo: [],
   spine: {
     key: Enemy.Type.RACCOON,

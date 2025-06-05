@@ -1,10 +1,10 @@
 import { StorageSpace, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
 import { PlayerJumpEvent, PlayerSkin } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
-import JumpAudioUrl from '../assets/audio/jump.mp3';
+import { JumpSound, preloadJumpSound } from '../audio/jump';
 import { MotionController2 } from '../controllers/MotionController2';
 import { offEvent, onEvent } from '../GameEvents';
-import { SettingsService } from '../services/SettingsService';
+import { AudioService } from '../services/AudioService';
 import { jumpEventCollection } from '../storage/collections/events.collectio';
 import { PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture, PlayerSkins, preloadPlayerTextures } from '../textures/player';
 import { Player, Shop } from '../types';
@@ -15,19 +15,13 @@ import { generateId } from '../utils/stringGenerator';
 import { ShadowEntity } from './ShadowEntity';
 import { WeaponEntity } from './WeaponEntity';
 
+
 const logger = createLogger('Player');
-const settingsService = SettingsService.getInstance();
 
 const LEG_WALK_MAX_ROTATION = Phaser.Math.DegToRad(30);
 const LEG_JUMP_ROTATION = Phaser.Math.DegToRad(45);
 const WALK_CYCLE_SPEED_FACTOR = 0.05; // Множитель для скорости анимации ходьбы (подбирается экспериментально)
 const BODY_WALK_MAX_ROTATION = Phaser.Math.DegToRad(1); // Максимальный угол наклона тела при ходьбе
-
-
-const jumpAudio = {
-  key: 'player_jump',
-  url: JumpAudioUrl,
-}
 
 export class PlayerEntity {
   name = 'Player';
@@ -63,7 +57,7 @@ export class PlayerEntity {
 
   static preload(scene: Phaser.Scene): void {
     preloadPlayerTextures(scene);
-    scene.load.audio(jumpAudio.key, jumpAudio.url);
+    preloadJumpSound(scene);
   }
 
   constructor(
@@ -286,7 +280,7 @@ export class PlayerEntity {
 
   private jumpAction(): void {
     this.motionController.jump(this.jumpHeight);
-    this.scene.sound.play(jumpAudio.key, { volume: settingsService.getValue('audioEffectsVolume') as number });
+    AudioService.playAudio(this.scene, JumpSound);
   }
 
   // private handleDirectionChange(direction: number): void {

@@ -1,25 +1,23 @@
+import { ClickSound, preloadClickSound } from "../../../../audio/click";
+import { DISPLAY, FONT_FAMILY } from "../../../../config";
 import { emitEvent } from "../../../../GameEvents";
 import { LevelCollection, LevelId } from "../../../../levels";
-import { plashka1MaskTexture, plashkaPodstavkaTexture, plashka1Texture, circleTexture } from "./textures";
-import { MenuSceneTypes } from "../../MenuSceneTypes";
-import { UiBackButton } from "../../../../ui/BackButton";
-import { Level, Quest, Bank } from "../../../../types";
-import { SelectLevelText } from "./translates";
+import { preloadImage } from "../../../../preload";
+import { AudioService } from "../../../../services/AudioService";
 import { QuestService } from "../../../../services/QuestService";
+import { Level, Quest } from "../../../../types";
+import { UiBackButton } from "../../../../ui/BackButton";
 import { UiStar } from "../../../../ui/Star";
 import { hexToNumber } from "../../../../utils/colors";
-import { BankService } from "../../../../services/BankService";
-import { UiStars } from "../../../../ui/Stars";
-import { DISPLAY, FONT_FAMILY } from "../../../../config";
-import { preloadImage } from "../../../../preload";
-import { clickAudio } from "../../../../ui/Button";
+import { MenuSceneTypes } from "../../MenuSceneTypes";
+import { circleTexture, plashka1MaskTexture, plashka1Texture, plashkaPodstavkaTexture } from "./textures";
+import { SelectLevelText } from "./translates";
 
 export class SelectLevelView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
   protected container: Phaser.GameObjects.Container;
   private backButton: UiBackButton;
   private questService: QuestService;
-  private bankService: BankService;
 
   private levelCollection: Record<LevelId, Level.Config> = LevelCollection;
 
@@ -60,8 +58,9 @@ export class SelectLevelView implements MenuSceneTypes.View {
     preloadImage(scene, circleTexture);
 
     UiStar.preload(scene);
-    UiStars.preload(scene);
-    
+
+    preloadClickSound(scene);
+
     for (const levelConfig of Object.values(LevelCollection)) {
       if (levelConfig.preview) {
         preloadImage(scene, levelConfig.preview);
@@ -74,31 +73,25 @@ export class SelectLevelView implements MenuSceneTypes.View {
     this.container = this.scene.add.container(0, 0);
     this.backButton = new UiBackButton(this.scene);
     this.questService = QuestService.getInstance();
-    this.bankService = BankService.getInstance();
 
     this.backButton.on('pointerdown', () => {
       emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.HOME });
     });
 
-    const title = this.scene.add.text(DISPLAY.WIDTH / 2, 65, SelectLevelText.translate.toUpperCase(), { 
-      fontSize: '36px', 
-      color: '#ffffff', 
-      stroke: '#000000', 
+    const title = this.scene.add.text(DISPLAY.WIDTH / 2, 65, SelectLevelText.translate.toUpperCase(), {
+      fontSize: '36px',
+      color: '#ffffff',
+      stroke: '#000000',
       strokeThickness: 4,
       fontFamily: FONT_FAMILY.BOLD
     }).setOrigin(0.5);
-
-    this.bankService.getPlayerBalance(Bank.Currency.Star).then((balance: number) => {
-      const uiStars = new UiStars(this.scene, 1100, 66, balance);
-      this.container.add(uiStars);
-    });
 
     this.renderBlocks();
     this.container.add(title);
     this.container.add(this.backButton);
   }
 
-  update(time: number, delta: number): void {}
+  update(time: number, delta: number): void { }
 
   getContainer(): Phaser.GameObjects.Container {
     return this.container;
@@ -109,7 +102,7 @@ export class SelectLevelView implements MenuSceneTypes.View {
       resolve();
     });
   }
-  
+
   leave(): Promise<void> {
     return new Promise((resolve) => {
       resolve();
@@ -128,10 +121,10 @@ export class SelectLevelView implements MenuSceneTypes.View {
       const previewOffsetY = blockConfig.previewOffsetY + blockConfig.offsetY;
       const previewOffsetX = blockConfig.previewOffsetX;
 
-      const text = this.scene.add.text(0, -80, levelConfig.name.translate.toUpperCase(), { 
-        fontSize: '32px', 
-        color: '#ffffff', 
-        stroke: '#000000', 
+      const text = this.scene.add.text(0, -80, levelConfig.name.translate.toUpperCase(), {
+        fontSize: '32px',
+        color: '#ffffff',
+        stroke: '#000000',
         strokeThickness: 3,
         fontFamily: FONT_FAMILY.BOLD
       }).setOrigin(0.5);
@@ -142,8 +135,8 @@ export class SelectLevelView implements MenuSceneTypes.View {
           .setOrigin(0.5)
           .setScale(levelConfig.preview.scale)
           .setTint(0xbbbbbb);
-          const mask = maskImage.createBitmapMask();
-          preview.setMask(mask);
+        const mask = maskImage.createBitmapMask();
+        preview.setMask(mask);
       }
 
       const plashka = this.scene.add.image(0, 0, this.blocks[index].plashkaTexture.key).setOrigin(0.5).setScale(this.blocks[index].plashkaTexture.scale).setFlipX(blockConfig.flipX as boolean);
@@ -163,12 +156,12 @@ export class SelectLevelView implements MenuSceneTypes.View {
       plashka.on('pointerdown', () => {
         if (levelConfig.disabled) return;
         emitEvent(this.scene, MenuSceneTypes.Events.Play.Name, { levelId });
-        this.scene.sound.play(clickAudio.key);
+        AudioService.playAudio(this.scene, ClickSound);
       });
 
       this.questService.getCurrentQuest(levelId).then((quest: Quest.Config | null) => {
         if (!quest) return;
-        
+
         quest.tasks.forEach((task: Quest.AnyTaskConfig, index: number) => {
           const leftOffset = -130;
           const containerHeight = 50;
@@ -176,18 +169,18 @@ export class SelectLevelView implements MenuSceneTypes.View {
           const taskContainer = this.scene.add.container(0, containerHeight * index);
           const circle = this.scene.add.image(leftOffset, 0, circleTexture.key).setOrigin(0.5).setScale(circleTexture.scale);
           const uiStar = new UiStar(this.scene, 126, 4, task.reward.amount).setScale(0.6);
-          
-          const title = this.scene.add.text(leftOffset + 26, 0, task.title.translate.toUpperCase(), { 
-            fontSize: '14px', 
-            color: '#ffffff', 
-            stroke: '#000000', 
+
+          const title = this.scene.add.text(leftOffset + 26, 0, task.title.translate.toUpperCase(), {
+            fontSize: '14px',
+            color: '#ffffff',
+            stroke: '#000000',
             strokeThickness: 2,
             fontFamily: FONT_FAMILY.REGULAR,
           }).setOrigin(0, 0.5).setWordWrapWidth(200);
-          const number = this.scene.add.text(leftOffset, 0, `${index + 1}`, { 
-            fontSize: '16px', 
-            color: '#ffffff', 
-            stroke: '#000000', 
+          const number = this.scene.add.text(leftOffset, 0, `${index + 1}`, {
+            fontSize: '16px',
+            color: '#ffffff',
+            stroke: '#000000',
             strokeThickness: 2,
             fontFamily: FONT_FAMILY.REGULAR,
           }).setOrigin(0.5);

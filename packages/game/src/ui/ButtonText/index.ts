@@ -1,6 +1,7 @@
+import { ClickSound, preloadClickSound } from "../../audio/click";
 import { FONT_FAMILY } from "../../config";
 import { preloadImage } from "../../preload";
-import { clickAudio, UiButton } from "../Button";
+import { AudioService } from "../../services/AudioService";
 import buttonTextActiveUrl from './assets/button_text_active.png';
 import buttonTextBackgroundUrl from './assets/button_text_background.png';
 
@@ -21,7 +22,7 @@ export class UiButtonText extends Phaser.GameObjects.Container {
   private background: Phaser.GameObjects.Image;
 
   static preload(scene: Phaser.Scene): void {
-    UiButton.preload(scene);
+    preloadClickSound(scene);
     preloadImage(scene, buttonTextBackgroundTexture);
     preloadImage(scene, buttonTextActiveTexture);
   }
@@ -40,7 +41,7 @@ export class UiButtonText extends Phaser.GameObjects.Container {
     }
 
     this.background.on('pointerdown', () => {
-      scene.sound.play(clickAudio.key);
+      AudioService.playAudio(scene, ClickSound);
     });
     this.background.on('pointerover', () => {
       this.background.setTexture(buttonTextActiveTexture.key);

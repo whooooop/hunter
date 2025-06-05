@@ -1,10 +1,10 @@
-import { DISPLAY, FONT_FAMILY } from "../../../../config";
+import { DISPLAY } from "../../../../config";
 import { emitEvent } from "../../../../GameEvents";
 import { UiBackButton } from "../../../../ui/BackButton";
 import { UiContainer } from "../../../../ui/Container";
 import { UiSlider } from "../../../../ui/Slider";
 import { MenuSceneTypes } from "../../MenuSceneTypes";
-import { SettingsText, SoonText } from "./translates";
+import { SettingsText } from "./translates";
 
 export class SettingsView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
@@ -22,6 +22,7 @@ export class SettingsView implements MenuSceneTypes.View {
     this.container.add(this.backButton);
 
     const container = new UiContainer(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2, SettingsText.translate);
+    container.setScale(0.9);
     this.container.add(container);
 
     const slider = new UiSlider(this.scene, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2, {
@@ -29,13 +30,10 @@ export class SettingsView implements MenuSceneTypes.View {
         console.log(value);
       }
     });
-    this.container.add(slider);
+    container.add(slider);
     // audioWeaponVolume: 0.5,
     // audioEffectsVolume: 1,
     // audioMusicVolume: 0.5,
-
-    const text = this.scene.add.text(DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2, SoonText.translate, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#ffffff' }).setOrigin(0.5);
-    this.container.add(text);
 
     this.backButton.on('pointerdown', () => {
       emitEvent(this.scene, MenuSceneTypes.Events.GoToView.Name, { viewKey: MenuSceneTypes.ViewKeys.HOME });

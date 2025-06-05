@@ -1,8 +1,9 @@
-import { WeaponType } from "./WeaponTypes";
 import { ProjectileName } from "../projectiles/ProjectileName";
-import { Weapon, WeaponTexture } from "../types/weaponTypes";
 import { GrenadeImageTexture_0 } from '../textures/GrenadeTexture';
+import { Audio } from "../types/audioTypes";
+import { Weapon, WeaponTexture } from "../types/weaponTypes";
 import GrenadeThrowAudioUrl from './assets/audio/grenade_throw_audio_0.mp3';
+import { WeaponType } from "./WeaponTypes";
 
 const GrenadeTexture_0: WeaponTexture = {
   ...GrenadeImageTexture_0,
@@ -29,10 +30,12 @@ export const GrenadeConfig: Weapon.Config = {
   shellCasings: false,
   autoreload: true,
   hideWhileReload: true,
-  
+
   fireAudio: {
     key: 'granade_throw_audio_0',
     url: GrenadeThrowAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
 
   projectile: ProjectileName.GRENADE

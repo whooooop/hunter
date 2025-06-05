@@ -2,9 +2,10 @@ import { DISPLAY, FONT_FAMILY } from "../../config";
 import { UiReplayButton } from "../../ui/ReplayButton";
 import { GameOverTexture3, TextTexture } from "./textures";
 
+import { ClickSound, preloadClickSound } from "../../audio/click";
 import { emitEvent } from "../../GameEvents";
+import { AudioService } from "../../services/AudioService";
 import { Game } from "../../types";
-import { clickAudio } from "../../ui/Button";
 import { BackgroundTexture, GameOverTexture1, GameOverTexture2, TitleTexture } from "./textures";
 import { exitText1, exitText2, exitText3, gameOverText, killsText, timeText, tryAgainText1, tryAgainText2, tryAgainText3 } from "./translates";
 
@@ -35,7 +36,7 @@ export class GameOverView {
 
   static preload(scene: Phaser.Scene) {
     UiReplayButton.preload(scene);
-
+    preloadClickSound(scene);
     scene.load.image(TextTexture.key, TextTexture.url);
     scene.load.image(BackgroundTexture.key, BackgroundTexture.url);
     scene.load.image(TitleTexture.key, TitleTexture.url);
@@ -113,7 +114,7 @@ export class GameOverView {
     exitBackground.on('pointerout', () => exitContainer.setScale(1));
     exitBackground.on('pointerdown', () => {
       emitEvent(this.scene, Game.Events.Exit.Local, {})
-      this.scene.sound.play(clickAudio.key);
+      AudioService.playAudio(this.scene, ClickSound);
     });
     exitContainer.add(exitBackground);
     exitContainer.add(exitText);

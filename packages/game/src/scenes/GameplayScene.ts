@@ -1,6 +1,7 @@
 import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
 import { ConnectionState, EnemyState, GameState, PlayerSkin, ReplayEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
+import { playGameoverAudio, preloadGameoverAudio } from '../audio/gameover';
 import { MenuAudio } from '../audio/menu';
 import { DISPLAY, FONT_FAMILY, GAMEOVER, VERSION } from '../config';
 import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../controllers';
@@ -139,6 +140,7 @@ export class GameplayScene extends Phaser.Scene {
     preloadWeapons(this);
     preloadProjectiles(this);
     preloadFx(this);
+    preloadGameoverAudio(this);
   }
 
   clear(): void {
@@ -440,6 +442,7 @@ export class GameplayScene extends Phaser.Scene {
       if (enemy instanceof EnemyEntity && enemy.getPosition().x < 0) {
         if (GAMEOVER && !this.isGameOver) {
           this.isGameOver = true;
+          playGameoverAudio(this);
           window.bridge.platform.sendMessage("gameplay_stopped");
           this.gameOverView.open({
             attempt: this.attempt,

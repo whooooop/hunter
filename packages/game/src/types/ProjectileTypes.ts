@@ -1,5 +1,5 @@
+import { Audio } from "./audioTypes";
 import { ImageTexture } from "./texture";
-import { Weapon } from "./weaponTypes";
 
 export namespace Projectile {
 
@@ -23,7 +23,7 @@ export namespace Projectile {
     activateDelay?: number;
     activateRadius?: number;
 
-    activateAudio?: Weapon.Audio.Asset;
+    activateAudio?: Audio.Asset;
 
     force?: number;
     bounce?: number;

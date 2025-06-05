@@ -1,10 +1,9 @@
 import { OBJECTS_DEPTH_OFFSET } from "../config";
 import { ExplosionFx } from "../fx/explosion/ExplosionFx";
-import { SettingsService } from "../services/SettingsService";
+import { AudioService } from "../services/AudioService";
 import { Projectile } from "../types";
 import { WeaponType } from "../weapons/WeaponTypes";
 
-const settingsService = SettingsService.getInstance();
 
 const defaultOptions = {
   bounce: 0.2,
@@ -193,9 +192,7 @@ export class ProjectileEntity {
 
   protected playActivateAudio(): void {
     if (this.options.activateAudio) {
-      this.scene.sound.play(this.options.activateAudio.key, {
-        volume: settingsService.getValue('audioWeaponVolume') as number
-      });
+      AudioService.playAudio(this.scene, this.options.activateAudio);
     }
   }
 

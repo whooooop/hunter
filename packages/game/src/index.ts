@@ -11,6 +11,7 @@ import { BootScene } from './scenes/BootScene';
 import { GameplayScene } from './scenes/GameplayScene';
 import { MenuScene } from './scenes/MenuScene/MenuScene';
 import { ReloadScene } from './scenes/ReloadScene';
+import { AudioService } from './services/AudioService';
 import { PlayerService } from './services/PlayerService';
 import { SettingsService } from './services/SettingsService';
 import { FontLoader } from './utils/font';
@@ -77,12 +78,12 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 async function initBridge() {
-  window.bridge.initialize({
+  return window.bridge.initialize({
     configFilePath: playgamaBridgeConfigUrl
   })
     .then(() => {
       const lang = window.location.search.split('locale=')[1] || window.bridge.platform.language;
-
+      console.log('SDK initialized');
       if (isSupportedLocale(lang)) {
         setDefaultLocale(lang);
       } else {
@@ -96,7 +97,6 @@ async function initBridge() {
 
 async function initGame() {
   try {
-
     const playerService = PlayerService.getInstance();
     const settingsService = SettingsService.getInstance();
 
@@ -104,7 +104,8 @@ async function initGame() {
       FontLoader(introFontRegular.name, introFontRegular.sources),
       FontLoader(introFontBold.name, introFontBold.sources),
       settingsService.init(),
-      playerService.initPlayer()
+      playerService.initPlayer(),
+      AudioService.init()
     ]);
 
     const game = new Phaser.Game(config);

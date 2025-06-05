@@ -1,11 +1,11 @@
-import { CHARS, generateStringWithLength } from "../utils/stringGenerator";
 import { GameStorage } from "../GameStorage";
 import { Player } from "../types/playerTypes";
 import { logger } from "../utils/logger";
+import { CHARS, generateStringWithLength } from "../utils/stringGenerator";
 
 export class PlayerService {
   private static instance: PlayerService;
-  private storage: GameStorage; 
+  private storage: GameStorage;
   private curentLocalPlayerId!: string;
 
   private getInternalPlayerIdKey(): string {
@@ -20,6 +20,7 @@ export class PlayerService {
   }
 
   private constructor() {
+    console.log('PlayerService constructor');
     this.storage = new GameStorage();
   }
 

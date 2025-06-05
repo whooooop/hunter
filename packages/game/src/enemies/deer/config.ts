@@ -15,7 +15,9 @@ export const DeerConfig: Enemy.Config = {
   score: [
     { death: true, value: 400 },
   ],
-  damageMultiplier: {},
+  damageMultiplier: {
+    head: 2,
+  },
   killCombo: [],
   spine: {
     key: Enemy.Type.DEER,

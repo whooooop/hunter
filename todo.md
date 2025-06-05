@@ -5,5 +5,4 @@
 - config weapons
 - config score
 - config quests
-- crypto storage key & data
 - playgama sdk

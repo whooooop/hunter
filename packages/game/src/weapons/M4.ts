@@ -1,5 +1,5 @@
 import { ProjectileName } from "../projectiles/ProjectileName";
-import { Weapon } from "../types/weaponTypes";
+import { Audio, Weapon } from "../types";
 import M4BoltAudioUrl from './assets/audio/m4_bolt_audio_0.mp3';
 import M4ReloadAudioUrl from './assets/audio/m4_reload_audio_0.mp3';
 import M4ShootAudioUrl from './assets/audio/m4_shoot_audio_0.mp3';
@@ -49,14 +49,20 @@ export const M4Config: Weapon.Config = {
   fireAudio: {
     key: WeaponType.M4 + '_shoot_0',
     url: M4ShootAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
   boltAudio: {
     key: WeaponType.M4 + '_bolt_0',
     url: M4BoltAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
   reloadAudio: {
     key: WeaponType.M4 + '_reload_0',
     url: M4ReloadAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
   emptyAudio: BaseEmptyAudio,
 

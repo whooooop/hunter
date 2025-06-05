@@ -1,3 +1,4 @@
+export * from './audioTypes';
 export * from './BaskTypes';
 export * from './BloodTypes';
 export * from './ControlsTypes';

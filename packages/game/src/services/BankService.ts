@@ -1,4 +1,4 @@
-import { GameStorage } from "../GameStorage";
+import { GameStorage, StorageStrategy } from "../GameStorage";
 import { Bank } from "../types";
 import { PlayerService } from "./PlayerService";
 
@@ -19,7 +19,7 @@ export class BankService {
   }
 
   private constructor() {
-    this.storage = new GameStorage();
+    this.storage = new GameStorage(StorageStrategy.Local);
     this.playerService = PlayerService.getInstance();
   }
 
@@ -36,14 +36,15 @@ export class BankService {
     const key = this.getPlayerKey(playerId);
     const state = await this.storage.get<Bank.State>(key);
     if (!state) {
-      return {...BankService.DEFAULT_STATE}
+      return { ...BankService.DEFAULT_STATE }
     }
-    return {...BankService.DEFAULT_STATE, ...state};
+    return { ...BankService.DEFAULT_STATE, ...state };
   }
 
-  async getPlayerBalance(currency: Bank.Currency): Promise<number> {
-    const playerId = this.playerService.getCurrentPlayerId();
-    const state = await this.getPlayerState(playerId);
+  static async getPlayerBalance(currency: Bank.Currency): Promise<number> {
+    const instance = BankService.getInstance();
+    const playerId = instance.playerService.getCurrentPlayerId();
+    const state = await instance.getPlayerState(playerId);
     return state[currency];
   }
 
@@ -67,6 +68,6 @@ export class BankService {
     state[currency] -= balance;
     await this.setPlayerState(playerId, state);
   }
-  
+
 }
 

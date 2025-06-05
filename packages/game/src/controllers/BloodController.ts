@@ -4,7 +4,6 @@ import { SettingsService } from '../services/SettingsService';
 import { Blood, Decals, Location } from '../types';
 import { createLogger } from '../utils/logger';
 
-const settingsService = SettingsService.getInstance();
 const logger = createLogger('BaseBlood');
 
 // --- ДОБАВЬ КЛЮЧ ТЕКСТУРЫ ---
@@ -67,17 +66,19 @@ const defaultScreenBloodOptions: Blood.ScreenBloodSplashConfig = {
 export class BloodController {
   private bloodParticles: Phaser.GameObjects.Sprite[] = [];
   private bloodPools: Phaser.GameObjects.Container[] = [];
+  private settingsService: SettingsService;
 
   constructor(
     private readonly scene: Phaser.Scene,
     private readonly bounds: Location.Bounds
   ) {
+    this.settingsService = SettingsService.getInstance();
 
     // setTimeout(() => {
     //   this.createBloodPool(300, 300, 50);
     // }, 3000)
 
-    if (settingsService.getValue('bloodEnabled')) {
+    if (this.settingsService.getValue('bloodEnabled')) {
       onEvent(this.scene, Blood.Events.BloodSplash.Local, this.createBloodSplash, this);
       onEvent(this.scene, Blood.Events.ScreenBloodSplash.Local, this.createScreenBloodSplash, this);
       onEvent(this.scene, Blood.Events.DeathFountain.Local, this.createDeathFountain, this);
@@ -520,7 +521,7 @@ export class BloodController {
    * @param size Примерный размер лужи
    */
   public createBloodPool(x: number, y: number, size: number): void {
-    if (!settingsService.getValue('bloodEnabled')) return;
+    if (!this.settingsService.getValue('bloodEnabled')) return;
 
     const poolContainer = this.scene.add.container(x, y);
     poolContainer.setDepth(5);

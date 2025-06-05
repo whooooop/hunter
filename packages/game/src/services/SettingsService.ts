@@ -9,10 +9,6 @@ export class SettingsService {
   private isInitialized: boolean = false;
 
   private static readonly defaultState: Settings.StorageState = {
-    audioWeaponVolume: 0.5,
-    audioEffectsVolume: 1,
-    audioMusicVolume: 0.5,
-
     shellCasingsEnabled: true,
     shellCasingsDecals: true,
     bloodEnabled: true,

@@ -1,6 +1,7 @@
 import { SightEntityOptions } from "../entities/SightEntity";
 import { ProjectileName } from "../projectiles/ProjectileName";
 import { WeaponType } from "../weapons/WeaponTypes";
+import { Audio } from "./audioTypes";
 import { ImageTexture } from "./texture";
 
 export type WeaponTexture = ImageTexture & {
@@ -78,25 +79,17 @@ export namespace Weapon {
       scale: number;
     };
 
-    emptyAudio?: Weapon.Audio.Asset;
-    reloadAudio?: Weapon.Audio.Asset;
-    reloadItemAudio?: Weapon.Audio.Asset;
-    boltAudio?: Weapon.Audio.Asset;
-    fireAudio?: Weapon.Audio.Asset;
+    emptyAudio?: Audio.Asset;
+    reloadAudio?: Audio.Asset;
+    reloadItemAudio?: Audio.Asset;
+    boltAudio?: Audio.Asset;
+    fireAudio?: Audio.Asset;
 
     shellCasings?: boolean;
     sight?: SightEntityOptions | boolean;
     hideSightWhenCantFire?: boolean;
 
     projectile?: ProjectileName;
-  }
-
-  export namespace Audio {
-    export interface Asset {
-      key: string;
-      url: string;
-    }
-    export type Sound = Phaser.Sound.BaseSound | null;
   }
 }
 

@@ -1,5 +1,5 @@
 import { ProjectileName } from '../projectiles/ProjectileName';
-import { Weapon } from '../types/weaponTypes';
+import { Audio, Weapon } from '../types';
 import { WeaponType } from "./WeaponTypes";
 
 import SawedTextureUrl from './assets/textures/sawed_texture_0.png';
@@ -46,15 +46,21 @@ export const SawedConfig: Weapon.Config = {
   fireAudio: {
     key: WeaponType.SAWED + '_shoot_0',
     url: SawedShootAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
   emptyAudio: BaseEmptyAudio,
   reloadAudio: {
     key: WeaponType.SAWED + '_reload_start_0',
     url: SawedReloadStartAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
   reloadItemAudio: {
     key: WeaponType.SAWED + '_reload_item_0',
     url: SawedReloadItemAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 1,
   },
   boltAudio: BaseBoltAudio2,
 
