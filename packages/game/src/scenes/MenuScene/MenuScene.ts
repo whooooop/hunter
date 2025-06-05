@@ -61,11 +61,11 @@ export class MenuScene extends Phaser.Scene {
     this.backgroundView = new BackgroundView(this);
     this.container.add(this.backgroundView.getContainer());
 
-    const mute = new UiMute(this, DISPLAY.WIDTH - 80, 70);
+    const mute = new UiMute(this, 80, 70);
     this.container.add(mute);
 
     BankService.getPlayerBalance(Bank.Currency.Star).then((balance: number) => {
-      const uiStars = new UiStars(this, 160, 70, balance);
+      const uiStars = new UiStars(this, DISPLAY.WIDTH - 160, 70, balance);
       this.container.add(uiStars);
     });
 

@@ -3,6 +3,7 @@ import { ClickSound, preloadClickSound } from "../../../../audio/click";
 import { DISPLAY, FONT_FAMILY } from "../../../../config";
 import { preloadImage } from "../../../../preload";
 import { AudioService } from "../../../../services/AudioService";
+import { LogoTexture, preloadLogoTextures } from "../../../../textures/logo";
 import { MenuSceneTypes } from "../../MenuSceneTypes";
 import { multiplayerButtonTexture, playButtonTexture, settingsButtonTexture, shopButtonTexture } from "./textures";
 import { MultiplayerText, PlayText, SettingsText, ShopText } from "./translates";
@@ -75,6 +76,9 @@ export class HomeView implements MenuSceneTypes.View {
     this.scene = scene;
     this.container = this.scene.add.container(0, 0);
 
+    const logo = this.scene.add.image(DISPLAY.WIDTH / 2, 120, LogoTexture.key).setScale(LogoTexture.scale);
+    this.container.add(logo);
+
     this.createPlayButton();
     this.buttons.forEach(button => {
       this.createMenuButton(button);
@@ -87,6 +91,7 @@ export class HomeView implements MenuSceneTypes.View {
     preloadImage(scene, settingsButtonTexture);
     preloadImage(scene, multiplayerButtonTexture);
     preloadClickSound(scene);
+    preloadLogoTextures(scene);
   }
 
   public update(time: number, delta: number): void { }
@@ -96,7 +101,7 @@ export class HomeView implements MenuSceneTypes.View {
   }
 
   private createPlayButton(): void {
-    const playButtonContainer = this.scene.add.container(DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 - 80).setDepth(50);
+    const playButtonContainer = this.scene.add.container(DISPLAY.WIDTH / 2, DISPLAY.HEIGHT / 2 - 40).setDepth(50);
     const button = this.scene.add.image(0, 0, playButtonTexture.key).setScale(playButtonTexture.scale);
     const text = this.scene.add.text(4, 84, PlayText.translate, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#ffffff' }).setOrigin(0.5);
     playButtonContainer.setAlpha(0).setScale(0.8);
