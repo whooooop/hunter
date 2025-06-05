@@ -4,7 +4,7 @@ import { connectionStateCollection } from "../storage/collections/connectionStat
 import { createLogger } from '../utils/logger';
 
 const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-const SERVER_URL = `${protocol}://${location.host}/multiplayer`;
+const SERVER_URL = `${protocol}://${window.SERVER_HOST}/multiplayer`;
 
 const logger = createLogger('MultiplayerController');
 

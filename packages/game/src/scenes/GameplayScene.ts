@@ -52,8 +52,8 @@ export class GameplayScene extends Phaser.Scene {
   private pingText!: Phaser.GameObjects.Text;
 
   private shop!: ShopEntity;
-  private enemies: Map<string, Damageable.Entity> = new Map();
-  private damageableObjects: Map<string, Damageable.Entity> = new Map();
+  private enemies!: Map<string, Damageable.Entity>;
+  private damageableObjects!: Map<string, Damageable.Entity>;
 
   private levelConfig!: Level.Config;
   private levelId!: LevelId;
@@ -75,17 +75,18 @@ export class GameplayScene extends Phaser.Scene {
   private pauseView!: PauseView;
   private gameOverView!: GameOverView;
   private mainPlayerId!: string;
-  private players: Map<string, PlayerEntity> = new Map();
+  private players!: Map<string, PlayerEntity>;
 
-  private isHost: boolean = false;
-  private attempt: number = 1;
-  private playTime: number = 0;
-  private kills: number = 0;
+  private isHost!: boolean;
+  private playTime!: number;
+  private kills!: number;
 
   private gameId?: string;
-  private isGameOver: boolean = false;
-  private isMultiplayer: boolean = false;
-  private sceneLoaded: boolean = false;
+  private isGameOver!: boolean;
+  private isMultiplayer!: boolean;
+  private sceneLoaded!: boolean;
+
+  private attempt: number = 1;
 
   private storage!: StorageSpace;
 
@@ -100,12 +101,23 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   init({ levelId, gameId }: GameplaySceneData) {
+    const playerId = this.playerService.getCurrentPlayerId();
+
+    this.mainPlayerId = playerId;
     this.loadingView = new LoadingView(this, { minLoadingTime: 2000 });
     this.levelConfig = getLevel(levelId);
     this.levelId = levelId;
     this.gameId = gameId;
     this.location = getLocation(this, this.levelConfig.location);
     this.storage = StorageSpace.create(gameStorage)!;
+    this.kills = 0;
+    this.playTime = 0;
+    this.isGameOver = false;
+    this.isMultiplayer = false;
+    this.sceneLoaded = false;
+    this.players = new Map();
+    this.enemies = new Map();
+    this.damageableObjects = new Map();
 
     HintsService.getInstance().getHint().then(hint => {
       this.loadingView.setHint(hint);
@@ -130,13 +142,6 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   clear(): void {
-    this.isGameOver = false;
-    this.sceneLoaded = false;
-    this.isMultiplayer = false;
-    this.gameId = undefined;
-    this.isHost = false;
-    this.playTime = 0;
-    this.kills = 0;
     this.location.destroy();
     this.waveController.destroy();
     this.scoreController.destroy();
@@ -147,9 +152,6 @@ export class GameplayScene extends Phaser.Scene {
     this.waveInfo.destroy();
     this.weaponStatus.destroy();
     this.players.forEach(player => player.destroy());
-    this.players.clear();
-    this.enemies.clear();
-    this.damageableObjects.clear();
     this.pauseView.close();
     this.multiplayerController?.destroy();
     this.keyboardController.destroy();
@@ -164,9 +166,6 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   async create(): Promise<void> {
-    const playerId = this.playerService.getCurrentPlayerId();
-    this.mainPlayerId = playerId;
-
     onEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
     onEvent(this, Game.Events.Pause.Local, this.handlePause, this);
     onEvent(this, Game.Events.Replay.Local, this.handleReplay, this);
@@ -184,18 +183,18 @@ export class GameplayScene extends Phaser.Scene {
 
     this.scoreController = new ScoreController(this, this.storage);
     this.bloodController = new BloodController(this, this.location.getBounds());
-    this.keyboardController = new KeyBoardController(this, playerId, this.storage);
-    this.weaponController = new WeaponController(this, this.players, this.storage, playerId);
-    this.shopController = new ShopController(this, this.players, playerId, this.shop, this.levelConfig.weapons, this.storage);
+    this.keyboardController = new KeyBoardController(this, this.mainPlayerId, this.storage);
+    this.weaponController = new WeaponController(this, this.players, this.storage, this.mainPlayerId);
+    this.shopController = new ShopController(this, this.players, this.mainPlayerId, this.shop, this.levelConfig.weapons, this.storage);
     this.decalController = new DecalController(this, 0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 5);
     this.projectileController = new ProjectileController(this, this.damageableObjects);
     this.waveController = new WaveController(this, this.levelConfig.waves(), this.storage);
 
     this.waveInfo = new WaveInfo(this, this.storage);
-    this.weaponStatus = new WeaponStatus(this, this.storage, playerId);
+    this.weaponStatus = new WeaponStatus(this, this.storage, this.mainPlayerId);
 
     this.physics.world.setBounds(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
-    this.shopController.setInteractablePlayerId(playerId);
+    this.shopController.setInteractablePlayerId(this.mainPlayerId);
 
     (window as any)['_s'] = this.storage;
 
