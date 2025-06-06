@@ -1,10 +1,46 @@
 /**
+ * Проверяет доступность Web Crypto API
+ */
+function isCryptoAvailable(): boolean {
+  return typeof window !== 'undefined' &&
+    window.crypto !== undefined &&
+    window.crypto.subtle !== undefined;
+}
+
+/**
+ * Простая реализация шифрования, когда Web Crypto API недоступен
+ */
+function simpleEncrypt(text: string, key: string): string {
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return btoa(result);
+}
+
+/**
+ * Простая реализация дешифрования, когда Web Crypto API недоступен
+ */
+function simpleDecrypt(encrypted: string, key: string): string {
+  const text = atob(encrypted);
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return result;
+}
+
+/**
  * Encrypts a plaintext string using AES-GCM, returning a single base64 string.
  * @param {string} plainText - The data to encrypt.
  * @param {string} keyString - A string key that will be used to derive the encryption key.
  * @returns {Promise<string>} A base64-encoded string containing the encrypted data.
  */
 export async function encrypt(plainText: string, keyString: string): Promise<string> {
+  if (!isCryptoAvailable()) {
+    return simpleEncrypt(plainText, keyString);
+  }
+
   // Convert the string key to a CryptoKey
   const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
@@ -56,6 +92,10 @@ export async function encrypt(plainText: string, keyString: string): Promise<str
  * @returns {Promise<string>} The original plaintext string.
  */
 export async function decrypt(encryptedBase64: string, keyString: string): Promise<string> {
+  if (!isCryptoAvailable()) {
+    return simpleDecrypt(encryptedBase64, keyString);
+  }
+
   // Convert base64 to Uint8Array
   const encrypted = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
 
