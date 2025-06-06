@@ -22,10 +22,6 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 4000, state: { x, y: y(2), vx: -2, type: Enemy.Type.HARE } },
       { delay: 3000, state: { x, y: y(1), vx: -2, type: Enemy.Type.HARE } },
       { delay: 3000, state: { x, y: y(5), vx: -2, type: Enemy.Type.HARE } },
-      {
-        delay: 4000, state: { x, y: y(2), vx: -5, type: Enemy.Type.WOLF },
-        ambience: { assetKey: WolfSound.key }
-      },
       { delay: 2000, state: { x, y: y(4), vx: -2, type: Enemy.Type.HARE } },
       { delay: 1000, state: { x, y: y(1), vx: -3, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(5), vx: -2, type: Enemy.Type.HARE } },
