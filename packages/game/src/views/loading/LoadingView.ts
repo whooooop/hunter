@@ -80,6 +80,10 @@ export class LoadingView {
   private loadCommonAssets(): void {
     window.bridge.platform.sendMessage("in_game_loading_started");
 
+
+
+
+
     const progressBarWidth = 608;
     const center = {
       x: DISPLAY.WIDTH / 2,
@@ -103,9 +107,10 @@ export class LoadingView {
     this.progressContainer.add(this.rightProgress);
     this.progressContainer.add(loadingText);
 
-    loadAssets(this.scene, this.minLoadingTime, (progress: number) => {
+    loadAssets(this.scene, this.minLoadingTime, async (progress: number) => {
       this.progressBar.setScale(this.maxProgressScale * progress, loadingProgress.scale);
       if (progress === 1) {
+        await this.showAd();
         this.rightProgress.setVisible(true);
         window.bridge.platform.sendMessage("in_game_loading_stopped");
         this.finishLoading();
@@ -144,6 +149,29 @@ export class LoadingView {
     ).setOrigin(0.5).setWordWrapWidth(500);
 
     this.progressContainer.add(text);
+  }
+
+  private showAd(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      function handleInterstitialStateChanged(state: any) {
+        console.log("Interstitial state:", state);
+        if (state === "closed" || state === "failed") {
+          // Реклама завершена, можно продолжить игру / загрузку
+          window.bridge.advertisement.off(
+            window.bridge.EVENT_NAME.INTERSTITIAL_STATE_CHANGED,
+            handleInterstitialStateChanged
+          );
+          resolve();
+        }
+      }
+
+      window.bridge.advertisement.on(
+        window.bridge.EVENT_NAME.INTERSTITIAL_STATE_CHANGED,
+        handleInterstitialStateChanged
+      );
+
+      window.bridge.advertisement.showInterstitial();
+    });
   }
 
   destroy(): void {

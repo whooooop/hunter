@@ -3,6 +3,7 @@ import { DISPLAY, FONT_FAMILY, VERSION } from "../../config";
 import { offEvent, onEvent } from "../../GameEvents";
 import { BankService } from "../../services/BankService";
 import { Bank } from "../../types/BaskTypes";
+import { Loading } from "../../types/LoadingTypes";
 import { UiMute, UiStars } from "../../ui";
 import { BackgroundView } from "../../views/background/BackgroundView";
 import { LoadingView } from "../../views/loading/LoadingView";
@@ -56,6 +57,7 @@ export class MenuScene extends Phaser.Scene {
   create(): void {
     onEvent(this, MenuSceneTypes.Events.Play.Name, this.playHandler, this);
     onEvent(this, MenuSceneTypes.Events.GoToView.Name, this.goToViewHandler, this);
+    onEvent(this, Loading.Events.LoadingComplete.Local, this.handleLoadingComplete, this);
 
     this.container = this.add.container(0, 0);
     this.backgroundView = new BackgroundView(this);
@@ -71,11 +73,18 @@ export class MenuScene extends Phaser.Scene {
 
     this.renderView(this.initialViewKey);
 
-    playMenuAudio(this);
-
     this.add.text(DISPLAY.WIDTH - 20, DISPLAY.HEIGHT - 30, VERSION.toUpperCase(), { fontSize: 16, color: '#ffffff', fontFamily: FONT_FAMILY.REGULAR })
       .setDepth(10000)
       .setOrigin(1, 1);
+  }
+
+  handleLoadingComplete(): void {
+    this.ready();
+  }
+
+  ready(): void {
+    console.log('ready');
+    playMenuAudio(this);
   }
 
   playHandler(payload: MenuSceneTypes.Events.Play.Payload): void {
@@ -115,5 +124,6 @@ export class MenuScene extends Phaser.Scene {
     // console.log('clear MenuScene');
     offEvent(this, MenuSceneTypes.Events.Play.Name, this.playHandler, this);
     offEvent(this, MenuSceneTypes.Events.GoToView.Name, this.goToViewHandler, this);
+    offEvent(this, Loading.Events.LoadingComplete.Local, this.handleLoadingComplete, this);
   }
 }
