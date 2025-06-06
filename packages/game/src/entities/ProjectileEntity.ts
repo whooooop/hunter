@@ -192,7 +192,7 @@ export class ProjectileEntity {
 
   protected playActivateAudio(): void {
     if (this.options.activateAudio) {
-      AudioService.playAudio(this.scene, this.options.activateAudio);
+      AudioService.playAudio(this.scene, this.options.activateAudio.key);
     }
   }
 

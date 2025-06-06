@@ -110,7 +110,7 @@ export class HomeView implements MenuSceneTypes.View {
     button.setInteractive();
     button.on('pointerdown', () => {
       this.goToScene(MenuSceneTypes.ViewKeys.SELECT_LEVEL);
-      AudioService.playAudio(this.scene, ClickSound);
+      AudioService.playAudio(this.scene, ClickSound.key);
     });
     button.on('pointerover', () => {
       this.scene.tweens.add({
@@ -140,7 +140,7 @@ export class HomeView implements MenuSceneTypes.View {
     button.setInteractive();
     button.on('pointerdown', () => {
       this.goToScene(data.viewKey);
-      AudioService.playAudio(this.scene, ClickSound);
+      AudioService.playAudio(this.scene, ClickSound.key);
     });
     container.add(button);
     container.add(textObject);

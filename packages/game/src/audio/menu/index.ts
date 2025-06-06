@@ -1,4 +1,3 @@
-import { preloadAudio } from '../../preload';
 import { AudioService } from '../../services/AudioService';
 import { Audio } from '../../types';
 import menuMusicUrl from './assets/menu.mp3';
@@ -21,11 +20,11 @@ export const MenuAudio2 = {
 const playlist = [MenuAudio, MenuAudio2];
 
 export const preloadMenuAudio = (scene: Phaser.Scene) => {
-  preloadAudio(scene, MenuAudio.key, MenuAudio.url);
-  preloadAudio(scene, MenuAudio2.key, MenuAudio2.url);
+  AudioService.preloadAsset(scene, MenuAudio);
+  AudioService.preloadAsset(scene, MenuAudio2);
 };
 
 export const playMenuAudio = (scene: Phaser.Scene) => {
   const randomIndex = Math.floor(Math.random() * playlist.length);
-  AudioService.playAudio(scene, playlist[randomIndex]);
+  AudioService.playAudio(scene, playlist[randomIndex].key);
 };

@@ -1,4 +1,4 @@
-import { preloadAudio } from '../../preload';
+import { AudioService } from '../../services/AudioService';
 import { Audio } from '../../types';
 import clickSoundUrl from './assets/click.mp3';
 
@@ -10,5 +10,5 @@ export const ClickSound: Audio.Asset = {
 };
 
 export const preloadClickSound = (scene: Phaser.Scene) => {
-  preloadAudio(scene, ClickSound.key, ClickSound.url);
+  AudioService.preloadAsset(scene, ClickSound);
 };

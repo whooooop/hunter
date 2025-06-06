@@ -1,5 +1,6 @@
 import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 import { EnemyEntity } from "../entities/EnemyEntity";
+import { AudioService } from "../services/AudioService";
 import { Enemy } from "../types/enemyTypes";
 import { loadSprite, loadSpriteSheet } from "../utils/sprite";
 import { BearEnemy } from "./bear";
@@ -76,6 +77,8 @@ export const EnemyCollections: Record<Enemy.Type, {
 }
 
 export function preloadEnemies(scene: Phaser.Scene, enemies: Enemy.Type[]): void {
+  EnemyEntity.preload(scene);
+
   enemies.forEach(enemy => {
     const EnemyConfig = EnemyCollections[enemy].config;
     EnemyConfig.animations?.forEach(animation => {
@@ -87,6 +90,11 @@ export function preloadEnemies(scene: Phaser.Scene, enemies: Enemy.Type[]): void
     if (EnemyConfig.spine) {
       scene.load.spineJson(EnemyConfig.spine!.key, EnemyConfig.spine!.json)
       scene.load.spineAtlas(EnemyConfig.spine!.key, EnemyConfig.spine!.atlas)
+    }
+    if (EnemyConfig.ambience) {
+      Object.values(EnemyConfig.ambience).forEach(asset => {
+        AudioService.preloadAsset(scene, asset);
+      });
     }
   });
 }

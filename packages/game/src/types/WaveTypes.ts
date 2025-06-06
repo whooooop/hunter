@@ -1,4 +1,4 @@
-import { Enemy } from "./enemyTypes";
+import { Enemy } from "./index";
 
 export namespace Wave {
   export interface Config {
@@ -9,5 +9,9 @@ export namespace Wave {
   export interface Spawn {
     delay: number;
     state: Pick<Enemy.State, 'type' | 'x' | 'y'> & Partial<Enemy.State>;
+    ambience?: {
+      delay?: number;
+      assetKey: string;
+    };
   }
 }

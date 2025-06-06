@@ -40,7 +40,7 @@ export class UiMute extends Phaser.GameObjects.Image {
       this.muted = !this.muted;
       AudioService.setSettingsValue('muted', this.muted);
       this.updateTexture();
-      AudioService.playAudio(scene, ClickSound);
+      AudioService.playAudio(scene, ClickSound.key);
     });
 
     this.on('pointerover', () => {

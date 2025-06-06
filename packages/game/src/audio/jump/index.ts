@@ -1,4 +1,4 @@
-import { preloadAudio } from '../../preload';
+import { AudioService } from '../../services/AudioService';
 import { Audio } from '../../types';
 import jumpSoundUrl from './assets/jump.mp3';
 
@@ -10,5 +10,5 @@ export const JumpSound: Audio.Asset = {
 };
 
 export const preloadJumpSound = (scene: Phaser.Scene) => {
-  preloadAudio(scene, JumpSound.key, JumpSound.url);
+  AudioService.preloadAsset(scene, JumpSound);
 };

@@ -41,7 +41,7 @@ export class UiButtonText extends Phaser.GameObjects.Container {
     }
 
     this.background.on('pointerdown', () => {
-      AudioService.playAudio(scene, ClickSound);
+      AudioService.playAudio(scene, ClickSound.key);
     });
     this.background.on('pointerover', () => {
       this.background.setTexture(buttonTextActiveTexture.key);

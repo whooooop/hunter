@@ -2,7 +2,6 @@ import { ClickSound, preloadClickSound } from "../../../../audio/click";
 import { preloadWolfSound, WolfSound } from "../../../../audio/wolf";
 import { DISPLAY, FONT_FAMILY } from "../../../../config";
 import { emitEvent } from "../../../../GameEvents";
-import { preloadAudio } from "../../../../preload";
 import { AudioService } from "../../../../services/AudioService";
 import { UiBackButton } from "../../../../ui/BackButton";
 import { UiContainer } from "../../../../ui/Container";
@@ -19,7 +18,7 @@ export class SettingsView implements MenuSceneTypes.View {
   static preload(scene: Phaser.Scene): void {
     UiContainer.preload(scene);
     preloadClickSound(scene);
-    preloadAudio(scene, GlockShootAudio.key, GlockShootAudio.url);
+    AudioService.preloadAsset(scene, GlockShootAudio);
     preloadWolfSound(scene);
   }
 
@@ -83,7 +82,7 @@ export class SettingsView implements MenuSceneTypes.View {
     effectsSlider.element.setValue(settings.effectVolume);
     effectsSlider.element.on('inputend', () => {
       AudioService.setSettingsValue('effectVolume', effectsSlider.element.getValue());
-      AudioService.playAudio(this.scene, GlockShootAudio);
+      AudioService.playAudio(this.scene, GlockShootAudio.key);
     });
     container.add(effectsSlider.element);
 
@@ -94,7 +93,7 @@ export class SettingsView implements MenuSceneTypes.View {
     ambienceSlider.element.setValue(settings.ambienceVolume);
     ambienceSlider.element.on('inputend', () => {
       AudioService.setSettingsValue('ambienceVolume', ambienceSlider.element.getValue());
-      AudioService.playAudio(this.scene, WolfSound);
+      AudioService.playAudio(this.scene, WolfSound.key);
     });
     container.add(ambienceSlider.element);
 
@@ -105,7 +104,7 @@ export class SettingsView implements MenuSceneTypes.View {
     interfaceSlider.element.setValue(settings.interfaceVolume);
     interfaceSlider.element.on('inputend', () => {
       AudioService.setSettingsValue('interfaceVolume', interfaceSlider.element.getValue());
-      AudioService.playAudio(this.scene, ClickSound);
+      AudioService.playAudio(this.scene, ClickSound.key);
     });
     container.add(interfaceSlider.element);
 

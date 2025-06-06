@@ -1,7 +1,7 @@
 import { defineStorageSpace } from "@hunter/multiplayer/dist/client";
 import { connectionStateCollection } from "./collections/connectionState.collection";
 import { enemyStateCollection } from "./collections/enemyState.collection";
-import { enemyAnimationEvent, enemyDeathEventCollection, fireEventCollection, jumpEventCollection, reloadEventCollection, replayEventCollection } from "./collections/events.collectio";
+import { embienceEvent, enemyAnimationEvent, enemyDeathEventCollection, fireEventCollection, jumpEventCollection, reloadEventCollection, replayEventCollection } from "./collections/events.collectio";
 import { gameStateCollection } from "./collections/gameState.collection";
 import { playerScoreStateCollection } from "./collections/playerScoreState.collection";
 import { playerSkinCollection } from "./collections/playerSkin.collection";
@@ -25,6 +25,7 @@ export const gameStorage = defineStorageSpace('game', {
     fireEventCollection,
     reloadEventCollection,
     jumpEventCollection,
+    embienceEvent,
     enemyDeathEventCollection,
     enemyAnimationEvent,
     replayEventCollection,

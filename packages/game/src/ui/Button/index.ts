@@ -22,7 +22,7 @@ export class UiButton extends Phaser.GameObjects.Image {
 
     this.on('pointerdown', () => {
       this.setScale(texture.scale * 1);
-      AudioService.playAudio(scene, ClickSound);
+      AudioService.playAudio(scene, ClickSound.key);
     });
     this.on('pointerup', () => {
       this.setScale(texture.scale * 1.1);

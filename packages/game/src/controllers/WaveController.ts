@@ -1,8 +1,9 @@
 import { StorageSpace, SyncCollection } from "@hunter/multiplayer/dist/client";
-import { WaveState } from "@hunter/storage-proto/dist/storage";
+import { EmbienceEvent, WaveState } from "@hunter/storage-proto/dist/storage";
 import { emitEvent } from "../GameEvents";
 import { EnemyCollections, preloadEnemies } from "../enemies";
 import { enemyStateCollection } from "../storage/collections/enemyState.collection";
+import { embienceEvent } from "../storage/collections/events.collectio";
 import { waveStateCollection } from "../storage/collections/waveState.collection";
 import { Enemy, Game, Wave } from "../types";
 import { generateId } from "../utils/stringGenerator";
@@ -145,6 +146,14 @@ export class WaveController {
     if (!spawn) {
       this.enemySpawned();
       return;
+    }
+
+    if (spawn.ambience) {
+      this.scene.time.delayedCall(spawn.ambience.delay || 0, () => {
+        this.storage.getCollection<EmbienceEvent>(embienceEvent)!.addItem(generateId(), {
+          assetKey: spawn.ambience!.assetKey,
+        })
+      });
     }
 
     this.scene.time.delayedCall(spawn.delay, () => {

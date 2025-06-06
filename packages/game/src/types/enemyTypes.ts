@@ -1,6 +1,7 @@
 import { EnemyState } from "@hunter/storage-proto/dist/storage";
 import { SpriteConfig } from "../utils/sprite";
 import { WeaponType } from "../weapons/WeaponTypes";
+import { Audio } from "./audioTypes";
 
 export namespace Enemy {
   export enum Type {
@@ -77,6 +78,8 @@ export namespace Enemy {
       texture: string;
       animations: Partial<Record<Animation, SpineAnimation>>;
     };
+
+    ambience?: Record<string, Audio.Asset>;
   }
 
   // export interface SpawnConfig {

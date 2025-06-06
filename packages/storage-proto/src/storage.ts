@@ -98,6 +98,10 @@ export interface ReplayEvent {
   gameId: string;
 }
 
+export interface EmbienceEvent {
+  assetKey: string;
+}
+
 function createBaseGameState(): GameState {
   return { host: "", levelId: "", createdAt: "0", playersCount: 0, paused: false, started: false, finished: false };
 }
@@ -1444,6 +1448,64 @@ export const ReplayEvent: MessageFns<ReplayEvent> = {
   fromPartial<I extends Exact<DeepPartial<ReplayEvent>, I>>(object: I): ReplayEvent {
     const message = createBaseReplayEvent();
     message.gameId = object.gameId ?? "";
+    return message;
+  },
+};
+
+function createBaseEmbienceEvent(): EmbienceEvent {
+  return { assetKey: "" };
+}
+
+export const EmbienceEvent: MessageFns<EmbienceEvent> = {
+  encode(message: EmbienceEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.assetKey !== "") {
+      writer.uint32(10).string(message.assetKey);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EmbienceEvent {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEmbienceEvent();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.assetKey = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EmbienceEvent {
+    return { assetKey: isSet(object.assetKey) ? globalThis.String(object.assetKey) : "" };
+  },
+
+  toJSON(message: EmbienceEvent): unknown {
+    const obj: any = {};
+    if (message.assetKey !== "") {
+      obj.assetKey = message.assetKey;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<EmbienceEvent>, I>>(base?: I): EmbienceEvent {
+    return EmbienceEvent.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<EmbienceEvent>, I>>(object: I): EmbienceEvent {
+    const message = createBaseEmbienceEvent();
+    message.assetKey = object.assetKey ?? "";
     return message;
   },
 };

@@ -1,5 +1,7 @@
 import * as Phaser from 'phaser';
+import { playMissSound } from '../audio/miss';
 import { DEBUG } from '../config';
+import { EnemyEntity } from '../entities/EnemyEntity';
 import { ProjectileEntity } from '../entities/ProjectileEntity';
 import { emitEvent, offEvent, onEvent } from '../GameEvents';
 import { createProjectile } from '../projectiles';
@@ -19,6 +21,7 @@ interface Hit {
 
 interface HitGroup {
   hits: Hit[];
+  enemiesCount: number;
   time: number;
 }
 
@@ -67,6 +70,7 @@ export class ProjectileController {
   private predictRayHits(projectile: ProjectileEntity): void {
     const group: HitGroup = {
       hits: [],
+      enemiesCount: 0,
       time: 0
     };
 
@@ -107,6 +111,10 @@ export class ProjectileController {
         const { hitX, hitY, distance } = intersection;
         const time = this.scene.time.now + (distance / speed[0] * 1000);
 
+        if (enemy instanceof EnemyEntity) {
+          group.enemiesCount++;
+        }
+
         group.hits.push({
           time,
           projectile,
@@ -124,6 +132,10 @@ export class ProjectileController {
       group.time = group.hits[0].time;
       this.projectileHits.push(group);
     }
+
+    if (group.enemiesCount === 0) {
+      playMissSound(this.scene);
+    }
   }
 
   private predictRadiusHits(projectile: ProjectileEntity): void {
@@ -138,6 +150,7 @@ export class ProjectileController {
     // Массив для хранения обнаруженных попаданий
     const group: HitGroup = {
       hits: [],
+      enemiesCount: 0,
       time: 0
     };
 
@@ -167,6 +180,10 @@ export class ProjectileController {
           x: x + Math.cos(angle) * Math.min(distance, radius),
           y: y + Math.sin(angle) * Math.min(distance, radius)
         };
+
+        if (enemy instanceof EnemyEntity) {
+          group.enemiesCount++;
+        }
 
         group.hits.push({
           time: explosionTime,

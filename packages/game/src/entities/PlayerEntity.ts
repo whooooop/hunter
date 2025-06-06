@@ -2,6 +2,7 @@ import { StorageSpace, SyncCollectionRecord } from '@hunter/multiplayer/dist/cli
 import { PlayerJumpEvent, PlayerSkin } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
 import { JumpSound, preloadJumpSound } from '../audio/jump';
+import { preloadRunSound, RunSound } from '../audio/run';
 import { MotionController2 } from '../controllers/MotionController2';
 import { offEvent, onEvent } from '../GameEvents';
 import { AudioService } from '../services/AudioService';
@@ -14,7 +15,6 @@ import { createLogger } from '../utils/logger';
 import { generateId } from '../utils/stringGenerator';
 import { ShadowEntity } from './ShadowEntity';
 import { WeaponEntity } from './WeaponEntity';
-
 
 const logger = createLogger('Player');
 
@@ -49,6 +49,8 @@ export class PlayerEntity {
   private containerOffsetY: number = 20;
   private jumpHeight: number = 140;
 
+  private runSound!: Phaser.Sound.BaseSound;
+
   // Анимация ног
   private walkPhase: number = 0; // Текущая фаза анимации ходьбы
   private legReturnSpeed: number = Phaser.Math.DegToRad(360); // Скорость возврата ног в покой (градусы в секунду)
@@ -58,6 +60,7 @@ export class PlayerEntity {
   static preload(scene: Phaser.Scene): void {
     preloadPlayerTextures(scene);
     preloadJumpSound(scene);
+    preloadRunSound(scene);
   }
 
   constructor(
@@ -97,6 +100,8 @@ export class PlayerEntity {
 
     this.leftLeg.setRotation(0);
     this.rightLeg.setRotation(0);
+
+    this.runSound = AudioService.createAudio(scene, RunSound, { loop: true });
 
     this.motionController = new MotionController2(scene, this.body, {
       acceleration: 850,
@@ -251,6 +256,12 @@ export class PlayerEntity {
       }
     }
 
+    if (isMoving && !this.runSound.isPlaying) {
+      this.runSound.play();
+    } else if (!isMoving && this.runSound.isPlaying || isJumping && this.runSound.isPlaying) {
+      this.runSound.stop();
+    }
+
     if (this.shadow) {
       this.shadow
         .getContainer()
@@ -280,7 +291,7 @@ export class PlayerEntity {
 
   private jumpAction(): void {
     this.motionController.jump(this.jumpHeight);
-    AudioService.playAudio(this.scene, JumpSound);
+    AudioService.playAudio(this.scene, JumpSound.key);
   }
 
   // private handleDirectionChange(direction: number): void {

@@ -12,6 +12,8 @@ export class AudioService {
   private settings!: Audio.Settings;
   private isInitialized: boolean = false;
 
+  static assets = new Map<string, Audio.Asset>();
+
   private music = new Map<Audio.Asset, Phaser.Sound.BaseSound>();
 
   private static readonly defaultState: Audio.Settings = {
@@ -45,6 +47,17 @@ export class AudioService {
     }
 
     return AudioService.instance;
+  }
+
+  static preloadAsset(scene: Phaser.Scene, asset: Audio.Asset): void {
+    if (AudioService.assets.has(asset.key)) {
+      return;
+    }
+    AudioService.assets.set(asset.key, asset);
+    if (!scene.cache.audio.exists(asset.key)) {
+      scene.load.audio(asset.key, asset.url);
+      AudioService.assets.set(asset.key, asset);
+    }
   }
 
   static async init(): Promise<void> {
@@ -90,8 +103,13 @@ export class AudioService {
     }
   }
 
-  static playAudio(scene: Phaser.Scene, asset: Audio.Asset, config?: AudioServicePlayConfig): void {
+  static playAudio(scene: Phaser.Scene, key: string, config?: AudioServicePlayConfig): void {
     const instance = AudioService.getInstance();
+
+    const asset = AudioService.assets.get(key);
+    if (!asset) {
+      throw new Error(`Audio asset with key ${key} not found`);
+    }
 
     const volume = instance.getVolume(asset);
     const loop = config?.loop ?? false;
@@ -105,6 +123,13 @@ export class AudioService {
     } else {
       scene.sound.play(asset.key, { volume, loop });
     }
+  }
+
+  static createAudio(scene: Phaser.Scene, asset: Audio.Asset, config?: AudioServicePlayConfig): Phaser.Sound.BaseSound {
+    const instance = AudioService.getInstance();
+    const volume = instance.getVolume(asset);
+    const loop = config?.loop ?? false;
+    return scene.sound.add(asset.key, { volume, loop });
   }
 
   static stopAllMusic(scene: Phaser.Scene, duration: number): void {

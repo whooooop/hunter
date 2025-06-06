@@ -156,7 +156,7 @@ export class SelectLevelView implements MenuSceneTypes.View {
       plashka.on('pointerdown', () => {
         if (levelConfig.disabled) return;
         emitEvent(this.scene, MenuSceneTypes.Events.Play.Name, { levelId });
-        AudioService.playAudio(this.scene, ClickSound);
+        AudioService.playAudio(this.scene, ClickSound.key);
       });
 
       this.questService.getCurrentQuest(levelId).then((quest: Quest.Config | null) => {

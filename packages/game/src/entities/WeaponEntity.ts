@@ -404,34 +404,34 @@ export class WeaponEntity {
   // Звук пустого магазина
   protected playEmptySound(): void {
     if (this.options.emptyAudio) {
-      AudioService.playAudio(this.scene, this.options.emptyAudio);
+      AudioService.playAudio(this.scene, this.options.emptyAudio.key);
     }
   }
 
   // Звук перезарядки
   protected playReloadSound(): void {
     if (this.options.reloadAudio) {
-      AudioService.playAudio(this.scene, this.options.reloadAudio);
+      AudioService.playAudio(this.scene, this.options.reloadAudio.key);
     }
   }
 
   protected playReloadItemSound(): void {
     if (this.options.reloadItemAudio) {
-      AudioService.playAudio(this.scene, this.options.reloadItemAudio);
+      AudioService.playAudio(this.scene, this.options.reloadItemAudio.key);
     }
   }
 
   // Звук выстрела
   protected playFireSound(): void {
     if (this.options.fireAudio) {
-      AudioService.playAudio(this.scene, this.options.fireAudio);
+      AudioService.playAudio(this.scene, this.options.fireAudio.key);
     }
   }
 
   // Звук затвора (взводной механизм)
   protected playBoltSound(): void {
     if (this.options.boltAudio) {
-      AudioService.playAudio(this.scene, this.options.boltAudio);
+      AudioService.playAudio(this.scene, this.options.boltAudio.key);
     }
   }
 

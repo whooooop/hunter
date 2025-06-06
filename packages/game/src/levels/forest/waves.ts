@@ -1,3 +1,5 @@
+import { BossSound } from "../../audio/boss";
+import { WolfSound } from "../../audio/wolf";
 import { DISPLAY } from "../../config";
 import { Enemy, Wave } from "../../types";
 
@@ -12,7 +14,7 @@ export function createWavesConfig(): Wave.Config[] {
     return Phaser.Math.Between(Math.floor(zoneStart), Math.floor(zoneEnd));
   }
 
-  const wave1 = {
+  const wave1: Wave.Config = {
     waitAllEnemiesDead: true,
     spawns: [
       { delay: 2000, state: { x, y: y(5), vx: -2, type: Enemy.Type.HARE } },
@@ -20,6 +22,10 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 4000, state: { x, y: y(2), vx: -2, type: Enemy.Type.HARE } },
       { delay: 3000, state: { x, y: y(1), vx: -2, type: Enemy.Type.HARE } },
       { delay: 3000, state: { x, y: y(5), vx: -2, type: Enemy.Type.HARE } },
+      {
+        delay: 4000, state: { x, y: y(2), vx: -5, type: Enemy.Type.WOLF },
+        ambience: { assetKey: WolfSound.key }
+      },
       { delay: 2000, state: { x, y: y(4), vx: -2, type: Enemy.Type.HARE } },
       { delay: 1000, state: { x, y: y(1), vx: -3, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(5), vx: -2, type: Enemy.Type.HARE } },
@@ -53,12 +59,14 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 1000, state: { x, y: y(1), vx: -4, type: Enemy.Type.SQUIREEL } },
 
       {
-        delay: 3000, state: { x, y: y(3), vx: -2, type: Enemy.Type.DEER, boss: true },
+        delay: 4000,
+        state: { x, y: y(3), vx: -2, type: Enemy.Type.DEER, boss: true },
+        ambience: { assetKey: BossSound.key }
       },
     ],
   }
 
-  const wave2 = {
+  const wave2: Wave.Config = {
     waitAllEnemiesDead: true,
     spawns: [
       { delay: 2500, state: { x, y: y(3), vx: -2, type: Enemy.Type.HARE } },
@@ -68,7 +76,10 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 2000, state: { x, y: y(1), vx: -4, type: Enemy.Type.SQUIREEL } },
       { delay: 2000, state: { x, y: y(3), vx: -4, type: Enemy.Type.SQUIREEL } },
 
-      { delay: 4000, state: { x, y: y(2), vx: -5, type: Enemy.Type.WOLF } },
+      {
+        delay: 4000, state: { x, y: y(2), vx: -5, type: Enemy.Type.WOLF },
+        ambience: { assetKey: WolfSound.key, delay: 1000 }
+      },
       { delay: 0, state: { x, y: y(4), vx: -5, type: Enemy.Type.WOLF } },
 
       { delay: 2500, state: { x, y: y(1), vx: -2, type: Enemy.Type.HARE } },
@@ -84,7 +95,10 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 2000, state: { x, y: y(3), vx: -5, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(5), vx: -3, type: Enemy.Type.HARE } },
 
-      { delay: 4000, state: { x, y: y(2), vx: -5, type: Enemy.Type.WOLF } },
+      {
+        delay: 4000, state: { x, y: y(2), vx: -5, type: Enemy.Type.WOLF },
+        ambience: { assetKey: WolfSound.key, delay: 1000 }
+      },
       { delay: 1000, state: { x, y: y(4), vx: -5, type: Enemy.Type.WOLF } },
 
       { delay: 5000, state: { x, y: y(3), vx: -3, vy: -1, type: Enemy.Type.RACCOON } },
@@ -97,7 +111,7 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 1500, state: { x, y: y(3), vx: -4, vy: -1, type: Enemy.Type.SQUIREEL } },
       { delay: 2000, state: { x, y: y(1), vx: -4, vy: -1, type: Enemy.Type.SQUIREEL } },
 
-      { delay: 6000, state: { x, y: y(1), vx: -2, vy: 0.5, type: Enemy.Type.HEDGEHOG, boss: true } },
+      { delay: 6000, state: { x, y: y(1), vx: -2, vy: 0.5, type: Enemy.Type.HEDGEHOG, boss: true }, ambience: { assetKey: BossSound.key, delay: 2000 } },
       { delay: 100, state: { x, y: y(2), vx: -2, vy: 0.5, type: Enemy.Type.HEDGEHOG, boss: true } },
       { delay: 100, state: { x, y: y(3), vx: -2, vy: -0.5, type: Enemy.Type.HEDGEHOG, boss: true } },
       { delay: 100, state: { x, y: y(2), vx: -2, vy: -0.5, type: Enemy.Type.HEDGEHOG, boss: true } },
@@ -110,7 +124,7 @@ export function createWavesConfig(): Wave.Config[] {
     ],
   }
 
-  const wave3 = {
+  const wave3: Wave.Config = {
     waitAllEnemiesDead: true,
     spawns: [
       { delay: 4000, state: { x, y: y(2), vx: -4, vy: -2, type: Enemy.Type.CAPIBARA } },
@@ -182,7 +196,7 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 500, state: { x, y: y(5), vx: -4, vy: -1, type: Enemy.Type.DEER_BABY } },
       { delay: 1000, state: { x, y: y(1), vx: -4, vy: 1, type: Enemy.Type.DEER_BABY } },
 
-      { delay: 6000, state: { x, y: y(2), vx: -2.5, type: Enemy.Type.DEER, boss: true } },
+      { delay: 6000, state: { x, y: y(2), vx: -2.5, type: Enemy.Type.DEER, boss: true }, ambience: { assetKey: BossSound.key, delay: 2000 } },
       { delay: 1000, state: { x, y: y(4), vx: -2.5, type: Enemy.Type.DEER, boss: true } },
       { delay: 1000, state: { x, y: y(1), vx: -1, vy: -1, type: Enemy.Type.MOUSE, boss: true } },
       { delay: 100, state: { x, y: y(2), vx: -3, vy: -1, type: Enemy.Type.MOUSE, boss: true } },
@@ -208,17 +222,23 @@ export function createWavesConfig(): Wave.Config[] {
     ],
   }
 
-  const wave4 = {
+  const wave4: Wave.Config = {
     waitAllEnemiesDead: true,
     spawns: [
-      { delay: 6000, state: { x, y: y(1), vx: -5, type: Enemy.Type.WOLF } },
+      {
+        delay: 6000, state: { x, y: y(1), vx: -5, type: Enemy.Type.WOLF },
+        ambience: { assetKey: WolfSound.key, delay: 3000 }
+      },
       { delay: 3000, state: { x, y: y(5), vx: -5, type: Enemy.Type.WOLF } },
       { delay: 4000, state: { x, y: y(1), vx: -2, type: Enemy.Type.HARE } },
       { delay: 2000, state: { x, y: y(5), vx: -5, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(1), vx: -3, type: Enemy.Type.HARE } },
       { delay: 100, state: { x, y: y(1), vx: -2, type: Enemy.Type.HARE } },
       { delay: 3000, state: { x, y: y(5), vx: -5, type: Enemy.Type.CAPIBARA } },
-      { delay: 1000, state: { x, y: y(2), vx: -4, type: Enemy.Type.WOLF } },
+      {
+        delay: 1000, state: { x, y: y(2), vx: -4, type: Enemy.Type.WOLF },
+        ambience: { assetKey: WolfSound.key }
+      },
       { delay: 1000, state: { x, y: y(1), vx: -5, type: Enemy.Type.WOLF } },
       { delay: 1000, state: { x, y: y(5), vx: -2, type: Enemy.Type.HARE } },
       { delay: 0, state: { x, y: y(3), vx: -1, type: Enemy.Type.MOUSE } },
@@ -250,7 +270,10 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 0, state: { x, y: y(1), vx: -1, type: Enemy.Type.MOUSE } },
       { delay: 1000, state: { x, y: y(3), vx: -3, type: Enemy.Type.SQUIREEL } },
       { delay: 3000, state: { x, y: y(5), vx: -3, type: Enemy.Type.DEER_BABY } },
-      { delay: 1000, state: { x, y: y(4), vx: -4, type: Enemy.Type.WOLF } },
+      {
+        delay: 1000, state: { x, y: y(4), vx: -4, type: Enemy.Type.WOLF },
+        ambience: { assetKey: WolfSound.key }
+      },
       { delay: 1000, state: { x, y: y(5), vx: -3, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(2), vx: -4, type: Enemy.Type.WOLF } },
       { delay: 1000, state: { x, y: y(4), vx: -3, type: Enemy.Type.SQUIREEL } },
@@ -268,7 +291,7 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 1000, state: { x, y: y(5), vx: -3, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(1), vx: -3, type: Enemy.Type.SQUIREEL } },
 
-      { delay: 1000, state: { x, y: y(3), vx: -4, type: Enemy.Type.WOLF } },
+      { delay: 1000, state: { x, y: y(3), vx: -4, type: Enemy.Type.WOLF }, ambience: { assetKey: WolfSound.key } },
       { delay: 1000, state: { x, y: y(4), vx: -4, type: Enemy.Type.CAPIBARA } },
       { delay: 1000, state: { x, y: y(3), vx: -2, type: Enemy.Type.HARE } },
       { delay: 0, state: { x, y: y(3), vx: -1, type: Enemy.Type.MOUSE } },
@@ -283,7 +306,7 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 0, state: { x, y: y(5), vx: -1, type: Enemy.Type.MOUSE } },
       { delay: 1000, state: { x, y: y(3), vx: -2, type: Enemy.Type.HARE } },
       { delay: 1000, state: { x, y: y(5), vx: -3, type: Enemy.Type.RACCOON } },
-      { delay: 1000, state: { x, y: y(2), vx: -4, type: Enemy.Type.WOLF } },
+      { delay: 1000, state: { x, y: y(2), vx: -4, type: Enemy.Type.WOLF }, ambience: { assetKey: WolfSound.key } },
       { delay: 0, state: { x, y: y(1), vx: -1, type: Enemy.Type.MOUSE } },
       { delay: 1000, state: { x, y: y(3), vx: -3, type: Enemy.Type.RACCOON } },
       { delay: 1000, state: { x, y: y(2), vx: -3, type: Enemy.Type.SQUIREEL } },
@@ -292,10 +315,10 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 1000, state: { x, y: y(2), vx: -3, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(1), vx: -3, type: Enemy.Type.RACCOON } },
       { delay: 0, state: { x, y: y(3), vx: -1, type: Enemy.Type.MOUSE } },
-      { delay: 1000, state: { x, y: y(1), vx: -4, type: Enemy.Type.WOLF } },
+      { delay: 1000, state: { x, y: y(1), vx: -4, type: Enemy.Type.WOLF }, ambience: { assetKey: WolfSound.key } },
 
 
-      { delay: 1000, state: { x, y: y(1), vx: -3, type: Enemy.Type.SQUIRREL_ANGRY, boss: true } },
+      { delay: 3000, state: { x, y: y(1), vx: -3, type: Enemy.Type.SQUIRREL_ANGRY, boss: true }, ambience: { assetKey: BossSound.key } },
       { delay: 1000, state: { x, y: y(5), vx: -1, type: Enemy.Type.SQUIRREL_ANGRY, boss: true } },
       { delay: 1000, state: { x, y: y(3), vx: -2, type: Enemy.Type.HARE } },
       { delay: 5000, state: { x, y: y(5), vx: -1, type: Enemy.Type.SQUIRREL_ANGRY, boss: true } },
@@ -304,7 +327,7 @@ export function createWavesConfig(): Wave.Config[] {
     ]
   }
 
-  const wave5 = {
+  const wave5: Wave.Config = {
     waitAllEnemiesDead: true,
     spawns: [
       { delay: 1000, state: { x, y: y(3), vx: -1, type: Enemy.Type.HARE } },
@@ -353,7 +376,7 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.HEDGEHOG } },
       { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.HEDGEHOG } },
 
-      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.WOLF } },
+      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.WOLF }, ambience: { assetKey: WolfSound.key } },
       { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.WOLF } },
       { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.WOLF } },
       { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.WOLF } },
@@ -396,7 +419,7 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.SQUIRREL_ANGRY } },
       { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.SQUIRREL_ANGRY } },
 
-      { delay: 1000, state: { x, y: y(1), vx: -1, type: Enemy.Type.BEAR, boss: true } },
+      { delay: 1000, state: { x, y: y(1), vx: -1, type: Enemy.Type.BEAR, boss: true }, ambience: { assetKey: BossSound.key } },
     ]
   }
 

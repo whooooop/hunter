@@ -90,3 +90,7 @@ message EnemyDeathEvent {
 message ReplayEvent {
   string gameId  = 1;
 }
+
+message EmbienceEvent {
+  string assetKey = 1;
+}

@@ -3,7 +3,9 @@ import { Weapon } from "../types/weaponTypes";
 import { WeaponType } from "./WeaponTypes";
 
 import { StorageSpace } from "@hunter/multiplayer/dist/StorageSpace";
+import { preloadMissSound } from "../audio/miss";
 import { createShellCasingTexture } from "../entities/ShellCasingEntity";
+import { AudioService } from "../services/AudioService";
 import { AWPConfig } from "./AWP";
 import { GlockConfig } from "./Glock";
 import { GrenadeConfig } from "./Grenade";
@@ -30,25 +32,26 @@ export const WeaponConfigs: Record<WeaponType, Weapon.Config> = {
 
 export function preloadWeapons(scene: Phaser.Scene): void {
   createShellCasingTexture(scene);
+  preloadMissSound(scene);
 
   Object.values(WeaponConfigs).forEach(WeaponConfig => {
     if (WeaponConfig.texture.url) {
       scene.load.image(WeaponConfig.texture.key, WeaponConfig.texture.url);
     }
     if (WeaponConfig.fireAudio) {
-      scene.load.audio(WeaponConfig.fireAudio.key, WeaponConfig.fireAudio.url);
+      AudioService.preloadAsset(scene, WeaponConfig.fireAudio);
     }
     if (WeaponConfig.emptyAudio) {
-      scene.load.audio(WeaponConfig.emptyAudio.key, WeaponConfig.emptyAudio.url);
+      AudioService.preloadAsset(scene, WeaponConfig.emptyAudio);
     }
     if (WeaponConfig.reloadAudio) {
-      scene.load.audio(WeaponConfig.reloadAudio.key, WeaponConfig.reloadAudio.url);
+      AudioService.preloadAsset(scene, WeaponConfig.reloadAudio);
     }
     if (WeaponConfig.boltAudio) {
-      scene.load.audio(WeaponConfig.boltAudio.key, WeaponConfig.boltAudio.url);
+      AudioService.preloadAsset(scene, WeaponConfig.boltAudio);
     }
     if (WeaponConfig.reloadItemAudio) {
-      scene.load.audio(WeaponConfig.reloadItemAudio.key, WeaponConfig.reloadItemAudio.url);
+      AudioService.preloadAsset(scene, WeaponConfig.reloadItemAudio);
     }
   });
 }

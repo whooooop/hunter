@@ -1,3 +1,4 @@
+import { WolfSound } from '../../audio/wolf';
 import { Enemy } from '../../types/enemyTypes';
 import atlasUrl from './assets/wolf.atlas';
 import wolfAtlasUrl from './assets/wolf.atlas.png';
@@ -39,4 +40,7 @@ export const WolfConfig: Enemy.Config = {
       },
     },
   },
+  ambience: {
+    spawn: WolfSound,
+  }
 }

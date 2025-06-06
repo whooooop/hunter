@@ -1,13 +1,14 @@
-import { generateId } from "../utils/stringGenerator"
 import { ProjectileEntity } from "../entities/ProjectileEntity"
+import { AudioService } from "../services/AudioService"
 import { Projectile } from "../types/ProjectileTypes"
-import { ProjectileMineConfig } from "./Mine"
-import { ProjectileGrenadeConfig } from "./Grenade"
+import { generateId } from "../utils/stringGenerator"
+import { WeaponType } from "../weapons/WeaponTypes"
 import { ProjectileBulletConfig } from "./Bullet"
-import { ProjectileName } from "./ProjectileName"
+import { ProjectileGrenadeConfig } from "./Grenade"
+import { ProjectileMineConfig } from "./Mine"
 import { ProjectilePelletsConfig } from "./Pellets"
 import { ProjectileProjectileConfig } from "./Projectile"
-import { WeaponType } from "../weapons/WeaponTypes"
+import { ProjectileName } from "./ProjectileName"
 
 export const ProjectileConfigs: Record<ProjectileName, Projectile.Config> = {
   [ProjectileName.BULLET]: ProjectileBulletConfig,
@@ -25,22 +26,21 @@ export function preloadProjectiles(scene: Phaser.Scene): void {
       scene.load.image(ProjectileConfig.texture.key, ProjectileConfig.texture.url);
     }
     if (ProjectileConfig.activateAudio) {
-      scene.load.audio(ProjectileConfig.activateAudio.key, ProjectileConfig.activateAudio.url);
+      AudioService.preloadAsset(scene, ProjectileConfig.activateAudio);
     }
   });
 }
 
 export function createProjectile(
-  scene: Phaser.Scene, 
-  projectileName: ProjectileName, 
-  originPoint: { x: number, y: number }, 
-  targetPoint: { x: number, y: number }, 
-  playerId: string, 
+  scene: Phaser.Scene,
+  projectileName: ProjectileName,
+  originPoint: { x: number, y: number },
+  targetPoint: { x: number, y: number },
+  playerId: string,
   weaponName: WeaponType,
-  speed: number[], 
+  speed: number[],
   damage: number
-): ProjectileEntity[] 
-{
+): ProjectileEntity[] {
   const config = ProjectileConfigs[projectileName];
   const count = config.count || 1;
   const objects: ProjectileEntity[] = [];

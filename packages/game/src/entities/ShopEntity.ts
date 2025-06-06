@@ -7,6 +7,8 @@ import { WeaponType } from '../weapons/WeaponTypes';
 
 import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin';
 import { offEvent, onEvent } from '../GameEvents';
+import { preloadPurchaseSound, PurchaseSound } from '../audio/purchase';
+import { AudioService } from '../services/AudioService';
 import { Game, ScoreEvents, Shop, ShopEvents, ShopSlotElement, ShopWeapon, Weapon } from '../types';
 import { Controls } from '../types/ControlsTypes';
 
@@ -91,7 +93,9 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
     this.createInteractionZone();
   }
 
-  static preload(scene: Phaser.Scene): void { }
+  static preload(scene: Phaser.Scene): void {
+    preloadPurchaseSound(scene);
+  }
 
   public getIsShopOpen(): boolean {
     return this.isShopOpen;
@@ -346,6 +350,8 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
   }
 
   protected purchasedWeapon(weaponType: WeaponType): void {
+    AudioService.playAudio(this.scene, PurchaseSound.key);
+
     const weaponData = this.weapons.find(weapon => weapon.type === weaponType)!;
 
     emitEvent(this.scene, ShopEvents.WeaponPurchasedEvent, {

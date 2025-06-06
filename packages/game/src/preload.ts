@@ -20,7 +20,7 @@ export function loadAssets(scene: Phaser.Scene, minLoadingTime: number, callback
     loop: true
   });
 
-  if(allTexturesLoaded && allAudioLoaded) {
+  if (allTexturesLoaded && allAudioLoaded) {
     targetProgress = 1;
   }
 
@@ -33,13 +33,6 @@ export function preloadImage(scene: Phaser.Scene, { key, url }: { key: string, u
   if (!scene.textures.exists(key)) {
     scene.load.image(key, url);
     textures.set(key, { url });
-  }
-}
-
-export function preloadAudio(scene: Phaser.Scene, key: string, url: string): void {
-  if (!scene.cache.audio.exists(key)) {
-    scene.load.audio(key, url);
-    audio.set(key, { url });
   }
 }
 

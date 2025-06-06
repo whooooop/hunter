@@ -114,7 +114,7 @@ export class GameOverView {
     exitBackground.on('pointerout', () => exitContainer.setScale(1));
     exitBackground.on('pointerdown', () => {
       emitEvent(this.scene, Game.Events.Exit.Local, {})
-      AudioService.playAudio(this.scene, ClickSound);
+      AudioService.playAudio(this.scene, ClickSound.key);
     });
     exitContainer.add(exitBackground);
     exitContainer.add(exitText);

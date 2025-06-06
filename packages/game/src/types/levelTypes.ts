@@ -1,8 +1,8 @@
+import { I18nReturnType } from "../utils/i18n";
 import { WeaponType } from "../weapons/WeaponTypes";
-import { Wave } from "./WaveTypes";
 import { Location } from "./Location";
 import { Quest } from "./QuestsTypes";
-import { I18nReturnType } from "../utils/i18n";
+import { Wave } from "./WaveTypes";
 
 export namespace Level {
   export interface Config {

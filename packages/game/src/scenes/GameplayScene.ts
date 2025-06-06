@@ -1,6 +1,8 @@
 import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
-import { ConnectionState, EnemyState, GameState, PlayerSkin, ReplayEvent } from '@hunter/storage-proto/dist/storage';
+import { ConnectionState, EmbienceEvent, EnemyState, GameState, PlayerSkin, ReplayEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
+import { preloadBossSound } from '../audio/boss';
+import { playDangerSound, preloadDangerSound } from '../audio/danger';
 import { playGameoverAudio, preloadGameoverAudio } from '../audio/gameover';
 import { DISPLAY, FONT_FAMILY, GAMEOVER, VERSION } from '../config';
 import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../controllers';
@@ -20,11 +22,11 @@ import { QuestService } from '../services/QuestService';
 import { gameStorage } from '../storage';
 import { connectionStateCollection } from '../storage/collections/connectionState.collection';
 import { enemyStateCollection } from '../storage/collections/enemyState.collection';
-import { replayEventCollection } from '../storage/collections/events.collectio';
+import { embienceEvent, replayEventCollection } from '../storage/collections/events.collectio';
 import { gameStateCollection } from '../storage/collections/gameState.collection';
 import { playerSkinCollection } from '../storage/collections/playerSkin.collection';
 import { playerStateCollection } from '../storage/collections/playerState.collection';
-import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../types';
+import { Damageable, Enemy, Game, Level, Loading, Location, Player, ScoreEvents, ShopEvents } from '../types';
 import { UiMute, WaveInfo, WeaponStatus } from '../ui';
 import { createLogger } from '../utils/logger';
 import { generateId } from '../utils/stringGenerator';
@@ -78,6 +80,7 @@ export class GameplayScene extends Phaser.Scene {
   private gameOverView!: GameOverView;
   private mainPlayerId!: string;
   private players!: Map<string, PlayerEntity>;
+  private dangerNotification!: Set<string>;
 
   private isHost!: boolean;
   private playTime!: number;
@@ -120,6 +123,7 @@ export class GameplayScene extends Phaser.Scene {
     this.players = new Map();
     this.enemies = new Map();
     this.damageableObjects = new Map();
+    this.dangerNotification = new Set();
 
     HintsService.getInstance().getHint().then(hint => {
       this.loadingView.setHint(hint);
@@ -142,6 +146,8 @@ export class GameplayScene extends Phaser.Scene {
     preloadProjectiles(this);
     preloadFx(this);
     preloadGameoverAudio(this);
+    preloadDangerSound(this);
+    preloadBossSound(this);
 
     UiMute.preload(this);
   }
@@ -181,6 +187,7 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.on<Player.State>(playerStateCollection, 'Add', this.spawnPlayer.bind(this));
     this.storage.on<EnemyState>(enemyStateCollection, 'Add', this.handleSpawnEnemy.bind(this));
     this.storage.on<GameState>(gameStateCollection, 'Update', this.handleGameStateUpdate.bind(this));
+    this.storage.on<EmbienceEvent>(embienceEvent, 'Add', this.handleEmbience.bind(this));
 
     this.location.create();
 
@@ -258,7 +265,8 @@ export class GameplayScene extends Phaser.Scene {
     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.SAWED, price: 0 });
     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MACHINE, price: 0 });
-    // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
+    emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
+
     this.waveController.start();
     this.projectileController.setSimulate(false);
   }
@@ -315,9 +323,10 @@ export class GameplayScene extends Phaser.Scene {
     this.scene.start(SceneKeys.MENU, { view: MenuSceneTypes.ViewKeys.HOME });
   }
 
-  /** 
-   *      Multiplayer 
-   */
+  private handleEmbience(id: string, record: SyncCollectionRecord<EmbienceEvent>): void {
+    AudioService.playAudio(this, record.data.assetKey);
+  }
+
   private multiplayerInit(playerId: string, gameId: string): void {
     this.isMultiplayer = true;
 
@@ -339,6 +348,7 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.getCollection<GameState>(gameStateCollection)!.subscribe('Add', (id, record, collection, from) => {
       this.isHost = record.data.host === playerId;
       this.storage.getCollection<EnemyState>(enemyStateCollection)!.setReadonly(!this.isHost);
+      this.storage.getCollection<EmbienceEvent>(embienceEvent)!.setReadonly(!this.isHost);
     });
 
     this.storage.getCollection<ReplayEvent>(replayEventCollection)!.subscribe('Add', (id, record, collection, from) => {
@@ -369,7 +379,7 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.getCollection<EnemyState>(enemyStateCollection)!.removeItem(id);
   }
 
-  private handleSpawnEnemy(id: string, record: SyncCollectionRecord<EnemyState>, collection: SyncCollection<EnemyState>, from: string): void {
+  private handleSpawnEnemy(id: string, record: SyncCollectionRecord<EnemyState>): void {
     if (this.isGameOver) {
       return;
     }
@@ -437,7 +447,8 @@ export class GameplayScene extends Phaser.Scene {
     // Обновляем всех врагов
     this.enemies.forEach((enemy) => {
       enemy.update(time, delta);
-      if (enemy instanceof EnemyEntity && enemy.getPosition().x < 0) {
+      const position = enemy instanceof EnemyEntity && enemy.getPosition();
+      if (position && position.x < 0) {
         if (GAMEOVER && !this.isGameOver) {
           this.isGameOver = true;
           playGameoverAudio(this);
@@ -460,6 +471,11 @@ export class GameplayScene extends Phaser.Scene {
           enemyEntity.destroy();
         }
         this.handleEnemyDeath({ id: enemy.id });
+      } else if (position && position.x < 250 && !this.isGameOver) {
+        if (!this.dangerNotification.has(enemy.id)) {
+          this.dangerNotification.add(enemy.id);
+          playDangerSound(this);
+        }
       }
     });
 

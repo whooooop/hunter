@@ -1,4 +1,3 @@
-import { preloadAudio } from '../../preload';
 import { AudioService } from '../../services/AudioService';
 import { Audio } from '../../types';
 import gameoverMusicUrl from './assets/gameover1.mp3';
@@ -51,14 +50,14 @@ const gameoverAudio = [
 ];
 
 export const preloadGameoverAudio = (scene: Phaser.Scene) => {
-  preloadAudio(scene, GameoverAudio.key, GameoverAudio.url);
-  preloadAudio(scene, GameoverAudio2.key, GameoverAudio2.url);
-  preloadAudio(scene, GameoverAudio3.key, GameoverAudio3.url);
-  preloadAudio(scene, GameoverAudio4.key, GameoverAudio4.url);
-  preloadAudio(scene, GameoverAudio5.key, GameoverAudio5.url);
+  AudioService.preloadAsset(scene, GameoverAudio);
+  AudioService.preloadAsset(scene, GameoverAudio2);
+  AudioService.preloadAsset(scene, GameoverAudio3);
+  AudioService.preloadAsset(scene, GameoverAudio4);
+  AudioService.preloadAsset(scene, GameoverAudio5);
 };
 
 export const playGameoverAudio = (scene: Phaser.Scene) => {
   const randomAudio = gameoverAudio[Math.floor(Math.random() * gameoverAudio.length)];
-  AudioService.playAudio(scene, randomAudio);
+  AudioService.playAudio(scene, randomAudio.key);
 };

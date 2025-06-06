@@ -1,9 +1,9 @@
-import { createWavesConfig } from './waves';
+import { Level } from '../../types/levelTypes';
 import { Location } from '../../types/Location';
 import { I18n } from '../../utils/i18n';
-import { forestWeapons } from './weapons';
-import { Level } from '../../types/levelTypes';
 import { quests } from './quests';
+import { createWavesConfig } from './waves';
+import { forestWeapons } from './weapons';
 
 import forestPreview from './assets/preview.png';
 

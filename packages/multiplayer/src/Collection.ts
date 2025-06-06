@@ -106,19 +106,57 @@ export class SyncCollection<T extends object> {
     this.subscribersCount.set(event, this.subscribersCount.get(event)! - 1);
   }
 
-  public addItem(id: string, data: T): void {
-    collectionUpdateCounter.inc({ name: this.name, origin: 'Client', event: CollectionEvent.Add });
+  private createRecord(id: string, data: T): SyncCollectionRecord<T> {
+    const reactive = this.config.reactive;
+    const readonly = this.config.readonly ?? this.readonlyItems.has(id);
+    const __original = data;
 
-    if (this.config.saveData) {
-      this.localAdd(id, data);
+    const onChange = (key: keyof T, value: any, oldValue: any) => {
+      // console.log('onChange', key, value, oldValue);
+      const record = this.collection.get(id)!;
+      collectionUpdateCounter.inc({ name: this.name, origin: 'Client', event: CollectionEvent.Update });
+      this.sendEvent('Update', 'Client', id, record);
+      this.sendUpdate(id, data);
+    };
+
+    if (reactive) {
+      const proxy = new Proxy(data as object, {
+        set: (obj: any, key: string | symbol, value: any) => {
+          if (readonly) {
+            return false;
+          }
+          const oldValue = obj[key];
+          if (oldValue !== value) {
+            obj[key] = value;
+            onChange(key as keyof T, value, oldValue);
+          }
+          return true;
+        }
+      });
+      return { data: proxy as T, __original, readonly };
     }
 
-    const record = this.collection.get(id);
+    return { data, __original, readonly };
+  }
+
+  public addItem(id: string, data: T): void {
+    if (this.config.readonly) {
+      return;
+    }
+
+    collectionUpdateCounter.inc({ name: this.name, origin: 'Client', event: CollectionEvent.Add });
+    const record = this.createRecord(id, data);
+
+    this.localAdd(id, record);
     this.sendAdd(id, data);
-    this.sendEvent('Add', 'Client', id, record!);
+    this.sendEvent('Add', 'Client', id, record);
   }
 
   public updateItem(id: string, data: T): void {
+    if (this.config.readonly) {
+      return;
+    }
+
     collectionUpdateCounter.inc({ name: this.name, origin: 'Client', event: CollectionEvent.Update });
 
     if (this.config.saveData) {
@@ -131,6 +169,10 @@ export class SyncCollection<T extends object> {
   }
 
   public removeItem(id: string): void {
+    if (this.config.readonly) {
+      return;
+    }
+
     collectionUpdateCounter.inc({ name: this.name, origin: 'Client', event: CollectionEvent.Remove });
 
     const record = this.collection.get(id);
@@ -146,17 +188,15 @@ export class SyncCollection<T extends object> {
   public import(itemIds: string[], bytes: Uint8Array[]): void {
     const data = bytes.map(byte => this.config.decode(byte));
     itemIds.forEach((id, index) => {
-      const record = this.collection.get(id);
+      let record = this.collection.get(id);
 
       if (record) {
         return;
       }
 
-      if (this.config.saveData) {
-        this.localAdd(id, data[index]);
-      }
-
-      this.sendEvent('Add', 'Server', id, this.collection.get(id)!);
+      record = this.createRecord(id, data[index]);
+      this.localAdd(id, record);
+      this.sendEvent('Add', 'Server', id, record);
     });
   }
 
@@ -205,60 +245,29 @@ export class SyncCollection<T extends object> {
       .map(item => this.config.encode(item.data).finish());
   }
 
-  private localAdd(id: string, data: T): SyncCollectionRecord<T> {
-    const reactive = this.config.reactive;
-    const readonly = this.config.readonly ?? this.readonlyItems.has(id);
-    const __original = data;
-    let result: SyncCollectionRecord<T>;
-
+  private localAdd(id: string, record: SyncCollectionRecord<T>): SyncCollectionRecord<T> {
     const item = this.collection.get(id);
     if (item) {
       return item;
-    }
-
-    const onChange = (key: keyof T, value: any, oldValue: any) => {
-      // console.log('onChange', key, value, oldValue);
-      const record = this.collection.get(id)!;
-      collectionUpdateCounter.inc({ name: this.name, origin: 'Client', event: CollectionEvent.Update });
-      this.sendEvent('Update', 'Client', id, record);
-      this.sendUpdate(id, data);
-    };
-
-    if (reactive) {
-      const proxy = new Proxy(data as object, {
-        set: (obj: any, key: string | symbol, value: any) => {
-          if (readonly) {
-            return false;
-          }
-          const oldValue = obj[key];
-          if (oldValue !== value) {
-            obj[key] = value;
-            onChange(key as keyof T, value, oldValue);
-          }
-          return true;
-        }
-      });
-      result = { data: proxy as T, __original, readonly };
-    } else {
-      result = { data, __original, readonly };
     }
 
     if (this.config.saveData) {
-      this.collection.set(id, result!);
+      this.collection.set(id, record);
     }
 
-    return result!;
+    return record;
   }
 
   private localUpdate(id: string, data: T): SyncCollectionRecord<T> {
-    const item = this.collection.get(id);
-    if (item) {
+    const record = this.collection.get(id);
+    if (record) {
       Object.keys(data).forEach((key: string) => {
-        item.__original[key as keyof T] = data[key as keyof T];
+        record.__original[key as keyof T] = data[key as keyof T];
       });
-      return item;
+      return record;
     } else {
-      return this.localAdd(id, data);
+      const record = this.createRecord(id, data);
+      return this.localAdd(id, record);
     }
   }
 
@@ -349,7 +358,8 @@ export class SyncCollection<T extends object> {
 
     if (this.config.saveData || this.subscribersCount.get('Add')! > 0) {
       const data = this.config.decode(bytes);
-      const record = this.localAdd(id, data);
+      const record = this.createRecord(id, data);
+      this.localAdd(id, record);
       this.sendEvent('Add', 'Server', id, record);
     }
     if (broadcast) {
