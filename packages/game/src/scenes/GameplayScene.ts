@@ -95,6 +95,8 @@ export class GameplayScene extends Phaser.Scene {
 
   private storage!: StorageSpace;
 
+  private handleVisibilityStateChangedBind!: (state: any) => void;
+
   constructor() {
     super({
       key: SceneKeys.GAMEPLAY
@@ -175,6 +177,7 @@ export class GameplayScene extends Phaser.Scene {
     offEvent(this, Game.Events.Replay.Local, this.handleReplay, this);
     offEvent(this, Game.Events.Exit.Local, this.handleExit, this);
     offEvent(this, Loading.Events.LoadingComplete.Local, this.handleLoadingComplete, this);
+    window.bridge.game.off(window.bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, this.handleVisibilityStateChangedBind);
   }
 
   async create(): Promise<void> {
@@ -188,6 +191,9 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.on<EnemyState>(enemyStateCollection, 'Add', this.handleSpawnEnemy.bind(this));
     this.storage.on<GameState>(gameStateCollection, 'Update', this.handleGameStateUpdate.bind(this));
     this.storage.on<EmbienceEvent>(embienceEvent, 'Add', this.handleEmbience.bind(this));
+
+    this.handleVisibilityStateChangedBind = this.handleVisibilityStateChanged.bind(this);
+    window.bridge.game.on(window.bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, this.handleVisibilityStateChangedBind);
 
     this.location.create();
 
@@ -218,6 +224,7 @@ export class GameplayScene extends Phaser.Scene {
       .setOrigin(0, 1);
   }
 
+
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
     this.sceneLoaded = true;
     window.bridge.platform.sendMessage("gameplay_started");
@@ -233,10 +240,21 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private handleGameStateUpdate(id: string, record: SyncCollectionRecord<GameState>, collection: SyncCollection<GameState>, from: string): void {
+    if (this.isGameOver) {
+      return;
+    }
+
     if (record.data.paused) {
       this.pause();
     } else {
       this.resume();
+    }
+  }
+
+  private handleVisibilityStateChanged(state: any): void {
+    if (state === "hidden") {
+      const gameState = this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game')!;
+      gameState.paused = true;
     }
   }
 
@@ -271,7 +289,7 @@ export class GameplayScene extends Phaser.Scene {
     this.projectileController.setSimulate(false);
   }
 
-  private handlePause(payload: Game.Events.Pause.Payload): void {
+  private handlePause(): void {
     const gameState = this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game')!;
     gameState.paused = !gameState.paused;
   }

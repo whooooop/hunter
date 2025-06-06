@@ -17,8 +17,11 @@ export class GameStorage {
       return null;
     }
 
+
     const encryptedKey = await this.getEncryptedKey(key);
     const value = await window.bridge.storage.get(encryptedKey, this.strategy);
+
+    console.log('get', key, value);
 
     if (!value) {
       return null;
@@ -44,6 +47,8 @@ export class GameStorage {
       console.warn('Empty key provided to GameStorage.set');
       return;
     }
+
+    console.log('set', key, value);
 
     let data: string;
     try {
