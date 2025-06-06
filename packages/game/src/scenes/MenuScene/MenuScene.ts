@@ -83,7 +83,6 @@ export class MenuScene extends Phaser.Scene {
   }
 
   ready(): void {
-    console.log('ready');
     playMenuAudio(this);
   }
 

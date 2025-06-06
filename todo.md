@@ -7,3 +7,4 @@
 
 - win popup
 - leaderboard
+- received start notification

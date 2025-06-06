@@ -80,10 +80,6 @@ export class LoadingView {
   private loadCommonAssets(): void {
     window.bridge.platform.sendMessage("in_game_loading_started");
 
-
-
-
-
     const progressBarWidth = 608;
     const center = {
       x: DISPLAY.WIDTH / 2,
@@ -154,9 +150,7 @@ export class LoadingView {
   private showAd(): Promise<void> {
     return new Promise((resolve, reject) => {
       function handleInterstitialStateChanged(state: any) {
-        console.log("Interstitial state:", state);
         if (state === "closed" || state === "failed") {
-          // Реклама завершена, можно продолжить игру / загрузку
           window.bridge.advertisement.off(
             window.bridge.EVENT_NAME.INTERSTITIAL_STATE_CHANGED,
             handleInterstitialStateChanged
