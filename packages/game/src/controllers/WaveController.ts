@@ -152,7 +152,7 @@ export class WaveController {
       this.scene.time.delayedCall(spawn.ambience.delay || 0, () => {
         this.storage.getCollection<EmbienceEvent>(embienceEvent)!.addItem(generateId(), {
           assetKey: spawn.ambience!.assetKey,
-        })
+        });
       });
     }
 
