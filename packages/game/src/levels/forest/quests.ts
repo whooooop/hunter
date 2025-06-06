@@ -1,5 +1,5 @@
-import { I18n } from "../../utils/i18n";
 import { Bank, Enemy, Game, Quest } from "../../types";
+import { I18n } from "../../utils/i18n";
 import { WeaponType } from "../../weapons/WeaponTypes";
 
 export const quests: Quest.Config[] = [
@@ -45,7 +45,7 @@ export const quests: Quest.Config[] = [
         count: -1,
         conditions: []
       },
-     
+
     ]
   },
   {
@@ -74,7 +74,7 @@ export const quests: Quest.Config[] = [
         event: Game.Events.Stat.EnemyKillEvent.Event,
         count: 15,
         conditions: [
-          { key: 'enemyType', value: Enemy.Type.HARE },
+          { key: 'enemyType', value: Enemy.Type.SQUIREEL },
         ],
       },
       {
@@ -91,7 +91,7 @@ export const quests: Quest.Config[] = [
           { key: 'distance', operator: '>', value: 10 },
         ]
       },
-      
+
     ]
-  } 
+  }
 ]

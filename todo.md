@@ -1,7 +1,9 @@
 - sounds: death / machine shoot / weapons
-- win popup
 - config waves
 - config weapons
 - config score
 - config quests
 - playgama sdk
+
+- win popup
+- leaderboard
