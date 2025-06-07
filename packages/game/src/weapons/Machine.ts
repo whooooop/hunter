@@ -1,9 +1,9 @@
 import { ProjectileName } from "../projectiles/ProjectileName";
-import { Weapon } from "../types/weaponTypes";
-import { BaseEmptyAudio, BaseShootAudio } from "./assets/baseAudio";
-import { WeaponType } from "./WeaponTypes";
-// import MachineShootAudioUrl from './assets/audio/machine_shoot_0.mp3';
+import { Audio, Weapon } from "../types";
+import MachineShootAudioUrl from './assets/audio/machine_shoot_0.mp3';
+import { BaseEmptyAudio } from "./assets/baseAudio";
 import MachineTextureUrl from './assets/textures/machine_texture_0.png';
+import { WeaponType } from "./WeaponTypes";
 
 export const MachineConfig: Weapon.Config = {
   name: WeaponType.MACHINE,
@@ -17,7 +17,7 @@ export const MachineConfig: Weapon.Config = {
     }
   },
 
-  damage: 40,          // Урон от одного выстрела
+  damage: 50,          // Урон от одного выстрела
   speed: [4000, 4000], // Скорость пули
   magazineSize: 160,    // Размер магазина
 
@@ -28,7 +28,7 @@ export const MachineConfig: Weapon.Config = {
   boltTime: 800,          // Время взвода затвора
 
   // Параметры стрельбы
-  fireRate: 70,       // Задержка между выстрелами в мс
+  fireRate: 100,       // Задержка между выстрелами в мс
   aimingTime: 200,    // Время прицеливания в мс
   spreadAngle: 2,      // Угол разброса при выстреле в градусах
   automatic: true,
@@ -44,7 +44,12 @@ export const MachineConfig: Weapon.Config = {
     scale: 1.5,
   },
 
-  fireAudio: BaseShootAudio,
+  fireAudio: {
+    key: WeaponType.MACHINE + '_shoot_0',
+    url: MachineShootAudioUrl,
+    type: Audio.Type.Effect,
+    volume: 0.7,
+  },
   emptyAudio: BaseEmptyAudio,
 
   projectile: ProjectileName.BULLET

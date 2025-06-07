@@ -4,6 +4,7 @@ import * as Phaser from 'phaser';
 import { preloadBossSound } from '../audio/boss';
 import { playDangerSound, preloadDangerSound } from '../audio/danger';
 import { playGameoverAudio, preloadGameoverAudio } from '../audio/gameover';
+import { stopMenuAudio } from '../audio/menu';
 import { DISPLAY, FONT_FAMILY, GAMEOVER, VERSION } from '../config';
 import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../controllers';
 import { createEnemy } from '../enemies';
@@ -138,6 +139,7 @@ export class GameplayScene extends Phaser.Scene {
     PlayerEntity.preload(this);
     BloodController.preload(this);
     KeyBoardController.preload(this);
+    ProjectileController.preload(this);
     WaveController.preloadEnemies(this, this.levelConfig.waves());
     PauseView.preload(this);
     GameOverView.preload(this);
@@ -206,7 +208,7 @@ export class GameplayScene extends Phaser.Scene {
     this.weaponController = new WeaponController(this, this.players, this.storage, this.mainPlayerId);
     this.shopController = new ShopController(this, this.players, this.mainPlayerId, this.shop, this.levelConfig.weapons, this.storage);
     this.decalController = new DecalController(this, 0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 5);
-    this.projectileController = new ProjectileController(this, this.damageableObjects);
+    this.projectileController = new ProjectileController(this, this.damageableObjects, this.storage);
     this.waveController = new WaveController(this, this.levelConfig.waves(), this.storage);
 
     this.waveInfo = new WaveInfo(this, this.storage);
@@ -236,7 +238,7 @@ export class GameplayScene extends Phaser.Scene {
     }
     this.playTime = 0;
 
-    AudioService.stopAllMusic(this, 5000);
+    stopMenuAudio(this, 5000);
   }
 
   private handleGameStateUpdate(id: string, record: SyncCollectionRecord<GameState>, collection: SyncCollection<GameState>, from: string): void {
@@ -279,10 +281,11 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.getCollection<PlayerSkin>(playerSkinCollection)!.addItem(playerId, { body: 'b1' });
     this.storage.getCollection<Player.State>(playerStateCollection)!.addItem(playerId, { x: 0, y: 0, vx: 0, vy: 0 });
     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
-    emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.LAUNCHER, price: 0 });
-    emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.SAWED, price: 0 });
-    emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.M4, price: 0 });
+    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.REVOLVER, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MACHINE, price: 0 });
+    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.AWP, price: 0 });
+    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MINE, price: 0 });
+    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GRENADE, price: 0 });
     emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
 
     this.waveController.start();

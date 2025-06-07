@@ -1,6 +1,7 @@
 import { StorageSpace, SyncCollection } from "@hunter/multiplayer/dist/client";
 import { EmbienceEvent, WaveState } from "@hunter/storage-proto/dist/storage";
 import { emitEvent } from "../GameEvents";
+import { FONT_FAMILY } from "../config";
 import { EnemyCollections, preloadEnemies } from "../enemies";
 import { enemyStateCollection } from "../storage/collections/enemyState.collection";
 import { embienceEvent } from "../storage/collections/events.collectio";
@@ -14,6 +15,7 @@ export class WaveController {
   private waveCollection: SyncCollection<WaveState>;
   private waveState!: WaveState;
   private active: boolean = false;
+  private countdownText?: Phaser.GameObjects.Text;
 
   private bossCount: number = 0;
   private aliveCount: number = 0;
@@ -34,10 +36,65 @@ export class WaveController {
     this.active = false;
   }
 
-  public start(): void {
+  private async countdown(delay: number): Promise<void> {
+    return new Promise((resolve) => {
+      this.scene.time.delayedCall(delay, () => {
+        const centerX = this.scene.cameras.main.width / 2;
+        const centerY = this.scene.cameras.main.height / 2;
+
+        this.countdownText = this.scene.add.text(centerX, centerY, '3', {
+          fontFamily: FONT_FAMILY.BOLD,
+          fontSize: '200px',
+          color: '#ffffff'
+        }).setOrigin(0.5).setDepth(800);
+
+        let count = 3;
+        const timer = this.scene.time.addEvent({
+          delay: 1000,
+          callback: () => {
+            count--;
+            if (count > 0) {
+              this.countdownText?.setText(count.toString());
+              this.countdownText?.setScale(0.5);
+              this.scene.tweens.add({
+                targets: this.countdownText,
+                scale: 1,
+                duration: 300,
+                ease: 'Back.easeOut'
+              });
+            } else {
+              this.scene.tweens.add({
+                targets: this.countdownText,
+                scale: 0,
+                alpha: 0,
+                duration: 100,
+                onComplete: () => {
+                  this.countdownText?.destroy();
+                  resolve();
+                }
+              });
+            }
+          },
+          repeat: 2
+        });
+
+        this.countdownText?.setScale(0.5);
+        this.scene.tweens.add({
+          targets: this.countdownText,
+          scale: 1,
+          duration: 300,
+          ease: 'Back.easeOut'
+        });
+      });
+    });
+  }
+
+  public async start(): Promise<void> {
     if (this.active) {
       return;
     }
+
+    await this.countdown(2000);
 
     const waveState = this.waveCollection.getItem('wave');
 

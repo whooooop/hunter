@@ -4,10 +4,8 @@ import { WeaponType } from "./WeaponTypes";
 
 import SawedTextureUrl from './assets/textures/sawed_texture_0.png';
 
-import SawedReloadItemAudioUrl from './assets/audio/sawed_reload_item_0.mp3';
-import SawedReloadStartAudioUrl from './assets/audio/sawed_reload_start_0.mp3';
 import SawedShootAudioUrl from './assets/audio/sawed_shoot_audio_0.mp3';
-import { BaseBoltAudio2, BaseEmptyAudio } from "./assets/baseAudio";
+import { BaseBoltAudio2, BaseEmptyAudio, BaseReloadItemAudio, BaseReloadStartAudio } from "./assets/baseAudio";
 
 export const SawedConfig: Weapon.Config = {
   name: WeaponType.SAWED,
@@ -50,18 +48,8 @@ export const SawedConfig: Weapon.Config = {
     volume: 1,
   },
   emptyAudio: BaseEmptyAudio,
-  reloadAudio: {
-    key: WeaponType.SAWED + '_reload_start_0',
-    url: SawedReloadStartAudioUrl,
-    type: Audio.Type.Effect,
-    volume: 1,
-  },
-  reloadItemAudio: {
-    key: WeaponType.SAWED + '_reload_item_0',
-    url: SawedReloadItemAudioUrl,
-    type: Audio.Type.Effect,
-    volume: 1,
-  },
+  reloadAudio: BaseReloadStartAudio,
+  reloadItemAudio: BaseReloadItemAudio,
   boltAudio: BaseBoltAudio2,
 
   muzzleFlash: {

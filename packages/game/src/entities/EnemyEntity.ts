@@ -1,7 +1,6 @@
 import { SpineGameObject, TrackEntry } from "@esotericsoftware/spine-phaser";
 import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
 import { EnemyAnimationEvent, EnemyDeathEvent } from "@hunter/storage-proto/dist/storage";
-import { playDamageSound, preloadDamageSound } from "../audio/damage";
 import { DEBUG } from "../config";
 import { createSimpleBloodConfig } from "../controllers/BloodController";
 import { DamageableController } from "../controllers/DamageableController";
@@ -43,7 +42,6 @@ export class EnemyEntity implements Damageable.Entity {
   private _handleEnemyAnimation: (eventId: string, record: SyncCollectionRecord<EnemyAnimationEvent>) => void;
 
   static preload(scene: Phaser.Scene): void {
-    preloadDamageSound(scene);
   }
 
   constructor(
@@ -144,8 +142,6 @@ export class EnemyEntity implements Damageable.Entity {
     }
 
     const result = this.damageableController.takeDamage(damage, target);
-
-    playDamageSound(this.scene);
 
     this.createBloodSplash(damage, target);
 

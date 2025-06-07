@@ -2,7 +2,7 @@ import { ProjectileName } from '../projectiles/ProjectileName';
 import { Audio, Weapon } from '../types';
 import { WeaponType } from "./WeaponTypes";
 
-import { BaseBoltAudio, BaseEmptyAudio } from "./assets/baseAudio";
+import { BaseBoltAudio, BaseEmptyAudio, BaseReloadAudio } from "./assets/baseAudio";
 
 import GlockShootAudioUrl from './assets/audio/glock_shoot_audio_0.mp3';
 import GlockTextureUrl from './assets/textures/glock_texture_0.png';
@@ -59,6 +59,7 @@ export const GlockConfig: Weapon.Config = {
 
   fireAudio: GlockShootAudio,
   emptyAudio: BaseEmptyAudio,
+  reloadAudio: BaseReloadAudio,
   boltAudio: BaseBoltAudio,
 
   projectile: ProjectileName.BULLET

@@ -1,7 +1,7 @@
 import { ProjectileName } from "../projectiles/ProjectileName";
 import { Audio, Weapon } from "../types";
 import MP5ShootAudioUrl from './assets/audio/mp5_shoot_0.mp3';
-import { BaseEmptyAudio } from "./assets/baseAudio";
+import { BaseBoltAudio3, BaseEmptyAudio, BaseReloadAudio } from "./assets/baseAudio";
 import MP5TextureUrl from './assets/textures/mp5_texture_0.png';
 import { WeaponType } from "./WeaponTypes";
 
@@ -51,6 +51,8 @@ export const MP5Config: Weapon.Config = {
     volume: 1,
   },
   emptyAudio: BaseEmptyAudio,
+  reloadAudio: BaseReloadAudio,
+  boltAudio: BaseBoltAudio3,
 
   projectile: ProjectileName.BULLET
 }

@@ -1,13 +1,19 @@
+import { StorageSpace } from '@hunter/multiplayer/dist/client';
+import { EmbienceEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
+import { playDamageSound, preloadDamageSound } from '../audio/damage';
+import { KillDoubleSound, KillMonsterSound, KillTripleSound, KillUltraSound, preloadKillSound } from '../audio/kill';
 import { playMissSound } from '../audio/miss';
 import { DEBUG } from '../config';
 import { EnemyEntity } from '../entities/EnemyEntity';
 import { ProjectileEntity } from '../entities/ProjectileEntity';
 import { emitEvent, offEvent, onEvent } from '../GameEvents';
 import { createProjectile } from '../projectiles';
+import { embienceEvent } from '../storage/collections/events.collectio';
 import { Damageable, Game, Projectile } from '../types/';
 import { Weapon } from '../types/weaponTypes';
 import { rayRectIntersectionRobust } from '../utils/GeometryUtils';
+import { generateId } from '../utils/stringGenerator';
 import { WeaponType } from '../weapons/WeaponTypes';
 
 interface Hit {
@@ -34,9 +40,16 @@ export class ProjectileController {
   private simulate: boolean;
 
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
+
+  static preload(scene: Phaser.Scene): void {
+    preloadDamageSound(scene);
+    preloadKillSound(scene);
+  }
+
   constructor(
     scene: Phaser.Scene,
     damageableObjects: Map<string, Damageable.Entity>,
+    private storage: StorageSpace
   ) {
     this.scene = scene;
     this.damageableObjects = damageableObjects;
@@ -135,6 +148,8 @@ export class ProjectileController {
 
     if (group.enemiesCount === 0) {
       playMissSound(this.scene);
+    } else {
+      playDamageSound(this.scene);
     }
   }
 
@@ -335,7 +350,7 @@ export class ProjectileController {
           penetratedCount: index
         });
 
-        if (damageResult?.isDead) {
+        if (damageResult?.isDead && hit.targetEntity instanceof EnemyEntity) {
           deathCount++;
         }
 
@@ -360,6 +375,28 @@ export class ProjectileController {
           event: Game.Events.Stat.TripleKillEvent.Event,
           data: { weaponName, projectileType }
         });
+      }
+
+      if (deathCount > 0) {
+        let key: string = '';
+
+        if (deathCount === 2) {
+          key = KillDoubleSound.key;
+        } else if (deathCount === 3) {
+          key = KillTripleSound.key;
+        } else if (deathCount === 4) {
+          key = KillUltraSound.key;
+        } else if (deathCount >= 5) {
+          key = KillMonsterSound.key;
+        }
+
+        if (key) {
+          this.scene.time.delayedCall(400, () => {
+            this.storage.getCollection<EmbienceEvent>(embienceEvent)!.addItem(generateId(), {
+              assetKey: key
+            });
+          });
+        }
       }
     });
   }

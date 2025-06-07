@@ -3,7 +3,7 @@ import { Audio, Weapon } from '../types';
 import { WeaponType } from "./WeaponTypes";
 
 import LauncherShootAudioUrl from './assets/audio/launcher_shoot_audio_0.mp3';
-import { BaseBoltAudio, BaseEmptyAudio } from "./assets/baseAudio";
+import { BaseEmptyAudio, BaseReloadItemAudio, BaseReloadStartAudio } from "./assets/baseAudio";
 import LauncherTextureUrl from './assets/textures/launcher_texture_0.png';
 
 export const LauncherConfig: Weapon.Config = {
@@ -47,7 +47,8 @@ export const LauncherConfig: Weapon.Config = {
     volume: 1,
   },
   emptyAudio: BaseEmptyAudio,
-  boltAudio: BaseBoltAudio,
+  reloadAudio: BaseReloadStartAudio,
+  reloadItemAudio: BaseReloadItemAudio,
 
   sight: true,
   shellCasings: true,

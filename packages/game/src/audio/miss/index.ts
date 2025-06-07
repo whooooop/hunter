@@ -6,14 +6,14 @@ import missSoundUrl2 from './assets/miss2.mp3';
 export const MissSound: Audio.Asset = {
   url: missSoundUrl,
   key: 'miss_sound',
-  volume: 1,
+  volume: 0.6,
   type: Audio.Type.Effect
 };
 
 export const MissSound2: Audio.Asset = {
   url: missSoundUrl2,
   key: 'miss_sound2',
-  volume: 1,
+  volume: 0.6,
   type: Audio.Type.Effect
 };
 

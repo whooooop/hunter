@@ -20,7 +20,7 @@ export class GameStorage {
 
     const encryptedKey = await this.getEncryptedKey(key);
     let value = await window.bridge.storage.get(encryptedKey, this.strategy);
-    console.log('get', key, 'encryptedKey', encryptedKey, 'value', value);
+    // console.log('get', key, 'encryptedKey', encryptedKey, 'value', value);
 
     if (value && Array.isArray(value)) {
       value = value[0] as string;
@@ -50,8 +50,6 @@ export class GameStorage {
       console.warn('Empty key provided to GameStorage.set');
       return;
     }
-
-    console.log('set', key, value);
 
     let data: string;
     try {

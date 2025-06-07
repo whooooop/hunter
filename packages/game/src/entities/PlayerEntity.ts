@@ -101,7 +101,7 @@ export class PlayerEntity {
     this.leftLeg.setRotation(0);
     this.rightLeg.setRotation(0);
 
-    this.runSound = AudioService.createAudio(scene, RunSound, { loop: true });
+    this.runSound = AudioService.createAudioLoop(scene, `run_player_${this.id}`, RunSound.key);
 
     this.motionController = new MotionController2(scene, this.body, {
       acceleration: 850,
@@ -342,6 +342,8 @@ export class PlayerEntity {
     this.container.destroy();
     this.body.destroy();
     this.motionController.destroy();
+
+    AudioService.stopLoopMusic(this.scene, `run_player_${this.id}`, 0);
 
     offEvent(this.scene, Controls.Events.Fire.Event, this.handleFire, this);
     offEvent(this.scene, Controls.Events.Reload.Event, this.handleReload, this);

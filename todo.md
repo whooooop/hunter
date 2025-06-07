@@ -1,4 +1,3 @@
-- sounds: death / machine shoot / weapons
 - config waves
 - config weapons
 - config score
@@ -7,4 +6,4 @@
 
 - win popup
 - leaderboard
-- received start notification
+- received stars notification / or task completed

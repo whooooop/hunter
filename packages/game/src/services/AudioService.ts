@@ -13,8 +13,9 @@ export class AudioService {
   private isInitialized: boolean = false;
 
   static assets = new Map<string, Audio.Asset>();
+  private static globalMuted: boolean = false;
 
-  private music = new Map<Audio.Asset, Phaser.Sound.BaseSound>();
+  private loopSounds = new Map<string, { asset: Audio.Asset, sound: Phaser.Sound.BaseSound }>()
 
   private static readonly defaultState: Audio.Settings = {
     muted: false,
@@ -35,6 +36,12 @@ export class AudioService {
   private constructor() {
     this.storage = new GameStorage();
     (window as any)._ss = this;
+  }
+
+  static setGlobalMute(mute: boolean): void {
+    const instance = AudioService.getInstance();
+    AudioService.globalMuted = mute;
+    instance.updateVolume();
   }
 
   private static getInstance(checkInitialized: boolean = true): AudioService {
@@ -87,68 +94,81 @@ export class AudioService {
     await AudioService.saveSettings();
 
     if (key === 'musicVolume' || key === 'globalVolume' || key === 'muted') {
-      instance.updateMusicVolume();
+      instance.updateVolume();
     }
   }
 
-  private updateMusicVolume(): void {
-    for (const [asset, music] of this.music.entries()) {
-      const volume = this.getVolume(asset);
-      if ('volume' in music) {
-        music.volume = volume;
-        if ('setVolume' in music && typeof (music as any).setVolume === 'function') {
-          (music as any).setVolume(volume);
+  private updateVolume(): void {
+    for (const item of this.loopSounds.values()) {
+      const volume = this.getVolume(item.asset);
+      if ('volume' in item.sound) {
+        item.sound.volume = volume;
+        if ('setVolume' in item.sound && typeof (item.sound as any).setVolume === 'function') {
+          (item.sound as any).setVolume(volume);
         }
       }
     }
   }
 
-  static playAudio(scene: Phaser.Scene, key: string, config?: AudioServicePlayConfig): void {
+  static playAudio(scene: Phaser.Scene, assetKey: string): void {
+    const instance = AudioService.getInstance();
+    const item = instance.createAudio(scene, assetKey, { loop: false });
+    item.sound.play();
+  }
+
+  static playAudioLoop(scene: Phaser.Scene, name: string, assetKey: string): void {
     const instance = AudioService.getInstance();
 
-    const asset = AudioService.assets.get(key);
+    if (instance.loopSounds.has(name)) {
+      AudioService.stopLoopMusic(scene, name, 0);
+    }
+
+    const sound = AudioService.createAudioLoop(scene, name, assetKey);
+    sound.play();
+  }
+
+  static createAudioLoop(scene: Phaser.Scene, name: string, assetKey: string): Phaser.Sound.BaseSound {
+    const instance = AudioService.getInstance();
+    const item = instance.createAudio(scene, assetKey, { loop: true });
+    instance.loopSounds.set(name, item);
+    return item.sound;
+  }
+
+  private createAudio(scene: Phaser.Scene, assetKey: string, config?: AudioServicePlayConfig): { asset: Audio.Asset, sound: Phaser.Sound.BaseSound } {
+    const asset = AudioService.assets.get(assetKey);
+
     if (!asset) {
-      throw new Error(`Audio asset with key ${key} not found`);
+      throw new Error(`Audio asset with key ${assetKey} not found`);
     }
 
-    const volume = instance.getVolume(asset);
-    const loop = config?.loop ?? false;
-
-    if (asset.type === Audio.Type.Music) {
-      if (!instance.music.has(asset)) {
-        instance.music.set(asset, scene.sound.add(asset.key));
-      }
-      const music = instance.music.get(asset);
-      music?.play({ volume });
-    } else {
-      scene.sound.play(asset.key, { volume, loop });
-    }
-  }
-
-  static createAudio(scene: Phaser.Scene, asset: Audio.Asset, config?: AudioServicePlayConfig): Phaser.Sound.BaseSound {
     const instance = AudioService.getInstance();
     const volume = instance.getVolume(asset);
     const loop = config?.loop ?? false;
-    return scene.sound.add(asset.key, { volume, loop });
+    const sound = scene.sound.add(asset.key, { volume, loop });
+    const item = { asset, sound };
+
+    return item;
   }
 
-  static stopAllMusic(scene: Phaser.Scene, duration: number): void {
+  static stopLoopMusic(scene: Phaser.Scene, name: string, duration: number): void {
     const instance = AudioService.getInstance();
-    for (const [asset, music] of instance.music.entries()) {
+    const item = instance.loopSounds.get(name);
+    if (item) {
       scene.tweens.add({
-        targets: music,
+        targets: item.sound,
         volume: 0,
         duration,
         ease: 'linear',
         onComplete: () => {
-          music.stop();
+          item.sound.stop()
+          instance.loopSounds.delete(name);
         }
       });
     }
   }
 
   private getVolume(asset: Audio.Asset): number {
-    if (this.settings.muted) {
+    if (this.settings.muted || AudioService.globalMuted) {
       return 0;
     }
     const typeVolume: number = this.settings[this.mapAssetTypeToSettingsKey.get(asset.type) as keyof Audio.Settings] as number ?? 1;

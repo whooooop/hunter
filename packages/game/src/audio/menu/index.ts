@@ -26,5 +26,9 @@ export const preloadMenuAudio = (scene: Phaser.Scene) => {
 
 export const playMenuAudio = (scene: Phaser.Scene) => {
   const randomIndex = Math.floor(Math.random() * playlist.length);
-  AudioService.playAudio(scene, playlist[randomIndex].key);
+  AudioService.playAudioLoop(scene, 'menu_music', playlist[randomIndex].key);
+};
+
+export const stopMenuAudio = (scene: Phaser.Scene, duration: number = 0) => {
+  AudioService.stopLoopMusic(scene, 'menu_music', duration);
 };

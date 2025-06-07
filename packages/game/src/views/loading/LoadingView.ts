@@ -6,6 +6,7 @@ import loadingRightUrl from '../../assets/images/loading_right.png';
 import { DISPLAY, FONT_FAMILY, LOADING_EXTRA_DURATION } from '../../config';
 import { emitEvent } from '../../GameEvents';
 import { loadAssets } from '../../preload';
+import { AudioService } from '../../services/AudioService';
 import { Loading } from '../../types';
 import { createLogger } from '../../utils/logger';
 import { BackgroundView } from '../background/BackgroundView';
@@ -148,6 +149,7 @@ export class LoadingView {
   }
 
   private showAd(): Promise<void> {
+    AudioService.setGlobalMute(true);
     return new Promise((resolve, reject) => {
       function handleInterstitialStateChanged(state: any) {
         if (state === "closed" || state === "failed") {
@@ -155,6 +157,7 @@ export class LoadingView {
             window.bridge.EVENT_NAME.INTERSTITIAL_STATE_CHANGED,
             handleInterstitialStateChanged
           );
+          AudioService.setGlobalMute(false);
           resolve();
         }
       }
