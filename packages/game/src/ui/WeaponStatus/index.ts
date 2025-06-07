@@ -405,6 +405,7 @@ export class WeaponStatus {
       });
       const iconScale = (this.radius * 2 * 0.4) / Math.max(this.weaponIcon.height || 1);
       this.weaponIcon.setScale(iconScale).setRotation(-0.1);
+      this.hideReloadOverlay();
     } catch (error) {
       console.error(error);
       this.weaponIcon.setVisible(false);

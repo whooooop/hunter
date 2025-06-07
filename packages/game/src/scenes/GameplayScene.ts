@@ -27,7 +27,7 @@ import { embienceEvent, replayEventCollection } from '../storage/collections/eve
 import { gameStateCollection } from '../storage/collections/gameState.collection';
 import { playerSkinCollection } from '../storage/collections/playerSkin.collection';
 import { playerStateCollection } from '../storage/collections/playerState.collection';
-import { Damageable, Enemy, Game, Level, Loading, Location, Player, ScoreEvents, ShopEvents } from '../types';
+import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../types';
 import { UiMute, WaveInfo, WeaponStatus } from '../ui';
 import { createLogger } from '../utils/logger';
 import { generateId } from '../utils/stringGenerator';
@@ -281,12 +281,7 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.getCollection<PlayerSkin>(playerSkinCollection)!.addItem(playerId, { body: 'b1' });
     this.storage.getCollection<Player.State>(playerStateCollection)!.addItem(playerId, { x: 0, y: 0, vx: 0, vy: 0 });
     emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
-    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.REVOLVER, price: 0 });
-    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MACHINE, price: 0 });
-    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.AWP, price: 0 });
-    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MINE, price: 0 });
-    // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GRENADE, price: 0 });
-    emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
+    // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
 
     this.waveController.start();
     this.projectileController.setSimulate(false);
