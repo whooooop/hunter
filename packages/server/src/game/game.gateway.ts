@@ -79,7 +79,7 @@ export class GameGateway {
       }
     }
 
-    if (namespace.getConnectionsSize() >= 2) {
+    if (namespace.getConnectionsSize() >= 3) {
       throw new Error(`Game ${gameId} is full.`);
     }
 
