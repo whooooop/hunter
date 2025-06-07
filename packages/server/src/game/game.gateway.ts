@@ -88,7 +88,7 @@ export class GameGateway {
       gameState.updateItem('game', {
         host: playerId,
         levelId: 'forest',
-        playersCount: 2,
+        playersCount: 3,
         paused: false,
         started: false,
         finished: false,
