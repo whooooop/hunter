@@ -170,6 +170,7 @@ export class WaveController {
 
     this.waitingForEnemies = false;
 
+    console.log('waveCompleted', this.waveState.waveIndex + 1);
     emitEvent(this.scene, Game.Events.Stat.Local, {
       event: Game.Events.Stat.WaveCompleteEvent.Event,
       data: {

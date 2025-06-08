@@ -3,6 +3,38 @@ import { WolfSound } from "../../audio/wolf";
 import { DISPLAY } from "../../config";
 import { Enemy, Wave } from "../../types";
 
+
+// Волна 1:
+// Зайцы (HARE): ~20
+// Белки (SQUIREEL): ~15
+// Олень (DEER): 1 (босс)
+
+// Волна 2:
+// Зайцы (HARE): ~10
+// Белки (SQUIREEL): ~15
+// Волки (WOLF): 4
+// Еноты (RACCOON): ~10
+// Ежи (HEDGEHOG): 10 (боссы)
+
+// Волна 3:
+// Капибары (CAPYBARA): ~8
+// Еноты (RACCOON): ~15
+// Зайцы (HARE): ~15
+// Белки (SQUIREEL): ~15
+// Ежи (HEDGEHOG): ~8
+// Оленята (DEER_BABY): ~15
+// Олень (DEER): 2 (боссы)
+// Мыши (MOUSE): ~20 (боссы)
+
+// Волна 4:
+// Волки (WOLF): 4
+// Зайцы (HARE): ~5
+// Белки (SQUIREEL): 1
+// Капибары (CAPYBARA): 1
+// Мыши (MOUSE): ~3
+// Олень (DEER): 1
+// Ежи (HEDGEHOG): ~8
+
 export function createWavesConfig(): Wave.Config[] {
   const x = DISPLAY.WIDTH;
   const minY = 150;
@@ -123,8 +155,8 @@ export function createWavesConfig(): Wave.Config[] {
   const wave3: Wave.Config = {
     waitAllEnemiesDead: true,
     spawns: [
-      { delay: 4000, state: { x, y: y(2), vx: -4, vy: -2, type: Enemy.Type.CAPIBARA } },
-      { delay: 1000, state: { x, y: y(4), vx: -4, vy: 2, type: Enemy.Type.CAPIBARA } },
+      { delay: 4000, state: { x, y: y(2), vx: -4, vy: -2, type: Enemy.Type.CAPYBARA } },
+      { delay: 1000, state: { x, y: y(4), vx: -4, vy: 2, type: Enemy.Type.CAPYBARA } },
 
       { delay: 4000, state: { x, y: y(1), vx: -3, vy: -1, type: Enemy.Type.RACCOON } },
       { delay: 1000, state: { x, y: y(2), vx: -3, vy: -1, type: Enemy.Type.HARE } },
@@ -135,7 +167,7 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 1000, state: { x, y: y(5), vx: -4, vy: -1, type: Enemy.Type.SQUIREEL } },
 
       { delay: 3000, state: { x, y: y(1), vx: -3, type: Enemy.Type.SQUIREEL } },
-      { delay: 2000, state: { x, y: y(5), vx: -5, type: Enemy.Type.CAPIBARA } },
+      { delay: 2000, state: { x, y: y(5), vx: -5, type: Enemy.Type.CAPYBARA } },
       { delay: 1000, state: { x, y: y(1), vx: -3, type: Enemy.Type.RACCOON } },
       { delay: 2000, state: { x, y: y(2), vx: -2, type: Enemy.Type.RACCOON } },
       { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.HARE } },
@@ -154,9 +186,9 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 3000, state: { x, y: y(3), vx: -3, vy: -1, type: Enemy.Type.RACCOON } },
       { delay: 1000, state: { x, y: y(5), vx: -4, vy: 1, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(4), vx: -4, vy: -1, type: Enemy.Type.RACCOON } },
-      { delay: 1000, state: { x, y: y(1), vx: -5, vy: -1, type: Enemy.Type.CAPIBARA } },
+      { delay: 1000, state: { x, y: y(1), vx: -5, vy: -1, type: Enemy.Type.CAPYBARA } },
       { delay: 3000, state: { x, y: y(2), vx: -3, vy: 1, type: Enemy.Type.HARE } },
-      { delay: 2000, state: { x, y: y(4), vx: -4, vy: -1, type: Enemy.Type.CAPIBARA } },
+      { delay: 2000, state: { x, y: y(4), vx: -4, vy: -1, type: Enemy.Type.CAPYBARA } },
       { delay: 2000, state: { x, y: y(5), vx: -3, vy: 1, type: Enemy.Type.HARE } },
       { delay: 1000, state: { x, y: y(1), vx: -3, vy: -1, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(2), vx: -4, vy: 1, type: Enemy.Type.DEER_BABY } },
@@ -177,7 +209,7 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 1000, state: { x, y: y(3), vx: -3, vy: -1, type: Enemy.Type.HARE } },
       { delay: 2000, state: { x, y: y(5), vx: -3, vy: -2, type: Enemy.Type.HARE } },
       { delay: 300, state: { x, y: y(4), vx: -4, vy: -1, type: Enemy.Type.SQUIREEL } },
-      { delay: 300, state: { x, y: y(3), vx: -5, vy: 0, type: Enemy.Type.CAPIBARA } },
+      { delay: 300, state: { x, y: y(3), vx: -5, vy: 0, type: Enemy.Type.CAPYBARA } },
       { delay: 300, state: { x, y: y(5), vx: -3, vy: -1, type: Enemy.Type.HARE } },
       { delay: 300, state: { x, y: y(3), vx: -4, vy: 1, type: Enemy.Type.SQUIREEL } },
       { delay: 300, state: { x, y: y(1), vx: -4, vy: 0, type: Enemy.Type.DEER_BABY } },
@@ -230,7 +262,7 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 2000, state: { x, y: y(5), vx: -5, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(1), vx: -3, type: Enemy.Type.HARE } },
       { delay: 100, state: { x, y: y(1), vx: -2, type: Enemy.Type.HARE } },
-      { delay: 3000, state: { x, y: y(5), vx: -5, type: Enemy.Type.CAPIBARA } },
+      { delay: 3000, state: { x, y: y(5), vx: -5, type: Enemy.Type.CAPYBARA } },
       {
         delay: 1000, state: { x, y: y(2), vx: -4, type: Enemy.Type.WOLF },
         ambience: { assetKey: WolfSound.key }
@@ -277,27 +309,27 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 1000, state: { x, y: y(1), vx: -3, type: Enemy.Type.RACCOON } },
       { delay: 3000, state: { x, y: y(5), vx: -3, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(2), vx: -3, type: Enemy.Type.RACCOON } },
-      { delay: 1000, state: { x, y: y(1), vx: -4, type: Enemy.Type.CAPIBARA } },
+      { delay: 1000, state: { x, y: y(1), vx: -4, type: Enemy.Type.CAPYBARA } },
       { delay: 0, state: { x, y: y(5), vx: -1, type: Enemy.Type.MOUSE } },
-      { delay: 1000, state: { x, y: y(5), vx: -4, type: Enemy.Type.CAPIBARA } },
-      { delay: 3000, state: { x, y: y(4), vx: -4, type: Enemy.Type.CAPIBARA } },
-      { delay: 1000, state: { x, y: y(2), vx: -4, type: Enemy.Type.CAPIBARA } },
+      { delay: 1000, state: { x, y: y(5), vx: -4, type: Enemy.Type.CAPYBARA } },
+      { delay: 3000, state: { x, y: y(4), vx: -4, type: Enemy.Type.CAPYBARA } },
+      { delay: 1000, state: { x, y: y(2), vx: -4, type: Enemy.Type.CAPYBARA } },
       { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.HARE } },
       { delay: 1000, state: { x, y: y(4), vx: -2, type: Enemy.Type.HARE } },
       { delay: 1000, state: { x, y: y(5), vx: -3, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(1), vx: -3, type: Enemy.Type.SQUIREEL } },
 
       { delay: 1000, state: { x, y: y(3), vx: -4, type: Enemy.Type.WOLF }, ambience: { assetKey: WolfSound.key } },
-      { delay: 1000, state: { x, y: y(4), vx: -4, type: Enemy.Type.CAPIBARA } },
+      { delay: 1000, state: { x, y: y(4), vx: -4, type: Enemy.Type.CAPYBARA } },
       { delay: 1000, state: { x, y: y(3), vx: -2, type: Enemy.Type.HARE } },
       { delay: 0, state: { x, y: y(3), vx: -1, type: Enemy.Type.MOUSE } },
       { delay: 1000, state: { x, y: y(3), vx: -3, type: Enemy.Type.RACCOON } },
-      { delay: 1000, state: { x, y: y(1), vx: -4, type: Enemy.Type.CAPIBARA } },
+      { delay: 1000, state: { x, y: y(1), vx: -4, type: Enemy.Type.CAPYBARA } },
       { delay: 1000, state: { x, y: y(3), vx: -3, type: Enemy.Type.SQUIREEL } },
       { delay: 0, state: { x, y: y(4), vx: -1, type: Enemy.Type.MOUSE } },
       { delay: 2000, state: { x, y: y(5), vx: -3, type: Enemy.Type.SQUIREEL } },
       { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.HARE } },
-      { delay: 2000, state: { x, y: y(3), vx: -4, type: Enemy.Type.CAPIBARA } },
+      { delay: 2000, state: { x, y: y(3), vx: -4, type: Enemy.Type.CAPYBARA } },
       { delay: 1000, state: { x, y: y(4), vx: -2, type: Enemy.Type.HARE } },
       { delay: 0, state: { x, y: y(5), vx: -1, type: Enemy.Type.MOUSE } },
       { delay: 1000, state: { x, y: y(3), vx: -2, type: Enemy.Type.HARE } },
@@ -354,12 +386,12 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 1000, state: { x, y: y(3), vx: -2, type: Enemy.Type.DEER } },
 
 
-      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.CAPIBARA } },
-      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.CAPIBARA } },
-      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.CAPIBARA } },
-      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.CAPIBARA } },
-      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.CAPIBARA } },
-      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.CAPIBARA } },
+      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.CAPYBARA } },
+      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.CAPYBARA } },
+      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.CAPYBARA } },
+      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.CAPYBARA } },
+      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.CAPYBARA } },
+      { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.CAPYBARA } },
 
       { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.HEDGEHOG } },
       { delay: 1000, state: { x, y: y(1), vx: -2, type: Enemy.Type.HEDGEHOG } },

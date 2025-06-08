@@ -5,8 +5,8 @@ import { Enemy } from "../types/enemyTypes";
 import { loadSprite, loadSpriteSheet } from "../utils/sprite";
 import { BearEnemy } from "./bear";
 import { BearConfig } from "./bear/config";
-import { CapibaraEnemy } from "./capibara";
-import { CapibaraConfig } from "./capibara/config";
+import { CapybaraEnemy } from "./capybara";
+import { CapybaraConfig } from "./capybara/config";
 import { DeerEnemy } from "./deer";
 import { DeerConfig } from "./deer/config";
 import { DeerBabyEnemy } from "./deerBaby";
@@ -42,9 +42,9 @@ export const EnemyCollections: Record<Enemy.Type, {
     config: BearConfig,
     enemy: BearEnemy,
   },
-  [Enemy.Type.CAPIBARA]: {
-    config: CapibaraConfig,
-    enemy: CapibaraEnemy,
+  [Enemy.Type.CAPYBARA]: {
+    config: CapybaraConfig,
+    enemy: CapybaraEnemy,
   },
   [Enemy.Type.HEDGEHOG]: {
     config: HedgehogConfig,

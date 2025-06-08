@@ -21,10 +21,10 @@ export const DEBUG = {
   LOCATION: false,
   SHOP: false,
   PROJECTILES: false,
-  QIEST: false,
+  QIEST: true,
 };
 
 export const GAMEOVER = true;
 export const START_SCENE_GAMEPLAY = false;
 
-export const VERSION = '1.3.1  Alpha'; 
+export const VERSION = '1.3.4  Alpha'; 

@@ -1,10 +1,10 @@
 import { Enemy } from '../../types/enemyTypes';
 
-import atlasUrl from './assets/capybara.atlas';
-import textureUrl from './assets/capybara.atlas.png';
-import jsonUrl from './assets/capybara.json';
+import atlasUrl from './assets/CAPYBARA.atlas';
+import textureUrl from './assets/CAPYBARA.atlas.png';
+import jsonUrl from './assets/CAPYBARA.json';
 
-export const CAPYBARAConfig: Enemy.Config = {
+export const CapybaraConfig: Enemy.Config = {
   type: Enemy.Type.CAPYBARA,
   health: 300,
   scale: .11,

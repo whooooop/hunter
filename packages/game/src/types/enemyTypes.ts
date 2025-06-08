@@ -8,7 +8,7 @@ export namespace Enemy {
     HARE = 'hare',
     MOUSE = 'mouse',
     BEAR = 'bear',
-    CAPIBARA = 'capibara',
+    CAPYBARA = 'capybara',
     HEDGEHOG = 'hedgehog',
     RACCOON = 'raccoon',
     DEER = 'deer',
