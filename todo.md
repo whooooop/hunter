@@ -1,6 +1,5 @@
 - config waves
-- config weapons
-- config score
+- first play
 
 - win popup
 - leaderboard

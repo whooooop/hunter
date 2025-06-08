@@ -216,12 +216,14 @@ export class MotionController2 {
     }
   }
 
-  public getPosition(): { x: number, y: number, moveX: number, moveY: number, jumpHeight: number, depth: number } {
+  public getPosition(): { x: number, y: number, moveX: number, moveY: number, velocityX: number, velocityY: number, jumpHeight: number, depth: number } {
     return {
       x: this.body.x + this.body.width / 2,
       y: this.body.y + this.body.height / 2,
       moveX: this.moveX,
       moveY: this.moveY,
+      velocityX: this.body.velocity.x,
+      velocityY: this.body.velocity.y,
       jumpHeight: this.jumpOffsetY,
       depth: this.getDepth(),
     };

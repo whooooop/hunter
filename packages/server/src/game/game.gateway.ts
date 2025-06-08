@@ -79,21 +79,23 @@ export class GameGateway {
       }
     }
 
-    if (namespace.getConnectionsSize() >= 3) {
-      throw new Error(`Game ${gameId} is full.`);
-    }
-
     if (namespace.getConnectionsSize() === 0) {
       const gameState = namespace.getCollection<GameState>(gameStateCollection)!;
       gameState.updateItem('game', {
         host: playerId,
         levelId: 'forest',
-        playersCount: 3,
+        playersCount: 2,
         paused: false,
         started: false,
         finished: false,
         createdAt: Date.now().toString(),
       });
+    }
+
+    const gameState = namespace.getCollection<GameState>(gameStateCollection)!;
+    const game = gameState.getItem('game')!;
+    if (namespace.getConnectionsSize() >= game.playersCount) {
+      throw new Error(`Game ${gameId} is full.`);
     }
   }
 

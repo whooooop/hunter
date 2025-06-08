@@ -20,6 +20,7 @@ export namespace Weapon {
         projectile: ProjectileName;
         originPoint: { x: number, y: number };
         targetPoint: { x: number, y: number };
+        velocity: { x: number, y: number };
       }
     }
 

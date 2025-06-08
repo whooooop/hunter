@@ -1,6 +1,6 @@
 import { SceneKeys } from "../../..";
 import { createGame } from "../../../../api/game";
-import { DISPLAY, FONT_FAMILY } from "../../../../config";
+import { DISPLAY, FONT_FAMILY, MULTIPLAYER_EXTRA_DURATION } from "../../../../config";
 import { emitEvent } from "../../../../GameEvents";
 import { LevelId } from "../../../../levels";
 import { UiBackButton } from "../../../../ui/BackButton";
@@ -76,7 +76,7 @@ export class MultipleerCreateView implements MenuSceneTypes.View {
     container.add(this.errorText);
 
 
-    this.scene.time.delayedCall(5000, async () => {
+    this.scene.time.delayedCall(MULTIPLAYER_EXTRA_DURATION, async () => {
       try {
         const { code } = await createGame();
         this.code = code;

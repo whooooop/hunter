@@ -43,6 +43,9 @@ export class WeaponEntity {
   protected reloadTime: number = 0;
   protected reloadTimeLeft: number = 0;
 
+  protected velocityX: number = 0;
+  protected velocityY: number = 0;
+
   protected x: number = 0;
   protected y: number = 0;
   protected direction: number = 1;
@@ -301,7 +304,11 @@ export class WeaponEntity {
         weaponName: this.name,
         projectile: this.options.projectile!,
         originPoint,
-        targetPoint
+        targetPoint,
+        velocity: {
+          x: this.velocityX,
+          y: this.velocityY
+        }
       });
     }
 
@@ -338,6 +345,11 @@ export class WeaponEntity {
 
   protected createProjectileEvent(playerId: string, originPoint: { x: number, y: number }, targetPoint: { x: number, y: number }): void {
 
+  }
+
+  setVelocity(velocityX: number, velocityY: number): void {
+    this.velocityX = velocityX;
+    this.velocityY = velocityY;
   }
 
   /**

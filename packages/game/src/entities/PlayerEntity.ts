@@ -269,6 +269,7 @@ export class PlayerEntity {
     }
 
     if (this.currentWeapon) {
+      this.currentWeapon.setVelocity(position.velocityX, position.velocityY);
       this.currentWeapon.update(time, delta);
     }
   }

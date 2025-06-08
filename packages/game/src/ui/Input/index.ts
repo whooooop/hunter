@@ -1,4 +1,5 @@
 import { preloadImage } from "../../preload";
+import { copyToClipboard } from "../../utils/clipboard";
 import copyUrl from './assets/copy.png';
 import inputBackgroundUrl from './assets/input_background.png';
 import copySuccessUrl from './assets/input_copy_success.png';
@@ -61,7 +62,6 @@ export class UiInput extends Phaser.GameObjects.Container {
       .setScale(inputBackgroundTexture.scale)
       .setInteractive();
     this.add(this.background);
-
     this.text = scene.add.text(0, 0, this.options.value, {
       fontSize,
       color: '#fff',
@@ -76,25 +76,13 @@ export class UiInput extends Phaser.GameObjects.Container {
         .setScale(copyTexture.scale)
         .setInteractive();
       this.copy.on('pointerdown', () => {
-        const textArea = document.createElement('textarea');
-        textArea.value = this.text.text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-
-        const success = document.execCommand('copy');
-        if (success) {
-          this.options.onCopy(this.text.text);
-          this.copy!.setTexture(copySuccessTexture.key);
-          this.scene.time.delayedCall(1000, () => {
-            this.copy!.setTexture(copyTexture.key);
-          });
-        }
-
-        document.body.removeChild(textArea);
+        console.log('copy');
+        copyToClipboard(this.text.text);
+        this.options.onCopy(this.text.text);
+        this.copy!.setTexture(copySuccessTexture.key);
+        this.scene.time.delayedCall(1000, () => {
+          this.copy!.setTexture(copyTexture.key);
+        });
       });
       this.add(this.copy);
     }

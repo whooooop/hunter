@@ -5,11 +5,11 @@ import { LevelId } from '../levels';
 import { BankService } from '../services/BankService';
 import { QuestService } from '../services/QuestService';
 import { Bank, Game, Quest } from '../types';
-import { createLogger, LogLevel } from '../utils/logger';
+import { createLogger } from '../utils/logger';
 
 const logger = createLogger('QuestController', {
-  minLevel: LogLevel.DEBUG,
-  enabled: true,
+  // minLevel: LogLevel.DEBUG,
+  // enabled: true,
 });
 
 export class QuestController {

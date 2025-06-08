@@ -1,6 +1,6 @@
 import { SceneKeys } from "../../..";
 import { checkGame } from "../../../../api/game";
-import { DISPLAY, FONT_FAMILY } from "../../../../config";
+import { DISPLAY, FONT_FAMILY, MULTIPLAYER_EXTRA_DURATION } from "../../../../config";
 import { emitEvent } from "../../../../GameEvents";
 import { LevelId } from "../../../../levels";
 import { UiBackButton } from "../../../../ui/BackButton";
@@ -70,7 +70,7 @@ export class MultipleerJoinView implements MenuSceneTypes.View {
       const spinner = new UiSpinner(this.scene, 0, 0);
       container.add(spinner);
 
-      this.scene.time.delayedCall(5000, async () => {
+      this.scene.time.delayedCall(MULTIPLAYER_EXTRA_DURATION, async () => {
         try {
           const { result } = await checkGame(code);
           spinner.destroy();

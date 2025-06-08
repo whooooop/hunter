@@ -23,10 +23,13 @@ export namespace Projectile {
     activateDelay?: number;
     activateRadius?: number;
 
+    inertion?: boolean;
+
     activateAudio?: Audio.Asset;
+    rotate?: boolean;
+    maxBounce?: number;
 
     force?: number;
-    bounce?: number;
     drag?: number;
     gravity?: number;
   }

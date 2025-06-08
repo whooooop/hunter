@@ -10,7 +10,7 @@ import { ProjectileEntity } from '../entities/ProjectileEntity';
 import { emitEvent, offEvent, onEvent } from '../GameEvents';
 import { createProjectile } from '../projectiles';
 import { embienceEvent } from '../storage/collections/events.collectio';
-import { Damageable, Game, Projectile } from '../types/';
+import { Damageable, Game, Location, Projectile } from '../types/';
 import { Weapon } from '../types/weaponTypes';
 import { rayRectIntersectionRobust } from '../utils/GeometryUtils';
 import { generateId } from '../utils/stringGenerator';
@@ -49,7 +49,8 @@ export class ProjectileController {
   constructor(
     scene: Phaser.Scene,
     damageableObjects: Map<string, Damageable.Entity>,
-    private storage: StorageSpace
+    private storage: StorageSpace,
+    private readonly bounds: Location.Bounds
   ) {
     this.scene = scene;
     this.damageableObjects = damageableObjects;
@@ -59,8 +60,8 @@ export class ProjectileController {
     onEvent(scene, Weapon.Events.CreateProjectile.Local, this.handleCreateProjectile, this);
   }
 
-  public handleCreateProjectile({ projectile, originPoint, targetPoint, playerId, weaponName, speed, damage }: Weapon.Events.CreateProjectile.Payload): void {
-    const objects = createProjectile(this.scene, projectile, originPoint, targetPoint, playerId, weaponName, speed, damage);
+  public handleCreateProjectile({ projectile, originPoint, targetPoint, playerId, weaponName, speed, damage, velocity }: Weapon.Events.CreateProjectile.Payload): void {
+    const objects = createProjectile(this.scene, projectile, originPoint, targetPoint, velocity, playerId, weaponName, speed, damage, this.bounds);
     objects.forEach(object => {
       this.projectiles.add(object);
       this.projectilesNotActivated.add(object);

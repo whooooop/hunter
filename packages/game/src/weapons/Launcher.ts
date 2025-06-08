@@ -21,7 +21,7 @@ export const LauncherConfig: Weapon.Config = {
   firePointOffset: [0, -8],
 
   damage: 250,           // Урон от одного выстрела
-  speed: [1200, 100],     // Скорость пули
+  speed: [1000, 100],     // Скорость пули
   magazineSize: 6,      // Размер магазина
 
   // Перезарядка
