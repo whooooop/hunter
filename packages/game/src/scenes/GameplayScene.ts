@@ -260,9 +260,12 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private handleVisibilityStateChanged(state: any): void {
-    if (state === "hidden" && !this.isGameOver && this.sceneLoaded) {
-      const gameState = this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game')!;
-      gameState.paused = true;
+    const gameCollection = this.storage.getCollection<GameState>(gameStateCollection);
+    if (state === "hidden" && !this.isGameOver && this.sceneLoaded && gameCollection) {
+      const gameState = gameCollection.getItem('game');
+      if (gameState) {
+        gameState.paused = true;
+      }
     }
   }
 
