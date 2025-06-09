@@ -147,7 +147,9 @@ export class ShellCasingEntity extends Phaser.Physics.Arcade.Sprite {
 
   public destroy(): void {
     try {
-      this.scene.events.off('update', this.update, this);
+      if (this.scene?.events) {
+        this.scene.events.off('update', this.update, this);
+      }
       super.destroy();
     } catch (error) {
       console.error(error);
