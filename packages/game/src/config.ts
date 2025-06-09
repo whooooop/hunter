@@ -26,6 +26,6 @@ export const DEBUG = {
 };
 
 export const GAMEOVER = true;
-export const START_SCENE_GAMEPLAY = true;
+export const START_SCENE_GAMEPLAY = false;
 
-export const VERSION = '1.4.2 Beta'; 
+export const VERSION = '1.4.3 Beta'; 
