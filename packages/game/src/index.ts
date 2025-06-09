@@ -88,18 +88,6 @@ async function initBridge() {
       } else {
         setDefaultLocale('en');
       }
-
-      if (window.bridge.game.visibilityState === "hidden") {
-        AudioService.setGlobalMute(true, 'VISIBILITY');
-      }
-
-      window.bridge.game.on(window.bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, (state: string) => {
-        if (state === "hidden") {
-          AudioService.setGlobalMute(true, 'VISIBILITY');
-        } else {
-          AudioService.setGlobalMute(false, 'VISIBILITY');
-        }
-      });
     })
     .catch((error: any) => {
       console.error('Playgama SDK failed to initialize:', error);
@@ -118,6 +106,18 @@ async function initGame() {
       playerService.initPlayer(),
       AudioService.init()
     ]);
+
+    if (window.bridge.game.visibilityState === "hidden") {
+      AudioService.setGlobalMute(true, 'VISIBILITY');
+    }
+
+    window.bridge.game.on(window.bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, (state: string) => {
+      if (state === "hidden") {
+        AudioService.setGlobalMute(true, 'VISIBILITY');
+      } else {
+        AudioService.setGlobalMute(false, 'VISIBILITY');
+      }
+    });
 
     const game = new Phaser.Game(config);
     game.scene.start(SceneKeys.BOOT);
