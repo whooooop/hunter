@@ -89,6 +89,10 @@ async function initBridge() {
         setDefaultLocale('en');
       }
 
+      if (window.bridge.game.visibilityState === "hidden") {
+        AudioService.setGlobalMute(true, 'VISIBILITY');
+      }
+
       window.bridge.game.on(window.bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, (state: string) => {
         if (state === "hidden") {
           AudioService.setGlobalMute(true, 'VISIBILITY');
