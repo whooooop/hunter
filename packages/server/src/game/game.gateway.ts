@@ -4,9 +4,8 @@ import { GameState, PlayerSkin } from '@hunter/storage-proto/dist/storage';
 import { Injectable, Logger } from '@nestjs/common';
 import { Server as HttpServer, IncomingMessage } from 'http';
 import * as ms from 'ms';
-import { Rword } from 'rword';
-import { words } from 'rword-english-extended';
 import { parse } from 'url';
+import { generateWord } from '../words';
 import { connectionStateCollection } from './collections/connectionState.collection';
 import { enemyStateCollection } from './collections/enemyState.collection';
 import { gameStateCollection } from './collections/gameState.collection';
@@ -46,8 +45,8 @@ export class GameGateway {
   }
 
   async createGame(): Promise<string> {
-    const rword = new Rword(words);
-    const namespaceId = rword.generate(1)[0].toLowerCase();
+    // Генерируем случайное слово длиной от 4 символов
+    const namespaceId = generateWord(4);
     const hasGame = await this.hasGame(namespaceId);
 
     if (hasGame) {

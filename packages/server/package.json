@@ -22,8 +22,6 @@
     "ms": "^2.1.3",
     "prom-client": "^15.1.3",
     "reflect-metadata": "^0.2.2",
-    "rword": "^4.0.0",
-    "rword-english-extended": "^1.0.0",
     "rxjs": "^7.8.1",
     "ws": "^8.18.1"
   },

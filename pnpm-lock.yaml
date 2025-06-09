@@ -124,12 +124,6 @@ importers:
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
-      rword:
-        specifier: ^4.0.0
-        version: 4.0.0
-      rword-english-extended:
-        specifier: ^1.0.0
-        version: 1.0.0
       rxjs:
         specifier: ^7.8.1
         version: 7.8.2
@@ -2956,12 +2950,6 @@ packages:
 
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
-
-  rword-english-extended@1.0.0:
-    resolution: {integrity: sha512-48dowNlsj6ATfs4xoHu3xsduEREXnSsNH2JdUYPn3RnkP6LB08W7ZcsSvJo8g20xksBovIEO4ui607UrCqRQ+Q==}
-
-  rword@4.0.0:
-    resolution: {integrity: sha512-BqYBmdCnysVnb2PKyyD+DACwyglW0JV41tluk7/Z7pGPwOHTAF8RjOfKc1zez54FMOLpHt4GJ8z4VWkSzRKBDw==}
 
   rxjs@7.8.1:
     resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
@@ -6393,10 +6381,6 @@ snapshots:
   run-parallel@1.2.0:
     dependencies:
       queue-microtask: 1.2.3
-
-  rword-english-extended@1.0.0: {}
-
-  rword@4.0.0: {}
 
   rxjs@7.8.1:
     dependencies:
