@@ -5,4 +5,5 @@ export const playerStateCollection = defineCollection<PlayerState>('playerState'
   encode: PlayerState.encode,
   decode: PlayerState.decode,
   localEvents: true,
+  throttle: 60,
 });
