@@ -63,7 +63,7 @@ export class GameGateway {
     const playerId = query?.playerId as string;
     const gameId = namespaceId;
 
-    if (gameId.length > 10) {
+    if (gameId.length > 30) {
       throw new Error(`Upgrade request rejected for game ${gameId}: Game id is too long.`);
     }
 
