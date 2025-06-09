@@ -1,35 +1,36 @@
 import { ClickSound, preloadClickSound } from '../../audio/click';
 import { preloadImage } from '../../preload';
 import { AudioService } from '../../services/AudioService';
-import audioUrl from './assets/audio.png';
-import muteUrl from './assets/mute.png';
+import closeUrl from './assets/close.png';
+import openUrl from './assets/open.png';
 
-const MUTE_TEXTURE = {
-  key: 'button_mute',
-  url: muteUrl,
+const OPEN_TEXTURE = {
+  key: 'button_fullscreen_open',
+  url: openUrl,
   scale: 0.5
 };
 
-const AUDIO_TEXTURE = {
-  key: 'button_audio',
-  url: audioUrl,
+const CLOSE_TEXTURE = {
+  key: 'button_fullscreen_close',
+  url: closeUrl,
   scale: 0.5
 };
 
-export class UiMute extends Phaser.GameObjects.Image {
-  private muted: boolean;
+export class UiFullscreen extends Phaser.GameObjects.Image {
+  private fullscreen: boolean = false;
   private textureAsset!: { key: string, url: string, scale: number };
   private buttonScale: number = 1;
+
   static preload(scene: Phaser.Scene): void {
-    preloadImage(scene, { url: MUTE_TEXTURE.url, key: MUTE_TEXTURE.key });
-    preloadImage(scene, { url: AUDIO_TEXTURE.url, key: AUDIO_TEXTURE.key });
+    preloadImage(scene, { url: OPEN_TEXTURE.url, key: OPEN_TEXTURE.key });
+    preloadImage(scene, { url: CLOSE_TEXTURE.url, key: CLOSE_TEXTURE.key });
     preloadClickSound(scene);
   }
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, '');
 
-    this.muted = AudioService.getSettingsValue('muted') as boolean;;
+    this.fullscreen = false;
     this.updateTexture();
     this.setInteractive();
 
@@ -37,9 +38,11 @@ export class UiMute extends Phaser.GameObjects.Image {
     let hoverTweenY: Phaser.Tweens.Tween | null = null;
 
     this.on('pointerdown', () => {
-      this.muted = !this.muted;
-      AudioService.setSettingsValue('muted', this.muted);
-      this.updateTexture();
+      if (!scene.scale.isFullscreen) {
+        scene.scale.startFullscreen();
+      } else {
+        scene.scale.stopFullscreen();
+      }
       AudioService.playAudio(scene, ClickSound.key);
     });
 
@@ -82,7 +85,7 @@ export class UiMute extends Phaser.GameObjects.Image {
   }
 
   private updateTexture(): void {
-    this.textureAsset = this.muted ? MUTE_TEXTURE : AUDIO_TEXTURE;
+    this.textureAsset = this.fullscreen ? OPEN_TEXTURE : CLOSE_TEXTURE;
     this.setTexture(this.textureAsset.key);
     this.setScale(this.textureAsset.scale * this.buttonScale);
   }

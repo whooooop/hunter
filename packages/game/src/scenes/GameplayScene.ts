@@ -29,6 +29,7 @@ import { playerSkinCollection } from '../storage/collections/playerSkin.collecti
 import { playerStateCollection } from '../storage/collections/playerState.collection';
 import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../types';
 import { UiMute, WaveInfo, WeaponStatus } from '../ui';
+import { UiFullscreen } from '../ui/Fullscreen';
 import { createLogger } from '../utils/logger';
 import { generateId } from '../utils/stringGenerator';
 import { GameOverView } from '../views/gameover';
@@ -66,6 +67,7 @@ export class GameplayScene extends Phaser.Scene {
   private waveInfo!: WaveInfo;
   private weaponStatus!: WeaponStatus;
   private uiMute!: UiMute;
+  private uiFullscreen!: UiFullscreen;
   private decalController!: DecalController;
   private projectileController!: ProjectileController;
   private questController!: QuestController;
@@ -160,6 +162,7 @@ export class GameplayScene extends Phaser.Scene {
     preloadBossSound(this);
 
     UiMute.preload(this);
+    UiFullscreen.preload(this);
   }
 
   clear(): void {
@@ -173,6 +176,7 @@ export class GameplayScene extends Phaser.Scene {
     this.waveInfo.destroy();
     this.weaponStatus.destroy();
     this.uiMute.destroy();
+    this.uiFullscreen.destroy();
     this.players.forEach(player => player.destroy());
     this.pauseView.close();
     this.multiplayerController?.destroy();
@@ -213,8 +217,10 @@ export class GameplayScene extends Phaser.Scene {
 
     this.waveInfo = new WaveInfo(this, this.storage);
     this.weaponStatus = new WeaponStatus(this, this.storage, this.mainPlayerId);
-    this.uiMute = new UiMute(this, DISPLAY.WIDTH - 80, 70).setDepth(600);
+    this.uiMute = new UiMute(this, DISPLAY.WIDTH - 120, 74).setDepth(600).setButtonScale(0.6);
+    this.uiFullscreen = new UiFullscreen(this, DISPLAY.WIDTH - 60, 74).setDepth(600).setButtonScale(0.6);
     this.add.existing(this.uiMute);
+    this.add.existing(this.uiFullscreen);
 
     this.physics.world.setBounds(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
     this.shopController.setInteractablePlayerId(this.mainPlayerId);
