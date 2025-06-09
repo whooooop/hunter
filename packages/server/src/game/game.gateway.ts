@@ -4,6 +4,7 @@ import { GameState, PlayerSkin } from '@hunter/storage-proto/dist/storage';
 import { Injectable, Logger } from '@nestjs/common';
 import { Server as HttpServer, IncomingMessage } from 'http';
 import * as ms from 'ms';
+import { generate } from "random-words";
 import { parse } from 'url';
 import { connectionStateCollection } from './collections/connectionState.collection';
 import { enemyStateCollection } from './collections/enemyState.collection';
@@ -44,7 +45,7 @@ export class GameGateway {
   }
 
   async createGame(): Promise<string> {
-    const namespaceId = Math.random().toString(36).substring(2, 10);
+    const namespaceId = (generate({ minLength: 3 }) as string).toLowerCase();
     const hasGame = await this.hasGame(namespaceId);
 
     if (hasGame) {

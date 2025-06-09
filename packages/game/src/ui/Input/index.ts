@@ -71,7 +71,7 @@ export class UiInput extends Phaser.GameObjects.Container {
     }).setOrigin(0.5);
     this.add(this.text);
 
-    if (this.options.copy) {
+    if (this.options.copy && !navigator.userAgent.match(/ipad|iphone/i)) {
       this.copy = scene.add.image(this.background.width / 2 - 60, 0, copyTexture.key)
         .setScale(copyTexture.scale)
         .setInteractive();

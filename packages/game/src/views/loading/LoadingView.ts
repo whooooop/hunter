@@ -149,7 +149,7 @@ export class LoadingView {
   }
 
   private showAd(): Promise<void> {
-    AudioService.setGlobalMute(true);
+    AudioService.setGlobalMute(true, 'AD');
     return new Promise((resolve, reject) => {
       function handleInterstitialStateChanged(state: any) {
         if (state === "closed" || state === "failed") {
@@ -157,7 +157,7 @@ export class LoadingView {
             window.bridge.EVENT_NAME.INTERSTITIAL_STATE_CHANGED,
             handleInterstitialStateChanged
           );
-          AudioService.setGlobalMute(false);
+          AudioService.setGlobalMute(false, 'AD');
           resolve();
         }
       }

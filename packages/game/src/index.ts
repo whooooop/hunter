@@ -88,6 +88,14 @@ async function initBridge() {
       } else {
         setDefaultLocale('en');
       }
+
+      window.bridge.game.on(window.bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, (state: string) => {
+        if (state === "hidden") {
+          AudioService.setGlobalMute(true, 'VISIBILITY');
+        } else {
+          AudioService.setGlobalMute(false, 'VISIBILITY');
+        }
+      });
     })
     .catch((error: any) => {
       console.error('Playgama SDK failed to initialize:', error);

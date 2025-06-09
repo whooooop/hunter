@@ -14,13 +14,14 @@ export class AudioService {
 
   static assets = new Map<string, Audio.Asset>();
   private static globalMuted: boolean = false;
+  private static globalMutedReason: Set<string> = new Set();
 
   private loopSounds = new Map<string, { asset: Audio.Asset, sound: Phaser.Sound.BaseSound }>()
 
   private static readonly defaultState: Audio.Settings = {
     muted: false,
     globalVolume: 0.6,
-    musicVolume: 0.2,
+    musicVolume: 0.1,
     effectVolume: 0.6,
     interfaceVolume: 1,
     ambienceVolume: 1,
@@ -38,9 +39,18 @@ export class AudioService {
     (window as any)._ss = this;
   }
 
-  static setGlobalMute(mute: boolean): void {
+  static setGlobalMute(mute: boolean, reason: string): void {
+    if (mute) {
+      AudioService.globalMutedReason.add(reason);
+    } else {
+      AudioService.globalMutedReason.delete(reason);
+    }
     const instance = AudioService.getInstance();
-    AudioService.globalMuted = mute;
+    if (AudioService.globalMutedReason.size) {
+      AudioService.globalMuted = true;
+    } else {
+      AudioService.globalMuted = false;
+    }
     instance.updateVolume();
   }
 
