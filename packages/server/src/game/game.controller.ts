@@ -6,9 +6,11 @@ export class GameController {
   constructor(private readonly gameGateway: GameGateway) { }
 
   @Post()
-  async createGame() {
+  async createGame(
+    @Query('players') players: number = 2,
+  ) {
     const code = await this.gameGateway.createGame({
-      players: 2
+      players
     });
     return {
       code

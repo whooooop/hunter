@@ -1,6 +1,7 @@
 import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
 import { ConnectionState, EmbienceEvent, EnemyState, GameState, PlayerSkin, ReplayEvent } from '@hunter/storage-proto/dist/storage';
 import * as Phaser from 'phaser';
+import { createGame } from '../api/game';
 import { preloadBossSound } from '../audio/boss';
 import { playDangerSound, preloadDangerSound } from '../audio/danger';
 import { playGameoverAudio, preloadGameoverAudio } from '../audio/gameover';
@@ -31,7 +32,6 @@ import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents }
 import { UiMute, WaveInfo, WeaponStatus } from '../ui';
 import { UiFullscreen } from '../ui/Fullscreen';
 import { createLogger } from '../utils/logger';
-import { generateId } from '../utils/stringGenerator';
 import { GameOverView } from '../views/gameover';
 import { LoadingView } from '../views/loading/LoadingView';
 import { PauseView } from '../views/pause';
@@ -325,16 +325,18 @@ export class GameplayScene extends Phaser.Scene {
     this.physics.world.resume();
   }
 
-  private handleReplay(payload: Game.Events.Replay.Payload): void {
-    const gameId = this.isMultiplayer ? generateId() : undefined;
+  private async handleReplay(payload: Game.Events.Replay.Payload): Promise<void> {
+    const gameCollection = this.storage.getCollection<GameState>(gameStateCollection)!;
+    const gameState = gameCollection.getItem('game')!;
+    const { code } = await createGame(gameState.playersCount);
 
-    if (this.isMultiplayer && gameId) {
-      this.storage.getCollection<ReplayEvent>(replayEventCollection)!.addItem(gameId, {
-        gameId
+    if (this.isMultiplayer && code) {
+      this.storage.getCollection<ReplayEvent>(replayEventCollection)!.addItem(code, {
+        gameId: code
       });
     }
 
-    this.replay(gameId);
+    this.replay(code);
   }
 
   private replay(gameId?: string): void {

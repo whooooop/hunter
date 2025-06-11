@@ -1,7 +1,7 @@
 const API_URL = `${location.protocol}//${window.SERVER_HOST}`;
 
-export function createGame() {
-  return fetch(`${API_URL}/game`, {
+export function createGame(players: number = 2) {
+  return fetch(`${API_URL}/game?players=${players}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
