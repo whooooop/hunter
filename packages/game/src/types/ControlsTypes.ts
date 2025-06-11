@@ -70,5 +70,12 @@ export namespace Controls {
         playerId: string;
       }
     }
+    export namespace NumberKey {
+      export const Event = 'controls.numberKey';
+      export type Payload = {
+        playerId: string;
+        number: number;
+      }
+    }
   }
 }

@@ -28,6 +28,7 @@ export class WeaponController {
     onEvent(scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
     onEvent(scene, Controls.Events.NextWeapon.Event, this.handleNextWeapon, this);
     onEvent(scene, Controls.Events.PrevWeapon.Event, this.handlePrevWeapon, this);
+    onEvent(scene, Controls.Events.NumberKey.Event, this.handleNumberKey, this);
     this.storage.on<WeaponState>(weaponStateCollection, 'Add', this.addPlayerWeapon.bind(this));
     this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Add', this.updatePlayerCurrentWeapon.bind(this));
     this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Update', this.updatePlayerCurrentWeapon.bind(this));
@@ -95,6 +96,17 @@ export class WeaponController {
     });
   }
 
+  private handleNumberKey({ playerId, number }: Controls.Events.NumberKey.Payload): void {
+    const currentWeaponId = this.getCurrentWeapon(playerId);
+    if (!currentWeaponId) return;
+    const playerWeapons = Array.from(this.playerWeapons.get(playerId)?.keys() || []);
+    const weaponId = playerWeapons[number - 1];
+    if (!weaponId) return;
+    this.storage.getCollection<PlayerWeapon>(playerWeaponCollection)!.updateItem(playerId, {
+      weaponId
+    });
+  }
+
   public getWeapon(weaponId: string): WeaponEntity {
     return this.weapons.get(weaponId)!;
   }
@@ -118,13 +130,6 @@ export class WeaponController {
       return;
     }
 
-    if (currentWeaponId) {
-      // const currentWeapon = this.getWeapon(currentWeaponId);
-      // if (currentWeapon) {
-      //   currentWeapon.hide();
-      // }
-    }
-
     const weapon = this.getWeapon(weaponId);
     this.setCurrentWeapon(playerId, weaponId);
     this.players.get(playerId)!.setWeapon(weapon);
@@ -138,5 +143,6 @@ export class WeaponController {
     offEvent(this.scene, ShopEvents.WeaponPurchasedEvent, this.handleWeaponPurchased, this);
     offEvent(this.scene, Controls.Events.NextWeapon.Event, this.handleNextWeapon, this);
     offEvent(this.scene, Controls.Events.PrevWeapon.Event, this.handlePrevWeapon, this);
+    offEvent(this.scene, Controls.Events.NumberKey.Event, this.handleNumberKey, this);
   }
 }

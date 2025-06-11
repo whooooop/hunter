@@ -39,6 +39,15 @@ export class KeyBoardController {
   private prevWeaponKey: Phaser.Input.Keyboard.Key;
   private pauseKey: Phaser.Input.Keyboard.Key;
   private shopKey: Phaser.Input.Keyboard.Key;
+  private key1: Phaser.Input.Keyboard.Key;
+  private key2: Phaser.Input.Keyboard.Key;
+  private key3: Phaser.Input.Keyboard.Key;
+  private key4: Phaser.Input.Keyboard.Key;
+  private key5: Phaser.Input.Keyboard.Key;
+  private key6: Phaser.Input.Keyboard.Key;
+  private key7: Phaser.Input.Keyboard.Key;
+  private key8: Phaser.Input.Keyboard.Key;
+  private key9: Phaser.Input.Keyboard.Key;
   private joystick!: VirtualJoystick;
   private joystickRadius: number = 100;
 
@@ -52,6 +61,8 @@ export class KeyBoardController {
   private keyRightDisabled: boolean = false;
   private fireKeyPressed: boolean = false;
   private firePointerPressed: boolean = false;
+  private numberKeyPressed: number = 0;
+
 
   private isJoystickActive: boolean = false;
   private isJoystickPow: number = 1;
@@ -79,6 +90,16 @@ export class KeyBoardController {
     this.shopKey = this.scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
     this.jumpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.pauseKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+
+    this.key1 = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
+    this.key2 = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
+    this.key3 = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
+    this.key4 = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.FOUR);
+    this.key5 = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.FIVE);
+    this.key6 = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SIX);
+    this.key7 = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SEVEN);
+    this.key8 = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.EIGHT);
+    this.key9 = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.NINE);
 
     if (!this.scene.sys.game.device.os.desktop) {
       this.createMobileControls();
@@ -313,6 +334,20 @@ export class KeyBoardController {
     this.handlePause(time, delta);
     this.handleShop(time, delta);
     this.handleCursorKeys(time, delta);
+    this.handleNumberKeys(time, delta);
+  }
+
+  private handleNumberKeys(time: number, delta: number): void {
+    const numberKeys = [this.key1, this.key2, this.key3, this.key4, this.key5, this.key6, this.key7, this.key8, this.key9];
+
+    numberKeys.forEach((key) => {
+      if (key.isDown && !this.numberKeyPressed) {
+        this.numberKeyPressed = key.keyCode - 48;
+        emitEvent(this.scene, Controls.Events.NumberKey.Event, { playerId: this.playerId, number: this.numberKeyPressed });
+      } else if (!key.isDown && this.numberKeyPressed === key.keyCode - 48) {
+        this.numberKeyPressed = 0;
+      }
+    });
   }
 
   private handleMovement(time: number, delta: number): void {

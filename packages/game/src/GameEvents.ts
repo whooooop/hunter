@@ -44,6 +44,7 @@ interface EventPayloadMap {
   [Controls.Events.KeyDown.Event]: Controls.Events.KeyDown.Payload;
   [Controls.Events.KeyLeft.Event]: Controls.Events.KeyLeft.Payload;
   [Controls.Events.KeyRight.Event]: Controls.Events.KeyRight.Payload;
+  [Controls.Events.NumberKey.Event]: Controls.Events.NumberKey.Payload;
 
   // Game
   [Game.Events.Pause.Local]: Game.Events.Pause.Payload;
