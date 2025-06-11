@@ -5,7 +5,7 @@ import runSoundUrl from './assets/run.mp3';
 export const RunSound: Audio.Asset = {
   url: runSoundUrl,
   key: 'run_sound',
-  volume: 1,
+  volume: 0.5,
   type: Audio.Type.Effect
 };
 

@@ -54,7 +54,7 @@ export class KeyBoardController {
   private firePointerPressed: boolean = false;
 
   private isJoystickActive: boolean = false;
-  private isJoystickPow: number = 1.1;
+  private isJoystickPow: number = 1;
 
   private dashedTimeout: number = 7000;
 
