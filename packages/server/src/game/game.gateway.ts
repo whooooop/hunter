@@ -1,4 +1,4 @@
-import { ClientSocket, MultiplayerServer } from '@hunter/multiplayer/dist/server';
+import { ClientSocket, MultiplayerServer, NamespaceId } from '@hunter/multiplayer/dist/server';
 import { ConnectionState, PlayerState } from '@hunter/storage-proto';
 import { GameState, PlayerSkin } from '@hunter/storage-proto/dist/storage';
 import { Injectable, Logger } from '@nestjs/common';
@@ -44,18 +44,32 @@ export class GameGateway {
     return this.multiplayerServer.hasNamespace(namespaceId);
   }
 
-  async createGame(): Promise<string> {
-    // Генерируем случайное слово длиной от 4 символов
+  async createGame({ players }: { players: number }): Promise<string> {
     const namespaceId = generateWord(4);
     const hasGame = await this.hasGame(namespaceId);
 
     if (hasGame) {
-      return this.createGame();
+      return this.createGame({ players });
     }
 
     await this.multiplayerServer.createNamespace(namespaceId);
+    await this.createGameState(namespaceId, players);
 
     return namespaceId;
+  }
+
+  private async createGameState(namespaceId: NamespaceId, playersCount: number) {
+    const namespace = await this.multiplayerServer.createNamespace(namespaceId);
+    const gameCollection = namespace.getCollection<GameState>(gameStateCollection)!;
+    gameCollection.addItem('game', {
+      host: '',
+      levelId: 'forest',
+      playersCount,
+      paused: false,
+      started: false,
+      finished: false,
+      createdAt: Date.now().toString(),
+    });
   }
 
   async onConnection(server: MultiplayerServer, socket: ClientSocket<SessionData>, namespaceId: string, request: IncomingMessage) {
@@ -74,6 +88,7 @@ export class GameGateway {
     socket.session.playerId = playerId;
 
     const namespace = await server.getNamespace(namespaceId);
+    const gameCollection = namespace.getCollection<GameState>(gameStateCollection)!;
     const connections = namespace.getConnections();
     for (const connection of connections) {
       if (connection.session?.playerId === playerId) {
@@ -81,21 +96,16 @@ export class GameGateway {
       }
     }
 
-    if (namespace.getConnectionsSize() === 0) {
-      const gameState = namespace.getCollection<GameState>(gameStateCollection)!;
-      gameState.updateItem('game', {
-        host: playerId,
-        levelId: 'forest',
-        playersCount: 2,
-        paused: false,
-        started: false,
-        finished: false,
-        createdAt: Date.now().toString(),
-      });
+    if (!gameCollection.getItem('game')) {
+      await this.createGameState(namespaceId, 2);
     }
 
-    const gameState = namespace.getCollection<GameState>(gameStateCollection)!;
-    const game = gameState.getItem('game')!;
+    if (namespace.getConnectionsSize() === 0) {
+      const gameState = gameCollection.getItem('game')!;
+      gameState.host = playerId;
+    }
+
+    const game = gameCollection.getItem('game')!;
     if (namespace.getConnectionsSize() >= game.playersCount) {
       throw new Error(`Game ${gameId} is full.`);
     }
@@ -113,7 +123,6 @@ export class GameGateway {
     connections.addItem(clientSocket.session.playerId, { ready: false });
 
     if (!player) {
-
       playersSkin.addItem(clientSocket.session.playerId, {
         body: Array.from(availableBodySkins)[Math.floor(Math.random() * availableBodySkins.size)],
       });

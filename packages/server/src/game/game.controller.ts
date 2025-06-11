@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post } from "@nestjs/common";
+import { Controller, Get, Param, Post, Query } from "@nestjs/common";
 import { GameGateway } from "./game.gateway";
 
 @Controller('game')
@@ -7,7 +7,21 @@ export class GameController {
 
   @Post()
   async createGame() {
-    const code = await this.gameGateway.createGame();
+    const code = await this.gameGateway.createGame({
+      players: 2
+    });
+    return {
+      code
+    };
+  }
+
+  @Get('/special')
+  async createGameSpecial(
+    @Query('players') players: number = 2,
+  ) {
+    const code = await this.gameGateway.createGame({
+      players
+    });
     return {
       code
     };
