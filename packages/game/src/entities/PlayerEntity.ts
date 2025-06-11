@@ -109,6 +109,7 @@ export class PlayerEntity {
       friction: 2400,
       maxVelocityX: 320,
       maxVelocityY: 280,
+      disableAccelerationWhenChangeDirection: true,
     });
 
     this.motionController.setState(state);

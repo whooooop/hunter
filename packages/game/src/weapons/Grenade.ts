@@ -16,7 +16,7 @@ const GrenadeTexture_0: WeaponTexture = {
 export const GrenadeConfig: Weapon.Config = {
   name: WeaponType.GRENADE,
   texture: GrenadeTexture_0,
-  reloadTime: 2000,     // Скорость перезарядки в мс
+  reloadTime: 1500,     // Скорость перезарядки в мс
   magazineSize: 1,      // Размер магазина
   damage: 250,          // Урон от одного выстрела
   speed: [500, 600],    // Скорость пули

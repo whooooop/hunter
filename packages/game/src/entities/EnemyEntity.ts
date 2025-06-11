@@ -321,8 +321,10 @@ export class EnemyEntity implements Damageable.Entity {
   protected createBloodSplash({ forceVector, hitPoint }: Damageable.Damage, target: Enemy.Body): void {
     const multiplier = target === 'head' ? 1.2 : 1;
     const forceOrigin = { x: forceVector[0][0], y: forceVector[0][1] };
-    const bloodConfig = createSimpleBloodConfig(multiplier);
+    const amount = this.scene.sys.game.device.os.desktop ? Phaser.Math.Between(25, 45) : Phaser.Math.Between(15, 25);
+    const bloodConfig = createSimpleBloodConfig(amount * multiplier);
     bloodConfig.texture = Blood.Texture.drops;
+
     emitEvent(this.scene, Blood.Events.BloodSplash.Local, {
       x: hitPoint[0],
       y: hitPoint[1],

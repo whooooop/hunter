@@ -28,6 +28,10 @@ const changeWeaponText = I18n({
 
 export class KeyBoardController {
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+  private UpKey: Phaser.Input.Keyboard.Key;
+  private DownKey: Phaser.Input.Keyboard.Key;
+  private LeftKey: Phaser.Input.Keyboard.Key;
+  private RightKey: Phaser.Input.Keyboard.Key;
   private fireKey: Phaser.Input.Keyboard.Key;
   private reloadKey: Phaser.Input.Keyboard.Key;
   private jumpKey: Phaser.Input.Keyboard.Key;
@@ -64,6 +68,10 @@ export class KeyBoardController {
     private readonly storage: StorageSpace
   ) {
     this.cursors = scene.input.keyboard!.createCursorKeys();
+    this.UpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+    this.DownKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+    this.LeftKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+    this.RightKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D);
     this.fireKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.reloadKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
     this.nextWeaponKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.C);
@@ -314,15 +322,20 @@ export class KeyBoardController {
       move.x = Math.sign(this.joystick.forceX) * Math.pow(Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius, this.isJoystickPow);
       move.y = Math.sign(this.joystick.forceY) * Math.pow(Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius, this.isJoystickPow);
     } else {
-      if (this.cursors.left.isDown) {
+      const UpKeyisDown = this.UpKey.isDown || this.cursors.up.isDown;
+      const DownKeyisDown = this.DownKey.isDown || this.cursors.down.isDown;
+      const LeftKeyisDown = this.LeftKey.isDown || this.cursors.left.isDown;
+      const RightKeyisDown = this.RightKey.isDown || this.cursors.right.isDown;
+
+      if (LeftKeyisDown) {
         move.x = -1;
-      } else if (this.cursors.right.isDown) {
+      } else if (RightKeyisDown) {
         move.x = 1;
       }
 
-      if (this.cursors.up.isDown) {
+      if (UpKeyisDown) {
         move.y = -1;
-      } else if (this.cursors.down.isDown) {
+      } else if (DownKeyisDown) {
         move.y = 1;
       }
     }
@@ -331,31 +344,20 @@ export class KeyBoardController {
   }
 
   private handleCursorKeys(time: number, delta: number): void {
-    if (this.cursors.up.isDown && !this.keyUpDisabled) {
-      emitEvent(this.scene, Controls.Events.KeyUp.Event, { playerId: this.playerId });
-      this.keyUpDisabled = true;
-    } else if (!this.cursors.up.isDown) {
-      this.keyUpDisabled = false;
-    }
+    const LeftKeyisDown = this.LeftKey.isDown || this.cursors.left.isDown;
+    const RightKeyisDown = this.RightKey.isDown || this.cursors.right.isDown;
 
-    if (this.cursors.down.isDown && !this.keyDownDisabled) {
-      emitEvent(this.scene, Controls.Events.KeyDown.Event, { playerId: this.playerId });
-      this.keyDownDisabled = true;
-    } else if (!this.cursors.down.isDown) {
-      this.keyDownDisabled = false;
-    }
-
-    if (this.cursors.left.isDown && !this.keyLeftDisabled) {
+    if (LeftKeyisDown && !this.keyLeftDisabled) {
       emitEvent(this.scene, Controls.Events.KeyLeft.Event, { playerId: this.playerId });
       this.keyLeftDisabled = true;
-    } else if (!this.cursors.left.isDown) {
+    } else if (!LeftKeyisDown) {
       this.keyLeftDisabled = false;
     }
 
-    if (this.cursors.right.isDown && !this.keyRightDisabled) {
+    if (RightKeyisDown && !this.keyRightDisabled) {
       emitEvent(this.scene, Controls.Events.KeyRight.Event, { playerId: this.playerId });
       this.keyRightDisabled = true;
-    } else if (!this.cursors.right.isDown) {
+    } else if (!RightKeyisDown) {
       this.keyRightDisabled = false;
     }
   }

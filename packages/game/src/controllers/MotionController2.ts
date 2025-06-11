@@ -14,6 +14,7 @@ interface MotionControllerOptions {
   maxVelocityX: number;
   maxVelocityY: number;
   friction: number;
+  disableAccelerationWhenChangeDirection?: boolean;
 }
 
 // Интерфейс для внешней силы с целевым смещением
@@ -61,6 +62,9 @@ export class MotionController2 {
   private targetMaxVelocityX: number = 0;
   private targetMaxVelocityY: number = 0;
   private lerpFactorVelocity: number = 0.1;
+
+  private previousMoveDirectionX: number = 0;
+  private previousMoveDirectionY: number = 0;
 
   private locationBounds: Location.Bounds | null = null;
 
@@ -122,6 +126,21 @@ export class MotionController2 {
   }
 
   public setMove(moveX: number, moveY: number): void {
+    if (this.options.disableAccelerationWhenChangeDirection) {
+      const currentMoveDirectionX = Math.sign(this.moveX);
+      const currentMoveDirectionY = Math.sign(this.moveY);
+
+      if (currentMoveDirectionX !== 0 && this.previousMoveDirectionX !== Math.sign(this.moveX)) {
+        this.previousMoveDirectionX = currentMoveDirectionX;
+        this.body.setVelocityX(0);
+      }
+
+      if (currentMoveDirectionY !== 0 && this.previousMoveDirectionY !== Math.sign(this.moveY)) {
+        this.previousMoveDirectionY = currentMoveDirectionY;
+        this.body.setVelocityY(0);
+      }
+    }
+
     this.moveX = moveX;
     this.moveY = moveY;
     this.updateVelocity();

@@ -43,7 +43,6 @@ export class ShopController {
    */
   protected createInteractionIcon(): void {
     this.shopButton = new UiShopButton(this.scene, 50, 90);
-    this.shopButton.setAlpha(0);
     this.shopButton.on('pointerup', () => {
       emitEvent(this.scene, Controls.Events.Shop.Event, { playerId: this.playerId });
     }).setDepth(900);
@@ -55,7 +54,7 @@ export class ShopController {
    */
   public showInteractionPrompt(): void {
     if (!this.shopButton || !this.scene) return;
-    this.shopButton.setAlpha(1);
+    this.shopButton.show();
   }
 
   /**
@@ -63,7 +62,7 @@ export class ShopController {
    */
   public hideInteractionPrompt(): void {
     if (!this.shopButton || !this.scene) return;
-    this.shopButton.setAlpha(0);
+    this.shopButton.hide();
   }
 
   public update(time: number, delta: number) {

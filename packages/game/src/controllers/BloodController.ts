@@ -687,11 +687,11 @@ export function createBloodSplatterTexture(scene: Phaser.Scene, textureKey: stri
   graphics.destroy();
 }
 
-export function createSimpleBloodConfig(multiplier: number): Partial<Blood.BloodSplashConfig> {
+export function createSimpleBloodConfig(amount: number): Partial<Blood.BloodSplashConfig> {
   return {
     // texture: Blood.Texture.drops,
-    amount: Phaser.Math.Between(40, 60) * multiplier,
-    force: 20 * multiplier,
+    amount,
+    force: 20,
     size: {
       min: 0.2,
       max: 0.3
@@ -708,7 +708,7 @@ export function createSimpleBloodConfig(multiplier: number): Partial<Blood.Blood
     fallDistance: {
       min: 1,
       max: 15,
-      factor: 0.5 * multiplier
+      factor: 0.5
     },
   }
 }
