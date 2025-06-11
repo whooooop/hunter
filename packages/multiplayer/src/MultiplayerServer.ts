@@ -73,6 +73,7 @@ export class MultiplayerServer<Session extends object = any> {
       if (namespace.isTimeouted()) {
         namespace.disconnectAllClients();
         this.namespaces.delete(namespaceId);
+        namespaceGauge.set(this.namespaces.size);
       }
     });
   }
