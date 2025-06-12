@@ -7,6 +7,7 @@ import { DISPLAY, FONT_FAMILY, LOADING_EXTRA_DURATION } from '../../config';
 import { emitEvent } from '../../GameEvents';
 import { loadAssets } from '../../preload';
 import { AudioService } from '../../services/AudioService';
+import { StatsService } from '../../services/StatsService';
 import { Loading } from '../../types';
 import { createLogger } from '../../utils/logger';
 import { BackgroundView } from '../background/BackgroundView';
@@ -81,6 +82,7 @@ export class LoadingView {
   private loadCommonAssets(): void {
     window.bridge.platform.sendMessage("in_game_loading_started");
 
+    const stats = StatsService.getStats();
     const progressBarWidth = 608;
     const center = {
       x: DISPLAY.WIDTH / 2,
@@ -107,7 +109,9 @@ export class LoadingView {
     loadAssets(this.scene, this.minLoadingTime, async (progress: number) => {
       this.progressBar.setScale(this.maxProgressScale * progress, loadingProgress.scale);
       if (progress === 1) {
-        await this.showAd();
+        if (stats.gameplays !== 0) {
+          await this.showAd();
+        }
         this.rightProgress.setVisible(true);
         window.bridge.platform.sendMessage("in_game_loading_stopped");
         this.finishLoading();

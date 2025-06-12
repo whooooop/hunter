@@ -168,12 +168,12 @@ export class AudioService {
         targets: item.sound,
         volume: 0,
         duration,
-        ease: 'linear',
-        onComplete: () => {
-          item.sound.stop()
-          instance.loopSounds.delete(name);
-        }
+        ease: 'linear'
       });
+      setTimeout(() => {
+        item.sound.stop()
+        instance.loopSounds.delete(name);
+      }, duration + 16);
     }
   }
 

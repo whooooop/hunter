@@ -21,6 +21,7 @@ import { AudioService } from '../services/AudioService';
 import { HintsService } from '../services/HintsService';
 import { PlayerService } from '../services/PlayerService';
 import { QuestService } from '../services/QuestService';
+import { StatsService } from '../services/StatsService';
 import { gameStorage } from '../storage';
 import { connectionStateCollection } from '../storage/collections/connectionState.collection';
 import { enemyStateCollection } from '../storage/collections/enemyState.collection';
@@ -235,6 +236,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
     this.sceneLoaded = true;
+    StatsService.incGameplay();
     window.bridge.platform.sendMessage("gameplay_started");
 
     if (this.gameId) {
@@ -325,18 +327,19 @@ export class GameplayScene extends Phaser.Scene {
     this.physics.world.resume();
   }
 
-  private async handleReplay(payload: Game.Events.Replay.Payload): Promise<void> {
+  private async handleReplay(): Promise<void> {
     const gameCollection = this.storage.getCollection<GameState>(gameStateCollection)!;
     const gameState = gameCollection.getItem('game')!;
-    const { code } = await createGame(gameState.playersCount);
 
-    if (this.isMultiplayer && code) {
+    if (this.isMultiplayer) {
+      const { code } = await createGame(gameState.playersCount);
       this.storage.getCollection<ReplayEvent>(replayEventCollection)!.addItem(code, {
         gameId: code
       });
+      this.replay(code);
+    } else {
+      this.replay();
     }
-
-    this.replay(code);
   }
 
   private replay(gameId?: string): void {

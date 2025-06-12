@@ -17,6 +17,7 @@ export * from './recoilForce';
 export * from './scoreTypes';
 export * from './SettingsTypes';
 export * from './shopTypes';
+export * from './StatsTypes';
 export * from './texture';
 export * from './WaveTypes';
 export * from './weaponTypes';

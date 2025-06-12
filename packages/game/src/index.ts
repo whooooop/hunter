@@ -14,6 +14,7 @@ import { ReloadScene } from './scenes/ReloadScene';
 import { AudioService } from './services/AudioService';
 import { PlayerService } from './services/PlayerService';
 import { SettingsService } from './services/SettingsService';
+import { StatsService } from "./services/StatsService";
 import { FontLoader } from './utils/font';
 import { isSupportedLocale, setDefaultLocale } from './utils/i18n';
 import { logger } from './utils/logger';
@@ -104,7 +105,8 @@ async function initGame() {
       FontLoader(introFontBold.name, introFontBold.sources),
       settingsService.init(),
       playerService.initPlayer(),
-      AudioService.init()
+      AudioService.init(),
+      StatsService.init()
     ]);
 
     if (window.bridge.game.visibilityState === "hidden") {
