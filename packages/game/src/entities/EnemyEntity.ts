@@ -88,27 +88,6 @@ export class EnemyEntity implements Damageable.Entity {
     this._handleEnemyAnimation = this.handleEnemyAnimation.bind(this);
     this.storage.on<EnemyDeathEvent>(enemyDeathEventCollection, 'Add', this._handleEnemyDeath);
     this.storage.on<EnemyAnimationEvent>(enemyAnimationEvent, 'Add', this._handleEnemyAnimation);
-
-    // const deathAnimation = this.config.animations.find(animation => animation.name === 'walk')!.key;
-
-    // setTimeout(() => {
-    //     const emitter = this.scene.add.particles(
-    //       0,
-    //       0,
-    //       deathAnimation,
-    //         {
-    //             speed: { min: -300, max: 300 },
-    //             angle: { min: 0, max: 360 },
-    //             lifespan: 1200,
-    //             quantity: 50,
-    //             gravityY: 400,
-    //         }
-    //     );
-    //     this.container.add(emitter);
-
-    //     emitter.explode(50, 0, 0);
-
-    // }, 4000);
   }
 
   private handleEnemyDeath(enemyId: string, record: SyncCollectionRecord<EnemyDeathEvent>): void {
@@ -288,7 +267,7 @@ export class EnemyEntity implements Damageable.Entity {
       }
     });
 
-    await this.onDeathAnimation();
+    await this.onDeathAnimation(3000);
     emitEvent(this.scene, Enemy.Events.Death.Local, {
       id: this.id,
     });
@@ -305,12 +284,18 @@ export class EnemyEntity implements Damageable.Entity {
     this.destroy();
   }
 
-  protected onDeathAnimation(): Promise<void> {
+  protected onDeathAnimation(fallbackDuration: number = 0): Promise<void> {
     return new Promise(resolve => {
       if (this.config.spine?.animations[Enemy.Animation.DEATH]) {
+        const timeout = fallbackDuration ? this.scene.time.delayedCall(fallbackDuration, () => {
+          resolve();
+        }) : null;
         this.setAnimation(Enemy.Animation.DEATH, false);
         this.spineObject.animationState.addListener({
-          complete: () => resolve(),
+          complete: () => {
+            resolve();
+            timeout?.destroy();
+          },
         });
       } else {
         resolve();
@@ -455,6 +440,7 @@ export class EnemyEntity implements Damageable.Entity {
   public destroy(): void {
     if (this.destroyed) return;
     this.storage.off<EnemyDeathEvent>(enemyDeathEventCollection, 'Add', this._handleEnemyDeath);
+    this.storage.off<EnemyAnimationEvent>(enemyAnimationEvent, 'Add', this._handleEnemyAnimation);
     this.spineObject?.destroy();
     this.body.destroy();
     this.motionController.destroy();

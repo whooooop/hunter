@@ -51,7 +51,12 @@ export class SyncCollection<T extends object> {
   static readonly registry: Map<string, SyncCollectionConfig<object>> = new Map();
 
   private collection: Map<string, SyncCollectionRecord<T>> = new Map();
-  private subscribers: Set<{ event: SyncCollectionEvent, callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void }> = new Set();
+  private subscribers: Record<SyncCollectionEvent, Map<(id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void, boolean>> = {
+    Add: new Map(),
+    Update: new Map(),
+    Remove: new Map(),
+    UNRECOGNIZED: new Map()
+  };
   private subscribersCount = new Map<SyncCollectionEvent, number>([
     ['Add', 0],
     ['Update', 0],
@@ -97,12 +102,12 @@ export class SyncCollection<T extends object> {
   public subscribe(event: 'Update', callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): void
   public subscribe(event: 'Add', callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): void
   public subscribe(event: SyncCollectionEvent, callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): void {
-    this.subscribers.add({ event, callback });
+    this.subscribers[event].set(callback, true);
     this.subscribersCount.set(event, this.subscribersCount.get(event)! + 1);
   }
 
   public unsubscribe(event: SyncCollectionEvent, callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void): void {
-    this.subscribers.delete({ event, callback });
+    this.subscribers[event].delete(callback)
     this.subscribersCount.set(event, this.subscribersCount.get(event)! - 1);
   }
 
@@ -371,10 +376,8 @@ export class SyncCollection<T extends object> {
     if (!this.config.localEvents && from === 'Client') {
       return;
     }
-    this.subscribers.forEach(listener => {
-      if (listener.event === event) {
-        listener.callback(id, record, this, from);
-      }
+    this.subscribers[event].forEach((_: boolean, callback: (id: string, record: SyncCollectionRecord<T>, collection: SyncCollection<T>, from: FromUpdate) => void) => {
+      callback(id, record, this, from);
     });
   }
 }

@@ -114,7 +114,6 @@ export class WaveController {
       return;
     }
 
-
     this.calculateEnemyCount();
 
     if (this.waitingForEnemies && this.aliveCount === 0) {

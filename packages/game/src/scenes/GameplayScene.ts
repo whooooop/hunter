@@ -219,14 +219,12 @@ export class GameplayScene extends Phaser.Scene {
     this.waveInfo = new WaveInfo(this, this.storage);
     this.weaponStatus = new WeaponStatus(this, this.storage, this.mainPlayerId);
     this.uiMute = new UiMute(this, DISPLAY.WIDTH - 90, 74).setDepth(600).setButtonScale(0.8);
-    // this.uiFullscreen = new UiFullscreen(this, DISPLAY.WIDTH - 60, 74).setDepth(600).setButtonScale(0.6);
     this.add.existing(this.uiMute);
-    // this.add.existing(this.uiFullscreen);
 
     this.physics.world.setBounds(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
     this.shopController.setInteractablePlayerId(this.mainPlayerId);
 
-    (window as any)['_s'] = this.storage;
+    (window as any)['_g'] = this;
 
     this.add.text(20, DISPLAY.HEIGHT - 30, VERSION.toUpperCase(), { fontSize: 16, color: '#ffffff', fontFamily: FONT_FAMILY.REGULAR })
       .setDepth(10000)
