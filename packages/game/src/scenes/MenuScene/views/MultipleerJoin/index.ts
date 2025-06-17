@@ -1,4 +1,3 @@
-import { SceneKeys } from "../../..";
 import { checkGame } from "../../../../api/game";
 import { DISPLAY, FONT_FAMILY, MULTIPLAYER_EXTRA_DURATION } from "../../../../config";
 import { emitEvent } from "../../../../GameEvents";
@@ -78,7 +77,7 @@ export class MultipleerJoinView implements MenuSceneTypes.View {
             this.handleError(JoinGameErrorText.translate);
           } else {
             this.handleError('');
-            this.scene.scene.start(SceneKeys.GAMEPLAY, {
+            emitEvent(this.scene, MenuSceneTypes.Events.Play.Name, {
               levelId: LevelId.FOREST,
               gameId: code
             });

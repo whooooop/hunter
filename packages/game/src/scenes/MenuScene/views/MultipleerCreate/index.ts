@@ -1,4 +1,3 @@
-import { SceneKeys } from "../../..";
 import { createGame } from "../../../../api/game";
 import { DISPLAY, FONT_FAMILY, MULTIPLAYER_EXTRA_DURATION } from "../../../../config";
 import { emitEvent } from "../../../../GameEvents";
@@ -59,7 +58,7 @@ export class MultipleerCreateView implements MenuSceneTypes.View {
     this.content.add(instructions);
 
     const createGameButton = new UiButtonText(this.scene, 0, 200, EnterGameText.translate).onClick(() => {
-      this.scene.scene.start(SceneKeys.GAMEPLAY, {
+      emitEvent(this.scene, MenuSceneTypes.Events.Play.Name, {
         levelId: LevelId.FOREST,
         gameId: this.code
       });

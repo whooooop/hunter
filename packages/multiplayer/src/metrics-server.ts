@@ -9,6 +9,13 @@ export const namespaceGauge = new Gauge({
   registers: [registry],
 });
 
+export const namespaceCounter = new Counter({
+  name: 'namespace_counter',
+  help: 'A counter for the namespace',
+  labelNames: [],
+  registers: [registry],
+});
+
 export const connectionsGauge = new Gauge({
   name: 'connections_gauge',
   help: 'A gauge for the connections',

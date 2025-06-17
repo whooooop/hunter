@@ -3,7 +3,7 @@ import { parse } from "node:url";
 import Stream from "stream";
 import { WebSocket, WebSocketServer } from "ws";
 import { ClientSocket } from "./ClientSocket";
-import { connectionsGauge, messageCounter, namespaceGauge, registry } from "./metrics";
+import { connectionsGauge, messageCounter, namespaceCounter, namespaceGauge, registry } from "./metrics-server";
 import { ServerNamespace, ServerNamespaceConfig } from "./ServerNamespace";
 import { Message, MessageType } from './sync';
 import { ClientId, NamespaceId } from "./types";
@@ -84,7 +84,6 @@ export class MultiplayerServer<Session extends object = any> {
 
   public async getNamespace(namespaceId: NamespaceId): Promise<ServerNamespace<Session>> {
     const hasNamespace = await this.hasNamespace(namespaceId);
-
     if (!hasNamespace) {
       return this.createNamespace(namespaceId);
     }
@@ -98,6 +97,8 @@ export class MultiplayerServer<Session extends object = any> {
       await this.config.onNamespaceCreated(this, namespace);
     }
     namespaceGauge.set(this.namespaces.size);
+    namespaceCounter.inc();
+    console.log(`Namespace ${namespaceId} created. Total namespaces: ${this.namespaces.size}`);
     return namespace;
   }
 
@@ -159,8 +160,9 @@ export class MultiplayerServer<Session extends object = any> {
     if (namespace) {
       namespace.disconnectClient(clientId);
       this.clientNamespaceMap.delete(clientId);
-      this.sockets.delete(clientId);
     }
+
+    this.sockets.delete(clientId);
 
     try {
       clientSocket.ws.close();

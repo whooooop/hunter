@@ -14,6 +14,7 @@ export namespace MenuSceneTypes {
       export const Name = 'MenuSceneEventPlay';
       export interface Payload {
         levelId: string;
+        gameId?: string;
       }
     }
 

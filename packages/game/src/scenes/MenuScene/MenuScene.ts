@@ -87,7 +87,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   playHandler(payload: MenuSceneTypes.Events.Play.Payload): void {
-    this.scene.start(SceneKeys.GAMEPLAY, { levelId: payload.levelId });
+    this.scene.start(SceneKeys.GAMEPLAY, { levelId: payload.levelId, gameId: payload.gameId });
     this.clear();
   }
 

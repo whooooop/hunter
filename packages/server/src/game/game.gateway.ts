@@ -59,7 +59,7 @@ export class GameGateway {
   }
 
   private async createGameState(namespaceId: NamespaceId, playersCount: number) {
-    const namespace = await this.multiplayerServer.createNamespace(namespaceId);
+    const namespace = await this.multiplayerServer.getNamespace(namespaceId);
     const gameCollection = namespace.getCollection<GameState>(gameStateCollection)!;
     gameCollection.addItem('game', {
       host: '',

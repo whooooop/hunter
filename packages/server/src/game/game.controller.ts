@@ -13,7 +13,8 @@ export class GameController {
       players
     });
     return {
-      code
+      code,
+      players
     };
   }
 
@@ -25,7 +26,8 @@ export class GameController {
       players
     });
     return {
-      code
+      code,
+      players
     };
   }
 
