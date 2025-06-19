@@ -14,7 +14,7 @@ export const CapybaraConfig: Enemy.Config = {
     body: { x: 0, y: 0, width: 50, height: 46 },
   },
   score: [
-    { death: true, value: 80 },
+    { death: true, value: 170 },
   ],
   damageMultiplier: {
     head: 2,

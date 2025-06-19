@@ -14,7 +14,7 @@ export const WolfConfig: Enemy.Config = {
     head: { x: 0, y: 0, width: 25, height: 25 },
   },
   score: [
-    { death: true, value: 80 },
+    { death: true, value: 120 },
   ],
   damageMultiplier: {
     head: 2,

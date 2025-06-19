@@ -197,7 +197,6 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 1000, state: { x, y: y(1), vx: -2, vy: -1, type: Enemy.Type.HEDGEHOG } },
       { delay: 1000, state: { x, y: y(3), vx: -2, vy: -1, type: Enemy.Type.HEDGEHOG } },
 
-
       { delay: 6000, state: { x, y: y(3), vx: -2, vy: -1, type: Enemy.Type.HARE } },
       { delay: 1000, state: { x, y: y(1), vx: -3, vy: 1, type: Enemy.Type.SQUIREEL } },
       { delay: 100, state: { x, y: y(1), vx: -3, vy: 1, type: Enemy.Type.RACCOON } },
@@ -209,9 +208,9 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 1000, state: { x, y: y(3), vx: -3, vy: -1, type: Enemy.Type.HARE } },
       { delay: 2000, state: { x, y: y(5), vx: -3, vy: -2, type: Enemy.Type.HARE } },
       { delay: 300, state: { x, y: y(4), vx: -3, vy: -1, type: Enemy.Type.SQUIREEL } },
-      { delay: 300, state: { x, y: y(3), vx: -5, vy: 0, type: Enemy.Type.CAPYBARA } },
+      { delay: 2300, state: { x, y: y(3), vx: -5, vy: 0, type: Enemy.Type.CAPYBARA } },
       { delay: 300, state: { x, y: y(5), vx: -3, vy: -1, type: Enemy.Type.HARE } },
-      { delay: 300, state: { x, y: y(3), vx: -3, vy: 1, type: Enemy.Type.SQUIREEL } },
+      { delay: 1000, state: { x, y: y(3), vx: -3, vy: 1, type: Enemy.Type.SQUIREEL } },
       { delay: 300, state: { x, y: y(1), vx: -4, vy: 0, type: Enemy.Type.DEER_BABY } },
       { delay: 300, state: { x, y: y(4), vx: -4, vy: -1, type: Enemy.Type.DEER_BABY } },
       { delay: 1000, state: { x, y: y(5), vx: -3, vy: -1, type: Enemy.Type.HARE } },
@@ -226,7 +225,7 @@ export function createWavesConfig(): Wave.Config[] {
 
       { delay: 6000, state: { x, y: y(2), vx: -2.5, type: Enemy.Type.DEER, boss: true }, ambience: { assetKey: BossSound.key, delay: 2000 } },
       { delay: 1000, state: { x, y: y(4), vx: -2.5, type: Enemy.Type.DEER, boss: true } },
-      { delay: 1000, state: { x, y: y(1), vx: -1, vy: -1, type: Enemy.Type.MOUSE, boss: true } },
+      { delay: 3000, state: { x, y: y(1), vx: -1, vy: -1, type: Enemy.Type.MOUSE, boss: true } },
       { delay: 100, state: { x, y: y(2), vx: -3, vy: -1, type: Enemy.Type.MOUSE, boss: true } },
       { delay: 100, state: { x, y: y(1), vx: -2, vy: -1, type: Enemy.Type.MOUSE, boss: true } },
       { delay: 100, state: { x, y: y(3), vx: -1, vy: -1, type: Enemy.Type.MOUSE, boss: true } },
@@ -235,7 +234,7 @@ export function createWavesConfig(): Wave.Config[] {
       { delay: 100, state: { x, y: y(2), vx: -3, vy: 1, type: Enemy.Type.MOUSE, boss: true } },
       { delay: 1000, state: { x, y: y(3), vx: -1, vy: -1, type: Enemy.Type.MOUSE, boss: true } },
       { delay: 100, state: { x, y: y(5), vx: -2, vy: 1, type: Enemy.Type.MOUSE, boss: true } },
-      { delay: 1000, state: { x, y: y(1), vx: -2, vy: -1, type: Enemy.Type.MOUSE, boss: true } },
+      { delay: 3000, state: { x, y: y(1), vx: -2, vy: -1, type: Enemy.Type.MOUSE, boss: true } },
       { delay: 1000, state: { x, y: y(4), vx: -1, vy: -1, type: Enemy.Type.MOUSE, boss: true } },
       { delay: 1000, state: { x, y: y(1), vx: -2, vy: 1, type: Enemy.Type.MOUSE, boss: true } },
       { delay: 1000, state: { x, y: y(2), vx: -1, vy: 1, type: Enemy.Type.MOUSE, boss: true } },

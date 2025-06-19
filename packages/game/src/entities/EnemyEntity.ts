@@ -252,7 +252,7 @@ export class EnemyEntity implements Damageable.Entity {
     // max Damage = 400
     // min Damage = 100
 
-    const maxParticleCount = 140;
+    const maxParticleCount = 30;
     const particleCount = Math.max(0, Math.min(maxParticleCount, Math.floor(Math.max(damage - 100, 0) / 100 * maxParticleCount)));
 
     emitEvent(this.scene, Blood.Events.DeathFountain.Local, {
@@ -304,9 +304,9 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   protected createBloodSplash({ forceVector, hitPoint }: Damageable.Damage, target: Enemy.Body): void {
-    const multiplier = target === 'head' ? 1.2 : 1;
+    const multiplier = target === 'head' ? 1.1 : 1;
     const forceOrigin = { x: forceVector[0][0], y: forceVector[0][1] };
-    const amount = this.scene.sys.game.device.os.desktop ? Phaser.Math.Between(25, 45) : Phaser.Math.Between(15, 25);
+    const amount = this.scene.sys.game.device.os.desktop ? Phaser.Math.Between(15, 30) : Phaser.Math.Between(5, 20);
     const bloodConfig = createSimpleBloodConfig(amount * multiplier);
     bloodConfig.texture = Blood.Texture.drops;
 
