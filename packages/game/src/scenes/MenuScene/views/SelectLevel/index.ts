@@ -2,16 +2,17 @@ import { ClickSound, preloadClickSound } from "../../../../audio/click";
 import { DISPLAY, FONT_FAMILY } from "../../../../config";
 import { emitEvent } from "../../../../GameEvents";
 import { LevelCollection, LevelId } from "../../../../levels";
-import { preloadImage } from "../../../../preload";
+import { preloadImage, preloadVideo } from "../../../../preload";
 import { AudioService } from "../../../../services/AudioService";
 import { QuestService } from "../../../../services/QuestService";
+import { StatsService } from "../../../../services/StatsService";
 import { Level, Quest } from "../../../../types";
 import { UiBackButton } from "../../../../ui/BackButton";
 import { UiStar } from "../../../../ui/Star";
 import { hexToNumber } from "../../../../utils/colors";
 import { MenuSceneTypes } from "../../MenuSceneTypes";
 import { circleTexture, plashka1MaskTexture, plashka1Texture, plashkaPodstavkaTexture } from "./textures";
-import { SelectLevelText } from "./translates";
+import { BestScoreText, GameplaysCountText, SelectLevelText, WavesCountText } from "./translates";
 
 export class SelectLevelView implements MenuSceneTypes.View {
   protected scene: Phaser.Scene;
@@ -65,6 +66,9 @@ export class SelectLevelView implements MenuSceneTypes.View {
       if (levelConfig.preview) {
         preloadImage(scene, levelConfig.preview);
       }
+      if (levelConfig.video) {
+        preloadVideo(scene, levelConfig.video);
+      }
     }
   }
 
@@ -82,7 +86,7 @@ export class SelectLevelView implements MenuSceneTypes.View {
       fontSize: '36px',
       color: '#ffffff',
       stroke: '#000000',
-      strokeThickness: 4,
+      strokeThickness: 2,
       fontFamily: FONT_FAMILY.BOLD
     }).setOrigin(0.5);
 
@@ -115,11 +119,13 @@ export class SelectLevelView implements MenuSceneTypes.View {
     Object.keys(this.levelCollection).forEach((id: string, index: number) => {
       const levelId = id as LevelId;
       let preview: Phaser.GameObjects.Image | null = null;
+      let video: Phaser.GameObjects.Video | null = null;
       const levelConfig = this.levelCollection[levelId as LevelId];
       const blockConfig = this.blocks[index];
       const offsetX = blockConfig.offsetX;
       const previewOffsetY = blockConfig.previewOffsetY + blockConfig.offsetY;
       const previewOffsetX = blockConfig.previewOffsetX;
+      const stats = StatsService.getLevelStats(levelId);
 
       const text = this.scene.add.text(0, -80, levelConfig.name.translate.toUpperCase(), {
         fontSize: '32px',
@@ -130,7 +136,43 @@ export class SelectLevelView implements MenuSceneTypes.View {
       }).setOrigin(0.5);
       const container = this.scene.add.container(center.x - offsetX, center.y + blockConfig.offsetY);
       const maskImage = this.scene.add.image(center.x - offsetX + previewOffsetX, center.y + previewOffsetY, this.blocks[index].maskTexture.key).setOrigin(0.5).setScale(this.blocks[index].maskTexture.scale).setFlipX(blockConfig.flipX as boolean).setVisible(false);
-      if (levelConfig.preview) {
+
+      // Сначала пытаемся создать видео
+      if (levelConfig.video) {
+        try {
+          video = this.scene.add.video(previewOffsetX, previewOffsetY, levelConfig.video.key)
+            .setOrigin(0.5)
+            .setScale(levelConfig.video.scale)
+            .setLoop(true)
+            .setMute(true)
+            .setTint(0xbbbbbb);
+
+          const mask = maskImage.createBitmapMask();
+          video.setMask(mask);
+
+          // Запускаем видео
+          video.play();
+
+          // Добавляем обработчик ошибок для видео
+          video.on('error', () => {
+            console.warn(`Ошибка воспроизведения видео для уровня ${levelId}`);
+            video = null;
+            // Если видео не удалось воспроизвести, показываем постер
+            if (levelConfig.preview) {
+              preview = this.scene.add.image(previewOffsetX, previewOffsetY, levelConfig.preview.key)
+                .setOrigin(0.5)
+                .setScale(levelConfig.preview.scale)
+                .setTint(0xbbbbbb);
+              const mask = maskImage.createBitmapMask();
+              preview.setMask(mask);
+              container.add(preview);
+            }
+          });
+        } catch (error) {
+          console.warn(`Ошибка создания видео для уровня ${levelId}:`, error);
+          video = null;
+        }
+      } else if (levelConfig.preview) {
         preview = this.scene.add.image(previewOffsetX, previewOffsetY, levelConfig.preview.key)
           .setOrigin(0.5)
           .setScale(levelConfig.preview.scale)
@@ -143,14 +185,50 @@ export class SelectLevelView implements MenuSceneTypes.View {
       const plashkaPodstavka = this.scene.add.image(0, 180, plashkaPodstavkaTexture.key).setOrigin(0.5).setScale(plashkaPodstavkaTexture.scale);
       const tasksContainer = this.scene.add.container(0, 80);
 
+
+
       container.add(plashkaPodstavka);
       container.add(plashka);
       container.add(maskImage);
       container.add(tasksContainer);
 
+      if (video) {
+        container.add(video);
+      }
+
       if (preview) {
         container.add(preview);
       }
+
+      if (!levelConfig.disabled) {
+        const wavesCount = this.scene.add.text(0, -50, `${WavesCountText.translate}: ${levelConfig.wavesCount}`, {
+          fontSize: '14px',
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 2,
+          fontFamily: FONT_FAMILY.REGULAR,
+        }).setOrigin(0.5);
+        container.add(wavesCount);
+
+        const bestScore = this.scene.add.text(0, -10, `${BestScoreText.translate}: ${stats.bestScore}`, {
+          fontSize: '14px',
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 2,
+          fontFamily: FONT_FAMILY.REGULAR,
+        }).setOrigin(0.5);
+        container.add(bestScore);
+
+        const gameplaysCount = this.scene.add.text(0, 10, `${GameplaysCountText.translate}: ${stats.gameplays}`, {
+          fontSize: '14px',
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 2,
+          fontFamily: FONT_FAMILY.REGULAR,
+        }).setOrigin(0.5);
+        container.add(gameplaysCount);
+      }
+
       container.add(text);
       plashka.setInteractive();
       plashka.on('pointerdown', () => {

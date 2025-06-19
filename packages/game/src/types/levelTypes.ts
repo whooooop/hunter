@@ -14,6 +14,12 @@ export namespace Level {
       url: string;
       scale: number;
     }
+    video?: {
+      key: string;
+      url: string;
+      scale: number;
+    }
+    wavesCount: number;
     waves: () => Wave.Config[];
     quests: Quest.Config[];
     weapons: Weapon[];

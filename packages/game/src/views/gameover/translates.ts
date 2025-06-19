@@ -1,5 +1,15 @@
 import { I18n } from "../../utils/i18n";
 
+export const bestScoreText = I18n({
+  en: 'Best Score:',
+  ru: 'Лучший результат:',
+});
+
+export const scoreText = I18n({
+  en: 'Score:',
+  ru: 'Результат:',
+});
+
 export const gameOverText = I18n({
   en: 'Game Over',
   ru: 'Ты проиграл',
@@ -28,7 +38,7 @@ export const exitText1 = I18n({
 export const exitText2 = I18n({
   en: 'I’m useless',
   ru: 'Я не способный',
-});   
+});
 
 export const exitText3 = I18n({
   en: 'I’m a punk',

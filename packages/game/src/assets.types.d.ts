@@ -26,7 +26,12 @@ declare module '*.svg' {
 declare module '*.wav' {
   const wavValue: string;
   export default wavValue;
-} 
+}
+
+declare module '*.mp4' {
+  const mp4Value: string;
+  export default mp4Value;
+}
 
 declare module '*.mp3' {
   const mp3Value: string;

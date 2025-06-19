@@ -5,6 +5,7 @@ import { quests } from './quests';
 import { createWavesConfig } from './waves';
 import { forestWeapons } from './weapons';
 
+import forestVideo from './assets/preview.mp4';
 import forestPreview from './assets/preview.png';
 
 export const ForestLevelConfig: Level.Config = {
@@ -18,7 +19,13 @@ export const ForestLevelConfig: Level.Config = {
     url: forestPreview,
     scale: 0.5,
   },
+  video: {
+    key: 'forest_location_video',
+    url: forestVideo,
+    scale: 0.35,
+  },
   quests,
+  wavesCount: 5,
   waves: createWavesConfig,
   weapons: forestWeapons,
 }

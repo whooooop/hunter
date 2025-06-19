@@ -1,6 +1,6 @@
+import { Level } from '../../types/levelTypes';
 import { Location } from '../../types/Location';
 import { I18n } from '../../utils/i18n';
-import { Level } from '../../types/levelTypes';
 
 export const DesertLevelConfig: Level.Config = {
   location: Location.Id.DESERT,
@@ -12,6 +12,7 @@ export const DesertLevelConfig: Level.Config = {
   waves: () => {
     return [];
   },
+  wavesCount: 1,
   quests: [],
   weapons: [],
 }

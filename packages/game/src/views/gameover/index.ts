@@ -4,10 +4,12 @@ import { GameOverTexture3, TextTexture } from "./textures";
 
 import { ClickSound, preloadClickSound } from "../../audio/click";
 import { emitEvent } from "../../GameEvents";
+import { LevelId } from "../../levels";
 import { AudioService } from "../../services/AudioService";
+import { StatsService } from "../../services/StatsService";
 import { Game } from "../../types";
 import { BackgroundTexture, GameOverTexture1, GameOverTexture2, TitleTexture } from "./textures";
-import { exitText1, exitText2, exitText3, gameOverText, killsText, timeText, tryAgainText1, tryAgainText2, tryAgainText3 } from "./translates";
+import { bestScoreText, exitText1, exitText2, exitText3, gameOverText, killsText, scoreText, timeText, tryAgainText1, tryAgainText2, tryAgainText3 } from "./translates";
 
 const variants = [
   {
@@ -52,13 +54,13 @@ export class GameOverView {
     // this.open({ attempt: 1, time: 0, kills: 0 });
   }
 
-  open({ attempt = 1, time = 0, kills = 0, showReplay = false }: { attempt: number, time: number, kills: number, showReplay: boolean }) {
+  open({ attempt = 1, time = 0, kills = 0, showReplay = false, score = 0, levelId }: { attempt: number, time: number, kills: number, showReplay: boolean, score: number, levelId: LevelId }) {
     if (this.isOpen) return;
     this.isOpen = true;
     this.container.setScale(0).setAlpha(0);
     this.overlay.setAlpha(0);
 
-    this.render(attempt, time, kills, showReplay);
+    this.render(attempt, time, kills, score, showReplay, levelId);
 
     this.scene.tweens.add({
       ease: Phaser.Math.Easing.Bounce.Out,
@@ -76,9 +78,9 @@ export class GameOverView {
     });
   }
 
-
-  render(attempt: number, time: number, kills: number, showReplay: boolean) {
+  render(attempt: number, time: number, kills: number, score: number, showReplay: boolean, levelId: LevelId) {
     const variant = variants[Math.max(attempt - 1, 0) % variants.length];
+    const stats = StatsService.getLevelStats(levelId);
 
     const background = this.scene.add.image(0, 0, BackgroundTexture.key).setOrigin(0.5).setScale(BackgroundTexture.scale);
     this.container.add(background);
@@ -95,7 +97,7 @@ export class GameOverView {
 
 
     if (showReplay) {
-      const replayContainer = this.scene.add.container(50, 100);
+      const replayContainer = this.scene.add.container(0, 100);
       const replayText = this.scene.add.text(-100, 0, variant.replayText.translate, { fontSize: 20, fontFamily: FONT_FAMILY.REGULAR, color: '#000' }).setOrigin(0, 0.5);
       const replayBackground = this.scene.add.image(0, 0, TextTexture.key).setOrigin(0.5).setScale(TextTexture.scale);
       const replayButton = new UiReplayButton(this.scene, -170, 0);
@@ -120,12 +122,19 @@ export class GameOverView {
     exitContainer.add(exitText);
     this.container.add(exitContainer);
 
+    const fontSize = 22;
+    const fontFamily = FONT_FAMILY.REGULAR;
     const minutes = Math.floor(time / 1000 / 60).toString().padStart(2, '0');
     const seconds = Math.floor(time / 1000 % 60).toString().padStart(2, '0');
-    const timeTextElement = this.scene.add.text(-100, -56, timeText.translate.toUpperCase() + ' ' + minutes + ':' + seconds, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#fff' }).setOrigin(0, 0.5);
-    const killsTextElement = this.scene.add.text(-100, 0, killsText.translate.toUpperCase() + ' ' + kills, { fontSize: 26, fontFamily: FONT_FAMILY.REGULAR, color: '#fff' }).setOrigin(0, 0.5);
+    const x = -114;
+    const timeTextElement = this.scene.add.text(x, -90, timeText.translate.toUpperCase() + ' ' + minutes + ':' + seconds, { fontSize, fontFamily, color: '#fff' }).setOrigin(0, 0.5);
+    const killsTextElement = this.scene.add.text(x, -50, killsText.translate.toUpperCase() + ' ' + kills, { fontSize, fontFamily, color: '#fff' }).setOrigin(0, 0.5);
+    const scoreTextElement = this.scene.add.text(x, -10, scoreText.translate.toUpperCase() + ' ' + score, { fontSize, fontFamily, color: '#fff' }).setOrigin(0, 0.5);
+    const bestScoreTextElement = this.scene.add.text(x, 30, bestScoreText.translate.toUpperCase() + ' ' + stats.bestScore, { fontSize, fontFamily, color: '#fff' }).setOrigin(0, 0.5);
     this.container.add(timeTextElement);
     this.container.add(killsTextElement);
+    this.container.add(scoreTextElement);
+    this.container.add(bestScoreTextElement);
   }
 
   destroy() {

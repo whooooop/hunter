@@ -1,5 +1,6 @@
 const textures: Map<string, { url: string }> = new Map();
 const audio: Map<string, { url: string }> = new Map();
+const videos: Map<string, { url: string }> = new Map();
 
 export function loadAssets(scene: Phaser.Scene, minLoadingTime: number, callback: (value: number) => void): void {
   const allTexturesLoaded = Array.from(textures.keys()).every((key) => scene.textures.exists(key));
@@ -33,6 +34,13 @@ export function preloadImage(scene: Phaser.Scene, { key, url }: { key: string, u
   if (!scene.textures.exists(key)) {
     scene.load.image(key, url);
     textures.set(key, { url });
+  }
+}
+
+export function preloadVideo(scene: Phaser.Scene, { key, url }: { key: string, url: string }): void {
+  if (!videos.has(key)) {
+    scene.load.video(key, url);
+    videos.set(key, { url });
   }
 }
 

@@ -234,7 +234,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
     this.sceneLoaded = true;
-    StatsService.incGameplay();
+    StatsService.incGameplay(this.levelId);
     window.bridge.platform.sendMessage("gameplay_started");
 
     if (this.gameId) {
@@ -450,6 +450,14 @@ export class GameplayScene extends Phaser.Scene {
     this.shop = shop;
   }
 
+  private handleGameEnd(): void {
+    const score = this.scoreController.getTotalScore(this.mainPlayerId);
+    const stats = StatsService.getLevelStats(this.levelId);
+    if (score > stats.bestScore) {
+      StatsService.setBestScore(this.levelId, score);
+    }
+  }
+
   update(time: number, delta: number): void {
     if (this.isMultiplayer && this.pingText) {
       this.pingText.setText(`Ping: ${this.multiplayerController.ping}ms`);
@@ -464,7 +472,6 @@ export class GameplayScene extends Phaser.Scene {
     this.players.forEach(player => {
       player.update(time, delta);
     });
-
 
     // Обновляем игрока
     if (mainPlayer) {
@@ -484,6 +491,7 @@ export class GameplayScene extends Phaser.Scene {
       const position = enemy instanceof EnemyEntity && enemy.getPosition();
       if (position && position.x < 0) {
         if (GAMEOVER && !this.isGameOver) {
+          this.handleGameEnd();
           this.isGameOver = true;
           playGameoverAudio(this);
           window.bridge.platform.sendMessage("gameplay_stopped");
@@ -491,7 +499,9 @@ export class GameplayScene extends Phaser.Scene {
             attempt: this.attempt,
             time: this.playTime,
             kills: this.kills,
-            showReplay: this.isHost
+            showReplay: this.isHost,
+            score: this.scoreController.getTotalScore(this.mainPlayerId),
+            levelId: this.levelId
           });
           if (this.isHost) {
             this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game')!.finished = true;

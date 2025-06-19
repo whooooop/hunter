@@ -244,16 +244,10 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   protected async onDeath({ damage, target }: { damage: number, target: Enemy.Body }): Promise<void> {
-    // Создаем эффект разлетающихся частей через BloodController
     const position = this.motionController.getPosition();
-    // particleCount зависчит от наносимого урона damage.value 
-    // maxParticleCount = 200
-    // minParticleCount = 0
-    // max Damage = 400
-    // min Damage = 100
-
-    const maxParticleCount = 30;
-    const particleCount = Math.max(0, Math.min(maxParticleCount, Math.floor(Math.max(damage - 100, 0) / 100 * maxParticleCount)));
+    const maxParticleCount = this.scene.sys.game.device.os.desktop ? 80 : 30;
+    const minDamage = 90;
+    const particleCount = Math.max(0, Math.min(maxParticleCount, Math.floor(Math.max(damage - minDamage, 0) / minDamage * maxParticleCount)));
 
     emitEvent(this.scene, Blood.Events.DeathFountain.Local, {
       x: position.x,
@@ -304,9 +298,9 @@ export class EnemyEntity implements Damageable.Entity {
   }
 
   protected createBloodSplash({ forceVector, hitPoint }: Damageable.Damage, target: Enemy.Body): void {
-    const multiplier = target === 'head' ? 1.1 : 1;
+    const multiplier = target === 'head' ? 1.2 : 1;
     const forceOrigin = { x: forceVector[0][0], y: forceVector[0][1] };
-    const amount = this.scene.sys.game.device.os.desktop ? Phaser.Math.Between(15, 30) : Phaser.Math.Between(5, 20);
+    const amount = this.scene.sys.game.device.os.desktop ? Phaser.Math.Between(20, 35) : Phaser.Math.Between(15, 25);
     const bloodConfig = createSimpleBloodConfig(amount * multiplier);
     bloodConfig.texture = Blood.Texture.drops;
 

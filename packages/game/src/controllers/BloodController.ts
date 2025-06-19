@@ -68,6 +68,11 @@ export class BloodController {
   private bloodPools: Phaser.GameObjects.Container[] = [];
   private settingsService: SettingsService;
 
+  // Добавляем счетчик активных частиц и лимит
+  private activeParticlesCount: number = 0;
+  private readonly MAX_PARTICLES: number = 400;
+  private readonly PARTICLE_REDUCTION_THRESHOLD: number = 300; // Начинаем снижать при 300 частицах
+
   constructor(
     private readonly scene: Phaser.Scene,
     private readonly bounds: Location.Bounds
@@ -127,14 +132,28 @@ export class BloodController {
     // Объединяем переданные параметры с дефолтными
     const options = { ...defaultBloodOptions, ...config };
 
+    // Проверяем лимит частиц
+    if (this.activeParticlesCount >= this.MAX_PARTICLES) {
+      return; // Не создаем новые частицы если достигли лимита
+    }
+
     // Вычисляем базовый угол на основе originPoint и hitPoint (x, y)
     const baseAngle = Math.atan2(y - originPoint.y, x - originPoint.x);
 
     // Создаем массив для физических брызг
     const physicsParticles: Phaser.Physics.Arcade.Sprite[] = [];
 
+    // Применяем коэффициент снижения к количеству частиц
+    const reductionFactor = this.getParticleReductionFactor();
+    const adjustedAmount = Math.max(1, Math.floor(options.amount! * reductionFactor));
+
     // Создаем новые частицы крови с физикой
-    for (let i = 0; i < options.amount!; i++) {
+    for (let i = 0; i < adjustedAmount; i++) {
+      // Проверяем лимит перед созданием каждой частицы
+      if (this.activeParticlesCount >= this.MAX_PARTICLES) {
+        break;
+      }
+
       // Создаем композитную частицу крови
       const bloodParticle = this.createCompositeBloodParticle(
         x,
@@ -142,8 +161,11 @@ export class BloodController {
         options
       );
 
+      // Увеличиваем счетчик активных частиц
+      this.incrementParticleCount();
+
       // Устанавливаем размер и прозрачность
-      bloodParticle.setScale(Phaser.Math.FloatBetween(options.size!.min, options.size!.max));
+      bloodParticle.setScale(Phaser.Math.FloatBetween(options.size!.min, options.size!.max) * 0.25); // Масштабируем в 4 раза меньше
       bloodParticle.setAlpha(Phaser.Math.FloatBetween(options.alpha!.min, options.alpha!.max));
       bloodParticle.setDepth(options.depth!);
       bloodParticle.setCollideWorldBounds(false);
@@ -216,6 +238,9 @@ export class BloodController {
 
             // Проверяем, не превысили ли мы максимальную дистанцию падения для псевдо-3D
             if (particle.y >= initialY + maxFallDistance) {
+              // Уменьшаем счетчик активных частиц
+              this.decrementParticleCount();
+
               // Добавляем частицу на слой декалей и удаляем её
               this.addToDecalLayer(particle);
             } else {
@@ -364,19 +389,31 @@ export class BloodController {
 
     const settings = { ...defaultConfig, ...config };
 
+    // Применяем коэффициент снижения к количеству частиц
+    const reductionFactor = this.getParticleReductionFactor();
+    const adjustedParticleCount = Math.max(1, Math.floor(settings.particleCount! * reductionFactor));
+
     // Создаем массив спрайтов с реальной гравитацией
     const particles: Phaser.GameObjects.Sprite[] = [];
 
-    for (let i = 0; i < settings.particleCount!; i++) {
+    for (let i = 0; i < adjustedParticleCount; i++) {
+      // Проверяем лимит перед созданием каждой частицы
+      if (this.activeParticlesCount >= this.MAX_PARTICLES) {
+        break;
+      }
+
       // Создаем спрайт частицы НА УРОВНЕ ЗЕМЛИ (центр врага)
       const particle = this.scene.add.sprite(x, y, settings.texture!);
       particle.setDepth(1000 + i);
-      particle.setScale(Phaser.Math.FloatBetween(settings.scale!.min, settings.scale!.max));
+      particle.setScale(Phaser.Math.FloatBetween(settings.scale!.min, settings.scale!.max) * 0.25); // Масштабируем в 4 раза меньше
       particle.setTint(Phaser.Math.RND.pick([0xFF0000, 0x8B0000, 0xA52A2A, 0x654321]));
+
+      // Увеличиваем счетчик активных частиц
+      this.incrementParticleCount();
 
       // ФОНТАН КРОВИ: хорошая ширина + больше высоты
       let angle;
-      if (i < settings.particleCount! * settings.fountainRatio!) {
+      if (i < adjustedParticleCount * settings.fountainRatio!) {
         // 75% частиц летят вверх (более высокий фонтан)
         angle = Phaser.Math.FloatBetween(settings.angles!.fountain.min, settings.angles!.fountain.max) * Math.PI / 180;
       } else {
@@ -445,6 +482,9 @@ export class BloodController {
           // Частица приземлилась
           particle.setData('landed', true);
 
+          // Уменьшаем счетчик активных частиц
+          this.decrementParticleCount();
+
           // Перемещаем на точку приземления
           const landingX = particle.getData('landingX');
           const landingY = particle.getData('landingY');
@@ -490,6 +530,10 @@ export class BloodController {
         if (shouldLand) {
           // Принудительно приземляем
           particle.setData('landed', true);
+
+          // Уменьшаем счетчик активных частиц
+          this.decrementParticleCount();
+
           particle.setPosition(particle.getData('landingX'), landingY);
 
           this.addToDecalLayer(particle);
@@ -581,6 +625,43 @@ export class BloodController {
 
   }
 
+  /**
+   * Получает коэффициент снижения количества частиц на основе текущего количества
+   */
+  private getParticleReductionFactor(): number {
+    if (this.activeParticlesCount < this.PARTICLE_REDUCTION_THRESHOLD) {
+      return 1.0; // Нет снижения
+    }
+
+    // Экспоненциальное снижение от 1.0 до 0.1
+    const excess = this.activeParticlesCount - this.PARTICLE_REDUCTION_THRESHOLD;
+    const maxExcess = this.MAX_PARTICLES - this.PARTICLE_REDUCTION_THRESHOLD;
+    const ratio = Math.min(excess / maxExcess, 1.0);
+
+    // Экспоненциальная функция: 1.0 -> 0.1
+    return Math.max(0.1, Math.exp(-2 * ratio));
+  }
+
+  /**
+   * Увеличивает счетчик активных частиц
+   */
+  private incrementParticleCount(): void {
+    this.activeParticlesCount++;
+  }
+
+  /**
+   * Уменьшает счетчик активных частиц
+   */
+  private decrementParticleCount(): void {
+    this.activeParticlesCount = Math.max(0, this.activeParticlesCount - 1);
+  }
+
+  /**
+   * Получает текущее количество активных частиц
+   */
+  public getActiveParticlesCount(): number {
+    return this.activeParticlesCount;
+  }
 }
 
 /**
@@ -590,22 +671,12 @@ export function createBasicBloodTexture(scene: Phaser.Scene, textureKey: string)
   if (scene.textures.exists(textureKey)) {
     return;
   }
-
-  // Создаем графику для рисования частицы крови
   const graphics = scene.add.graphics();
-
-  // Цвета для крови
   const darkRed = 0x8B0000;
   const brightRed = 0xFF0000;
-
-  // Рисуем базовую каплю крови
   graphics.fillStyle(brightRed, 0.9);
-  graphics.fillCircle(4, 4, 3);
-
-  // Создаем текстуру из графики
-  graphics.generateTexture(textureKey, 8, 8);
-
-  // Удаляем графику после создания текстуры
+  graphics.fillCircle(16, 16, 12); // Было (4,4,3)
+  graphics.generateTexture(textureKey, 32, 32); // Было 8x8
   graphics.destroy();
 }
 
@@ -616,31 +687,17 @@ export function createBloodDropsTexture(scene: Phaser.Scene, textureKey: string)
   if (scene.textures.exists(textureKey)) {
     return;
   }
-
-  // Создаем графику для рисования частицы крови с каплями
   const graphics = scene.add.graphics();
-
-  // Цвета для крови
   const darkRed = 0x8B0000;
   const brightRed = 0xFF0000;
-
-  // Рисуем основную каплю
   graphics.fillStyle(brightRed, 0.9);
-  graphics.fillCircle(8, 8, 4);
-
-  // Рисуем дополнительные маленькие капли
-  graphics.fillCircle(14, 6, 2);
-  graphics.fillCircle(4, 10, 2.5);
-  graphics.fillCircle(12, 12, 1.5);
-
-  // Добавляем темные участки для объема
+  graphics.fillCircle(32, 32, 16); // Было (8,8,4)
+  graphics.fillCircle(56, 24, 8);  // Было (14,6,2)
+  graphics.fillCircle(16, 40, 10); // Было (4,10,2.5)
+  graphics.fillCircle(48, 48, 6);  // Было (12,12,1.5)
   graphics.fillStyle(darkRed, 0.8);
-  graphics.fillCircle(7, 7, 2);
-
-  // Создаем текстуру из графики
-  graphics.generateTexture(textureKey, 20, 20);
-
-  // Удаляем графику после создания текстуры
+  graphics.fillCircle(28, 28, 8);  // Было (7,7,2)
+  graphics.generateTexture(textureKey, 80, 80); // Было 20x20
   graphics.destroy();
 }
 
@@ -651,39 +708,23 @@ export function createBloodSplatterTexture(scene: Phaser.Scene, textureKey: stri
   if (scene.textures.exists(textureKey)) {
     return;
   }
-
-  // Создаем графику для рисования брызг
   const graphics = scene.add.graphics();
-
-  // Цвета для крови
   const darkRed = 0x8B0000;
   const brightRed = 0xFF0000;
-
-  // Рисуем большое центральное пятно
   graphics.fillStyle(brightRed, 0.85);
-  graphics.fillCircle(15, 15, 8);
-
-  // Добавляем брызги в разные стороны
+  graphics.fillCircle(60, 60, 32); // Было (15,15,8)
   graphics.fillStyle(brightRed, 0.7);
-
-  // Брызги в разных направлениях
   for (let i = 0; i < 6; i++) {
     const angle = (Math.PI * 2 / 6) * i;
-    const distance = Phaser.Math.Between(8, 15);
-    const x = 15 + Math.cos(angle) * distance;
-    const y = 15 + Math.sin(angle) * distance;
-    const size = Phaser.Math.FloatBetween(1, 4);
+    const distance = Phaser.Math.Between(32, 60); // Было 8-15
+    const x = 60 + Math.cos(angle) * distance;
+    const y = 60 + Math.sin(angle) * distance;
+    const size = Phaser.Math.FloatBetween(4, 16); // Было 1-4
     graphics.fillCircle(x, y, size);
   }
-
-  // Добавляем темные участки для объема
   graphics.fillStyle(darkRed, 0.8);
-  graphics.fillCircle(13, 13, 4);
-
-  // Создаем текстуру из графики
-  graphics.generateTexture(textureKey, 30, 30);
-
-  // Удаляем графику после создания текстуры
+  graphics.fillCircle(52, 52, 16); // Было (13,13,4)
+  graphics.generateTexture(textureKey, 120, 120); // Было 30x30
   graphics.destroy();
 }
 

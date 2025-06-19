@@ -3,5 +3,9 @@ export namespace Stats {
     export interface State {
       gameplays: number;
     }
+    export interface LevelStats {
+      bestScore: number;
+      gameplays: number;
+    }
   }
 }

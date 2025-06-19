@@ -33,6 +33,13 @@ module.exports = (env) => {
           }
         },
         {
+          test: /\.mp4$/,
+          type: 'asset/resource',
+          generator: {
+            filename: 'assets/videos/[hash][ext]'
+          }
+        },
+        {
           test: /\.(png|jpg|jpeg|gif|svg)$/,
           type: 'asset/resource',
           generator: {
