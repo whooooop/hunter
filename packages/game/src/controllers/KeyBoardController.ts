@@ -89,7 +89,7 @@ export class KeyBoardController {
     this.prevWeaponKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     this.shopKey = this.scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
     this.jumpKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.pauseKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+    this.pauseKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.P);
 
     this.key1 = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
     this.key2 = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
