@@ -30,10 +30,12 @@ const clientConfig = {
     filename: 'client.js',
     path: path.resolve(__dirname, 'dist'),
     library: {
-      name: 'HunterMultiplayer',
-      type: 'umd'
+      type: 'module'
     },
     globalObject: 'this'
+  },
+  experiments: {
+    outputModule: true
   },
   resolve: {
     ...baseConfig.resolve,

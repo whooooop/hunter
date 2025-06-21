@@ -12,7 +12,6 @@ export default defineConfig(({ mode }) => {
       outDir: '../dist',
       emptyOutDir: true,
       rollupOptions: {
-        external: ['@hunter/multiplayer'],
         input: {
           main: resolve(__dirname, 'src/index.html'),
           bridge: resolve(__dirname, 'src/libs/playgama-bridge.js')
@@ -56,7 +55,8 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': resolve(__dirname, 'src')
+        '@': resolve(__dirname, 'src'),
+        '@hunter/multiplayer': resolve(__dirname, '../multiplayer/dist/client.js')
       }
     },
     define: {
