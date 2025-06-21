@@ -65,7 +65,6 @@ export class KeyBoardController {
 
 
   private isJoystickActive: boolean = false;
-  private isJoystickPow: number = 1;
 
   private dashedTimeout: number = 7000;
 
@@ -180,8 +179,8 @@ export class KeyBoardController {
       });
     });
 
-    const joystickBase = this.scene.add.image(0, 0, JoystickBaseTexture.key).setScale(0.7).setAlpha(0.8).setDepth(1000);
-    const joystickThumb = this.scene.add.image(0, 0, JoystickThumbTexture.key).setScale(0.7).setAlpha(0.8).setDepth(1000);
+    const joystickBase = this.scene.add.image(0, 0, JoystickBaseTexture.key).setScale(0.7).setAlpha(0.6).setDepth(1000);
+    const joystickThumb = this.scene.add.image(0, 0, JoystickThumbTexture.key).setScale(0.7).setAlpha(0.6).setDepth(1000);
 
     this.joystick = new VirtualJoystick(this.scene, {
       x: 200,
@@ -354,8 +353,16 @@ export class KeyBoardController {
     const move = { x: 0, y: 0 };
 
     if (this.isJoystickActive) {
-      move.x = Math.sign(this.joystick.forceX) * Math.pow(Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius, this.isJoystickPow);
-      move.y = Math.sign(this.joystick.forceY) * Math.pow(Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius, this.isJoystickPow);
+      const joystickX = Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius;
+      const joystickY = Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius;
+      const minThreshold = 0.28;
+
+      if (joystickX >= minThreshold) {
+        move.x = Math.sign(this.joystick.forceX) * joystickX;
+      }
+      if (joystickY >= minThreshold) {
+        move.y = Math.sign(this.joystick.forceY) * joystickY;
+      }
     } else {
       const UpKeyisDown = this.UpKey.isDown || this.cursors.up.isDown;
       const DownKeyisDown = this.DownKey.isDown || this.cursors.down.isDown;
