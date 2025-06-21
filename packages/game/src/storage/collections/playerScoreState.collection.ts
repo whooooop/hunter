@@ -1,5 +1,5 @@
-import { defineCollection } from "@hunter/multiplayer/dist/client";
-import { PlayerScoreState } from "@hunter/storage-proto/dist/storage";
+import { defineCollection } from "@hunter/multiplayer";
+import { PlayerScoreState } from "@hunter/storage-proto/src/storage";
 
 export const playerScoreStateCollection = defineCollection<PlayerScoreState>('playerScoreState', {
   encode: PlayerScoreState.encode,

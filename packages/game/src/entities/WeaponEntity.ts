@@ -1,6 +1,5 @@
-import { SyncCollectionRecord } from '@hunter/multiplayer/dist/Collection';
-import { StorageSpace } from '@hunter/multiplayer/dist/StorageSpace';
-import { WeaponFireEvent, WeaponReloadEvent } from '@hunter/storage-proto/dist/storage';
+import { StorageSpace, SyncCollectionRecord } from '@hunter/multiplayer';
+import { WeaponFireEvent, WeaponReloadEvent } from '@hunter/storage-proto/src/storage';
 import * as Phaser from 'phaser';
 import { MuzzleFlash } from '../fx/muzzleFlash/muzzleFlashFx';
 import { emitEvent } from "../GameEvents";

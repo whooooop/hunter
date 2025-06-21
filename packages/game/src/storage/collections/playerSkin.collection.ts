@@ -1,5 +1,5 @@
-import { defineCollection } from "@hunter/multiplayer/dist/client";
-import { PlayerSkin } from "@hunter/storage-proto/dist/storage";
+import { defineCollection } from "@hunter/multiplayer";
+import { PlayerSkin } from "@hunter/storage-proto/src/storage";
 
 export const playerSkinCollection = defineCollection<PlayerSkin>('playerSkin', {
   encode: PlayerSkin.encode,

@@ -1,5 +1,5 @@
-import { StorageSpace, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
-import { PlayerJumpEvent, PlayerSkin } from '@hunter/storage-proto/dist/storage';
+import { StorageSpace, SyncCollectionRecord } from '@hunter/multiplayer';
+import { PlayerJumpEvent, PlayerSkin } from '@hunter/storage-proto/src/storage';
 import * as Phaser from 'phaser';
 import { JumpSound, preloadJumpSound } from '../audio/jump';
 import { preloadRunSound, RunSound } from '../audio/run';

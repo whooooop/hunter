@@ -1,5 +1,5 @@
-import { StorageSpace, SyncCollection } from "@hunter/multiplayer/dist/client";
-import { EmbienceEvent, WaveState } from "@hunter/storage-proto/dist/storage";
+import { StorageSpace, SyncCollection } from "@hunter/multiplayer";
+import { EmbienceEvent, WaveState } from "@hunter/storage-proto/src/storage";
 import { emitEvent } from "../GameEvents";
 import { FONT_FAMILY } from "../config";
 import { EnemyCollections, preloadEnemies } from "../enemies";

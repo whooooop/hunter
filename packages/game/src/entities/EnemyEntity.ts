@@ -1,6 +1,6 @@
 import { SpineGameObject, TrackEntry } from "@esotericsoftware/spine-phaser";
-import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
-import { EnemyAnimationEvent, EnemyDeathEvent } from "@hunter/storage-proto/dist/storage";
+import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer";
+import { EnemyAnimationEvent, EnemyDeathEvent } from "@hunter/storage-proto/src/storage";
 import { DEBUG } from "../config";
 import { createSimpleBloodConfig } from "../controllers/BloodController";
 import { DamageableController } from "../controllers/DamageableController";

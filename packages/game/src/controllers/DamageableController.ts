@@ -1,4 +1,4 @@
-import { SyncCollectionRecord } from "@hunter/multiplayer/dist/Collection";
+import { SyncCollectionRecord } from "@hunter/multiplayer";
 import { Damageable } from "../types/damageableTypes";
 import { Enemy } from "../types/enemyTypes";
 

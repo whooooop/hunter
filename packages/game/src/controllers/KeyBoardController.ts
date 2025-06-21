@@ -1,4 +1,4 @@
-import { StorageSpace } from "@hunter/multiplayer/dist/StorageSpace";
+import { StorageSpace } from "@hunter/multiplayer";
 import VirtualJoystick from 'phaser3-rex-plugins/plugins/virtualjoystick.js';
 import { DISPLAY, FONT_FAMILY } from "../config";
 import { emitEvent } from "../GameEvents";
@@ -233,7 +233,7 @@ export class KeyBoardController {
     fireArea.setDepth(depth);
     fireArea.setInteractive();
 
-    let firePointerTimeout: number;
+    let firePointerTimeout: NodeJS.Timeout;
 
     const firePointer = this.createPointer(x + width / 2, y + height / 2, fireText.translate);
     fireArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {

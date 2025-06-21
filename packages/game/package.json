@@ -2,9 +2,11 @@
   "name": "@hunter/game",
   "version": "1.0.0",
   "main": "src/index.ts",
+  "type": "module",
   "scripts": {
-    "dev": "webpack serve --mode=development --env development",
-    "build": "webpack --mode=production --env production"
+    "dev": "vite",
+    "build": "vite build && zip -r dist/build.zip dist/",
+    "preview": "vite preview"
   },
   "repository": {
     "type": "git",
@@ -26,15 +28,10 @@
     "crypto-js": "^4.2.0",
     "phaser": "^3.60.0",
     "phaser3-rex-plugins": "^1.80.15",
-    "ts-loader": "^9.5.1",
-    "typescript": "^5.4.3",
-    "webpack": "^5.91.0",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.0.4"
+    "typescript": "^5.4.3"
   },
   "devDependencies": {
-    "clean-webpack-plugin": "^4.0.0",
-    "html-webpack-plugin": "^5.6.3",
-    "raw-loader": "^4.0.2"
+    "vite": "^5.0.0",
+    "@types/node": "^20.0.0"
   }
 }

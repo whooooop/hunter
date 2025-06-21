@@ -1,5 +1,5 @@
-import { StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
-import { WaveState } from '@hunter/storage-proto/dist/storage';
+import { StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer';
+import { WaveState } from '@hunter/storage-proto/src/storage';
 import * as Phaser from 'phaser';
 import { DISPLAY, FONT_FAMILY } from '../../config';
 import { COLORS } from '../../Constants';

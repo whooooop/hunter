@@ -1,4 +1,4 @@
-import { SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
+import { SyncCollectionRecord } from "@hunter/multiplayer";
 import { DEBUG, OBJECTS_DEPTH_OFFSET } from "../config";
 import { Location } from "../types/Location";
 import { hexToNumber } from "../utils/colors";

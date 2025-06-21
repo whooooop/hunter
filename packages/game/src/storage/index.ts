@@ -1,4 +1,4 @@
-import { defineStorageSpace } from "@hunter/multiplayer/dist/client";
+import { defineStorageSpace } from "@hunter/multiplayer";
 import { connectionStateCollection } from "./collections/connectionState.collection";
 import { enemyStateCollection } from "./collections/enemyState.collection";
 import { embienceEvent, enemyAnimationEvent, enemyDeathEventCollection, fireEventCollection, jumpEventCollection, reloadEventCollection, replayEventCollection } from "./collections/events.collectio";

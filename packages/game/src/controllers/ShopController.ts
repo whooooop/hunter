@@ -1,5 +1,5 @@
-import { StorageSpace, SyncCollection } from "@hunter/multiplayer/dist/client";
-import { PlayerScoreState, WeaponState } from "@hunter/storage-proto/dist/storage";
+import { StorageSpace, SyncCollection } from "@hunter/multiplayer";
+import { PlayerScoreState, WeaponState } from "@hunter/storage-proto/src/storage";
 import { PlayerEntity } from "../entities/PlayerEntity";
 import { ShopEntity } from "../entities/ShopEntity";
 import { emitEvent, offEvent, onEvent } from "../GameEvents";

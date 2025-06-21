@@ -9,6 +9,7 @@ export type { ClientId, NamespaceId } from './types';
 
 // Экспорт классов без привязки к среде
 export { BaseNamespace } from './BaseNamespace';
+export { ClientMultiplayer } from './ClientMultiplayer';
 export { defineCollection, SyncCollection } from './Collection';
 export { defineStorageSpace, StorageSpace } from './StorageSpace';
 

@@ -1,6 +1,6 @@
-import { SyncCollection } from "@hunter/multiplayer/dist/Collection";
-import { StorageSpace } from "@hunter/multiplayer/dist/StorageSpace";
-import { PlayerScoreState } from "@hunter/storage-proto/dist/storage";
+import { SyncCollection } from "@hunter/multiplayer";
+import { StorageSpace } from "@hunter/multiplayer";
+import { PlayerScoreState } from "@hunter/storage-proto/src/storage";
 import { emitEvent, offEvent, onEvent } from "../GameEvents";
 import { playerScoreStateCollection } from "../storage/collections/playerScoreState.collection";
 import { DecreaseScoreEventPayload, Game, IncreaseScoreEventPayload, ScoreEvents } from '../types';

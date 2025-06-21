@@ -1,5 +1,5 @@
-import { defineCollection } from "@hunter/multiplayer/dist/client";
-import { WeaponState } from "@hunter/storage-proto/dist/storage";
+import { defineCollection } from "@hunter/multiplayer";
+import { WeaponState } from "@hunter/storage-proto/src/storage";
 
 export const weaponStateCollection = defineCollection<WeaponState>('weaponState', {
   encode: WeaponState.encode,

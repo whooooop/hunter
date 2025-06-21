@@ -1,5 +1,5 @@
-import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer/dist/client';
-import { ConnectionState, EmbienceEvent, EnemyState, GameState, PlayerSkin, ReplayEvent } from '@hunter/storage-proto/dist/storage';
+import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer';
+import { ConnectionState, EmbienceEvent, EnemyState, GameState, PlayerSkin, ReplayEvent } from '@hunter/storage-proto/src/storage';
 import * as Phaser from 'phaser';
 import { createGame } from '../api/game';
 import { preloadBossSound } from '../audio/boss';

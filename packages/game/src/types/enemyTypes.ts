@@ -1,4 +1,4 @@
-import { EnemyState } from "@hunter/storage-proto/dist/storage";
+import { EnemyState } from "@hunter/storage-proto/src/storage";
 import { SpriteConfig } from "../utils/sprite";
 import { WeaponType } from "../weapons/WeaponTypes";
 import { Audio } from "./audioTypes";

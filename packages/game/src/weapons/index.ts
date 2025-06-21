@@ -2,7 +2,7 @@ import { WeaponEntity } from "../entities/WeaponEntity";
 import { Weapon } from "../types/weaponTypes";
 import { WeaponType } from "./WeaponTypes";
 
-import { StorageSpace } from "@hunter/multiplayer/dist/StorageSpace";
+import { StorageSpace } from "@hunter/multiplayer";
 import { preloadMissSound } from "../audio/miss";
 import { createShellCasingTexture } from "../entities/ShellCasingEntity";
 import { AudioService } from "../services/AudioService";

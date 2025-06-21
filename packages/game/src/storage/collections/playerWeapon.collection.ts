@@ -1,5 +1,5 @@
-import { defineCollection } from "@hunter/multiplayer/dist/client";
-import { PlayerWeapon } from "@hunter/storage-proto/dist/storage";
+import { defineCollection } from "@hunter/multiplayer";
+import { PlayerWeapon } from "@hunter/storage-proto/src/storage";
 
 export const playerWeaponCollection = defineCollection<PlayerWeapon>('playerWeapon', {
   encode: PlayerWeapon.encode,

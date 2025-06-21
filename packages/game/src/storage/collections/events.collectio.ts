@@ -1,5 +1,5 @@
-import { defineCollection } from "@hunter/multiplayer/dist/client";
-import { EmbienceEvent, EnemyAnimationEvent, EnemyDeathEvent, PlayerJumpEvent, ReplayEvent, WeaponFireEvent, WeaponReloadEvent } from "@hunter/storage-proto/dist/storage";
+import { defineCollection } from "@hunter/multiplayer";
+import { EmbienceEvent, EnemyAnimationEvent, EnemyDeathEvent, PlayerJumpEvent, ReplayEvent, WeaponFireEvent, WeaponReloadEvent } from "@hunter/storage-proto/src/storage";
 
 export const replayEventCollection = defineCollection<ReplayEvent>('replayEvent', {
   encode: ReplayEvent.encode,

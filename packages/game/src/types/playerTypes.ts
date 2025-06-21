@@ -1,4 +1,4 @@
-import { PlayerState } from "@hunter/storage-proto/dist/storage";
+import { PlayerState } from "@hunter/storage-proto/src/storage";
 // import { EventPlayerJoined } from "../proto/generated/game";
 // import { EventPlayerPosition } from "../proto/generated/game";
 

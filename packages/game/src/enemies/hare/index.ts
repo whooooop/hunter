@@ -1,4 +1,4 @@
-import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
+import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer";
 import { AntiAimBehavior } from "../../behaviors/AntiAimBehavior";
 import { EnemyEntity } from "../../entities/EnemyEntity";
 import { Enemy } from "../../types";

@@ -1,5 +1,5 @@
-import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer/dist/client";
-import { EmbienceEvent } from "@hunter/storage-proto/dist/storage";
+import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer";
+import { EmbienceEvent } from "@hunter/storage-proto/src/storage";
 import { EnemyEntity } from "../../entities/EnemyEntity";
 import { embienceEvent } from "../../storage/collections/events.collectio";
 import { Enemy } from "../../types/enemyTypes";

@@ -1,5 +1,5 @@
-import { StorageSpace } from '@hunter/multiplayer/dist/client';
-import { EmbienceEvent } from '@hunter/storage-proto/dist/storage';
+import { StorageSpace } from '@hunter/multiplayer';
+import { EmbienceEvent } from '@hunter/storage-proto/src/storage';
 import * as Phaser from 'phaser';
 import { playDamageSound, preloadDamageSound } from '../audio/damage';
 import { KillDoubleSound, KillMonsterSound, KillTripleSound, KillUltraSound, preloadKillSound } from '../audio/kill';

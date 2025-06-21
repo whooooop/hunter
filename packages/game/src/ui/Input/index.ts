@@ -76,7 +76,6 @@ export class UiInput extends Phaser.GameObjects.Container {
         .setScale(copyTexture.scale)
         .setInteractive();
       this.copy.on('pointerdown', () => {
-        console.log('copy');
         copyToClipboard(this.text.text);
         this.options.onCopy(this.text.text);
         this.copy!.setTexture(copySuccessTexture.key);

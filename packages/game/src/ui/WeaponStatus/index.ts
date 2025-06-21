@@ -1,6 +1,6 @@
-import { SyncCollectionRecord } from '@hunter/multiplayer/dist/Collection';
-import { StorageSpace } from '@hunter/multiplayer/dist/StorageSpace';
-import { PlayerScoreState, PlayerWeapon, WeaponState } from '@hunter/storage-proto/dist/storage';
+import { SyncCollectionRecord } from '@hunter/multiplayer';
+import { StorageSpace } from '@hunter/multiplayer';
+import { PlayerScoreState, PlayerWeapon, WeaponState } from '@hunter/storage-proto/src/storage';
 import * as Phaser from 'phaser';
 import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin';
 import { DISPLAY, FONT_FAMILY } from '../../config';
