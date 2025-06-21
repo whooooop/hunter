@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: '../dist',
       emptyOutDir: true,
+      assetsInlineLimit: 0,
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'src/index.html'),
