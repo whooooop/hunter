@@ -8,6 +8,16 @@ export default defineConfig(({ mode }) => {
   return {
     root: 'src',
     publicDir: '../public',
+    plugins: [
+      {
+        name: 'audio-assets',
+        load(id) {
+          if (id.endsWith('.mp3') || id.endsWith('.wav') || id.endsWith('.ogg')) {
+            return `export default new URL('${id}', import.meta.url).href`;
+          }
+        }
+      }
+    ],
     build: {
       outDir: '../dist',
       emptyOutDir: true,
@@ -66,7 +76,7 @@ export default defineConfig(({ mode }) => {
       port: 8080,
       host: true
     },
-    assetsInclude: ['**/*.vert', '**/*.frag', '**/*.geom', '**/*.atlas'],
+    assetsInclude: ['**/*.vert', '**/*.frag', '**/*.geom', '**/*.atlas', '**/*.mp3', '**/*.wav', '**/*.ogg'],
     optimizeDeps: {
       include: ['@hunter/multiplayer']
     }
