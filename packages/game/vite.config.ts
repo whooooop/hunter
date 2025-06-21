@@ -35,31 +35,31 @@ export default defineConfig(({ mode }) => {
             const ext = info[info.length - 1];
 
             if (/\.(mp3)$/.test(assetInfo.name || '')) {
-              return 'assets/sounds/[name].[hash][extname]';
+              return 'assets/sounds/[hash][extname]';
             }
             if (/\.(mp4)$/.test(assetInfo.name || '')) {
-              return 'assets/videos/[name].[hash][extname]';
+              return 'assets/videos/[hash][extname]';
             }
             if (/\.(png|jpe?g|gif|svg)$/.test(assetInfo.name || '')) {
-              return 'assets/images/[name].[hash][extname]';
+              return 'assets/images/[hash][extname]';
             }
             if (/\.(ttf|woff|woff2)$/.test(assetInfo.name || '')) {
-              return 'assets/fonts/[name].[hash][extname]';
+              return 'assets/fonts/[hash][extname]';
             }
             if (/\.atlas\.png$/.test(assetInfo.name || '')) {
-              return 'assets/atlas/[name][extname]';
+              return 'assets/atlas/[hash][extname]';
             }
             if (/\.atlas$/.test(assetInfo.name || '')) {
-              return 'assets/atlas/[name].[hash][extname]';
+              return 'assets/atlas/[hash][extname]';
             }
             if (/\.json$/.test(assetInfo.name || '')) {
-              return 'assets/json/[name].[hash][extname]';
+              return 'assets/json/[hash][extname]';
             }
             if (/playgama-bridge\.js$/.test(assetInfo.name || '')) {
               return '[name][extname]';
             }
 
-            return 'assets/[name].[hash][extname]';
+            return 'assets/[hash].[extname]';
           }
         }
       }
