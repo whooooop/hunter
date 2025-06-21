@@ -355,7 +355,7 @@ export class KeyBoardController {
     if (this.isJoystickActive) {
       const joystickX = Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius;
       const joystickY = Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius;
-      const minThreshold = 0.28;
+      const minThreshold = 0.45;
 
       if (joystickX >= minThreshold) {
         move.x = Math.sign(this.joystick.forceX) * joystickX;
