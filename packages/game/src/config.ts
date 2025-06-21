@@ -28,4 +28,4 @@ export const DEBUG = {
 export const GAMEOVER = true;
 export const START_SCENE_GAMEPLAY = false;
 
-export const VERSION = '1.5.3 Beta'; 
+export const VERSION = '1.5.4 Beta'; 

@@ -10,7 +10,7 @@
     "sourceMap": true,
     "outDir": "./dist",
     "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": false,
     "isolatedModules": true,
     "noEmit": true
   },

@@ -1,8 +1,8 @@
 import { Enemy } from '../../types/enemyTypes';
-import squireelWalkTextureUrl from './assets/squireel.atlas.png';
-import jsonUrl from './assets/squireel.json';
-import atlasUrl from './assets/squireel.atlas';
 import { WeaponType } from '../../weapons/WeaponTypes';
+import atlasUrl from './assets/squireel.atlas';
+import squireelWalkTextureUrl from './assets/squireel.atlas.png';
+import jsonUrl from './assets/squireel.url.json';
 
 export const SquireelConfig: Enemy.Config = {
   type: Enemy.Type.SQUIREEL,

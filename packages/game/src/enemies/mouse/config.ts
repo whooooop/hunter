@@ -2,8 +2,8 @@ import { Audio } from '../../types/audioTypes';
 import { Enemy } from '../../types/enemyTypes';
 import atlasUrl from './assets/mouse.atlas';
 import mouseWalkTextureUrl from './assets/mouse.atlas.png';
-import jsonUrl from './assets/mouse.json';
 import mouseSpawnAudioUrl from './assets/mouse.mp3';
+import jsonUrl from './assets/mouse.url.json';
 
 export const MouseConfig: Enemy.Config = {
   type: Enemy.Type.MOUSE,

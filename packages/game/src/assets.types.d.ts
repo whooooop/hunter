@@ -23,11 +23,6 @@ declare module '*.svg' {
   export default svgValue;
 }
 
-declare module '*.wav' {
-  const wavValue: string;
-  export default wavValue;
-}
-
 declare module '*.mp4' {
   const mp4Value: string;
   export default mp4Value;
@@ -38,7 +33,12 @@ declare module '*.mp3' {
   export default mp3Value;
 }
 
-declare module '*.json' {
+declare module '*.url.json' {
+  const jsonValue: string;
+  export default jsonValue;
+}
+
+declare module '**/*.url.json' {
   const jsonValue: string;
   export default jsonValue;
 }

@@ -10,9 +10,36 @@ export default defineConfig(({ mode }) => {
     publicDir: '../public',
     plugins: [
       {
-        name: 'audio-assets',
+        name: 'disable-json-for-url-json',
+        enforce: 'pre',
+        configResolved(config) {
+          const jsonPluginIndex = config.plugins.findIndex(
+            p => p.name === 'vite:json'
+          );
+          if (jsonPluginIndex !== -1) {
+            const origTransform = config.plugins[jsonPluginIndex].transform;
+            config.plugins[jsonPluginIndex].transform = function (code, id, ...args) {
+              if (id.endsWith('.url.json')) return null;
+              if (!origTransform) return null;
+              if (typeof origTransform === 'function') {
+                return origTransform.call(this, code, id, ...args);
+              }
+              if (typeof origTransform === 'object' && typeof origTransform.handler === 'function') {
+                return origTransform.handler.call(this, code, id, ...args);
+              }
+              return null;
+            };
+          }
+        }
+      },
+      {
+        name: 'assets-url-json',
+        enforce: 'pre',
         load(id) {
-          if (id.endsWith('.mp3') || id.endsWith('.wav') || id.endsWith('.ogg')) {
+          if (id.endsWith('.url.json')) {
+            return `export default new URL('${id}', import.meta.url).href`;
+          }
+          if (id.endsWith('.mp3')) {
             return `export default new URL('${id}', import.meta.url).href`;
           }
         }
@@ -47,12 +74,12 @@ export default defineConfig(({ mode }) => {
               return 'assets/fonts/[hash][extname]';
             }
             if (/\.atlas\.png$/.test(assetInfo.name || '')) {
-              return 'assets/atlas/[hash][extname]';
+              return 'assets/atlas/[name][extname]';
             }
             if (/\.atlas$/.test(assetInfo.name || '')) {
               return 'assets/atlas/[hash][extname]';
             }
-            if (/\.json$/.test(assetInfo.name || '')) {
+            if (/\.url\.json$/.test(assetInfo.name || '')) {
               return 'assets/json/[hash][extname]';
             }
             if (/playgama-bridge\.js$/.test(assetInfo.name || '')) {
@@ -77,7 +104,7 @@ export default defineConfig(({ mode }) => {
       port: 8080,
       host: true
     },
-    assetsInclude: ['**/*.vert', '**/*.frag', '**/*.geom', '**/*.atlas', '**/*.mp3', '**/*.wav', '**/*.ogg'],
+    assetsInclude: ['**/*.vert', '**/*.frag', '**/*.geom', '**/*.atlas', '**/*.mp3', '**/*.url.json'],
     optimizeDeps: {
       include: ['@hunter/multiplayer']
     }

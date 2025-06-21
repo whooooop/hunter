@@ -2,8 +2,8 @@ import { Enemy } from '../../types/enemyTypes';
 import { WeaponType } from '../../weapons/WeaponTypes';
 
 import atlasUrl from './assets/hare.atlas';
-import jsonUrl from './assets/hare.json';
 import textureUrl from './assets/hare.atlas.png';
+import jsonUrl from './assets/hare.url.json';
 
 export const HareConfig: Enemy.Config = {
   type: Enemy.Type.HARE,
@@ -24,10 +24,12 @@ export const HareConfig: Enemy.Config = {
     head: 2,
   },
   killCombo: [
-    { rules: [
-      { target: 'head', weapon: WeaponType.GLOCK },
-      { target: 'head', weapon: WeaponType.REVOLVER },
-    ], value: 5 },
+    {
+      rules: [
+        { target: 'head', weapon: WeaponType.GLOCK },
+        { target: 'head', weapon: WeaponType.REVOLVER },
+      ], value: 5
+    },
   ],
   spine: {
     key: Enemy.Type.HARE,

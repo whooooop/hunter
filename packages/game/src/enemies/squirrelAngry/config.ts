@@ -1,7 +1,7 @@
 import { Enemy } from '../../types/enemyTypes';
 import atlasUrl from './assets/squirrelAngry.atlas';
 import squirrelAngryAtlasUrl from './assets/squirrelAngry.atlas.png';
-import jsonUrl from './assets/squirrelAngry.json';
+import jsonUrl from './assets/squirrelAngry.url.json';
 
 export const SquirrelAngryConfig: Enemy.Config = {
   type: Enemy.Type.SQUIRREL_ANGRY,

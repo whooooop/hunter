@@ -1,7 +1,7 @@
 import { Enemy } from '../../types/enemyTypes';
 import atlasUrl from './assets/deer.atlas';
 import textureUrl from './assets/deer.atlas.png';
-import jsonUrl from './assets/deer.json';
+import jsonUrl from './assets/deer.url.json';
 
 export const DeerConfig: Enemy.Config = {
   type: Enemy.Type.DEER,

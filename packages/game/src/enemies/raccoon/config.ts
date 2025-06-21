@@ -1,7 +1,7 @@
 import { Enemy } from '../../types/enemyTypes';
 import atlasUrl from './assets/raccoon.atlas';
 import textureUrl from './assets/raccoon.atlas.png';
-import jsonUrl from './assets/raccoon.json';
+import jsonUrl from './assets/raccoon.url.json';
 
 export const RaccoonConfig: Enemy.Config = {
   type: Enemy.Type.RACCOON,

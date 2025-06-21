@@ -1,7 +1,7 @@
 import { Enemy } from '../../types/enemyTypes';
 import atlasUrl from './assets/hedgehog.atlas';
 import textureUrl from './assets/hedgehog.atlas.png';
-import jsonUrl from './assets/hedgehog.json';
+import jsonUrl from './assets/hedgehog.url.json';
 
 export const HedgehogConfig: Enemy.Config = {
   type: Enemy.Type.HEDGEHOG,
