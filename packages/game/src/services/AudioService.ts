@@ -67,6 +67,7 @@ export class AudioService {
   }
 
   static preloadAsset(scene: Phaser.Scene, asset: Audio.Asset): void {
+    console.log('preloadAsset', asset);
     if (AudioService.assets.has(asset.key)) {
       return;
     }
