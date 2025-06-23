@@ -67,14 +67,14 @@ export default defineConfig(({ mode }) => {
             if (/\.(mp4)$/.test(assetInfo.name || '')) {
               return 'assets/videos/[hash][extname]';
             }
+            if (/\.atlas\.png$/.test(assetInfo.name || '')) {
+              return 'assets/atlas/[name][extname]';
+            }
             if (/\.(png|jpe?g|gif|svg)$/.test(assetInfo.name || '')) {
               return 'assets/images/[hash][extname]';
             }
             if (/\.(ttf|woff|woff2)$/.test(assetInfo.name || '')) {
               return 'assets/fonts/[hash][extname]';
-            }
-            if (/\.atlas\.png$/.test(assetInfo.name || '')) {
-              return 'assets/atlas/[name][extname]';
             }
             if (/\.atlas$/.test(assetInfo.name || '')) {
               return 'assets/atlas/[hash][extname]';
