@@ -109,12 +109,16 @@ export class UiInput extends Phaser.GameObjects.Container {
   }
 
   public copyText(): void {
-    copyToClipboard(this.text.text);
-    this.options.onCopy(this.text.text);
-    this.copy!.setTexture(copySuccessTexture.key);
-    this.scene.time.delayedCall(1000, () => {
-      this.copy!.setTexture(copyTexture.key);
-    });
+    const success = copyToClipboard(this.text.text);
+    if (success) {
+      this.options.onCopy(this.text.text);
+      this.copy!.setTexture(copySuccessTexture.key);
+      this.scene.time.delayedCall(1000, () => {
+        this.copy!.setTexture(copyTexture.key);
+      });
+    } else {
+      console.warn('Failed to copy text to clipboard');
+    }
   }
 
   public getValue(): string {
