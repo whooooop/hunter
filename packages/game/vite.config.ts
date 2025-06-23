@@ -104,7 +104,7 @@ export default defineConfig(({ mode }) => {
       port: 8080,
       host: true
     },
-    assetsInclude: ['**/*.vert', '**/*.frag', '**/*.geom', '**/*.atlas', '**/*.mp3', '**/*.url.json'],
+    assetsInclude: ['**/*.vert', '**/*.frag', '**/*.geom', '**/*.atlas', '**/*.atlas.png', '**/*.mp3', '**/*.url.json'],
     optimizeDeps: {
       include: ['@hunter/multiplayer']
     }

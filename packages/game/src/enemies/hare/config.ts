@@ -5,6 +5,8 @@ import atlasUrl from './assets/hare.atlas';
 import textureUrl from './assets/hare.atlas.png';
 import jsonUrl from './assets/hare.url.json';
 
+console.log(atlasUrl, textureUrl, jsonUrl);
+
 export const HareConfig: Enemy.Config = {
   type: Enemy.Type.HARE,
   health: 47,
