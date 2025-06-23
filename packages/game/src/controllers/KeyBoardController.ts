@@ -358,10 +358,10 @@ export class KeyBoardController {
       const minThreshold = 0.15;
 
       if (joystickX >= minThreshold) {
-        move.x = Math.sign(this.joystick.forceX) * joystickX;
+        move.x = Math.sign(this.joystick.forceX);
       }
       if (joystickY >= minThreshold) {
-        move.y = Math.sign(this.joystick.forceY) * joystickY;
+        move.y = Math.sign(this.joystick.forceY);
       }
     } else {
       const UpKeyisDown = this.UpKey.isDown || this.cursors.up.isDown;

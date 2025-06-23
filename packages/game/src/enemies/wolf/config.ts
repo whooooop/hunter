@@ -4,8 +4,6 @@ import atlasUrl from './assets/wolf.atlas';
 import wolfAtlasUrl from './assets/wolf.atlas.png';
 import jsonUrl from './assets/wolf.url.json';
 
-console.log('jsonUrl', jsonUrl);
-
 export const WolfConfig: Enemy.Config = {
   type: Enemy.Type.WOLF,
   health: 300,

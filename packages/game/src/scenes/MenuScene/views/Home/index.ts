@@ -3,7 +3,7 @@ import { ClickSound, preloadClickSound } from "../../../../audio/click";
 import { DISPLAY, FONT_FAMILY } from "../../../../config";
 import { preloadImage } from "../../../../preload";
 import { AudioService } from "../../../../services/AudioService";
-import { LogoTexture, preloadLogoTextures } from "../../../../textures/logo";
+import { getLogoTexture, preloadLogoTextures } from "../../../../textures/logo";
 import { MenuSceneTypes } from "../../MenuSceneTypes";
 import { multiplayerButtonTexture, playButtonTexture, settingsButtonTexture, shopButtonTexture } from "./textures";
 import { MultiplayerText, PlayText, SettingsText, ShopText } from "./translates";
@@ -75,8 +75,8 @@ export class HomeView implements MenuSceneTypes.View {
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     this.container = this.scene.add.container(0, 0);
-
-    const logo = this.scene.add.image(DISPLAY.WIDTH / 2, 120, LogoTexture.key).setScale(LogoTexture.scale);
+    const logoTexture = getLogoTexture();
+    const logo = this.scene.add.image(DISPLAY.WIDTH / 2, 120, logoTexture.key).setScale(logoTexture.scale);
     this.container.add(logo);
 
     this.createPlayButton();

@@ -5,7 +5,7 @@ import RexUI from 'phaser3-rex-plugins/templates/ui/ui-plugin.js';
 
 import { introFontBold, introFontRegular } from './assets/fonts/intro';
 import { DEBUG, DISPLAY } from './config';
-import playgamaBridgeConfigUrl from './playgama-bridge-config.json';
+import playgamaBridgeConfigUrl from './playgama-bridge-config.url.json';
 import { SceneKeys } from './scenes';
 import { BootScene } from './scenes/BootScene';
 import { GameplayScene } from './scenes/GameplayScene';
