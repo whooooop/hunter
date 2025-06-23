@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
   return {
     root: 'src',
     publicDir: '../public',
+    base: '',
     plugins: [
       {
         name: 'disable-json-for-url-json',
@@ -52,7 +53,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'src/index.html'),
-          bridge: resolve(__dirname, 'src/libs/playgama-bridge.js')
+          // bridge: resolve(__dirname, 'src/libs/playgama-bridge.js')
         },
         output: {
           entryFileNames: '[name].[hash].js',
@@ -82,14 +83,12 @@ export default defineConfig(({ mode }) => {
             if (/\.url\.json$/.test(assetInfo.name || '')) {
               return 'assets/json/[hash][extname]';
             }
-            if (/playgama-bridge\.js$/.test(assetInfo.name || '')) {
-              return '[name][extname]';
-            }
-
             return 'assets/[hash].[extname]';
           }
         }
-      }
+      },
+      modulePreload: false,
+      cssCodeSplit: false
     },
     resolve: {
       alias: {
