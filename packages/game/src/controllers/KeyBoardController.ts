@@ -26,6 +26,8 @@ const changeWeaponText = I18n({
   ru: 'Проведите пальцем, влево или вправо, для смены оружия'
 });
 
+const minThreshold = 0.25;
+
 export class KeyBoardController {
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private UpKey: Phaser.Input.Keyboard.Key;
@@ -355,7 +357,6 @@ export class KeyBoardController {
     if (this.isJoystickActive) {
       const joystickX = Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius;
       const joystickY = Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius;
-      const minThreshold = 0.15;
 
       if (joystickX >= minThreshold) {
         move.x = Math.sign(this.joystick.forceX);
