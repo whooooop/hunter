@@ -1,7 +1,7 @@
 import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer";
 import { EmbienceEvent } from "@hunter/storage-proto/src/storage";
 import { EnemyEntity } from "../../entities/EnemyEntity";
-import { embienceEvent } from "../../storage/collections/events.collectio";
+import { embienceEvent } from "../../storage/collections/events.collection";
 import { Enemy } from "../../types/enemyTypes";
 import { generateId } from "../../utils/stringGenerator";
 import { MouseConfig } from "./config";

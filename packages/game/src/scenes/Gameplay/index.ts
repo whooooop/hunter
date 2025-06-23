@@ -1,45 +1,49 @@
 import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer';
-import { ConnectionState, EmbienceEvent, EnemyState, GameState, PlayerSkin, ReplayEvent } from '@hunter/storage-proto/src/storage';
+import { ConnectionState, CountdownEvent, EmbienceEvent, EnemyState, GameState, PlayerSkin, ReplayEvent } from '@hunter/storage-proto/src/storage';
 import * as Phaser from 'phaser';
-import { createGame } from '../api/game';
-import { preloadBossSound } from '../audio/boss';
-import { playDangerSound, preloadDangerSound } from '../audio/danger';
-import { playGameoverAudio, preloadGameoverAudio } from '../audio/gameover';
-import { stopMenuAudio } from '../audio/menu';
-import { DISPLAY, FONT_FAMILY, GAMEOVER, VERSION } from '../config';
-import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../controllers';
-import { createEnemy } from '../enemies';
-import { EnemyEntity } from '../entities/EnemyEntity';
-import { PlayerEntity } from '../entities/PlayerEntity';
-import { ShopEntity } from '../entities/ShopEntity';
-import { preloadFx } from '../fx';
-import { emitEvent, offEvent, onEvent } from '../GameEvents';
-import { getLevel, LevelId } from '../levels';
-import { getLocation } from '../locations';
-import { preloadProjectiles } from '../projectiles';
-import { AudioService } from '../services/AudioService';
-import { HintsService } from '../services/HintsService';
-import { PlayerService } from '../services/PlayerService';
-import { QuestService } from '../services/QuestService';
-import { StatsService } from '../services/StatsService';
-import { gameStorage } from '../storage';
-import { connectionStateCollection } from '../storage/collections/connectionState.collection';
-import { enemyStateCollection } from '../storage/collections/enemyState.collection';
-import { embienceEvent, replayEventCollection } from '../storage/collections/events.collectio';
-import { gameStateCollection } from '../storage/collections/gameState.collection';
-import { playerSkinCollection } from '../storage/collections/playerSkin.collection';
-import { playerStateCollection } from '../storage/collections/playerState.collection';
-import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../types';
-import { UiMute, WaveInfo, WeaponStatus } from '../ui';
-import { UiFullscreen } from '../ui/Fullscreen';
-import { createLogger } from '../utils/logger';
-import { GameOverView } from '../views/gameover';
-import { LoadingView } from '../views/loading/LoadingView';
-import { PauseView } from '../views/pause';
-import { preloadWeapons } from '../weapons';
-import { WeaponType } from '../weapons/WeaponTypes';
-import { SceneKeys } from './index';
-import { MenuSceneTypes } from './MenuScene/MenuSceneTypes';
+import { createGame } from '../../api/game';
+import { preloadBossSound } from '../../audio/boss';
+import { playDangerSound, preloadDangerSound } from '../../audio/danger';
+import { playGameoverAudio, preloadGameoverAudio } from '../../audio/gameover';
+import { stopMenuAudio } from '../../audio/menu';
+import { DISPLAY, FONT_FAMILY, GAMEOVER, VERSION } from '../../config';
+import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../../controllers';
+import { createEnemy } from '../../enemies';
+import { EnemyEntity } from '../../entities/EnemyEntity';
+import { PlayerEntity } from '../../entities/PlayerEntity';
+import { ShopEntity } from '../../entities/ShopEntity';
+import { preloadFx } from '../../fx';
+import { emitEvent, offEvent, onEvent } from '../../GameEvents';
+import { getLevel, LevelId } from '../../levels';
+import { getLocation } from '../../locations';
+import { preloadProjectiles } from '../../projectiles';
+import { AudioService } from '../../services/AudioService';
+import { HintsService } from '../../services/HintsService';
+import { PlayerService } from '../../services/PlayerService';
+import { QuestService } from '../../services/QuestService';
+import { StatsService } from '../../services/StatsService';
+import { gameStorage } from '../../storage';
+import { connectionStateCollection } from '../../storage/collections/connectionState.collection';
+import { enemyStateCollection } from '../../storage/collections/enemyState.collection';
+import { countdownEvent, embienceEvent, replayEventCollection } from '../../storage/collections/events.collection';
+import { gameStateCollection } from '../../storage/collections/gameState.collection';
+import { playerSkinCollection } from '../../storage/collections/playerSkin.collection';
+import { playerStateCollection } from '../../storage/collections/playerState.collection';
+import { Damageable, Enemy, Game, Level, Loading, Location, Player, ShopEvents } from '../../types';
+import { UiMute } from '../../ui';
+import { UiFullscreen } from '../../ui/Fullscreen';
+import { createLogger } from '../../utils/logger';
+import { GameOverView } from '../../views/gameover';
+import { LoadingView } from '../../views/loading/LoadingView';
+import { PauseView } from '../../views/pause';
+import { preloadWeapons } from '../../weapons';
+import { WeaponType } from '../../weapons/WeaponTypes';
+import { SceneKeys } from '../index';
+import { MenuSceneTypes } from '../MenuScene/MenuSceneTypes';
+import { Countdown } from './components/Countdown';
+import { UiStartGameButton } from './components/StartGameButton';
+import { WaveInfo } from './components/WaveInfo';
+import { WeaponStatus } from './components/WeaponStatus';
 
 const logger = createLogger('GameplayScene');
 
@@ -56,6 +60,7 @@ export class GameplayScene extends Phaser.Scene {
   private questService: QuestService;
 
   private pingText!: Phaser.GameObjects.Text;
+  private gameIdText!: Phaser.GameObjects.Text;
 
   private shop!: ShopEntity;
   private enemies!: Map<string, Damageable.Entity>;
@@ -82,6 +87,8 @@ export class GameplayScene extends Phaser.Scene {
   private changeWeaponKey!: Phaser.Input.Keyboard.Key;
   private pauseView!: PauseView;
   private gameOverView!: GameOverView;
+  private startGameButton!: UiStartGameButton;
+  private countdown!: Countdown;
   private mainPlayerId!: string;
   private players!: Map<string, PlayerEntity>;
   private dangerNotification!: Set<string>;
@@ -163,7 +170,7 @@ export class GameplayScene extends Phaser.Scene {
     preloadBossSound(this);
 
     UiMute.preload(this);
-    // UiFullscreen.preload(this);
+    UiStartGameButton.preload(this);
   }
 
   clear(): void {
@@ -198,9 +205,10 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.on<EnemyState>(enemyStateCollection, 'Add', this.handleSpawnEnemy.bind(this));
     this.storage.on<GameState>(gameStateCollection, 'Update', this.handleGameStateUpdate.bind(this));
     this.storage.on<EmbienceEvent>(embienceEvent, 'Add', this.handleEmbience.bind(this));
+    this.storage.on<CountdownEvent>(countdownEvent, 'Add', this.handleCountdown.bind(this));
 
     this.handleVisibilityStateChangedBind = this.handleVisibilityStateChanged.bind(this);
-    window.bridge.game.on(window.bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, this.handleVisibilityStateChangedBind);
+    // window.bridge.game.on(window.bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, this.handleVisibilityStateChangedBind);
 
     this.location.create();
 
@@ -215,6 +223,7 @@ export class GameplayScene extends Phaser.Scene {
     this.decalController = new DecalController(this, 0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 5);
     this.projectileController = new ProjectileController(this, this.damageableObjects, this.storage, this.location.getBounds());
     this.waveController = new WaveController(this, this.levelConfig.waves(), this.storage);
+    this.countdown = new Countdown(this, 0, 0);
 
     this.waveInfo = new WaveInfo(this, this.storage);
     this.weaponStatus = new WeaponStatus(this, this.storage, this.mainPlayerId);
@@ -295,8 +304,11 @@ export class GameplayScene extends Phaser.Scene {
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.LAUNCHER, price: 0 });
     // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
 
-    this.waveController.start();
-    this.projectileController.setSimulate(false);
+    this.startGame(2000);
+  }
+
+  private handleCountdown(id: string, record: SyncCollectionRecord<CountdownEvent>): void {
+    this.countdown.start(record.data.duration, record.data.delay);
   }
 
   private handlePause(): void {
@@ -307,22 +319,41 @@ export class GameplayScene extends Phaser.Scene {
     gameState.paused = !gameState.paused;
   }
 
-  private pause() {
+  async startGame(delay: number = 1000) {
+    const gameCollection = this.storage.getCollection<GameState>(gameStateCollection)!;
+    const gameState = gameCollection.getItem('game')!;
+    gameState.started = true;
+
+    const duration = 3000;
+    this.storage.getCollection<CountdownEvent>(countdownEvent)!.addItem('countdown', { delay, duration });
+    this.projectileController.setSimulate(false);
+    this.time.delayedCall(delay + duration, () => this.waveController.start());
+  }
+
+  private stopGame() {
     window.bridge.platform.sendMessage("gameplay_stopped");
+    this.time.timeScale = 0;
+    this.physics.world.pause();
+  }
+
+  private resumeGame() {
+    window.bridge.platform.sendMessage("gameplay_started");
+    this.time.timeScale = 1;
+    this.physics.world.resume();
+  }
+
+  private pause() {
+    this.stopGame();
     this.pauseView.open({
       levelId: this.levelId,
       questId: this.questId,
       showReplay: this.isHost
     });
-    this.time.timeScale = 0;
-    this.physics.world.pause();
   }
 
   private resume() {
-    window.bridge.platform.sendMessage("gameplay_started");
     this.pauseView.close();
-    this.time.timeScale = 1;
-    this.physics.world.resume();
+    this.resumeGame();
   }
 
   private async handleReplay(): Promise<void> {
@@ -363,47 +394,94 @@ export class GameplayScene extends Phaser.Scene {
 
   private multiplayerInit(playerId: string, gameId: string): void {
     this.isMultiplayer = true;
-
     this.projectileController.setSimulate(true);
-    this.pingText = this.add.text(10, 10, '', { fontSize: 16, color: '#ffffff' }).setDepth(10000);
+    this.pingText = this.add.text(10, 10, '', { fontSize: 16, color: '#ffffff' }).setDepth(1000);
+    this.gameIdText = this.add.text(10, 30, '', { fontSize: 16, color: '#ffffff' }).setDepth(1000);
 
     this.storage.on<ConnectionState>(connectionStateCollection, 'Update', this.handleConnectionState.bind(this));
-    this.storage.on<GameState>(gameStateCollection, 'Add', () => {
-      const currentWeaponId = this.weaponController.getCurrentWeapon(playerId);
-      // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
-
-      if (!currentWeaponId) {
-        emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
+    this.storage.on<ConnectionState>(connectionStateCollection, 'Add', this.handleConnectionState.bind(this));
+    this.storage.on<ConnectionState>(connectionStateCollection, 'Remove', this.handleConnectionState.bind(this));
+    this.storage.on<GameState>(gameStateCollection, 'Add', (id, record) => {
+      if (record.data.finished) {
+        return;
       }
 
-      this.multiplayerController.setReady();
-    });
+      const playerWeapons = this.weaponController.getPlayerWeapons(playerId);
+      // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
 
-    this.storage.getCollection<GameState>(gameStateCollection)!.subscribe('Add', (id, record, collection, from) => {
       this.isHost = record.data.host === playerId;
       this.storage.getCollection<EnemyState>(enemyStateCollection)!.setReadonly(!this.isHost);
       this.storage.getCollection<EmbienceEvent>(embienceEvent)!.setReadonly(!this.isHost);
+      this.createStartGameButton();
+
+      if (!playerWeapons.length) {
+        emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
+      }
     });
 
-    this.storage.getCollection<ReplayEvent>(replayEventCollection)!.subscribe('Add', (id, record, collection, from) => {
+    this.storage.on<Player.State>(playerStateCollection, 'Remove', (playerId: string) => {
+      const player = this.players.get(playerId);
+      if (player) {
+        player.destroy();
+        this.players.delete(playerId);
+      }
+      this.updateStartGameButton();
+    });
+
+    this.storage.getCollection<ReplayEvent>(replayEventCollection)!.subscribe('Add', (id, record) => {
       setTimeout(() => {
         this.replay(record.data.gameId);
-      }, 2000);
+      }, 1000);
     });
 
     this.multiplayerController = new MultiplayerController(this, this.storage);
     this.multiplayerController.connect(gameId, playerId);
   }
 
-  private handleConnectionState() {
-    const connections = this.storage.getCollection<ConnectionState>(connectionStateCollection)!;
-    const game = this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game');
+  createStartGameButton(): void {
+    const gameCollection = this.storage.getCollection<GameState>(gameStateCollection)!;
+    const gameState = gameCollection.getItem('game')!;
 
-    const allReady = connections.getSize() === game?.playersCount && connections.getItems().every(data => data.ready);
-    if (allReady && game?.host === this.mainPlayerId && !game?.finished) {
-      this.projectileController.setSimulate(false);
-      this.waveController.start();
+    if (gameState.started) {
+      return;
     }
+
+    this.startGameButton = new UiStartGameButton(this, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - 100);
+    this.startGameButton.setDepth(800);
+    this.add.existing(this.startGameButton);
+
+    this.startGameButton.setHostMode(this.isHost);
+    this.updateStartGameButton();
+
+    if (this.isHost) {
+      this.multiplayerController.setReady();
+    }
+
+    this.startGameButton.onClick(async () => {
+      this.multiplayerController.setReady();
+      await this.startGameButton.hide();
+      this.startGameButton.destroy();
+      if (this.isHost) {
+        this.startGame(1000);
+      }
+    });
+  }
+
+  updateStartGameButton(): void {
+    const gameCollection = this.storage.getCollection<GameState>(gameStateCollection)!;
+    const connections = this.storage.getCollection<ConnectionState>(connectionStateCollection)!;
+    const gameState = gameCollection.getItem('game')!;
+    const connectionsCount = connections.getSize();
+    const readyCount = connections.getItems().filter(data => data.ready).length;
+    const canStart = connectionsCount > 1 && readyCount === connectionsCount;
+
+    if (this.isHost && !gameState.started) {
+      this.startGameButton.setDisabled(!canStart);
+    }
+  }
+
+  private handleConnectionState() {
+    this.updateStartGameButton();
   }
 
   private handleEnemyDeath({ id }: Enemy.Events.Death.Payload): void {
@@ -433,15 +511,11 @@ export class GameplayScene extends Phaser.Scene {
 
     const skin = this.storage.getCollection<PlayerSkin>(playerSkinCollection)!.getItemRecord(playerId)!;
     const player = new PlayerEntity(this, playerId, stateRecord, skin, this.storage);
-    this.players.set(playerId, player);
 
+    this.players.set(playerId, player);
     player.setLocationBounds(this.location.getBounds());
   }
 
-  /**
-   * Добавляет интерактивный объект в группу объектов, взаимодействующих с пулями
-   * @param object Спрайт объекта для добавления в группу
-   */
   public addDamageableObject(id: string, object: Damageable.Entity): void {
     this.damageableObjects.set(id, object);
   }
@@ -456,11 +530,15 @@ export class GameplayScene extends Phaser.Scene {
     if (score > stats.bestScore) {
       StatsService.setBestScore(this.levelId, score);
     }
+    if (this.isGameOver) {
+      this.stopGame();
+    }
   }
 
   update(time: number, delta: number): void {
     if (this.isMultiplayer && this.pingText) {
       this.pingText.setText(`Ping: ${this.multiplayerController.ping}ms`);
+      this.gameIdText.setText(`Game ID: ${this.gameId}`);
     }
 
     const mainPlayer = this.players.get(this.mainPlayerId);
@@ -473,9 +551,7 @@ export class GameplayScene extends Phaser.Scene {
       player.update(time, delta);
     });
 
-    // Обновляем игрока
     if (mainPlayer) {
-      // Обновляем состояние оружия в интерфейсе
       const weapon = mainPlayer.getWeapon();
       if (weapon) {
         this.weaponStatus.setAmmo(
@@ -485,14 +561,13 @@ export class GameplayScene extends Phaser.Scene {
       }
     }
 
-    // Обновляем всех врагов
     this.enemies.forEach((enemy) => {
       enemy.update(time, delta);
       const position = enemy instanceof EnemyEntity && enemy.getPosition();
       if (position && position.x < 0) {
         if (GAMEOVER && !this.isGameOver) {
-          this.handleGameEnd();
           this.isGameOver = true;
+          this.handleGameEnd();
           playGameoverAudio(this);
           window.bridge.platform.sendMessage("gameplay_stopped");
           this.gameOverView.open({
@@ -523,7 +598,6 @@ export class GameplayScene extends Phaser.Scene {
       }
     });
 
-    // Обрабатываем попадания пуль
     this.projectileController.update(time, delta);
     this.waveInfo.update(time, delta);
 

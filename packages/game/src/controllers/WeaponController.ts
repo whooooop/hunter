@@ -1,8 +1,9 @@
 import { StorageSpace, SyncCollectionRecord } from "@hunter/multiplayer";
-import { PlayerWeapon, WeaponState } from "@hunter/storage-proto/src/storage";
+import { PlayerState, PlayerWeapon, WeaponState } from "@hunter/storage-proto/src/storage";
 import { PlayerEntity } from "../entities/PlayerEntity";
 import { WeaponEntity } from "../entities/WeaponEntity";
 import { offEvent, onEvent } from "../GameEvents";
+import { playerStateCollection } from "../storage/collections/playerState.collection";
 import { playerWeaponCollection } from "../storage/collections/playerWeapon.collection";
 import { weaponStateCollection } from "../storage/collections/weaponState.collection";
 import { ShopEvents, WeaponPurchasedPayload } from "../types";
@@ -29,9 +30,28 @@ export class WeaponController {
     onEvent(scene, Controls.Events.NextWeapon.Event, this.handleNextWeapon, this);
     onEvent(scene, Controls.Events.PrevWeapon.Event, this.handlePrevWeapon, this);
     onEvent(scene, Controls.Events.NumberKey.Event, this.handleNumberKey, this);
+
+    // player weapons
     this.storage.on<WeaponState>(weaponStateCollection, 'Add', this.addPlayerWeapon.bind(this));
+
+    // spawn player
+    this.storage.on<PlayerState>(playerStateCollection, 'Add', this.addPlayerHandler.bind(this));
+    this.storage.on<PlayerState>(playerStateCollection, 'Remove', this.removePlayerHandler.bind(this));
+
+    // player current weapon
     this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Add', this.updatePlayerCurrentWeapon.bind(this));
     this.storage.on<PlayerWeapon>(playerWeaponCollection, 'Update', this.updatePlayerCurrentWeapon.bind(this));
+  }
+
+  private addPlayerHandler(playerId: string, record: SyncCollectionRecord<PlayerState>): void {
+    const currentWeaponId = this.storage.getCollection<PlayerWeapon>(playerWeaponCollection)!.getItem(playerId)?.weaponId;
+    if (currentWeaponId) {
+      this.setWeapon(playerId, currentWeaponId);
+    }
+  }
+
+  private removePlayerHandler(playerId: string): void {
+    this.currentWeapon.delete(playerId);
   }
 
   private handleWeaponPurchased({ playerId, weaponType }: WeaponPurchasedPayload): void {
@@ -68,6 +88,10 @@ export class WeaponController {
     const currentWeaponId = this.getCurrentWeapon(playerId);
     if (!currentWeaponId) return;
     this.changeWeapon(playerId, -1);
+  }
+
+  public getPlayerWeapons(playerId: string): string[] {
+    return Array.from(this.playerWeapons.get(playerId)?.keys() || []);
   }
 
   private changeWeapon(playerId: string, direction: number): void {
@@ -119,7 +143,7 @@ export class WeaponController {
     this.currentWeapon.set(playerId, weaponId);
   }
 
-  public setWeapon(playerId: string, weaponId: string): void {
+  private setWeapon(playerId: string, weaponId: string): void {
     const currentWeaponId = this.getCurrentWeapon(playerId);
     const player = this.players.get(playerId);
     if (!player) {
@@ -132,7 +156,7 @@ export class WeaponController {
 
     const weapon = this.getWeapon(weaponId);
     this.setCurrentWeapon(playerId, weaponId);
-    this.players.get(playerId)!.setWeapon(weapon);
+    player.setWeapon(weapon);
   }
 
   private updatePlayerCurrentWeapon(playerId: string, record: SyncCollectionRecord<PlayerWeapon>): void {

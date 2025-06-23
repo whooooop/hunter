@@ -9,7 +9,7 @@ import { DEBUG, DISPLAY } from './config';
 import playgamaBridgeConfigUrl from './playgama-bridge-config.url.json';
 import { SceneKeys } from './scenes';
 import { BootScene } from './scenes/BootScene';
-import { GameplayScene } from './scenes/GameplayScene';
+import { GameplayScene } from './scenes/Gameplay/index.js';
 import { MenuScene } from './scenes/MenuScene/MenuScene';
 import { ReloadScene } from './scenes/ReloadScene';
 import { AudioService } from './services/AudioService';

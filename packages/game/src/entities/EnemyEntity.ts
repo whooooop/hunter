@@ -6,7 +6,7 @@ import { createSimpleBloodConfig } from "../controllers/BloodController";
 import { DamageableController } from "../controllers/DamageableController";
 import { MotionController2 } from "../controllers/MotionController2";
 import { emitEvent } from "../GameEvents";
-import { enemyAnimationEvent, enemyDeathEventCollection } from "../storage/collections/events.collectio";
+import { enemyAnimationEvent, enemyDeathEventCollection } from "../storage/collections/events.collection";
 import { Blood, Damageable, Decals, Enemy, Game, Location, ScoreEvents } from "../types/";
 import { hexToNumber } from "../utils/colors";
 import { Logger } from "../utils/logger";

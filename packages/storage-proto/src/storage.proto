@@ -94,3 +94,8 @@ message ReplayEvent {
 message EmbienceEvent {
   string assetKey = 1;
 }
+
+message CountdownEvent {
+  int32 duration = 1;
+  int32 delay = 2;
+}

@@ -1,4 +1,4 @@
-import { I18n } from "../../utils/i18n";
+import { I18n } from "../../../../utils/i18n";
 
 export const waveText = I18n({
   en: 'Wave',

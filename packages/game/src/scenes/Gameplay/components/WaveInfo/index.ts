@@ -1,11 +1,11 @@
 import { StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer';
 import { WaveState } from '@hunter/storage-proto/src/storage';
 import * as Phaser from 'phaser';
-import { DISPLAY, FONT_FAMILY } from '../../config';
-import { COLORS } from '../../Constants';
-import { waveStateCollection } from '../../storage/collections/waveState.collection';
-import { hexToNumber } from '../../utils/colors';
-import { CustomPauseButton } from '../CustomPauseButton';
+import { DISPLAY, FONT_FAMILY } from '../../../../config';
+import { COLORS } from '../../../../Constants';
+import { waveStateCollection } from '../../../../storage/collections/waveState.collection';
+import { CustomPauseButton } from '../../../../ui/CustomPauseButton';
+import { hexToNumber } from '../../../../utils/colors';
 import { bossText, waveText } from './translate';
 
 export class WaveInfo {

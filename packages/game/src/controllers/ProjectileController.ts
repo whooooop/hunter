@@ -9,7 +9,7 @@ import { EnemyEntity } from '../entities/EnemyEntity';
 import { ProjectileEntity } from '../entities/ProjectileEntity';
 import { emitEvent, offEvent, onEvent } from '../GameEvents';
 import { createProjectile } from '../projectiles';
-import { embienceEvent } from '../storage/collections/events.collectio';
+import { embienceEvent } from '../storage/collections/events.collection';
 import { Damageable, Game, Location, Projectile } from '../types/';
 import { Weapon } from '../types/weaponTypes';
 import { rayRectIntersectionRobust } from '../utils/GeometryUtils';

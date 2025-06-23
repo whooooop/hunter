@@ -102,6 +102,11 @@ export interface EmbienceEvent {
   assetKey: string;
 }
 
+export interface CountdownEvent {
+  duration: number;
+  delay: number;
+}
+
 function createBaseGameState(): GameState {
   return { host: "", levelId: "", createdAt: "0", playersCount: 0, paused: false, started: false, finished: false };
 }
@@ -1506,6 +1511,82 @@ export const EmbienceEvent: MessageFns<EmbienceEvent> = {
   fromPartial<I extends Exact<DeepPartial<EmbienceEvent>, I>>(object: I): EmbienceEvent {
     const message = createBaseEmbienceEvent();
     message.assetKey = object.assetKey ?? "";
+    return message;
+  },
+};
+
+function createBaseCountdownEvent(): CountdownEvent {
+  return { duration: 0, delay: 0 };
+}
+
+export const CountdownEvent: MessageFns<CountdownEvent> = {
+  encode(message: CountdownEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.duration !== 0) {
+      writer.uint32(8).int32(message.duration);
+    }
+    if (message.delay !== 0) {
+      writer.uint32(16).int32(message.delay);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CountdownEvent {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCountdownEvent();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.duration = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.delay = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CountdownEvent {
+    return {
+      duration: isSet(object.duration) ? globalThis.Number(object.duration) : 0,
+      delay: isSet(object.delay) ? globalThis.Number(object.delay) : 0,
+    };
+  },
+
+  toJSON(message: CountdownEvent): unknown {
+    const obj: any = {};
+    if (message.duration !== 0) {
+      obj.duration = Math.round(message.duration);
+    }
+    if (message.delay !== 0) {
+      obj.delay = Math.round(message.delay);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<CountdownEvent>, I>>(base?: I): CountdownEvent {
+    return CountdownEvent.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<CountdownEvent>, I>>(object: I): CountdownEvent {
+    const message = createBaseCountdownEvent();
+    message.duration = object.duration ?? 0;
+    message.delay = object.delay ?? 0;
     return message;
   },
 };

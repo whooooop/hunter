@@ -14,6 +14,8 @@ import { waveStateCollection } from './collections/waveState.collection';
 import { weaponStateCollection } from './collections/weaponState.collection';
 import { gameStorage } from './game.storage';
 
+const MAX_PLAYERS = 6;
+
 type SessionData = {
   playerId: string;
 }
@@ -64,7 +66,7 @@ export class GameGateway {
     gameCollection.addItem('game', {
       host: '',
       levelId: 'forest',
-      playersCount,
+      playersCount: 3,
       paused: false,
       started: false,
       finished: false,
@@ -106,8 +108,13 @@ export class GameGateway {
     }
 
     const game = gameCollection.getItem('game')!;
-    if (namespace.getConnectionsSize() >= game.playersCount) {
+    if (namespace.getConnectionsSize() >= MAX_PLAYERS) {
       throw new Error(`Game ${gameId} is full.`);
+    }
+
+    const player = namespace.getCollection<PlayerState>(playerStateCollection)!.getItem(playerId);
+    if (game.started && !player) {
+      throw new Error(`Game ${gameId} is already started. Player ${playerId} is not found.`);
     }
   }
 
@@ -149,7 +156,15 @@ export class GameGateway {
 
   private async onDisconnect(server: MultiplayerServer<SessionData>, clientSocket: ClientSocket<SessionData>) {
     const connections = clientSocket.getCollection<ConnectionState>(connectionStateCollection)!;
+    const gameCollection = clientSocket.getCollection<GameState>(gameStateCollection)!;
+    const game = gameCollection.getItem('game');
     connections.removeItem(clientSocket.session.playerId);
-  }
+    if (game && !game.started) {
+      const playersCollection = clientSocket.getCollection<PlayerState>(playerStateCollection)!;
+      const playersSkin = clientSocket.getCollection<PlayerSkin>(playerSkinCollection)!;
 
+      playersCollection.removeItem(clientSocket.session.playerId);
+      playersSkin.removeItem(clientSocket.session.playerId);
+    }
+  }
 }

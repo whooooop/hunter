@@ -148,7 +148,7 @@ export class KeyBoardController {
     const width = DISPLAY.WIDTH / 2;
     const height = DISPLAY.HEIGHT - y;
     const offset = 20;
-    const depth = 1000;
+    const depth = 799;
     const moveAreaOffsetY = 250;
     const moveArea = this.scene.add.rectangle(x, y, width, height, 0x000000, 0).setOrigin(0, 0);
     moveArea.setDepth(depth);
@@ -210,7 +210,7 @@ export class KeyBoardController {
     const y = DISPLAY.HEIGHT / 2.4;
     const width = DISPLAY.WIDTH - x;
     const height = DISPLAY.HEIGHT - y;
-    const depth = 1000;
+    const depth = 799;
     const offset = 20;
 
     const dashedRectangle = this.createDashedRectangle(x, y, width - offset, height - offset, {
@@ -266,7 +266,7 @@ export class KeyBoardController {
     const width = DISPLAY.WIDTH - x;
     const height = 150;
     const minSwipeDistance = 50;
-    const depth = 1000;
+    const depth = 799;
     let swipeStartX = 0;
 
     const changeWeaponArea = this.scene.add.rectangle(x, y, width, height, 0x000000, 0).setOrigin(0, 0);

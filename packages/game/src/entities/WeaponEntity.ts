@@ -3,10 +3,10 @@ import { WeaponFireEvent, WeaponReloadEvent } from '@hunter/storage-proto/src/st
 import * as Phaser from 'phaser';
 import { MuzzleFlash } from '../fx/muzzleFlash/muzzleFlashFx';
 import { emitEvent } from "../GameEvents";
-import { GameplayScene } from "../scenes/GameplayScene";
+import { GameplayScene } from "../scenes/Gameplay";
 import { AudioService } from '../services/AudioService';
 import { SettingsService } from '../services/SettingsService';
-import { fireEventCollection, reloadEventCollection } from '../storage/collections/events.collectio';
+import { fireEventCollection, reloadEventCollection } from '../storage/collections/events.collection';
 import { AudioAssets, FireParams, Weapon } from "../types";
 import { RecoilForceType } from "../types/recoilForce";
 import { createLogger } from "../utils/logger";

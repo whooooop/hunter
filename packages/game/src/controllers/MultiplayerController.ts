@@ -1,5 +1,5 @@
 import { ClientMultiplayer, StorageSpace } from '@hunter/multiplayer';
-import { GameplayScene } from '../scenes/GameplayScene';
+import { GameplayScene } from '../scenes/Gameplay';
 import { connectionStateCollection } from "../storage/collections/connectionState.collection";
 import { createLogger } from '../utils/logger';
 

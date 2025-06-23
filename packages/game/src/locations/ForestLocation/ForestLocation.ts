@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { GameplayScene } from '../../scenes/GameplayScene';
+import { GameplayScene } from '../../scenes/Gameplay';
 import { Location } from '../../types/Location';
 import { createLogger } from '../../utils/logger';
 import { ForestShop } from './components/ForestShop';

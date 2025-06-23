@@ -6,7 +6,7 @@ import { preloadRunSound, RunSound } from '../audio/run';
 import { MotionController2 } from '../controllers/MotionController2';
 import { offEvent, onEvent } from '../GameEvents';
 import { AudioService } from '../services/AudioService';
-import { jumpEventCollection } from '../storage/collections/events.collectio';
+import { jumpEventCollection } from '../storage/collections/events.collection';
 import { PlayerHandTexture, PlayerLegLeftTexture, PlayerLegRightTexture, PlayerSkins, preloadPlayerTextures } from '../textures/player';
 import { Player, Shop } from '../types';
 import { Controls } from '../types/ControlsTypes';
@@ -181,12 +181,18 @@ export class PlayerEntity {
     this.jump();
   }
 
-  public setWeapon(weapon: WeaponEntity): void {
+  private hideCurrnetWeapon(): void {
     if (this.currentWeapon) {
-      this.weaponContainer.remove(this.currentWeapon.getContainer());
-      this.currentWeapon.getContainer().setAlpha(0);
+      const container = this.currentWeapon.getContainer();
+      this.weaponContainer.remove(container);
+      container.setAlpha(0);
     }
+  }
+
+  public setWeapon(weapon: WeaponEntity): void {
+    this.hideCurrnetWeapon();
     this.currentWeapon = weapon;
+
     this.currentWeapon.setPosition(0, 0, this.direction);
     this.weaponContainer.add(weapon.getContainer());
     this.currentWeapon.getContainer().setAlpha(1);
@@ -341,6 +347,7 @@ export class PlayerEntity {
   }
 
   public destroy(): void {
+    this.hideCurrnetWeapon();
     this.container.destroy();
     this.body.destroy();
     this.motionController.destroy();

@@ -1,5 +1,5 @@
 import { defineCollection } from "@hunter/multiplayer/dist/server";
-import { EmbienceEvent, EnemyAnimationEvent, EnemyDeathEvent, PlayerJumpEvent, ReplayEvent, WeaponFireEvent, WeaponReloadEvent } from "@hunter/storage-proto/dist/storage";
+import { CountdownEvent, EmbienceEvent, EnemyAnimationEvent, EnemyDeathEvent, PlayerJumpEvent, ReplayEvent, WeaponFireEvent, WeaponReloadEvent } from "@hunter/storage-proto/dist/storage";
 
 export const replayEvent = defineCollection<ReplayEvent>('replayEvent', {
   encode: ReplayEvent.encode,
@@ -41,4 +41,11 @@ export const embienceEvent = defineCollection<EmbienceEvent>('embienceEvent', {
   encode: EmbienceEvent.encode,
   decode: EmbienceEvent.decode,
   saveData: false,
+});
+
+export const countdownEvent = defineCollection<CountdownEvent>('countdownEvent', {
+  encode: CountdownEvent.encode,
+  decode: CountdownEvent.decode,
+  saveData: false,
+  localEvents: true,
 });

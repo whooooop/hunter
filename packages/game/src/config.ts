@@ -8,7 +8,7 @@ export const DISPLAY = {
 export const OBJECTS_DEPTH_OFFSET = 1;
 
 export const LOADING_EXTRA_DURATION = 3000;
-export const MULTIPLAYER_EXTRA_DURATION = 3000;
+export const MULTIPLAYER_EXTRA_DURATION = 1000;
 
 export const FONT_FAMILY = {
   REGULAR: introFontRegular.name,
@@ -28,4 +28,4 @@ export const DEBUG = {
 export const GAMEOVER = true;
 export const START_SCENE_GAMEPLAY = false;
 
-export const VERSION = '1.5.6 Beta'; 
+export const VERSION = '1.6.0 Beta'; 
