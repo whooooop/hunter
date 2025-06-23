@@ -71,20 +71,15 @@ export class UiInput extends Phaser.GameObjects.Container {
     }).setOrigin(0.5);
     this.add(this.text);
 
-    if (this.options.copy && !navigator.userAgent.match(/ipad|iphone/i)) {
-      this.copy = scene.add.image(this.background.width / 2 - 60, 0, copyTexture.key)
-        .setScale(copyTexture.scale)
-        .setInteractive();
-      this.copy.on('pointerdown', () => {
-        copyToClipboard(this.text.text);
-        this.options.onCopy(this.text.text);
-        this.copy!.setTexture(copySuccessTexture.key);
-        this.scene.time.delayedCall(1000, () => {
-          this.copy!.setTexture(copyTexture.key);
-        });
-      });
-      this.add(this.copy);
-    }
+    // if (this.options.copy && !navigator.userAgent.match(/ipad|iphone/i)) {
+    this.copy = scene.add.image(this.background.width / 2 - 60, 0, copyTexture.key)
+      .setScale(copyTexture.scale)
+      .setInteractive();
+    this.copy.on('pointerdown', () => this.copyText());
+    this.copy.on('pointerup', () => this.copyText());
+    this.copy.on('touchend', () => this.copyText());
+    this.add(this.copy);
+    // }
 
     if (!this.options.readonly) {
       this.text.setInteractive().on('pointerdown', () => {
@@ -113,6 +108,15 @@ export class UiInput extends Phaser.GameObjects.Container {
         });
       });
     }
+  }
+
+  public copyText(): void {
+    copyToClipboard(this.text.text);
+    this.options.onCopy(this.text.text);
+    this.copy!.setTexture(copySuccessTexture.key);
+    this.scene.time.delayedCall(1000, () => {
+      this.copy!.setTexture(copyTexture.key);
+    });
   }
 
   public getValue(): string {

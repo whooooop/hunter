@@ -16,8 +16,8 @@ export const EnterGameText = I18n({
 });
 
 export const MultiplayerInstructionsText = I18n({
-  en: 'Share the code with your friend to join the game',
-  ru: 'Передай код другу, чтобы присоединиться к игре'
+  en: 'Share the code with your friend to join the game. Max 6 players',
+  ru: 'Передай код другу, чтобы присоединиться к игре. До 6 игроков'
 });
 
 export const CreateGameErrorText = I18n({

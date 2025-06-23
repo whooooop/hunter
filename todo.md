@@ -7,3 +7,5 @@
 
 - connect with pause
 - connection lost / not connected 
+- move pause button 
+- multiplayer score
