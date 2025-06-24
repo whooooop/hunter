@@ -1,32 +1,19 @@
 import { StorageSpace } from "@hunter/multiplayer";
 import VirtualJoystick from 'phaser3-rex-plugins/plugins/virtualjoystick.js';
-import { DISPLAY, FONT_FAMILY } from "../config";
+import { FONT_FAMILY } from "../config";
 import { emitEvent } from "../GameEvents";
+import { FOLLOW_FINGER, MIN_THRESHOLD, mobileChangeWeaponArea, mobileFireArea, mobileMoveArea } from "../mobile.controls.config";
 import { JoystickBaseTexture, JoystickThumbTexture, preloadJoystickTextures } from "../textures/joystick";
 import { Game } from "../types/";
 import { Controls } from "../types/ControlsTypes";
-import { hexToNumber } from "../utils/colors";
 import { I18n } from "../utils/i18n";
 
 const textColor = '#343434';
-const dashedColor = '#a9c5b4';
-
+const depth = 799;
 const fireText = I18n({
   en: 'Fire',
   ru: 'Огонь'
 });
-
-const jumpText = I18n({
-  en: 'Jump',
-  ru: 'Прыжок'
-});
-
-const changeWeaponText = I18n({
-  en: 'Swipe left or right for weapon change',
-  ru: 'Проведите пальцем, влево или вправо, для смены оружия'
-});
-
-const minThreshold = 0.25;
 
 export class KeyBoardController {
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -64,11 +51,7 @@ export class KeyBoardController {
   private fireKeyPressed: boolean = false;
   private firePointerPressed: boolean = false;
   private numberKeyPressed: number = 0;
-
-
   private isJoystickActive: boolean = false;
-
-  private dashedTimeout: number = 7000;
 
   public static preload(scene: Phaser.Scene): void {
     preloadJoystickTextures(scene);
@@ -108,23 +91,9 @@ export class KeyBoardController {
   }
 
   private createMobileControls(): void {
-    // jump
-
     this.createJoystick();
     this.createChangeWeaponArea();
     this.createFireArea();
-
-
-
-    // jump area rectangle
-    // const jumpAreaOffsetY = DISPLAY.HEIGHT / 2;
-    // const jumpAreaOffsetX = DISPLAY.WIDTH / 1.5;
-    // const jumpArea = this.scene.add.rectangle(jumpAreaOffsetX, jumpAreaOffsetY, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - jumpAreaOffsetY, hexToNumber('#343434'), 0.4).setOrigin(0, 0);
-    // jumpArea.setDepth(1000);
-    // jumpArea.setInteractive();
-    // jumpArea.on('pointerdown', () => {
-    //   console.log('jump area clicked');
-    // });
   }
 
   private createPointer(x: number, y: number, text: string): Phaser.GameObjects.Container {
@@ -143,14 +112,8 @@ export class KeyBoardController {
   }
 
   private createJoystick(): void {
-    const x = 0;
-    const y = DISPLAY.HEIGHT / 3.4;
-    const width = DISPLAY.WIDTH / 2;
-    const height = DISPLAY.HEIGHT - y;
     const offset = 20;
-    const depth = 799;
-    const moveAreaOffsetY = 250;
-    const moveArea = this.scene.add.rectangle(x, y, width, height, 0x000000, 0).setOrigin(0, 0);
+    const moveArea = this.scene.add.rectangle(mobileMoveArea.x, mobileMoveArea.y, mobileMoveArea.width - offset, mobileMoveArea.height - offset, 0x000000, 0).setOrigin(0, 0);
     moveArea.setDepth(depth);
     moveArea.setInteractive();
     moveArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -161,24 +124,6 @@ export class KeyBoardController {
     moveArea.on('pointerup', () => {
       this.joystick.visible = false;
       this.isJoystickActive = false;
-    });
-
-    const dashedRectangle = this.createDashedRectangle(x + offset, y, width - offset, height - offset, {
-      dashLength: 10,
-      gapLength: 10,
-      lineWidth: 3,
-      color: textColor,
-      alpha: 1,
-      depth: depth
-    });
-
-    this.scene.time.delayedCall(this.dashedTimeout, () => {
-      this.scene.tweens.add({
-        targets: dashedRectangle,
-        alpha: 0,
-        duration: 2000,
-        ease: 'linear'
-      });
     });
 
     const joystickBase = this.scene.add.image(0, 0, JoystickBaseTexture.key).setScale(0.7).setAlpha(0.6).setDepth(1000);
@@ -206,38 +151,16 @@ export class KeyBoardController {
   }
 
   private createFireArea(): void {
-    const x = DISPLAY.WIDTH / 2 + 50;
-    const y = DISPLAY.HEIGHT / 2.4;
-    const width = DISPLAY.WIDTH - x;
-    const height = DISPLAY.HEIGHT - y;
-    const depth = 799;
     const offset = 20;
+    const depth = 799;
 
-    const dashedRectangle = this.createDashedRectangle(x, y, width - offset, height - offset, {
-      dashLength: 10,
-      gapLength: 10,
-      lineWidth: 3,
-      color: textColor,
-      alpha: 1,
-      depth: depth
-    });
-
-    this.scene.time.delayedCall(this.dashedTimeout, () => {
-      this.scene.tweens.add({
-        targets: dashedRectangle,
-        alpha: 0,
-        duration: 2000,
-        ease: 'linear'
-      });
-    });
-
-    const fireArea = this.scene.add.rectangle(x, y, width, height, 0x000000, 0).setOrigin(0, 0);
+    const fireArea = this.scene.add.rectangle(mobileFireArea.x, mobileFireArea.y, mobileFireArea.width - offset, mobileFireArea.height - offset, 0x000000, 0).setOrigin(0, 0);
     fireArea.setDepth(depth);
     fireArea.setInteractive();
 
     let firePointerTimeout: NodeJS.Timeout;
 
-    const firePointer = this.createPointer(x + width / 2, y + height / 2, fireText.translate);
+    const firePointer = this.createPointer(mobileFireArea.x + mobileFireArea.width / 2, mobileFireArea.y + mobileFireArea.height / 2, fireText.translate);
     fireArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       this.firePointerPressed = true;
       clearTimeout(firePointerTimeout);
@@ -260,43 +183,13 @@ export class KeyBoardController {
   }
 
   private createChangeWeaponArea(): void {
-    const x = (DISPLAY.WIDTH / 2) + 50;
-    const y = 130;
     const offset = 20;
-    const width = DISPLAY.WIDTH - x;
-    const height = 150;
     const minSwipeDistance = 50;
-    const depth = 799;
     let swipeStartX = 0;
 
-    const changeWeaponArea = this.scene.add.rectangle(x, y, width, height, 0x000000, 0).setOrigin(0, 0);
+    const changeWeaponArea = this.scene.add.rectangle(mobileChangeWeaponArea.x, mobileChangeWeaponArea.y, mobileChangeWeaponArea.width - offset, mobileChangeWeaponArea.height - offset, 0x000000, 0).setOrigin(0, 0);
     changeWeaponArea.setDepth(1000);
     changeWeaponArea.setInteractive();
-
-    const changeWeaponAreaDashed = this.createDashedRectangle(x, y, width - offset, height, {
-      dashLength: 10,
-      gapLength: 10,
-      lineWidth: 3,
-      color: textColor,
-      alpha: 1,
-      radius: 20,
-      depth: depth
-    });
-
-    const changeWeaponTextElement = this.scene.add.text(x + width / 2, y + height / 2, changeWeaponText.translate, {
-      fontSize: '24px',
-      fontFamily: FONT_FAMILY.BOLD,
-      color: textColor.toString()
-    }).setOrigin(0.5).setDepth(depth).setWordWrapWidth(width - 200).setAlign('center');
-
-    this.scene.time.delayedCall(this.dashedTimeout, () => {
-      this.scene.tweens.add({
-        targets: [changeWeaponAreaDashed, changeWeaponTextElement],
-        alpha: 0,
-        duration: 2000,
-        ease: 'linear'
-      });
-    });
 
     changeWeaponArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       swipeStartX = pointer.x;
@@ -313,7 +206,6 @@ export class KeyBoardController {
         }
       }
     });
-
   }
 
   public destroy(): void {
@@ -358,10 +250,30 @@ export class KeyBoardController {
       const joystickX = Math.min(Math.abs(this.joystick.forceX), this.joystickRadius) / this.joystickRadius;
       const joystickY = Math.min(Math.abs(this.joystick.forceY), this.joystickRadius) / this.joystickRadius;
 
-      if (joystickX >= minThreshold) {
+      if (FOLLOW_FINGER) {
+        const exitZone = this.joystickRadius;
+
+        if (Math.abs(this.joystick.forceX) > exitZone || Math.abs(this.joystick.forceY) > exitZone) {
+          const pointer = this.scene.input.activePointer;
+          const currentX = this.joystick.x;
+          const currentY = this.joystick.y;
+
+          const overflowX = this.joystick.forceX > exitZone ? this.joystick.forceX - exitZone :
+            this.joystick.forceX < -exitZone ? this.joystick.forceX + exitZone : 0;
+          const overflowY = this.joystick.forceY > exitZone ? this.joystick.forceY - exitZone :
+            this.joystick.forceY < -exitZone ? this.joystick.forceY + exitZone : 0;
+
+          const targetX = currentX + overflowX;
+          const targetY = currentY + overflowY;
+
+          this.joystick.setPosition(targetX, targetY);
+        }
+      }
+
+      if (joystickX >= MIN_THRESHOLD) {
         move.x = Math.sign(this.joystick.forceX);
       }
-      if (joystickY >= minThreshold) {
+      if (joystickY >= MIN_THRESHOLD) {
         move.y = Math.sign(this.joystick.forceY);
       }
     } else {
@@ -465,99 +377,4 @@ export class KeyBoardController {
     }
   }
 
-  private createDashedRectangle(
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    options: {
-      dashLength?: number;
-      gapLength?: number;
-      lineWidth?: number;
-      color?: string;
-      alpha?: number;
-      radius?: number;
-      depth?: number;
-    } = {}
-  ): Phaser.GameObjects.Graphics {
-    const {
-      dashLength = 10,
-      gapLength = 10,
-      lineWidth = 3,
-      color = dashedColor,
-      alpha = 1,
-      radius = 20,
-      depth = 1000
-    } = options;
-
-    const graphics = this.scene.add.graphics();
-    graphics.setDepth(depth);
-    graphics.lineStyle(lineWidth, hexToNumber(color), alpha);
-
-    // Функция для рисования пунктирной линии между двумя точками
-    const drawDashedLine = (startX: number, startY: number, endX: number, endY: number) => {
-      const dx = endX - startX;
-      const dy = endY - startY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const dashCount = Math.floor(distance / (dashLength + gapLength));
-      const dashRatio = dashLength / (dashLength + gapLength);
-
-      for (let i = 0; i < dashCount; i++) {
-        const start = i * (dashLength + gapLength);
-        const end = start + dashLength;
-        const startRatio = start / distance;
-        const endRatio = end / distance;
-
-        const dashStartX = startX + dx * startRatio;
-        const dashStartY = startY + dy * startRatio;
-        const dashEndX = startX + dx * endRatio;
-        const dashEndY = startY + dy * endRatio;
-
-        graphics.moveTo(dashStartX, dashStartY);
-        graphics.lineTo(dashEndX, dashEndY);
-      }
-    };
-
-    // Рисуем закругленные углы
-    const drawRoundedCorner = (centerX: number, centerY: number, startAngle: number, endAngle: number) => {
-      const segments = 8; // Количество сегментов для закругления
-      const angleStep = (endAngle - startAngle) / segments;
-      const dashAngleStep = (dashLength / radius) * (Math.PI / 180);
-      const gapAngleStep = (gapLength / radius) * (Math.PI / 180);
-
-      for (let i = 0; i < segments; i++) {
-        const currentAngle = startAngle + i * angleStep;
-        const nextAngle = currentAngle + angleStep;
-
-        if (i % 2 === 0) { // Рисуем только штрихи
-          const x1 = centerX + radius * Math.cos(currentAngle);
-          const y1 = centerY + radius * Math.sin(currentAngle);
-          const x2 = centerX + radius * Math.cos(nextAngle);
-          const y2 = centerY + radius * Math.sin(nextAngle);
-
-          graphics.moveTo(x1, y1);
-          graphics.lineTo(x2, y2);
-        }
-      }
-    };
-
-    // Рисуем стороны прямоугольника
-    // Верхняя сторона
-    drawDashedLine(x + radius, y, x + width - radius, y);
-    // Правая сторона
-    drawDashedLine(x + width, y + radius, x + width, y + height - radius);
-    // Нижняя сторона
-    drawDashedLine(x + width - radius, y + height, x + radius, y + height);
-    // Левая сторона
-    drawDashedLine(x, y + height - radius, x, y + radius);
-
-    // Рисуем закругленные углы
-    drawRoundedCorner(x + radius, y + radius, Math.PI, Math.PI * 1.5); // Верхний левый
-    drawRoundedCorner(x + width - radius, y + radius, Math.PI * 1.5, Math.PI * 2); // Верхний правый
-    drawRoundedCorner(x + width - radius, y + height - radius, 0, Math.PI * 0.5); // Нижний правый
-    drawRoundedCorner(x + radius, y + height - radius, Math.PI * 0.5, Math.PI); // Нижний левый
-
-    graphics.strokePath();
-    return graphics;
-  }
 }

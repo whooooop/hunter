@@ -6,7 +6,7 @@ import { preloadBossSound } from '../../audio/boss';
 import { playDangerSound, preloadDangerSound } from '../../audio/danger';
 import { playGameoverAudio, preloadGameoverAudio } from '../../audio/gameover';
 import { stopMenuAudio } from '../../audio/menu';
-import { DISPLAY, FONT_FAMILY, GAMEOVER, VERSION } from '../../config';
+import { DISPLAY, FONT_FAMILY, GAMEOVER, PAUSE_WHEN_FOCUS_LOST, VERSION } from '../../config';
 import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../../controllers';
 import { createEnemy } from '../../enemies';
 import { EnemyEntity } from '../../entities/EnemyEntity';
@@ -40,6 +40,7 @@ import { preloadWeapons } from '../../weapons';
 import { WeaponType } from '../../weapons/WeaponTypes';
 import { SceneKeys } from '../index';
 import { MenuSceneTypes } from '../MenuScene/MenuSceneTypes';
+import { ControlsView } from './components/Controls';
 import { Countdown } from './components/Countdown';
 import { UiStartGameButton } from './components/StartGameButton';
 import { WaveInfo } from './components/WaveInfo';
@@ -88,6 +89,7 @@ export class GameplayScene extends Phaser.Scene {
   private pauseView!: PauseView;
   private gameOverView!: GameOverView;
   private startGameButton!: UiStartGameButton;
+  private controlsView!: ControlsView;
   private countdown!: Countdown;
   private mainPlayerId!: string;
   private players!: Map<string, PlayerEntity>;
@@ -171,6 +173,7 @@ export class GameplayScene extends Phaser.Scene {
 
     UiMute.preload(this);
     UiStartGameButton.preload(this);
+    ControlsView.preload(this);
   }
 
   clear(): void {
@@ -208,7 +211,10 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.on<CountdownEvent>(countdownEvent, 'Add', this.handleCountdown.bind(this));
 
     this.handleVisibilityStateChangedBind = this.handleVisibilityStateChanged.bind(this);
-    // window.bridge.game.on(window.bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, this.handleVisibilityStateChangedBind);
+
+    if (PAUSE_WHEN_FOCUS_LOST) {
+      window.bridge.game.on(window.bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, this.handleVisibilityStateChangedBind);
+    }
 
     this.location.create();
 
@@ -238,8 +244,15 @@ export class GameplayScene extends Phaser.Scene {
     this.add.text(20, DISPLAY.HEIGHT - 30, VERSION.toUpperCase(), { fontSize: 16, color: '#ffffff', fontFamily: FONT_FAMILY.REGULAR })
       .setDepth(10000)
       .setOrigin(0, 1);
+
+    this.controlsView = new ControlsView(this);
+    this.add.existing(this.controlsView);
   }
 
+  async beforeStart(): Promise<void> {
+    const stats = StatsService.getStats();
+    await this.controlsView.wait(stats.gameplays > 3 ? 10000 : 0);
+  }
 
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
     this.sceneLoaded = true;
@@ -304,7 +317,8 @@ export class GameplayScene extends Phaser.Scene {
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.LAUNCHER, price: 0 });
     // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
 
-    this.startGame(2000);
+    await this.beforeStart();
+    this.startGame(500);
   }
 
   private handleCountdown(id: string, record: SyncCollectionRecord<CountdownEvent>): void {
@@ -401,23 +415,7 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.on<ConnectionState>(connectionStateCollection, 'Update', this.handleConnectionState.bind(this));
     this.storage.on<ConnectionState>(connectionStateCollection, 'Add', this.handleConnectionState.bind(this));
     this.storage.on<ConnectionState>(connectionStateCollection, 'Remove', this.handleConnectionState.bind(this));
-    this.storage.on<GameState>(gameStateCollection, 'Add', (id, record) => {
-      if (record.data.finished) {
-        return;
-      }
-
-      const playerWeapons = this.weaponController.getPlayerWeapons(playerId);
-      // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
-
-      this.isHost = record.data.host === playerId;
-      this.storage.getCollection<EnemyState>(enemyStateCollection)!.setReadonly(!this.isHost);
-      this.storage.getCollection<EmbienceEvent>(embienceEvent)!.setReadonly(!this.isHost);
-      this.createStartGameButton();
-
-      if (!playerWeapons.length) {
-        emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
-      }
-    });
+    this.storage.on<GameState>(gameStateCollection, 'Add', async (id, record) => this.multiplayerGameLoaded(playerId, record.data));
 
     this.storage.on<Player.State>(playerStateCollection, 'Remove', (playerId: string) => {
       const player = this.players.get(playerId);
@@ -438,6 +436,28 @@ export class GameplayScene extends Phaser.Scene {
     this.multiplayerController.connect(gameId, playerId);
   }
 
+  async multiplayerGameLoaded(playerId: string, gameState: GameState): Promise<void> {
+    if (gameState.finished) {
+      return;
+    }
+
+    const playerWeapons = this.weaponController.getPlayerWeapons(playerId);
+    // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 }); // TODO: remove
+
+    this.isHost = gameState.host === playerId;
+    this.storage.getCollection<EnemyState>(enemyStateCollection)!.setReadonly(!this.isHost);
+    this.storage.getCollection<EmbienceEvent>(embienceEvent)!.setReadonly(!this.isHost);
+
+    if (!playerWeapons.length) {
+      emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
+    }
+
+    this.createStartGameButton();
+
+    await this.beforeStart();
+    this.startGameButton.show();
+  }
+
   createStartGameButton(): void {
     const gameCollection = this.storage.getCollection<GameState>(gameStateCollection)!;
     const gameState = gameCollection.getItem('game')!;
@@ -446,7 +466,7 @@ export class GameplayScene extends Phaser.Scene {
       return;
     }
 
-    this.startGameButton = new UiStartGameButton(this, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT - 100);
+    this.startGameButton = new UiStartGameButton(this);
     this.startGameButton.setDepth(800);
     this.add.existing(this.startGameButton);
 
@@ -471,6 +491,11 @@ export class GameplayScene extends Phaser.Scene {
     const gameCollection = this.storage.getCollection<GameState>(gameStateCollection)!;
     const connections = this.storage.getCollection<ConnectionState>(connectionStateCollection)!;
     const gameState = gameCollection.getItem('game')!;
+
+    if (!gameState) {
+      return;
+    }
+
     const connectionsCount = connections.getSize();
     const readyCount = connections.getItems().filter(data => data.ready).length;
     const canStart = connectionsCount > 1 && readyCount === connectionsCount;

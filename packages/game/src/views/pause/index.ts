@@ -15,7 +15,7 @@ export class PauseView {
   private overlay: Phaser.GameObjects.Rectangle;
 
   private isOpen: boolean = false;
-  private depth: number = 1000;
+  private depth: number = 1001;
 
   static preload(scene: Phaser.Scene) {
     UiPlayButton.preload(scene);

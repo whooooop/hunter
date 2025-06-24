@@ -120,7 +120,7 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
     if (this.options.debug) {
       const graphics = this.scene.add.graphics();
       graphics.lineStyle(2, 0xffff00);
-      graphics.setDepth(1000);
+      graphics.setDepth(900);
       graphics.strokeCircle(this.x, this.y, this.options.interactionRadius);
     }
   }
@@ -162,7 +162,7 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
 
     // Создаем основной контейнер интерфейса
     const shopUI = this.scene.add.container(0, 0);
-    shopUI.setDepth(1000);
+    shopUI.setDepth(900);
     shopUI.setScrollFactor(0); // Фиксирует UI на экране
     shopUI.setAlpha(0); // Начинаем с полностью прозрачного состояния
     this.currentShopUI = shopUI; // Сохраняем ссылку

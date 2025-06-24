@@ -1,9 +1,12 @@
 import { ClickSound, preloadClickSound } from '../../../../audio/click';
-import { FONT_FAMILY } from '../../../../config';
+import { DISPLAY, FONT_FAMILY } from '../../../../config';
 import { preloadImage } from '../../../../preload';
 import { AudioService } from '../../../../services/AudioService';
 import { StartGameButtonTexture } from './textures';
 import { readyText, startGameText, waitingText } from './translate';
+
+const showY: number = DISPLAY.HEIGHT - 100;
+const hideY: number = DISPLAY.HEIGHT + 100;
 
 export class UiStartGameButton extends Phaser.GameObjects.Container {
   private isHostMode: boolean = false;
@@ -16,8 +19,8 @@ export class UiStartGameButton extends Phaser.GameObjects.Container {
     preloadImage(scene, { key: StartGameButtonTexture.key, url: StartGameButtonTexture.url! });
   }
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y);
+  constructor(scene: Phaser.Scene) {
+    super(scene, DISPLAY.WIDTH / 2, hideY);
 
     this.text = this.scene.add.text(0, 0, '', { fontSize: 18, color: '#ffffff', align: 'center', fontFamily: FONT_FAMILY.BOLD }).setOrigin(0.5);
     this.button = this.scene.add.image(0, 0, StartGameButtonTexture.key).setScale(StartGameButtonTexture.scale);
@@ -60,16 +63,26 @@ export class UiStartGameButton extends Phaser.GameObjects.Container {
     });
   }
 
+  show(): Promise<void> {
+    return new Promise((resolve) => {
+      this.scene.tweens.add({
+        targets: this,
+        duration: 600,
+        y: showY,
+        ease: 'Quint.easeInOut',
+        onComplete: () => resolve()
+      });
+    });
+  }
+
   hide(): Promise<void> {
     return new Promise((resolve) => {
       this.scene.tweens.add({
         targets: this,
-        duration: 100,
-        y: this.y + 100,
-        onComplete: () => {
-          this.setVisible(false);
-          resolve();
-        }
+        duration: 600,
+        y: hideY,
+        ease: 'Quint.easeInOut',
+        onComplete: () => resolve()
       });
     });
   }

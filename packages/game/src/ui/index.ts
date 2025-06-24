@@ -7,4 +7,5 @@ export * from './ReplayButton';
 export * from './ShopButton';
 export * from './Star';
 export * from './Stars';
+export * from './TimerButton';
 

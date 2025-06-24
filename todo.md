@@ -1,6 +1,4 @@
 
-- multiplayer start button (max players)
-- multiplayer restart with save code
 - win popup
 - leaderboard (score / time)
 - received stars notification / or task completed
@@ -9,3 +7,5 @@
 - connection lost / not connected 
 - move pause button 
 - multiplayer score
+
+- ad reward
