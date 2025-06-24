@@ -22,4 +22,4 @@ export const mobileChangeWeaponArea = {
 };
 
 export const MIN_THRESHOLD = 0.25;
-export const FOLLOW_FINGER = true;
+export const FOLLOW_FINGER = false;

@@ -49,6 +49,7 @@ interface EventPayloadMap {
   // Game
   [Game.Events.Pause.Local]: Game.Events.Pause.Payload;
   [Game.Events.Replay.Local]: Game.Events.Replay.Payload;
+  [Game.Events.ResumeWithAds.Local]: Game.Events.ResumeWithAds.Payload;
   [Game.Events.Resume.Local]: Game.Events.Resume.Payload;
   [Game.Events.Exit.Local]: Game.Events.Exit.Payload;
   [Game.Events.Stat.Local]: Game.Events.Stat.Payload;

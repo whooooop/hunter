@@ -2,7 +2,7 @@ import { I18n } from "../../utils/i18n";
 
 export const bestScoreText = I18n({
   en: 'Best Score:',
-  ru: 'Лучший результат:',
+  ru: 'Лучший:',
 });
 
 export const scoreText = I18n({
@@ -55,6 +55,7 @@ export const killsText = I18n({
   ru: 'Убийств:',
 });
 
-
-
-
+export const watchVideoText = I18n({
+  en: 'Watch video to continue',
+  ru: 'Смотреть рекламу чтобы продолжить',
+});

@@ -313,24 +313,17 @@ export class ShopEntity extends Phaser.GameObjects.Sprite {
           weaponData: weaponData
         });
 
-        // Обработчик клика для покупки
         slotBackground.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-          console.log('pointerdown', weaponData.type);
-          pointer.event.stopPropagation(); // Останавливаем всплытие
+          pointer.event.stopPropagation();
 
           if (!this.currentPlayerId) return;
 
-          // Проверяем, можно ли купить
           const canAfford = weaponData.price <= this.currentPlayerBalance;
           const isPurchased = this.purchasedWeaponTypes.has(weaponData.type);
 
           if (canAfford && !isPurchased) {
             this.purchasedWeapon(weaponData.type);
             this.closeShop();
-          } else if (isPurchased) {
-            // Можно добавить звук "уже куплено"
-          } else {
-            // Можно добавить звук "не хватает денег"
           }
         });
 

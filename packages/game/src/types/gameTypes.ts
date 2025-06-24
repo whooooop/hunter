@@ -15,6 +15,11 @@ export namespace Game {
       export type Payload = {};
     }
 
+    export namespace ResumeWithAds {
+      export const Local = 'GameResumeWithAdsLocalEvent';
+      export type Payload = {};
+    }
+
     export namespace Exit {
       export const Local = 'GameExitLocalEvent';
       export type Payload = {};

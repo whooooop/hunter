@@ -105,6 +105,7 @@ export class GameplayScene extends Phaser.Scene {
   private sceneLoaded!: boolean;
 
   private attempt: number = 1;
+  private continueWithAdsCount: number = 0;
 
   private storage!: StorageSpace;
 
@@ -132,6 +133,7 @@ export class GameplayScene extends Phaser.Scene {
     this.storage = StorageSpace.create(gameStorage)!;
     this.kills = 0;
     this.playTime = 0;
+    this.continueWithAdsCount = 0;
     this.isGameOver = false;
     this.isMultiplayer = false;
     this.sceneLoaded = false;
@@ -147,6 +149,7 @@ export class GameplayScene extends Phaser.Scene {
     onEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
     onEvent(this, Game.Events.Pause.Local, this.handlePause, this);
     onEvent(this, Game.Events.Replay.Local, this.handleReplay, this);
+    onEvent(this, Game.Events.ResumeWithAds.Local, this.handleResumeWithAds, this);
     onEvent(this, Game.Events.Exit.Local, this.handleExit, this);
     onEvent(this, Loading.Events.LoadingComplete.Local, this.handleLoadingComplete, this);
   }
@@ -187,7 +190,6 @@ export class GameplayScene extends Phaser.Scene {
     this.waveInfo.destroy();
     this.weaponStatus.destroy();
     this.uiMute.destroy();
-    // this.uiFullscreen.destroy();
     this.players.forEach(player => player.destroy());
     this.pauseView.close();
     this.multiplayerController?.destroy();
@@ -198,6 +200,7 @@ export class GameplayScene extends Phaser.Scene {
     offEvent(this, Enemy.Events.Death.Local, this.handleEnemyDeath, this);
     offEvent(this, Game.Events.Pause.Local, this.handlePause, this);
     offEvent(this, Game.Events.Replay.Local, this.handleReplay, this);
+    offEvent(this, Game.Events.ResumeWithAds.Local, this.handleResumeWithAds, this);
     offEvent(this, Game.Events.Exit.Local, this.handleExit, this);
     offEvent(this, Loading.Events.LoadingComplete.Local, this.handleLoadingComplete, this);
     window.bridge.game.off(window.bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, this.handleVisibilityStateChangedBind);
@@ -288,6 +291,32 @@ export class GameplayScene extends Phaser.Scene {
       if (gameState) {
         gameState.paused = true;
       }
+    }
+  }
+
+  private handleResumeWithAds(): void {
+    this.continueWithAdsCount++;
+    const gameCollection = this.storage.getCollection<GameState>(gameStateCollection)!;
+    const gameState = gameCollection.getItem('game')!;
+    gameState.finished = false;
+    this.isGameOver = false;
+    this.gameOverView.close();
+    this.enemies.forEach(enemy => {
+      if (enemy instanceof EnemyEntity) {
+        if (enemy.getPosition().x < 400) {
+          this.destroyEnemy(enemy.id);
+        }
+      }
+    });
+    this.resumeGame();
+  }
+
+  destroyEnemy(id: string): void {
+    const enemy = this.enemies.get(id);
+    if (enemy && enemy instanceof EnemyEntity) {
+      enemy.destroy();
+      this.enemies.delete(id);
+      this.damageableObjects.delete(id);
     }
   }
 
@@ -597,6 +626,7 @@ export class GameplayScene extends Phaser.Scene {
           window.bridge.platform.sendMessage("gameplay_stopped");
           this.gameOverView.open({
             attempt: this.attempt,
+            showContinueWithAds: this.continueWithAdsCount < 3 && !this.isMultiplayer,
             time: this.playTime,
             kills: this.kills,
             showReplay: this.isHost,
@@ -605,15 +635,10 @@ export class GameplayScene extends Phaser.Scene {
           });
           if (this.isHost) {
             this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game')!.finished = true;
-            this.waveController.stop();
           }
         }
 
-        const enemyEntity = this.enemies.get(enemy.id);
-        if (enemyEntity) {
-          // @ts-ignore
-          enemyEntity.destroy();
-        }
+        this.destroyEnemy(enemy.id);
         this.handleEnemyDeath({ id: enemy.id });
       } else if (position && position.x < 250 && !this.isGameOver) {
         if (!this.dangerNotification.has(enemy.id)) {
