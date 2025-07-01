@@ -81,6 +81,7 @@ export class UiInput extends Phaser.GameObjects.Container {
 
     if (!this.options.readonly) {
       this.text.setInteractive().on('pointerdown', () => {
+        // this.createForm();
         // @ts-ignore
         this.scene.rexUI.edit(this.text, {
           inputStyle: {
@@ -119,6 +120,39 @@ export class UiInput extends Phaser.GameObjects.Container {
     } else {
       console.warn('Failed to copy text to clipboard');
     }
+  }
+
+  private createForm(): void {
+    const wrap = document.createElement('div');
+    const input = document.createElement('input');
+
+    wrap.style.position = 'fixed';
+    wrap.style.zIndex = '1000';
+    wrap.style.left = '0px';
+    wrap.style.bottom = '0px';
+    wrap.style.width = '100%';
+    wrap.style.backgroundColor = '#fff';
+
+    input.style.height = '40px';
+    input.style.width = '100%';
+    input.style.fontSize = '18px';
+    input.style.outline = 'none';
+    input.value = this.getValue();
+
+    wrap.appendChild(input);
+    document.body.appendChild(wrap);
+
+    const onInput = () => this.setValue(input.value);
+    input.addEventListener('input', onInput);
+
+    input.addEventListener('blur', () => {
+      input.removeEventListener('input', onInput);
+      document.body.removeChild(wrap);
+    }, { once: true })
+
+    setTimeout(() => {
+      input.focus();
+    }, 500);
   }
 
   public getValue(): string {

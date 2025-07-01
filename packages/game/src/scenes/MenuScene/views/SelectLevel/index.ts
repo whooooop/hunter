@@ -35,7 +35,7 @@ export class SelectLevelView implements MenuSceneTypes.View {
     {
       offsetX: 0,
       offsetY: 20,
-      previewOffsetY: 0,
+      previewOffsetY: -80,
       previewOffsetX: 0,
       plashkaTexture: plashka1Texture,
       maskTexture: plashka1MaskTexture,
@@ -123,6 +123,7 @@ export class SelectLevelView implements MenuSceneTypes.View {
       const levelConfig = this.levelCollection[levelId as LevelId];
       const blockConfig = this.blocks[index];
       const offsetX = blockConfig.offsetX;
+      const offsetY = blockConfig.offsetY
       const previewOffsetY = blockConfig.previewOffsetY + blockConfig.offsetY;
       const previewOffsetX = blockConfig.previewOffsetX;
       const stats = StatsService.getLevelStats(levelId);
@@ -134,13 +135,17 @@ export class SelectLevelView implements MenuSceneTypes.View {
         strokeThickness: 3,
         fontFamily: FONT_FAMILY.BOLD
       }).setOrigin(0.5);
-      const container = this.scene.add.container(center.x - offsetX, center.y + blockConfig.offsetY);
-      const maskImage = this.scene.add.image(center.x - offsetX + previewOffsetX, center.y + previewOffsetY, this.blocks[index].maskTexture.key).setOrigin(0.5).setScale(this.blocks[index].maskTexture.scale).setFlipX(blockConfig.flipX as boolean).setVisible(false);
+      const container = this.scene.add.container(center.x - offsetX, center.y + offsetY);
+      const maskImage = this.scene.add.image(center.x - offsetX + previewOffsetX, center.y + previewOffsetY, blockConfig.maskTexture.key)
+        .setOrigin(0.5)
+        .setScale(blockConfig.maskTexture.scale)
+        .setFlipX(blockConfig.flipX as boolean)
+        .setVisible(false);
 
       // Сначала пытаемся создать видео
       if (levelConfig.video) {
         try {
-          video = this.scene.add.video(previewOffsetX, previewOffsetY, levelConfig.video.key)
+          video = this.scene.add.video(previewOffsetX, previewOffsetY - offsetY, levelConfig.video.key)
             .setOrigin(0.5)
             .setScale(levelConfig.video.scale)
             .setLoop(true)
@@ -173,7 +178,7 @@ export class SelectLevelView implements MenuSceneTypes.View {
           video = null;
         }
       } else if (levelConfig.preview) {
-        preview = this.scene.add.image(previewOffsetX, previewOffsetY, levelConfig.preview.key)
+        preview = this.scene.add.image(previewOffsetX, previewOffsetY + offsetY, levelConfig.preview.key)
           .setOrigin(0.5)
           .setScale(levelConfig.preview.scale)
           .setTint(0xbbbbbb);

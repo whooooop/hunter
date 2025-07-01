@@ -3,18 +3,19 @@ import { ConnectionState, CountdownEvent, EmbienceEvent, EnemyState, GameState, 
 import * as Phaser from 'phaser';
 import { createGame } from '../../api/game';
 import { preloadBossSound } from '../../audio/boss';
-import { playDangerSound, preloadDangerSound } from '../../audio/danger';
+import { preloadDangerSound } from '../../audio/danger';
 import { playGameoverAudio, preloadGameoverAudio } from '../../audio/gameover';
 import { stopMenuAudio } from '../../audio/menu';
-import { DISPLAY, FONT_FAMILY, GAMEOVER, PAUSE_WHEN_FOCUS_LOST, VERSION } from '../../config';
+import { DISPLAY, FONT_FAMILY, PAUSE_WHEN_FOCUS_LOST, VERSION } from '../../config';
 import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../../controllers';
+import { LevelController } from '../../controllers/LevelController';
 import { createEnemy } from '../../enemies';
 import { EnemyEntity } from '../../entities/EnemyEntity';
 import { PlayerEntity } from '../../entities/PlayerEntity';
 import { ShopEntity } from '../../entities/ShopEntity';
 import { preloadFx } from '../../fx';
 import { emitEvent, offEvent, onEvent } from '../../GameEvents';
-import { getLevel, LevelId } from '../../levels';
+import { getLevel, levelControllersFactory, LevelId } from '../../levels';
 import { getLocation } from '../../locations';
 import { preloadProjectiles } from '../../projectiles';
 import { AudioService } from '../../services/AudioService';
@@ -37,7 +38,6 @@ import { GameOverView } from '../../views/gameover';
 import { LoadingView } from '../../views/loading/LoadingView';
 import { PauseView } from '../../views/pause';
 import { preloadWeapons } from '../../weapons';
-import { WeaponType } from '../../weapons/WeaponTypes';
 import { SceneKeys } from '../index';
 import { MenuSceneTypes } from '../MenuScene/MenuSceneTypes';
 import { ControlsView } from './components/Controls';
@@ -85,6 +85,7 @@ export class GameplayScene extends Phaser.Scene {
   private bloodController!: BloodController;
   private multiplayerController!: MultiplayerController;
   private keyboardController!: KeyBoardController;
+  private levelController!: LevelController;
   private changeWeaponKey!: Phaser.Input.Keyboard.Key;
   private pauseView!: PauseView;
   private gameOverView!: GameOverView;
@@ -93,7 +94,6 @@ export class GameplayScene extends Phaser.Scene {
   private countdown!: Countdown;
   private mainPlayerId!: string;
   private players!: Map<string, PlayerEntity>;
-  private dangerNotification!: Set<string>;
 
   private isHost!: boolean;
   private playTime!: number;
@@ -140,7 +140,6 @@ export class GameplayScene extends Phaser.Scene {
     this.players = new Map();
     this.enemies = new Map();
     this.damageableObjects = new Map();
-    this.dangerNotification = new Set();
 
     HintsService.getInstance().getHint().then(hint => {
       this.loadingView.setHint(hint);
@@ -187,6 +186,7 @@ export class GameplayScene extends Phaser.Scene {
     this.shopController.destroy();
     this.decalController.destroy();
     this.projectileController.destroy();
+    this.levelController.destroy();
     this.waveInfo.destroy();
     this.weaponStatus.destroy();
     this.uiMute.destroy();
@@ -232,8 +232,9 @@ export class GameplayScene extends Phaser.Scene {
     this.decalController = new DecalController(this, 0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 5);
     this.projectileController = new ProjectileController(this, this.damageableObjects, this.storage, this.location.getBounds());
     this.waveController = new WaveController(this, this.levelConfig.waves(), this.storage);
-    this.countdown = new Countdown(this, 0, 0);
+    this.levelController = new levelControllersFactory[this.levelConfig.controller](this, this.storage, this.enemies as Map<string, EnemyEntity>);
 
+    this.countdown = new Countdown(this, 0, 0);
     this.waveInfo = new WaveInfo(this, this.storage);
     this.weaponStatus = new WeaponStatus(this, this.storage, this.mainPlayerId);
     this.uiMute = new UiMute(this, DISPLAY.WIDTH - 90, 74).setDepth(600).setButtonScale(0.8);
@@ -250,11 +251,6 @@ export class GameplayScene extends Phaser.Scene {
 
     this.controlsView = new ControlsView(this);
     this.add.existing(this.controlsView);
-  }
-
-  async beforeStart(): Promise<void> {
-    const stats = StatsService.getStats();
-    await this.controlsView.wait(stats.gameplays > 3 ? 10000 : 0);
   }
 
   private handleLoadingComplete(payload: Loading.Events.LoadingComplete.Payload): void {
@@ -301,22 +297,16 @@ export class GameplayScene extends Phaser.Scene {
     gameState.finished = false;
     this.isGameOver = false;
     this.gameOverView.close();
-    this.enemies.forEach(enemy => {
-      if (enemy instanceof EnemyEntity) {
-        if (enemy.getPosition().x < 400) {
-          this.destroyEnemy(enemy.id);
-        }
-      }
-    });
+    this.levelController.resumeWithAds();
     this.resumeGame();
   }
 
   destroyEnemy(id: string): void {
     const enemy = this.enemies.get(id);
     if (enemy && enemy instanceof EnemyEntity) {
-      enemy.destroy();
       this.enemies.delete(id);
       this.damageableObjects.delete(id);
+      this.storage.getCollection<EnemyState>(enemyStateCollection)!.removeItem(id);
     }
   }
 
@@ -340,14 +330,16 @@ export class GameplayScene extends Phaser.Scene {
     });
     this.storage.getCollection<PlayerSkin>(playerSkinCollection)!.addItem(playerId, { body: 'b1' });
     this.storage.getCollection<Player.State>(playerStateCollection)!.addItem(playerId, { x: 0, y: 0, vx: 0, vy: 0 });
-    emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
+
+    if (this.levelConfig.defaultWeapon) {
+      emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: this.levelConfig.defaultWeapon, price: 0 });
+    }
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.AWP, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MINE, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.LAUNCHER, price: 0 });
     // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
-
-    await this.beforeStart();
-    this.startGame(500);
+    await this.showControlsHelp();
+    this.startGame();
   }
 
   private handleCountdown(id: string, record: SyncCollectionRecord<CountdownEvent>): void {
@@ -362,15 +354,28 @@ export class GameplayScene extends Phaser.Scene {
     gameState.paused = !gameState.paused;
   }
 
-  async startGame(delay: number = 1000) {
+  async showControlsHelp(): Promise<void> {
+    const stats = StatsService.getStats();
+    await this.controlsView.wait(stats.gameplays > 3 ? 10000 : 0);
+  }
+
+  waveStart() {
+    this.waveController.start();
+  }
+
+  async countdownStart(delay: number = 1000, duration: number = 3000): Promise<void> {
+    return new Promise(resolve => {
+      this.storage.getCollection<CountdownEvent>(countdownEvent)!.addItem('countdown', { delay, duration });
+      this.time.delayedCall(delay + duration, () => resolve());
+    });
+  }
+
+  async startGame() {
     const gameCollection = this.storage.getCollection<GameState>(gameStateCollection)!;
     const gameState = gameCollection.getItem('game')!;
     gameState.started = true;
-
-    const duration = 3000;
-    this.storage.getCollection<CountdownEvent>(countdownEvent)!.addItem('countdown', { delay, duration });
     this.projectileController.setSimulate(false);
-    this.time.delayedCall(delay + duration, () => this.waveController.start());
+    this.levelController.start();
   }
 
   private stopGame() {
@@ -477,13 +482,13 @@ export class GameplayScene extends Phaser.Scene {
     this.storage.getCollection<EnemyState>(enemyStateCollection)!.setReadonly(!this.isHost);
     this.storage.getCollection<EmbienceEvent>(embienceEvent)!.setReadonly(!this.isHost);
 
-    if (!playerWeapons.length) {
-      emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.GLOCK, price: 0 });
+    if (!playerWeapons.length && this.levelConfig.defaultWeapon) {
+      emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: this.levelConfig.defaultWeapon, price: 0 });
     }
 
     this.createStartGameButton();
 
-    await this.beforeStart();
+    await this.showControlsHelp();
     this.startGameButton.show();
   }
 
@@ -511,7 +516,7 @@ export class GameplayScene extends Phaser.Scene {
       await this.startGameButton.hide();
       this.startGameButton.destroy();
       if (this.isHost) {
-        this.startGame(1000);
+        this.startGame();
       }
     });
   }
@@ -539,10 +544,8 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private handleEnemyDeath({ id }: Enemy.Events.Death.Payload): void {
-    this.enemies.delete(id);
     this.kills++;
-    this.damageableObjects.delete(id);
-    this.storage.getCollection<EnemyState>(enemyStateCollection)!.removeItem(id);
+    this.destroyEnemy(id);
   }
 
   private handleSpawnEnemy(id: string, record: SyncCollectionRecord<EnemyState>): void {
@@ -578,18 +581,43 @@ export class GameplayScene extends Phaser.Scene {
     this.shop = shop;
   }
 
+  gameOver(): void {
+    this.isGameOver = true;
+    window.bridge.platform.sendMessage("gameplay_stopped");
+
+    playGameoverAudio(this);
+    this.stopGame();
+    this.handleGameEnd();
+
+    this.gameOverView.open({
+      attempt: this.attempt,
+      showContinueWithAds: this.continueWithAdsCount < 3 && !this.isMultiplayer,
+      time: this.playTime,
+      kills: this.kills,
+      showReplay: this.isHost,
+      score: this.scoreController.getTotalScore(this.mainPlayerId),
+      levelId: this.levelId
+    });
+  }
+
   private handleGameEnd(): void {
     const score = this.scoreController.getTotalScore(this.mainPlayerId);
     const stats = StatsService.getLevelStats(this.levelId);
+    if (this.isHost) {
+      this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game')!.finished = true;
+    }
     if (score > stats.bestScore) {
       StatsService.setBestScore(this.levelId, score);
-    }
-    if (this.isGameOver) {
-      this.stopGame();
     }
   }
 
   update(time: number, delta: number): void {
+    const gameState = this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game');
+
+    if (!gameState) {
+      return;
+    }
+
     if (this.isMultiplayer && this.pingText) {
       this.pingText.setText(`Ping: ${this.multiplayerController.ping}ms`);
       this.gameIdText.setText(`Game ID: ${this.gameId}`);
@@ -600,10 +628,7 @@ export class GameplayScene extends Phaser.Scene {
     this.location.update(time, delta);
     this.shopController.update(time, delta);
     this.keyboardController.update(time, delta);
-
-    this.players.forEach(player => {
-      player.update(time, delta);
-    });
+    this.players.forEach(player => player.update(time, delta));
 
     if (mainPlayer) {
       const weapon = mainPlayer.getWeapon();
@@ -615,43 +640,12 @@ export class GameplayScene extends Phaser.Scene {
       }
     }
 
-    this.enemies.forEach((enemy) => {
-      enemy.update(time, delta);
-      const position = enemy instanceof EnemyEntity && enemy.getPosition();
-      if (position && position.x < 0) {
-        if (GAMEOVER && !this.isGameOver) {
-          this.isGameOver = true;
-          this.handleGameEnd();
-          playGameoverAudio(this);
-          window.bridge.platform.sendMessage("gameplay_stopped");
-          this.gameOverView.open({
-            attempt: this.attempt,
-            showContinueWithAds: this.continueWithAdsCount < 3 && !this.isMultiplayer,
-            time: this.playTime,
-            kills: this.kills,
-            showReplay: this.isHost,
-            score: this.scoreController.getTotalScore(this.mainPlayerId),
-            levelId: this.levelId
-          });
-          if (this.isHost) {
-            this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game')!.finished = true;
-          }
-        }
-
-        this.destroyEnemy(enemy.id);
-        this.handleEnemyDeath({ id: enemy.id });
-      } else if (position && position.x < 250 && !this.isGameOver) {
-        if (!this.dangerNotification.has(enemy.id)) {
-          this.dangerNotification.add(enemy.id);
-          playDangerSound(this);
-        }
-      }
-    });
-
+    this.enemies.forEach((enemy) => enemy.update(time, delta));
     this.projectileController.update(time, delta);
     this.waveInfo.update(time, delta);
+    this.levelController.update(time, delta);
 
-    if (!this.storage.getCollection<GameState>(gameStateCollection)!.getItem('game')?.paused) {
+    if (!gameState.paused) {
       this.playTime += delta;
     }
   }

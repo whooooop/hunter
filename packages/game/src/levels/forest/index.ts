@@ -5,11 +5,14 @@ import { quests } from './quests';
 import { createWavesConfig } from './waves';
 import { forestWeapons } from './weapons';
 
+import { WeaponType } from '../../weapons/WeaponTypes';
 import forestVideo from './assets/preview.mp4';
 import forestPreview from './assets/preview.png';
 
 export const ForestLevelConfig: Level.Config = {
   location: Location.Id.FOREST,
+  multiplayer: true,
+  controller: Level.ControllerType.DEFAULT,
   name: I18n({
     en: 'Spring Forest',
     ru: 'Весенний лес',
@@ -28,4 +31,5 @@ export const ForestLevelConfig: Level.Config = {
   wavesCount: 5,
   waves: createWavesConfig,
   weapons: forestWeapons,
+  defaultWeapon: WeaponType.GLOCK,
 }

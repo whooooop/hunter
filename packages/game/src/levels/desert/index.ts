@@ -4,6 +4,8 @@ import { I18n } from '../../utils/i18n';
 
 export const DesertLevelConfig: Level.Config = {
   location: Location.Id.DESERT,
+  multiplayer: false,
+  controller: Level.ControllerType.DEFAULT,
   disabled: true,
   name: I18n({
     en: 'Soon',
@@ -15,4 +17,5 @@ export const DesertLevelConfig: Level.Config = {
   wavesCount: 1,
   quests: [],
   weapons: [],
+  defaultWeapon: null,
 }

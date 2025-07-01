@@ -7,5 +7,4 @@
 - connection lost / not connected 
 - move pause button 
 - multiplayer score
-
-- ad reward
+- upd SDK version

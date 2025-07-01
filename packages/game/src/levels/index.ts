@@ -1,17 +1,25 @@
+import { LevelController } from "../controllers/LevelController";
+import { LevelTutorialController } from "../controllers/LevelTutorialController";
 import { Level } from "../types/levelTypes";
-import { ForestLevelConfig } from "./forest";
 import { DesertLevelConfig } from "./desert";
+import { ForestLevelConfig } from "./forest";
+import { TutorialLevelConfig } from './tutorial';
 
 export enum LevelId {
+  TUTORIAL = 'tutotial',
   FOREST = 'forest',
   SOON = 'soon',
-  SOON2 = 'soon2',
 }
 
 export const LevelCollection: Record<LevelId, Level.Config> = {
+  [LevelId.TUTORIAL]: TutorialLevelConfig,
   [LevelId.FOREST]: ForestLevelConfig,
   [LevelId.SOON]: DesertLevelConfig,
-  [LevelId.SOON2]: DesertLevelConfig,
+}
+
+export const levelControllersFactory = {
+  [Level.ControllerType.TUTORIAL]: LevelTutorialController,
+  [Level.ControllerType.DEFAULT]: LevelController,
 }
 
 export function getLevelConfig(levelId: LevelId): Level.Config {
@@ -21,4 +29,3 @@ export function getLevelConfig(levelId: LevelId): Level.Config {
 export function getLevel(levelId: LevelId): Level.Config {
   return LevelCollection[levelId];
 }
-
