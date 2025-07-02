@@ -1,5 +1,5 @@
 import { LevelController } from "../controllers/LevelController";
-import { LevelTutorialController } from "../controllers/LevelTutorialController";
+import { LevelTutorialController } from "../tutorial/LevelTutorialController";
 import { Level } from "../types/levelTypes";
 import { DesertLevelConfig } from "./desert";
 import { ForestLevelConfig } from "./forest";

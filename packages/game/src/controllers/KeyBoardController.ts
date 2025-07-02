@@ -53,6 +53,10 @@ export class KeyBoardController {
   private numberKeyPressed: number = 0;
   private isJoystickActive: boolean = false;
 
+  private lastMoveX: number = 0;
+  private lastMoveY: number = 0;
+  private lastActiveFire: boolean = false;
+
   public static preload(scene: Phaser.Scene): void {
     preloadJoystickTextures(scene);
   }
@@ -276,6 +280,23 @@ export class KeyBoardController {
       if (joystickY >= MIN_THRESHOLD) {
         move.y = Math.sign(this.joystick.forceY);
       }
+
+      if (move.x !== this.lastMoveX) {
+        if (move.x === -1) {
+          emitEvent(this.scene, Controls.Events.KeyLeft.Event, { playerId: this.playerId });
+        } else if (move.x === 1) {
+          emitEvent(this.scene, Controls.Events.KeyRight.Event, { playerId: this.playerId });
+        }
+        this.lastMoveX = move.x;
+      }
+      if (move.y !== this.lastMoveY) {
+        if (move.y === -1) {
+          emitEvent(this.scene, Controls.Events.KeyUp.Event, { playerId: this.playerId });
+        } else if (move.y === 1) {
+          emitEvent(this.scene, Controls.Events.KeyDown.Event, { playerId: this.playerId });
+        }
+        this.lastMoveY = move.y;
+      }
     } else {
       const UpKeyisDown = this.UpKey.isDown || this.cursors.up.isDown;
       const DownKeyisDown = this.DownKey.isDown || this.cursors.down.isDown;
@@ -301,6 +322,8 @@ export class KeyBoardController {
   private handleCursorKeys(time: number, delta: number): void {
     const LeftKeyisDown = this.LeftKey.isDown || this.cursors.left.isDown;
     const RightKeyisDown = this.RightKey.isDown || this.cursors.right.isDown;
+    const UpKeyisDown = this.UpKey.isDown || this.cursors.up.isDown;
+    const DownKeyisDown = this.DownKey.isDown || this.cursors.down.isDown;
 
     if (LeftKeyisDown && !this.keyLeftDisabled) {
       emitEvent(this.scene, Controls.Events.KeyLeft.Event, { playerId: this.playerId });
@@ -314,6 +337,20 @@ export class KeyBoardController {
       this.keyRightDisabled = true;
     } else if (!RightKeyisDown) {
       this.keyRightDisabled = false;
+    }
+
+    if (UpKeyisDown && !this.keyUpDisabled) {
+      emitEvent(this.scene, Controls.Events.KeyUp.Event, { playerId: this.playerId });
+      this.keyUpDisabled = true;
+    } else if (!UpKeyisDown) {
+      this.keyUpDisabled = false;
+    }
+
+    if (DownKeyisDown && !this.keyDownDisabled) {
+      emitEvent(this.scene, Controls.Events.KeyDown.Event, { playerId: this.playerId });
+      this.keyDownDisabled = true;
+    } else if (!DownKeyisDown) {
+      this.keyDownDisabled = false;
     }
   }
 
@@ -355,10 +392,12 @@ export class KeyBoardController {
   private handleFire(time: number, delta: number): void {
     if (this.fireKey.isDown || this.firePointerPressed) {
       this.fireKeyPressed = true;
+      this.lastActiveFire = true;
       emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: true });
-    } else if (!this.fireKey.isDown && !this.firePointerPressed) {
+    } else if (!this.fireKey.isDown && !this.firePointerPressed && this.lastActiveFire) {
       emitEvent(this.scene, Controls.Events.Fire.Event, { playerId: this.playerId, active: false });
       this.fireKeyPressed = false;
+      this.lastActiveFire = false;
     }
   }
 

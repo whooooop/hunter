@@ -1,18 +1,24 @@
 import { StorageSpace } from '@hunter/multiplayer';
 import { GameState } from '@hunter/storage-proto/src/storage';
-import { playDangerSound } from '../audio/danger';
+import { playDangerSound, preloadDangerSound } from '../audio/danger';
 import { GAMEOVER } from '../config';
 import { EnemyEntity } from "../entities/EnemyEntity";
+import { PlayerEntity } from '../entities/PlayerEntity';
 import { GameplayScene } from "../scenes/Gameplay";
 import { gameStateCollection } from '../storage/collections/gameState.collection';
 
 export class LevelController {
   private dangerNotification = new Set<string>();
 
+  static preload(scene: Phaser.Scene): void {
+    preloadDangerSound(scene);
+  }
+
   constructor(
-    private readonly scene: GameplayScene,
-    private readonly storage: StorageSpace,
-    private readonly enemies: Map<string, EnemyEntity>
+    protected readonly scene: GameplayScene,
+    protected readonly storage: StorageSpace,
+    protected readonly players: Map<string, PlayerEntity>,
+    protected readonly enemies: Map<string, EnemyEntity>
   ) {
   }
 
@@ -31,9 +37,7 @@ export class LevelController {
       const position = enemy.getPosition();
       if (position?.x < 0) {
         this.scene.destroyEnemy(enemy.id);
-        if (GAMEOVER) {
-          this.scene.gameOver();
-        }
+        this.gameOver();
       } else if (position?.x < 250) {
         if (!this.dangerNotification.has(enemy.id)) {
           this.dangerNotification.add(enemy.id);
@@ -41,6 +45,16 @@ export class LevelController {
         }
       }
     });
+  }
+
+  gameOver(): void {
+    if (GAMEOVER) {
+      this.scene.gameOver();
+    }
+  }
+
+  async waitReady(): Promise<void> {
+    await this.scene.showControlsHelp();
   }
 
   async start(): Promise<void> {

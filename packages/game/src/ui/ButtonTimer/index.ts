@@ -4,7 +4,7 @@ import { preloadImage } from '../../preload';
 import { AudioService } from '../../services/AudioService';
 import { StartGameButtonTexture } from './textures';
 
-export class UiTimerButton extends Phaser.GameObjects.Container {
+export class UiButtonTimer extends Phaser.GameObjects.Container {
   private text: Phaser.GameObjects.Text;
   private button: Phaser.GameObjects.Image;
   private timer: Phaser.Time.TimerEvent | null = null;

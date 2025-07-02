@@ -1,5 +1,5 @@
 import { DISPLAY } from "../../../../config";
-import { UiTimerButton } from "../../../../ui";
+import { UiButtonTimer } from "../../../../ui";
 import { ControlsViewBase } from "./base";
 import { DesktopControlsView } from "./desktop";
 import { MobileControlsView } from "./mobile";
@@ -8,7 +8,7 @@ import { iUnderstandText } from "./translates";
 export class ControlsView extends ControlsViewBase {
   private readonly helpContainer!: ControlsViewBase;
 
-  private timerButton: UiTimerButton;
+  private timerButton: UiButtonTimer;
 
   private resolver: (value: void | PromiseLike<void>) => void = () => { };
 
@@ -17,7 +17,7 @@ export class ControlsView extends ControlsViewBase {
   private readonly buttonYHide: number = DISPLAY.HEIGHT + 80;
 
   static preload(scene: Phaser.Scene): void {
-    UiTimerButton.preload(scene);
+    UiButtonTimer.preload(scene);
   }
 
   constructor(
@@ -27,7 +27,7 @@ export class ControlsView extends ControlsViewBase {
 
     this.setDepth(this.depthValue);
 
-    this.timerButton = new UiTimerButton(this.scene, DISPLAY.WIDTH / 2, this.buttonYHide, iUnderstandText.translate, 0, () => {
+    this.timerButton = new UiButtonTimer(this.scene, DISPLAY.WIDTH / 2, this.buttonYHide, iUnderstandText.translate, 0, () => {
       this.hide();
     });
 

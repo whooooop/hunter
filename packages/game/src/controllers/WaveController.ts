@@ -53,6 +53,14 @@ export class WaveController {
     this.runWave();
   }
 
+  public continue() {
+    if (!this.active || this.waitingForEnemies) {
+      return;
+    }
+
+    this.runWave();
+  }
+
   private handleEnemyDeath(): void {
     if (!this.active) {
       return;
@@ -127,7 +135,9 @@ export class WaveController {
       this.waveState.boss = false;
       this.waveState.progress = 0;
       this.bossMaxHp = 0;
-      this.runWave();
+      if (!nextWave.manualStart) {
+        this.runWave();
+      }
     } else {
       this.end();
     }

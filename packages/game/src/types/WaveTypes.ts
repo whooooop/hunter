@@ -3,6 +3,7 @@ import { Enemy } from "./index";
 export namespace Wave {
   export interface Config {
     waitAllEnemiesDead: boolean;
+    manualStart?: boolean;
     spawns: Spawn[];
   }
 

@@ -29,4 +29,4 @@ export const GAMEOVER = true;
 export const START_SCENE_GAMEPLAY = false;
 export const PAUSE_WHEN_FOCUS_LOST = true;
 
-export const VERSION = '1.7.1 Beta'; 
+export const VERSION = '1.8.0 Beta'; 

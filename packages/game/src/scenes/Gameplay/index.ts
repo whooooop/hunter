@@ -3,7 +3,6 @@ import { ConnectionState, CountdownEvent, EmbienceEvent, EnemyState, GameState, 
 import * as Phaser from 'phaser';
 import { createGame } from '../../api/game';
 import { preloadBossSound } from '../../audio/boss';
-import { preloadDangerSound } from '../../audio/danger';
 import { playGameoverAudio, preloadGameoverAudio } from '../../audio/gameover';
 import { stopMenuAudio } from '../../audio/menu';
 import { DISPLAY, FONT_FAMILY, PAUSE_WHEN_FOCUS_LOST, VERSION } from '../../config';
@@ -100,7 +99,7 @@ export class GameplayScene extends Phaser.Scene {
   private kills!: number;
 
   private gameId?: string;
-  private isGameOver!: boolean;
+  public isGameOver!: boolean;
   private isMultiplayer!: boolean;
   private sceneLoaded!: boolean;
 
@@ -170,12 +169,13 @@ export class GameplayScene extends Phaser.Scene {
     preloadProjectiles(this);
     preloadFx(this);
     preloadGameoverAudio(this);
-    preloadDangerSound(this);
     preloadBossSound(this);
 
     UiMute.preload(this);
     UiStartGameButton.preload(this);
     ControlsView.preload(this);
+
+    levelControllersFactory[this.levelConfig.controller].preload(this);
   }
 
   clear(): void {
@@ -232,7 +232,7 @@ export class GameplayScene extends Phaser.Scene {
     this.decalController = new DecalController(this, 0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT, 5);
     this.projectileController = new ProjectileController(this, this.damageableObjects, this.storage, this.location.getBounds());
     this.waveController = new WaveController(this, this.levelConfig.waves(), this.storage);
-    this.levelController = new levelControllersFactory[this.levelConfig.controller](this, this.storage, this.enemies as Map<string, EnemyEntity>);
+    this.levelController = new levelControllersFactory[this.levelConfig.controller](this, this.storage, this.players, this.enemies as Map<string, EnemyEntity>);
 
     this.countdown = new Countdown(this, 0, 0);
     this.waveInfo = new WaveInfo(this, this.storage);
@@ -306,6 +306,7 @@ export class GameplayScene extends Phaser.Scene {
     if (enemy && enemy instanceof EnemyEntity) {
       this.enemies.delete(id);
       this.damageableObjects.delete(id);
+      enemy.destroy();
       this.storage.getCollection<EnemyState>(enemyStateCollection)!.removeItem(id);
     }
   }
@@ -338,9 +339,10 @@ export class GameplayScene extends Phaser.Scene {
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.MINE, price: 0 });
     // emitEvent(this, ShopEvents.WeaponPurchasedEvent, { playerId, weaponType: WeaponType.LAUNCHER, price: 0 });
     // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
-    await this.showControlsHelp();
+    await this.levelController.waitReady();
     this.startGame();
   }
+
 
   private handleCountdown(id: string, record: SyncCollectionRecord<CountdownEvent>): void {
     this.countdown.start(record.data.duration, record.data.delay);
@@ -363,6 +365,10 @@ export class GameplayScene extends Phaser.Scene {
     this.waveController.start();
   }
 
+  waveContinue() {
+    this.waveController.continue();
+  }
+
   async countdownStart(delay: number = 1000, duration: number = 3000): Promise<void> {
     return new Promise(resolve => {
       this.storage.getCollection<CountdownEvent>(countdownEvent)!.addItem('countdown', { delay, duration });
@@ -378,7 +384,7 @@ export class GameplayScene extends Phaser.Scene {
     this.levelController.start();
   }
 
-  private stopGame() {
+  stopGame() {
     window.bridge.platform.sendMessage("gameplay_stopped");
     this.time.timeScale = 0;
     this.physics.world.pause();
@@ -419,7 +425,7 @@ export class GameplayScene extends Phaser.Scene {
     }
   }
 
-  private replay(gameId?: string): void {
+  replay(gameId?: string): void {
     this.attempt++;
     this.clear();
     this.scene.start(SceneKeys.RELOAD, {
@@ -488,7 +494,7 @@ export class GameplayScene extends Phaser.Scene {
 
     this.createStartGameButton();
 
-    await this.showControlsHelp();
+    await this.levelController.waitReady();
     this.startGameButton.show();
   }
 

@@ -15,16 +15,17 @@ export function createWavesConfig(): Wave.Config[] {
   const wave1: Wave.Config = {
     waitAllEnemiesDead: true,
     spawns: [
-      { delay: 2000, state: { x, y: y(3), vx: -2, type: Enemy.Type.HARE } },
+      { delay: 2000, state: { x, y: y(2), vx: -2, type: Enemy.Type.HARE } },
     ],
   }
 
   const wave2: Wave.Config = {
     waitAllEnemiesDead: true,
+    manualStart: true,
     spawns: [
-      { delay: 1000, state: { x, y: y(3), vx: -2, type: Enemy.Type.SQUIREEL } },
-      { delay: 4000, state: { x, y: y(2), vx: -2, type: Enemy.Type.SQUIREEL } },
-      { delay: 0, state: { x, y: y(4), vx: -2, type: Enemy.Type.SQUIREEL } },
+      { delay: 1000, state: { x, y: y(2), vx: -2, type: Enemy.Type.SQUIREEL } },
+      { delay: 4000, state: { x, y: y(1), vx: -2, type: Enemy.Type.SQUIREEL } },
+      { delay: 0, state: { x, y: y(3), vx: -2, type: Enemy.Type.SQUIREEL } },
     ],
   }
 

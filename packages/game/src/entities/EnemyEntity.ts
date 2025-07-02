@@ -90,6 +90,10 @@ export class EnemyEntity implements Damageable.Entity {
     this.storage.on<EnemyAnimationEvent>(enemyAnimationEvent, 'Add', this._handleEnemyAnimation);
   }
 
+  setMoveSpeed(vx: number, vy: number) {
+    this.motionController.setMove(vx, vy);
+  }
+
   private handleEnemyDeath(enemyId: string, record: SyncCollectionRecord<EnemyDeathEvent>): void {
     if (enemyId === this.id) {
       this.onDeath({
@@ -262,9 +266,6 @@ export class EnemyEntity implements Damageable.Entity {
     });
 
     await this.onDeathAnimation(3000);
-    emitEvent(this.scene, Enemy.Events.Death.Local, {
-      id: this.id,
-    });
 
     const matrix = this.spineObject.getWorldTransformMatrix();
 
@@ -273,6 +274,10 @@ export class EnemyEntity implements Damageable.Entity {
       x: matrix.tx,
       y: matrix.ty,
       object: this.spineObject as unknown as Phaser.GameObjects.Sprite,
+    });
+
+    emitEvent(this.scene, Enemy.Events.Death.Local, {
+      id: this.id,
     });
 
     this.destroy();
