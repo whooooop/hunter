@@ -1,7 +1,7 @@
 import { DISPLAY } from "../../config";
 import { UiButtonTimer } from "../../ui";
 import { SceneKeys } from "../index";
-import { MenuSceneTypes } from "../MenuScene/MenuSceneTypes";
+import { MenuSceneTypes } from "../Menu/MenuSceneTypes";
 import { SkipText } from "./translates";
 
 export class IntroScene extends Phaser.Scene {

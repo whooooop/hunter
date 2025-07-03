@@ -11,7 +11,7 @@ import { SceneKeys } from './scenes';
 import { BootScene } from './scenes/BootScene';
 import { GameplayScene } from './scenes/Gameplay/index.js';
 import { IntroScene } from './scenes/Intro';
-import { MenuScene } from './scenes/MenuScene/MenuScene';
+import { MenuScene } from './scenes/Menu/index.js';
 import { ReloadScene } from './scenes/ReloadScene';
 import { AudioService } from './services/AudioService';
 import { PlayerService } from './services/PlayerService';

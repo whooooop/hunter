@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { MenuSceneTypes } from './scenes/MenuScene/MenuSceneTypes';
+import { MenuSceneTypes } from './scenes/Menu/MenuSceneTypes';
 import { Blood, Decals, DecreaseScoreEventPayload, Enemy, Game, IncreaseScoreEventPayload, Loading, ScoreEvents, Shop, ShopEvents, Weapon, WeaponPurchasedPayload } from './types';
 import { Controls } from './types/ControlsTypes';
 

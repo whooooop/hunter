@@ -6,7 +6,7 @@ import { UiButtonTimer } from "../ui";
 import { UiBackButton } from "../ui/BackButton";
 import { BackgroundView } from "../views/background/BackgroundView";
 import { LoadingView } from "../views/loading/LoadingView";
-import { MenuSceneTypes } from "./MenuScene/MenuSceneTypes";
+import { MenuSceneTypes } from "./Menu/MenuSceneTypes";
 
 export class BootScene extends Phaser.Scene {
   constructor() {

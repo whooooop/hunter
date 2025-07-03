@@ -38,7 +38,7 @@ import { LoadingView } from '../../views/loading/LoadingView';
 import { PauseView } from '../../views/pause';
 import { preloadWeapons } from '../../weapons';
 import { SceneKeys } from '../index';
-import { MenuSceneTypes } from '../MenuScene/MenuSceneTypes';
+import { MenuSceneTypes } from '../Menu/MenuSceneTypes';
 import { ControlsView } from './components/Controls';
 import { Countdown } from './components/Countdown';
 import { UiStartGameButton } from './components/StartGameButton';
