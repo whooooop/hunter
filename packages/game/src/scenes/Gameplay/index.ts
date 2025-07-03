@@ -1,4 +1,4 @@
-import { registry, StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer';
+import { StorageSpace, SyncCollection, SyncCollectionRecord } from '@hunter/multiplayer';
 import { ConnectionState, CountdownEvent, EmbienceEvent, EnemyState, GameState, PlayerSkin, ReplayEvent } from '@hunter/storage-proto/src/storage';
 import * as Phaser from 'phaser';
 import { createGame } from '../../api/game';
@@ -116,8 +116,6 @@ export class GameplayScene extends Phaser.Scene {
     });
     this.playerService = PlayerService.getInstance();
     this.questService = QuestService.getInstance();
-
-    (window as any)._r = registry;
   }
 
   init({ levelId, gameId }: GameplaySceneData) {
