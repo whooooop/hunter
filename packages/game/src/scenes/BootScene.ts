@@ -1,7 +1,8 @@
 import { SceneKeys } from ".";
 import { preloadMenuAudio } from "../audio/menu";
-import { START_SCENE_GAMEPLAY } from "../config";
+import { START_SCENE_GAMEPLAY, START_SCENE_INTRO } from "../config";
 import { LevelId } from "../levels";
+import { UiButtonTimer } from "../ui";
 import { UiBackButton } from "../ui/BackButton";
 import { BackgroundView } from "../views/background/BackgroundView";
 import { LoadingView } from "../views/loading/LoadingView";
@@ -16,13 +17,16 @@ export class BootScene extends Phaser.Scene {
     LoadingView.preload(this);
     BackgroundView.preload(this);
     UiBackButton.preload(this);
+    UiButtonTimer.preload(this);
     preloadMenuAudio(this);
   }
 
   create() {
     window.bridge.platform.sendMessage("game_ready");
 
-    if (START_SCENE_GAMEPLAY) {
+    if (START_SCENE_INTRO) {
+      this.scene.start(SceneKeys.INTRO);
+    } else if (START_SCENE_GAMEPLAY) {
       const gameId = new URLSearchParams(window.location.search).get('game')
       this.scene.start(SceneKeys.GAMEPLAY, {
         levelId: LevelId.FOREST,

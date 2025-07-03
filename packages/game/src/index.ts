@@ -10,6 +10,7 @@ import playgamaBridgeConfigUrl from './playgama-bridge-config.url.json';
 import { SceneKeys } from './scenes';
 import { BootScene } from './scenes/BootScene';
 import { GameplayScene } from './scenes/Gameplay/index.js';
+import { IntroScene } from './scenes/Intro';
 import { MenuScene } from './scenes/MenuScene/MenuScene';
 import { ReloadScene } from './scenes/ReloadScene';
 import { AudioService } from './services/AudioService';
@@ -73,6 +74,7 @@ const config: Phaser.Types.Core.GameConfig = {
   autoRound: false,
   scene: [
     BootScene,
+    IntroScene,
     GameplayScene,
     MenuScene,
     ReloadScene
@@ -133,26 +135,3 @@ window.addEventListener('DOMContentLoaded', async () => {
   await initBridge();
   await initGame();
 });
-
-
-
-
-// this.sound.unlock();
-// как поменять громкость текущего звука?
-// Глобальный мьют 
-
-// var music = this.sound.add(key, config);
-// music.setVolume(volume); 
-// music.setMute(mute); // mute: true/false
-// music.once("volume", function (music, volume) {});
-// music.once("complete", function (music) {});
-
-
-// this.sound.setMute(mute); // mute: true/false
-// var mute = this.sound.mute;
-// this.sound.setVolume(volume); // volume: 0 to 1
-
-// var musicArray = this.sound.getAllPlaying();
-
-// var stopped = this.sound.stopByKey(key);
-// this.sound.stopAll();

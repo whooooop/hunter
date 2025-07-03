@@ -27,6 +27,7 @@ export const DEBUG = {
 
 export const GAMEOVER = true;
 export const START_SCENE_GAMEPLAY = false;
+export const START_SCENE_INTRO = true;
 export const PAUSE_WHEN_FOCUS_LOST = true;
 
 export const VERSION = '1.8.0 Beta'; 
