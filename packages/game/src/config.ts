@@ -30,4 +30,4 @@ export const START_SCENE_GAMEPLAY = false;
 export const START_SCENE_INTRO = false;
 export const PAUSE_WHEN_FOCUS_LOST = true;
 
-export const VERSION = '1.9.0 Beta'; 
+export const VERSION = '2.0.0 Zombie Edition'; 
