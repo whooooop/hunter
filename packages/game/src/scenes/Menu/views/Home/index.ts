@@ -6,7 +6,7 @@ import { AudioService } from "../../../../services/AudioService";
 import { getLogoTexture, preloadLogoTextures } from "../../../../textures/logo";
 import { MenuSceneTypes } from "../../MenuSceneTypes";
 import { multiplayerButtonTexture, playButtonTexture, settingsButtonTexture, shopButtonTexture } from "./textures";
-import { MultiplayerText, PlayText, SettingsText, ShopText } from "./translates";
+import { MultiplayerText, PlayText, SettingsText } from "./translates";
 import { MenuButton } from "./types";
 
 export class HomeView implements MenuSceneTypes.View {
@@ -22,22 +22,22 @@ export class HomeView implements MenuSceneTypes.View {
   private buttonContainer: Map<string, Phaser.GameObjects.Container> = new Map();
 
   private buttons: Set<MenuButton> = new Set([
-    {
-      key: 'shop',
-      text: ShopText.translate,
-      texture: shopButtonTexture,
-      position: {
-        x: DISPLAY.WIDTH / 2 + 200,
-        y: DISPLAY.HEIGHT / 2 + 180,
-      },
-      leaveOffset: {
-        x: -250,
-        y: DISPLAY.HEIGHT * -1,
-      },
-      delay: 200,
-      textOffset: [10, 40],
-      viewKey: MenuSceneTypes.ViewKeys.SHOP
-    },
+    // {
+    //   key: 'shop',
+    //   text: ShopText.translate,
+    //   texture: shopButtonTexture,
+    //   position: {
+    //     x: DISPLAY.WIDTH / 2 + 200,
+    //     y: DISPLAY.HEIGHT / 2 + 180,
+    //   },
+    //   leaveOffset: {
+    //     x: -250,
+    //     y: DISPLAY.HEIGHT * -1,
+    //   },
+    //   delay: 200,
+    //   textOffset: [10, 40],
+    //   viewKey: MenuSceneTypes.ViewKeys.SHOP
+    // },
     {
       key: 'settings',
       text: SettingsText.translate,
@@ -59,7 +59,7 @@ export class HomeView implements MenuSceneTypes.View {
       text: MultiplayerText.translate,
       texture: multiplayerButtonTexture,
       position: {
-        x: DISPLAY.WIDTH / 2 - 20,
+        x: DISPLAY.WIDTH / 2 + 200,
         y: DISPLAY.HEIGHT / 2 + 220,
       },
       leaveOffset: {
