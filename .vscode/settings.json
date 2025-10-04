@@ -18,5 +18,9 @@
   "editor.insertSpaces": true,
   "editor.detectIndentation": false,
   "prettier.requireConfig": true,
-  "prettier.useEditorConfig": false
+  "prettier.useEditorConfig": false,
+  "colorize.languages": [
+    "javascript",
+    "typescript"
+  ]
 } 

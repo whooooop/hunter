@@ -5,8 +5,9 @@ import { createGame } from '../../api/game';
 import { preloadBossSound } from '../../audio/boss';
 import { playGameoverAudio, preloadGameoverAudio } from '../../audio/gameover';
 import { stopMenuAudio } from '../../audio/menu';
-import { DISPLAY, FONT_FAMILY, PAUSE_WHEN_FOCUS_LOST, VERSION } from '../../config';
+import { DEMO_MODE, DISPLAY, FONT_FAMILY, PAUSE_WHEN_FOCUS_LOST, VERSION } from '../../config';
 import { BloodController, DecalController, KeyBoardController, MultiplayerController, ProjectileController, QuestController, ScoreController, ShopController, WaveController, WeaponController } from '../../controllers';
+import { DemoController } from '../../controllers/DemoController';
 import { LevelController } from '../../controllers/LevelController';
 import { createEnemy } from '../../enemies';
 import { EnemyEntity } from '../../entities/EnemyEntity';
@@ -339,8 +340,16 @@ export class GameplayScene extends Phaser.Scene {
     // emitEvent(this, ScoreEvents.IncreaseScoreEvent, { playerId, score: 50000 });
     await this.levelController.waitReady();
     this.startGame();
-  }
 
+    if (DEMO_MODE) {
+      new DemoController(
+        this,
+        this.storage,
+        this.players,
+        this.enemies as Map<string, EnemyEntity>
+      );
+    }
+  }
 
   private handleCountdown(id: string, record: SyncCollectionRecord<CountdownEvent>): void {
     this.countdown.start(record.data.duration, record.data.delay);
