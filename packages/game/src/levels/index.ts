@@ -1,18 +1,20 @@
 import { LevelController } from "../controllers/LevelController";
 import { LevelTutorialController } from "../tutorial/LevelTutorialController";
 import { Level } from "../types/levelTypes";
-import { ForestLevelConfig } from "./forest";
+import { ForestLevelConfig } from './forest';
 import { TutorialLevelConfig } from './tutorial';
-
+import { ZombieForestLevelConfig } from './zombieForest';
 export enum LevelId {
   TUTORIAL = 'tutotial',
   FOREST = 'forest',
+  ZOMBIE_FOREST = 'zombie_forest',
   // SOON = 'soon',
 }
 
 export const LevelCollection: Record<LevelId, Level.Config> = {
   [LevelId.TUTORIAL]: TutorialLevelConfig,
   [LevelId.FOREST]: ForestLevelConfig,
+  [LevelId.ZOMBIE_FOREST]: ZombieForestLevelConfig,
   // [LevelId.SOON]: DesertLevelConfig,
 }
 

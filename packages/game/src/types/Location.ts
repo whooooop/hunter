@@ -2,6 +2,7 @@ export namespace Location {
   export enum Id {
     FOREST = 'forest',
     DESERT = 'desert',
+    ZOMBIE_FOREST = 'zombie_forest',
   }
 
   export interface Bounds {

@@ -1,9 +1,12 @@
-import { ForestLocation } from "./ForestLocation/ForestLocation";
 import { Location } from "../types/Location";
+import { ForestLocation } from "./ForestLocation/ForestLocation";
+import { ZombieForestLocation } from "./ZombieForestLocation/ZombieForestLocation";
+
 
 export const LocationCollections: Record<Location.Id, new (scene: Phaser.Scene) => Location.BaseClass> = {
   [Location.Id.FOREST]: ForestLocation,
   [Location.Id.DESERT]: ForestLocation,
+  [Location.Id.ZOMBIE_FOREST]: ZombieForestLocation,
 }
 
 export function getLocationClass(locationId: Location.Id): new (scene: Phaser.Scene) => Location.BaseClass {
